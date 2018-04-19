@@ -309,7 +309,7 @@ if(!function_exists('homepage')) {
      * @return array|null Returns the data of the primary Menu if found, null instead
      */
     function homepage($columnName = ''){
-        return \App\Models\Post::gethomepage($columnName);
+        return \App\Models\Post::getHomepage($columnName);
     }
 }
 

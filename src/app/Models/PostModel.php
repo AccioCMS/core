@@ -708,7 +708,7 @@ class PostModel extends Model{
      *
      * @return array|null Returns the data of the primary Menu if found, null instead
      */
-    public static function gethomepage($columnName = ''){
+    public static function getHomepage($columnName = ''){
         if($columnName){
             if(isset(self::$homepage->$columnName)){
                 return self::$homepage->$columnName;
