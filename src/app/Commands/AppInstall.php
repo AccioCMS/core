@@ -39,7 +39,7 @@ class AppInstall extends Command{
      *
      * @var string
      */
-    protected $description = 'Install Manaferra CMS';
+    protected $description = 'Install Accio CMS';
 
     /**
      * if cms is installed

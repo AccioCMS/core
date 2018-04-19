@@ -52033,7 +52033,7 @@ var staticRenderFns = [
       _c("div", { staticClass: "pull-right" }, [
         _vm._v("\n        Mana CMS - Created by "),
         _c("a", { attrs: { href: "http://www.manaferra.com/" } }, [
-          _vm._v("Manaferra")
+          _vm._v("Accio")
         ])
       ]),
       _vm._v(" "),
