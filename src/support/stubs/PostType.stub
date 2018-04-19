@@ -1,0 +1,10 @@
+<?php
+
+Route::group(['as' => 'post.DummySlug.', 'middleware' => 'translate', 'namespace' => \App\Models\Theme::controllersNameSpace()], function () {
+
+    // Index
+    Route::get(permalink("DummySlug/","index","DummySlug/"), 'PostController@index')->name('index');
+
+    // Single
+    Route::get(permalink("DummySlug","single","DummySlug/{postSlug}"), 'PostController@single')->name('single');
+});

@@ -1,0 +1,37 @@
+.editor div:first-child, .froalaCustomField{
+    z-index: 0;
+}
+.openAdvancedSearchBtn{
+    color: #fff !important;
+    border-radius: 0 !important;
+}
+#advancedSearchForm {
+    margin-bottom: 20px;
+}
+#advancedSearchForm label{
+    margin-top: 5px;
+}
+.postsDatepicker .datepicker{
+    float: left;
+}
+.postsDatepicker .time-picker input{
+    height: 34px !important;
+    margin-left: 10px;
+}
+.time-picker {
+    display: inline-block;
+    float: left;
+    width: 100% !important;
+}
+.datepicker {
+    position: relative;
+    float: left;
+}
+.popupContentLibrary #popupButtons {
+    padding-top: 10px;
+    border-top: 1px solid #EAEAEA;
+    margin-top: -55px;
+}
+.form-horizontal .form-group {
+    margin-top: 10px;
+}

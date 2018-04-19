@@ -1,0 +1,560 @@
+.mediaPopupWrapper{
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    padding: 50px;
+    overflow: auto;
+}
+.mediaPopupContainer{
+    height: 100%;
+    width: 100%;
+    background-color: #FFFFFF;
+    display: table;
+    border: 1px solid #999;
+    box-shadow: -1px 0px 20px 1px #333;
+}
+#popupContent{
+    display: table-row;
+    width: 100%;
+    text-align: center;
+    vertical-align: middle;
+    background-color: #fff;
+}
+
+#closePopupBtn, #closeCropBtn{
+    margin-top: 5px;
+    position: absolute;
+    right: 60px;
+    top: 50px;
+    color: #34495e;
+    cursor: pointer;
+}
+#closeCropBtn{
+    z-index: 1;
+}
+.text-container{
+    display: table-cell;
+    width: 100%;
+    height: 100%;
+    vertical-align: middle;
+}
+#popupContent p{
+    font-size: 18px;
+    color: #b8b8b8;
+    text-align: center;
+}
+#popupContent button{
+    width: 90px;
+    height: 40px;
+}
+#popupButtons{
+    width: 100%;
+    height: 50px;
+    position: absolute;
+    display: block;
+    background-color: #fff;
+    bottom: 0;
+}
+.popupContentLibrary #popupButtons{
+    padding-top: 10px;
+    border-top: 1px solid #EAEAEA;
+    margin-top: 2px;
+}
+#popupButtons hr{
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-top: 1px solid #EAEAEA;
+}
+.modal-open-test{
+    overflow: hidden !important;
+}
+#tabs{
+    display: table-row;
+    width: 100%;
+    height: 50px;
+}
+#tabs .tabs-container{
+    height: 50px;
+}
+#tabs button{
+    height: 49px;
+    width: 100px;
+    border: none;
+    border-right: 1px solid #EAEAEA;
+    border-radius: 0;
+    margin: 0 !important;
+    float: left;
+}
+#tabs hr{
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid #EAEAEA;
+    vertical-align: bottom;
+}
+#selectedFiles{
+    visibility: hidden;
+    position: absolute;
+}
+
+#popupButtons .btn-container{
+    float: right;
+    margin-right: 30px;
+    margin-top: -5px;
+}
+
+.slide-fade-enter-active {
+    transition: all .4s ease;
+}
+.slide-fade-leave-active {
+    transition: all .5s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-enter, .slide-fade-leave-to
+    /* .slide-fade-leave-active for <2.1.8 */ {
+    transform: translateX(10px);
+    opacity: 0;
+}
+
+.active{
+    color: #333;
+}
+
+.progress{
+    margin-bottom: 0;
+}
+.errorMsg{
+    font-size: 12px !important;
+    color: #800 !important;
+}
+
+.progressedImage{
+    width: 150px;
+    margin: 15px auto;
+}
+.complete{
+    background-color: #13b860;
+}
+.failed{
+    background-color: #b82c07;
+    width: 100%;
+}
+.complete .completedMsg{
+    display: none;
+    color: #fff !important;
+    font-size: 12px !important;
+}
+
+.failedMsg{
+    display: none;
+    color: #fff !important;
+    font-size: 12px !important;
+}
+
+.dropzone {
+    min-height: 300px;
+    border: 1px solid #e5e5e5;
+    display: table-cell;
+    width: 100%;
+    height: 100%;
+    vertical-align: middle;
+}
+
+/* Library extras */
+.popupContentLibrary{}
+
+.imageWrapperPopupMedia{
+    display: table-cell;
+    width: 100%;
+    height: 100%;
+}
+.imageContainerPopupMedia{
+    position: relative;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+#filesMediaPopup, #albumsContainer{
+    padding: 15px;
+    overflow: auto;
+    padding-bottom:50px;
+}
+#filesMediaPopup2, #albumsContainer{
+    padding: 15px;
+    overflow: auto;
+    padding-bottom:50px;
+}
+#filterSidebarMediaPopup{
+    height: 50px;
+    border-bottom: 1px solid #EAEAEA;
+    padding: 5px;
+}
+.imageWrapper{
+    width: 150px;
+    height: auto;
+    border: 3px solid transparent;
+    display: inline-block;
+    padding: 5px;
+    margin-left: 7px;
+    margin-right: 7px;
+    margin-bottom: 7px;
+    margin-top: 7px;
+    text-align: center;
+    vertical-align: top;
+}
+.imageWrapper.active{
+    border: 3px solid #00a4e8;
+}
+.imageWrapper p{
+    color: #666 !important;
+    font-size: 12px !important;
+    margin-top: 5px;
+}
+.singleImgContainer{
+    width: 100%;
+    height: 138px;
+}
+.singleImgContainer.selected{
+    border: 2px solid #1aafea;
+}
+.singleImgContainer img{
+    width: 100%;
+    height: 100%;
+}
+.searchBtnContainer button{
+    float: left;
+    height: 34px !important;
+}
+#editPanel{
+    background-color: #e4e4e4;
+}
+#editPanel h5{
+    display: block;
+    text-align: left;
+    margin-left: 10px;
+}
+#editPanel span{
+    text-align: left;
+    clear: both;
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    word-break: break-all;
+}
+#editPanel hr{
+    margin-top: 30px;
+}
+#editPanel span#filename{
+    color: #333;
+}
+#editPanel img#detailsUrl{
+    width: 100%;
+}
+#editPanel #editImage{
+    color: #0096dc;
+    display: block;
+    text-align: left;
+    margin-top: 5px;
+    cursor: pointer;
+}
+#editPanel #deleteImage{
+    color: #df0000;
+    display: block;
+    text-align: left;
+    margin-top: 5px;
+    cursor: pointer;
+}
+#editPanel #deleteImageMulti{
+    margin-top: 10px;
+}
+#editPanel #assignWatermarkBtn{
+    color: #14cf95;
+    display: block;
+    text-align: left;
+    margin-top: 5px;
+    cursor: pointer;
+}
+#editPanel #assignWatermarkBtnMulti{
+    margin-top: 10px;
+}
+#detailsImage{
+    width: 100%;
+}
+#editPanel2{
+    background-color: #e4e4e4;
+}
+#editPanel2 h5{
+    display: block;
+    text-align: left;
+    margin-left: 10px;
+}
+#editPanel2 span{
+    text-align: left;
+    clear: both;
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    word-break: break-all;
+}
+#editPanel2 hr{
+    margin-top: 30px;
+}
+#editPanel2 span#filename{
+    color: #333;
+}
+#editPanel2 img#detailsUrl{
+    width: 100%;
+}
+#editPanel2 #editImage{
+    color: #0096dc;
+    display: block;
+    text-align: left;
+    margin-top: 5px;
+    cursor: pointer;
+}
+#editPanel2 #deleteImage{
+    color: #df0000;
+    display: block;
+    text-align: left;
+    margin-top: 5px;
+    cursor: pointer;
+}
+#editPanel2 #deleteImageMulti{
+    margin-top: 10px;
+}
+#editPanel2 #assignWatermarkBtn{
+    color: #14cf95;
+    display: block;
+    text-align: left;
+    margin-top: 5px;
+    cursor: pointer;
+}
+#editPanel2 #assignWatermarkBtnMulti{
+    margin-top: 10px;
+}
+.detailsFromContainer .form-group{
+    margin-top: 15px;
+}
+.modal{
+    background:rgba(0,0,0,0.7);
+}
+.modal-dialog{
+    margin-top: 15%;
+}
+.modal .modal-title{
+    text-align: left;
+}
+.modal .close{
+    width: auto !important;
+    height: auto !important;
+}
+
+/* Crop component */
+.cropImageWrapper{
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    padding: 50px;
+    overflow: auto;
+}
+
+.cropImageContainer{
+    height: 100%;
+    width: 100%;
+    background-color: #FFFFFF;
+    border: 1px solid #999;
+    box-shadow: -1px 0px 20px 1px #333;
+    padding: 0;
+}
+
+
+/******************************************/
+
+div.image-decorator {
+    /*display : inline-block !important;*/
+    margin: 0 auto;
+    padding : 5px 5px 5px 5px !important;
+    position: relative !important;
+    margin-bottom: 10px !important;
+}
+
+.select-areas-background-area{
+    background-image: url(/images/example.jpg) ;
+}
+
+#imageToBeCropped{
+    left:0;
+}
+
+#thumbPanel{
+    height: -moz-calc(100% - (20px + 30px));
+    height: -webkit-calc(100% - (20px + 30px));
+    height: calc(100% - (20px + 30px));
+    padding: 0;
+    background-color: #e4e4e4;
+}
+#cropImgPanel{
+    height: 100%;
+    display: table;
+}
+#cropImgPanel .cropTitle, #cropImgPanel .image-decorator, #cropImgPanel #popupButtons{
+    display: table-row;
+}
+.cropImageContainer #popupButtons{
+    display: inline-table;
+}
+#cropImgPanel .cropTitle{
+    height: 50px;
+}
+.cropImageContainer .cropTitle h1{
+    font-size: 18px;
+}
+.image-decorator div:first-child{
+    margin: 0 auto;
+}
+#imagePrev{
+    width: 90%;
+    height: 150px;
+    margin-top: 40px;
+    background-repeat: no-repeat;
+}
+
+/* Original view not the popup */
+.mediaContainer{
+    height: 100%;
+    width: 100%;
+    background-color: #FFFFFF;
+    display: table;
+    border: 1px solid #EAEAEA;
+}
+.mediaContainer .text-container, .mediaContainer .dropzone{
+    height: 300px !important;
+}
+.albumPanel{
+    margin:0;
+    padding:0;
+}
+.albumTitle{
+    margin:0;
+}
+.albumTitle h2{
+    margin: 14px 10px 6px;
+}
+.albumTitle button{
+    margin: 5px 5px;
+}
+.addAlbumBtn{
+    margin-left:20px;
+}
+.albumPanelContent{
+    margin:0;
+    padding:0;
+}
+.albumWrapper{
+    margin-top: 30px;
+    cursor: pointer;
+}
+.albumWrapper .albumContainer{
+    border: 1px solid #EAEAEA;
+    height: 370px;
+}
+.albumWrapper .albumContainer .imagesContainer{
+    overflow: hidden;
+    height: 300px;
+}
+.albumWrapper .albumContainer .imagesContainer .image{
+    overflow: hidden;
+    height: 150px;
+    padding:0;
+}
+.albumWrapper .albumContainer .imagesContainer .image img{
+    width: 100%;
+}
+.albumWrapper .albumContainer .titleContainer{
+    height: 30px;
+    width:100%;
+}
+.albumWrapper .albumContainer .titleContainer h4{
+    text-align: center;
+    font-size: 14px;
+    margin:0;
+    padding-top:10px;
+}
+.albumWrapper .albumContainer .btnContainer{
+    height: 35px;
+    width: 100%;
+    text-align: center;
+}
+label.btn.btn-default.active {
+    color: #333 !important;
+}
+@media only screen and (max-width: 1600px) {
+    #filesMediaPopup, #albumsContainer {
+        position: absolute;
+        top: 50px;
+        left: 0;
+        right: 300px;
+        bottom: 0;
+        overflow: auto;
+        outline: 0;
+    }
+    #filesMediaPopup2, #albumsContainer{
+        position: relative;
+        overflow: auto;
+        outline: 0;
+    }
+    #editPanel {
+        overflow-y: scroll;
+        padding-bottom: 50px;
+        position: absolute;
+        top: 50px;
+        right: 0;
+        bottom: 0;
+    }
+    #editPanel2 {
+        overflow-y: scroll;
+        padding-bottom: 50px;
+        position: relative;
+    }
+}
+@media only screen and (min-width: 1601px) {
+    #filesMediaPopup, #albumsContainer {
+        position: absolute;
+        top: 50px;
+        left: 0;
+        right: 300px;
+        bottom: 0;
+        overflow: auto;
+        outline: 0;
+    }
+    #filesMediaPopup2, #albumsContainer{
+        position: relative;
+        overflow: auto;
+        outline: 0;
+    }
+    #editPanel {
+        overflow-y: scroll;
+        padding-bottom: 50px;
+        position: absolute;
+        top: 50px;
+        right: 0;
+        bottom: 0;
+    }
+    #editPanel2 {
+        overflow-y: scroll;
+        padding-bottom: 50px;
+        position: relative;
+    }
+}

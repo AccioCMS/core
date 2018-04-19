@@ -1,0 +1,56 @@
+.selectMenuLabel{
+    padding-top: 7px;
+}
+.createMenuBtn{
+    margin-left: 10px;
+}
+.selectMenuBtn{
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+.tableContainer{
+    height: 180px;
+    overflow: auto;
+}
+.selectLinkBtn{
+    float: right;
+    margin-top: 10px;
+}
+.menuNameInput{
+    margin-left: 15px;
+    margin-top: 5px;
+    width: 201px;
+    height: 28px;
+    border: 1px solid #dddde2;
+    padding-left: 7px;
+}
+.mainButtonsContainer button{
+    float: right;
+    margin-left: 10px;
+    margin-top: 10px;
+}
+.openEditLinkPanelPanel{
+    border: 1px solid #EAEAEA;
+    padding: 20px;
+    display: none;
+}
+.openEditLinkPanelPanel .form-group{
+    margin-top: 15px;
+}
+table th, table td{
+    color: #000;
+}
+
+.panel{
+    margin-bottom: 5px;
+}
+.panel-heading{
+    cursor: pointer;
+    background: #f7fafc;
+    padding: 18px;
+    width: 100%;
+    display: block;
+}
+.nav-tabs li{
+    cursor: pointer;
+}

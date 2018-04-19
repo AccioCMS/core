@@ -1,0 +1,309 @@
+<template>
+    <div>
+        <form>
+            <!-- Loading component -->
+            <spinner v-if="spinner" :width="'40px'" :height="'40px'" :border="'10px'"></spinner>
+
+            <div class="inputsContainer" v-if="!spinner">
+                <div class="form-group clearfix" id="form-group-siteTitle">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__siteTitle}}</label>
+                    <div class="col-md-9 col-sm-9 col-xs-12">
+                        <input type="text" class="form-control" id="siteTitle" name="siteTitle" v-model="form.siteTitle">
+                        <div class="alert" v-if="StoreResponse.errors.siteTitle" v-for="error in StoreResponse.errors.siteTitle">{{ error }}</div>
+                    </div>
+                </div>
+
+                <div class="form-group clearfix" id="form-group-adminEmail">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__adminEmail}}</label>
+                    <div class="col-md-9 col-sm-9 col-xs-12">
+                        <input type="text" class="form-control" id="adminEmail" name="adminEmail" v-model="form.adminEmail">
+                        <div class="alert" v-if="StoreResponse.errors.adminEmail" v-for="error in StoreResponse.errors.adminEmail">{{ error }}</div>
+                    </div>
+                </div>
+
+                <div class="form-group clearfix" id="form-group-defaultUserRole">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__defaultUserRole}}</label>
+                    <div class="col-md-9 col-sm-9 col-xs-12">
+                        <select v-model="form.defaultUserRole" id="defaultUserRole" name="defaultUserRole" class="form-control">
+                            <option value="NULL">NONE</option>
+                            <option :value="role.slug" v-for="role in userRoles">{{ role.name }}</option>
+                        </select>
+                        <div class="alert" v-if="StoreResponse.errors.defaultUserRole" v-for="error in StoreResponse.errors.defaultUserRole">{{ error }}</div>
+                    </div>
+                </div>
+
+                <div class="form-group clearfix" id="form-group-timezone">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__timezone}}</label>
+                    <div class="col-md-9 col-sm-9 col-xs-12">
+                        <select v-model="form.timezone" id="timezone" name="timezone" class="form-control">
+                            <option :value="option" v-for="option in timezoneOptions">{{ option }}</option>
+                        </select>
+                        <div class="alert" v-if="StoreResponse.errors.timezone" v-for="error in StoreResponse.errors.timezone">{{ error }}</div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="form-group-logo">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__logo}}</label>
+                    <div class="imagePrevContainer col-md-9 col-sm-9 col-xs-12">
+
+                        <div class="imageSingleThumb" v-if="mediaSelectedFiles['logo']">
+                            <i class="fa fa-close closeBtnForPrevImages" @click="deleteSelectedMediaFile('logo', 0)"></i>
+                            <img :src="generateUrl(constructUrl(mediaSelectedFiles['logo'][0]))">
+                        </div>
+
+                        <div class="clearfix"></div>
+
+                        <a class="btn btn-info" @click="openMedia('image', 'logo')" id="openMediaLogo">
+                            <span v-if="!mediaSelectedFiles['logo']">{{trans.__addImage}}</span>
+                            <span v-if="mediaSelectedFiles['logo']">{{trans.__change}}</span>
+                        </a>
+
+                        <div class="alert" v-if="StoreResponse.errors.logo" v-for="error in StoreResponse.errors.logo">{{ error }}</div>
+                    </div>
+                </div>
+
+                <div class="form-group clearfix" id="form-group-defaultLanguage">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__defaultLanguage}}</label>
+                    <div class="col-md-9 col-sm-9 col-xs-12">
+                        <select v-model="form.defaultLanguage" id="defaultLanguage" name="defaultLanguage" class="form-control">
+                            <option :value="language.languageID" v-for="language in languageList">{{ language.name }}</option>
+                        </select>
+                        <div class="alert" v-if="StoreResponse.errors.defaultLanguage" v-for="error in StoreResponse.errors.defaultLanguage">{{ error }}</div>
+                    </div>
+                </div>
+
+                <div class="form-group clearfix" id="form-group-homepageID">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__frontPage}}</label>
+                    <div class="col-md-9 col-sm-9 col-xs-12">
+                        <select v-model="form.homepageID" id="homepageID" name="homepageID" class="form-control">
+                            <option :value="page.postID" v-for="page in pagesList">{{ page.title }}</option>
+                        </select>
+                        <div class="alert" v-if="StoreResponse.errors.homepageID" v-for="error in StoreResponse.errors.homepageID">{{ error }}</div>
+                    </div>
+                </div>
+
+                <div class="form-group clearfix" id="form-group-activeTheme">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__activeTheme}}</label>
+                    <div class="col-md-9 col-sm-9 col-xs-12">
+                        <select v-model="form.activeTheme" id="activeTheme" name="activeTheme" class="form-control">
+                            <option :value="theme.namespace" v-for="theme in themesList">{{ theme.Title }}</option>
+                        </select>
+                        <div class="alert" v-if="StoreResponse.errors.activeTheme" v-for="error in StoreResponse.errors.activeTheme">{{ error }}</div>
+                    </div>
+                </div>
+
+                <div class="form-group clearfix" id="form-group-isVisible">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__activateMobileTheme}}</label>
+                    <div class="col-md-9 col-sm-9 col-xs-12" >
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-default" :class="{active: this.form.activateMobileTheme} == true" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="form.activateMobileTheme = true">
+                                <input type="radio" value="true"> &nbsp; {{trans.__true}} &nbsp;
+                            </label>
+                            <label class="btn btn-primary" :class="{active: !this.form.activateMobileTheme == false}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="form.activateMobileTheme = false">
+                                <input type="radio" value="false"> {{trans.__false}}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="form-group clearfix" id="form-group-activeTheme">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__mobileActiveTheme}}</label>
+                    <div class="col-md-9 col-sm-9 col-xs-12">
+                        <select v-model="form.mobileActiveTheme" :disabled="!this.form.activateMobileTheme"  id="activeTheme" name="activeTheme" class="form-control">
+                            <option :value="theme.namespace" v-for="theme in themesList">{{ theme.Title }}</option>
+                        </select>
+                    </div>
+                </div>
+
+
+                <div class="form-group clearfix">
+                    <div class="col-md-3 col-sm-3 col-xs-12"></div>
+                    <div class="col-md-9 col-sm-9 col-xs-12">
+                        <button type="button" class="btn btn-primary" @click="store">{{trans.__globalSaveBtn}}</button>
+                    </div>
+                </div>
+
+            </div>
+
+        </form>
+
+        <!-- OPEN popup media window to choose files -->
+        <transition name="slide-fade">
+            <popup-media v-if="isMediaOpen"></popup-media>
+        </transition>
+
+    </div>
+
+</template>
+<style scoped>
+    .form-group{
+        margin-bottom: 15px;
+    }
+    .form-group label{
+        margin-top: 10px;
+    }
+    .mainButtonsContainer button{
+        float: right;
+        margin-left: 10px;
+        margin-top: 10px;
+    }
+</style>
+<script>
+    import PopupMedia from '../media/Popup.vue'
+    import { globalComputed } from '../../mixins/globalComputed';
+    import { globalData } from '../../mixins/globalData';
+    import { globalUpdated } from '../../mixins/globalUpdated';
+    import { globalMethods } from '../../mixins/globalMethods';
+
+    export default{
+        mixins: [globalComputed, globalMethods, globalData, globalUpdated],
+        components:{'popup-media':PopupMedia},
+        data(){
+            return {
+                userRoles: [],
+                languageList: [],
+                pagesList: [],
+                themesList: [],
+                timezoneOptions: ['UTC-12', 'UTC-11:30', 'UTC-11', 'UTC-10:30', 'UTC-10', 'UTC-9:30', 'UTC-9', 'UTC-8:30', 'UTC-8', 'UTC-7:30', 'UTC-7', 'UTC-6:30', 'UTC-6', 'UTC-5:30', 'UTC-5', 'UTC-4:30', 'UTC-4', 'UTC-3:30', 'UTC-3', 'UTC-2:30', 'UTC-2', 'UTC-1:30', 'UTC-1', 'UTC-0:30',
+                'UTC+0', 'UTC+0:30', 'UTC+1', 'UTC+1:30', 'UTC+2', 'UTC+2:30', 'UTC+3', 'UTC+3:30', 'UTC+4', 'UTC+4:30', 'UTC+5', 'UTC+5:30', 'UTC+6', 'UTC+6:30', 'UTC+7', 'UTC+7:30', 'UTC+8', 'UTC+8:30', 'UTC+9', 'UTC+9:30', 'UTC+10',
+                'UTC+10:30', 'UTC+11', 'UTC+11:30', 'UTC+12', 'UTC+12.45', 'UTC+13', 'UTC+13.45', 'UTC+14'],
+                form: {
+                    siteTitle: '',
+                    adminEmail: '',
+                    defaultUserRole: '',
+                    timezone: '',
+                    logo: '',
+                    defaultLanguage: '',
+                    homepageID: '',
+                    activeTheme: '',
+                    activateMobileTheme: false,
+                    mobileActiveTheme: '',
+                }
+            }
+        },
+        created(){
+            // translations
+            this.trans = {
+                __siteTitle: this.__('settings.siteTitle'),
+                __adminEmail: this.__('settings.adminEmail'),
+                __defaultUserRole: this.__('settings.defaultUserRole'),
+                __activeTheme: this.__('settings.activeTheme'),
+                __activateMobileTheme: this.__('settings.activateMobileTheme'),
+                __mobileActiveTheme: this.__('settings.mobileActiveTheme'),
+                __timezone: this.__('settings.timezone'),
+                __logo: this.__('settings.logo'),
+                __defaultLanguage: this.__('settings.defaultLanguage'),
+                __frontPage: this.__('settings.frontPage'),
+                __addImage: this.__('media.addImage'),
+                __change: this.__('media.change'),
+                __globalSaveBtn: this.__('base.saveBtn'),
+                __true: this.__('base.booleans.true'),
+                __false: this.__('base.booleans.false')
+            };
+
+            this.$store.commit('setSpinner', true);
+
+            // TODO me i nxjerr krejt settings me nje request
+
+            // get all user groups / roles
+            var userGroupPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/permissions/users-groups')
+                .then((resp) => {
+                    this.userRoles = resp.body.list;
+                });
+
+            // get all languages
+            var languagesPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/language/get-all')
+                .then((resp) => {
+                    this.languageList = resp.body.data;
+                });
+
+            // get all pages
+            var pagesPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all-posts-without-pagination/post_pages')
+                .then((resp) => {
+                    this.pagesList = resp.body;
+                });
+
+            // get all themes
+            var themesPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/settings/get-theme-configs')
+                .then((resp) => {
+                    this.themesList = resp.body;
+                });
+
+            // get all settings
+            var settingsPromise = this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/settings/get-settings')
+                .then((resp) => {
+                    this.form.siteTitle = resp.body.siteTitle.value;
+                    this.form.adminEmail = resp.body.adminEmail.value;
+                    this.form.defaultUserRole = resp.body.defaultUserRole.value;
+                    this.form.timezone = resp.body.timezone.value;
+                    this.form.defaultLanguage = resp.body.defaultLanguage.value;
+                    this.form.homepageID = resp.body.homepageID.value;
+                    this.form.activeTheme = resp.body.activeTheme.value;
+                    this.form.activateMobileTheme = resp.body.activateMobileTheme.value;
+                    this.form.mobileActiveTheme = resp.body.mobileActiveTheme.value;
+                    this.form.logo = resp.body.logo.value;
+                    if(resp.body.logo && resp.body.logo !== undefined && resp.body.logo.media !== undefined && Object.keys(resp.body.logo.media).length != 0){
+                        this.$store.commit('setMediaSelectedFiles', {'logo': [resp.body.logo.media]});
+                    }
+                });
+
+            // when all ajax request are done
+            Promise.all([userGroupPromise,languagesPromise,pagesPromise, settingsPromise]).then(([v1,v2,v3,v4]) => {
+                this.$store.commit('setSpinner', false);
+            });
+        },
+        methods: {
+            openMedia(format, inputName){
+                this.$store.commit('setOpenMediaOptions', { multiple: false, has_multile_files: false, multipleInputs: false, format : format, inputName: inputName, langSlug: '', clear: false });
+                this.$store.commit('setIsMediaOpen', true);
+            },
+            store(){
+                if(this.mediaSelectedFiles['logo'] !== undefined && this.mediaSelectedFiles['logo'][0] !== undefined){
+                    this.form.logo = this.mediaSelectedFiles['logo'][0].mediaID;
+                }
+
+                const request = {
+                    settingsType: 'general',
+                    form: this.form,
+                };
+
+                this.$store.dispatch('store',{
+                    data: request,
+                    url: this.basePath+'/'+this.$route.params.adminPrefix+"/json/settings/store",
+                    error: "Settings could not be saved. Please try again later."
+                }).then((resp) => {
+                    if(resp.code == 200){
+                        this.getGlobalData.settings.logo = this.basePath+'/'+this.mediaSelectedFiles['logo'][0].fileDirectory+'/200x200/'+this.mediaSelectedFiles['logo'][0].filename;
+                        this.getGlobalData.settings.siteTitle = this.form.siteTitle;
+                    }
+                });
+            },
+            // this function is used to remove the selected images in custom fields
+            deleteSelectedMediaFile(key, mediaID){
+                var mediaArr = this.mediaSelectedFiles;
+                for(var k in mediaArr[key]){
+                    if(key == "logo"){
+                        delete mediaArr[key];
+                        continue;
+                    }
+                    if(mediaArr[key][k].mediaID == mediaID){
+                        mediaArr[key].splice(mediaArr[key][k], 1);
+                    }
+                }
+                this.$store.commit('setMediaSelectedFiles', "");
+                this.$store.commit('setMediaSelectedFiles', mediaArr);
+            },
+        },
+        computed: {
+            isMediaOpen(){
+                // return if media popup is open (true or false)
+                return this.$store.getters.get_is_media_open;
+            },
+            mediaSelectedFiles(){
+                // return when user chose files form media
+                return this.$store.getters.get_media_selected_files;
+            }
+        }
+    }
+</script>
