@@ -1,6 +1,6 @@
 <?php
 
-namespace Manaferra;
+namespace Accio;
 use App\Models\Plugin;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\File;

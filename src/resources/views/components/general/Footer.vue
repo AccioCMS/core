@@ -1,7 +1,7 @@
 <template>
     <footer>
         <div class="pull-right">
-            Mana CMS - Created by <a href="http://www.manaferra.com/">Manaferra</a>
+            Accio - Created by <a href="http://www.manaferra.com/">Accio</a>
         </div>
         <div class="clearfix"></div>
     </footer>
