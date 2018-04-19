@@ -52033,7 +52033,7 @@ var staticRenderFns = [
       _c("div", { staticClass: "pull-right" }, [
         _vm._v("\n        Mana CMS - Created by "),
         _c("a", { attrs: { href: "http://www.manaferra.com/" } }, [
-          _vm._v("Manaferra")
+          _vm._v("Accio")
         ])
       ]),
       _vm._v(" "),
@@ -62849,8 +62849,8 @@ exports.default = {
             __action: this.__('base.action'),
             __title: this.__('base.title'),
             __slug: this.__('base.slug'),
-            __listTableTitle: this.__('Manaferra.AdsManager.base.listTableTitle'),
-            __pluginTitle: this.__('Manaferra.AdsManager.base.pluginTitle')
+            __listTableTitle: this.__('Accio.AdsManager.base.listTableTitle'),
+            __pluginTitle: this.__('Accio.AdsManager.base.pluginTitle')
         };
     },
     mounted: function mounted() {
@@ -63368,14 +63368,14 @@ exports.default = {
         this.trans = {
             __title: this.__('base.title'),
             __slug: this.__('base.slug'),
-            __pluginTitle: this.__('Manaferra.AdsManager.base.pluginTitle'),
-            __formCreateTitle: this.__('Manaferra.AdsManager.base.formCreateTitle'),
-            __formUpdateTitle: this.__('Manaferra.AdsManager.base.formUpdateTitle'),
-            __embed: this.__('Manaferra.AdsManager.base.embed'),
-            __rules: this.__('Manaferra.AdsManager.base.rules'),
-            __belongsTo: this.__('Manaferra.AdsManager.base.belongsTo'),
-            __belongsToID: this.__('Manaferra.AdsManager.base.belongsToID'),
-            __displayOn: this.__('Manaferra.AdsManager.base.displayOn'),
+            __pluginTitle: this.__('Accio.AdsManager.base.pluginTitle'),
+            __formCreateTitle: this.__('Accio.AdsManager.base.formCreateTitle'),
+            __formUpdateTitle: this.__('Accio.AdsManager.base.formUpdateTitle'),
+            __embed: this.__('Accio.AdsManager.base.embed'),
+            __rules: this.__('Accio.AdsManager.base.rules'),
+            __belongsTo: this.__('Accio.AdsManager.base.belongsTo'),
+            __belongsToID: this.__('Accio.AdsManager.base.belongsToID'),
+            __displayOn: this.__('Accio.AdsManager.base.displayOn'),
             __saveBtn: this.__('base.saveBtn'),
             __cancelBtn: this.__('base.cancelBtn')
         };

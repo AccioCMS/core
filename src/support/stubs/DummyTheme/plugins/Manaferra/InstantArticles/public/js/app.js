@@ -52033,7 +52033,7 @@ var staticRenderFns = [
       _c("div", { staticClass: "pull-right" }, [
         _vm._v("\n        Mana CMS - Created by "),
         _c("a", { attrs: { href: "http://www.manaferra.com/" } }, [
-          _vm._v("Manaferra")
+          _vm._v("Accio")
         ])
       ]),
       _vm._v(" "),
@@ -63493,8 +63493,8 @@ exports.default = {
         var global = this;
 
         // translations
-        this.trans.__changeAppinfo = this.__('Manaferra.InstantArticles::base.change_app_info');
-        this.trans.__backToConfiguration = this.__('Manaferra.InstantArticles::base.back_to_configuration');
+        this.trans.__changeAppinfo = this.__('Accio.InstantArticles::base.change_app_info');
+        this.trans.__backToConfiguration = this.__('Accio.InstantArticles::base.back_to_configuration');
 
         // init fb sdk
         // Execute FB SDK

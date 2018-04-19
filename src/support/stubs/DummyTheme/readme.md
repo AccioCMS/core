@@ -6,7 +6,7 @@ Feel free to do whatever you want with it :)
 
 ## Official Documentation
 
-Documentation for the cms can be found on  [Manaferra website](http://manaferra.com/docs).
+Documentation for the cms can be found on  [Accio website](http://manaferra.com/docs).
 
 ## Contributing
 
