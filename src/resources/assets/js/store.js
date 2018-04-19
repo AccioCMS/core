@@ -1,6 +1,7 @@
 import Vuex from 'vuex'
 import Vue from 'vue'
 
+import Bootstrap from '../../../../../../../resources/assets/js/bootstrap-vuex';
 import  media from '../../views/components/media/media'
 import  users  from '../../views/components/users/users'
 import  tags  from '../../views/components/tags/tags'
@@ -12,31 +13,24 @@ import  language  from '../../views/components/language/language'
 import  custom_fields  from '../../views/components/custom_fields/custom_fields'
 import  category  from '../../views/components/category/category'
 
+
 Vue.use(Vuex);
 
 export const store = new Vuex.Store({
     modules: {
-        media, users, tags, posts, post_type, permissions, menu, language, custom_fields, category
+        Bootstrap, media, users, tags, posts, post_type, permissions, menu, language, custom_fields, category
     },
     state: {
-        baseURL: '',
-        basePath: '',
-        navigationMenuStateIsMobile: false,
         id: '',
-        openModule: '',
         spinner: '',
         maxPaginationNr: '',
         list: '',
-        logout_link: '',
-        pluginsConfigs: [],
         inputErrorsExist: false,
         inputErrorsMsg: [],
         languages: {},
         postType: '',
         actionReturnedData: {},
-        global_data: [],
         hasPermission: false,
-        labels: {},
         translation: '',
         storeResponse:{
             errors: []
@@ -61,23 +55,8 @@ export const store = new Vuex.Store({
         },
     },
     getters: {
-        get_base_url(state){
-            return state.base_url;
-        },
-        get_base_path(state){
-            return state.base_path;
-        },
-        get_navigation_menu_state_is_mobile(state){
-            return state.navigationMenuStateIsMobile;
-        },
-        get_logout_link(state){
-            return state.logout_link;
-        },
         get_id(state){
             return state.id;
-        },
-        get_open_module(state){
-            return state.openModule;
         },
         get_spinner(state){
             return state.spinner;
@@ -88,9 +67,6 @@ export const store = new Vuex.Store({
         get_list(state){
             return state.list;
         },
-        get_plugins_configs(state){
-            return state.pluginsConfigs;
-        },
         get_languages(state){
             return state.languages;
         },
@@ -100,17 +76,8 @@ export const store = new Vuex.Store({
         get_action_returned_data(state){
             return state.actionReturnedData;
         },
-        get_global_data(state){
-            return state.global_data;
-        },
         get_has_permission(state){
             return state.hasPermission;
-        },
-        get_labels(state){
-            return state.labels;
-        },
-        get_translation(state){
-            return state.translation;
         },
         get_froala_full_config(state){
             return state.froalaFullConfig;
@@ -126,23 +93,8 @@ export const store = new Vuex.Store({
         }
     },
     mutations: {
-        setBaseURL(state, base_url){
-            state.base_url = base_url;
-        },
-        setBasePath(state, base_path){
-            state.base_path = base_path;
-        },
-        setNavigationMenuStateIsMobile(state, navigationMenuStateIsMobile){
-            state.navigationMenuStateIsMobile = navigationMenuStateIsMobile;
-        },
-        setLogoutLink(state,logoutLink){
-            state.logout_link = logoutLink;
-        },
         setID(state, id){
             state.id = id;
-        },
-        setOpenModule(state, openModule){
-            state.openModule = openModule;
         },
         setSpinner(state, spinner){
             state.spinner = spinner;
@@ -156,9 +108,6 @@ export const store = new Vuex.Store({
         pushToList(state, obj){
             state.list.push(obj);
         },
-        setPluginsConfigs(state, pluginsConfigs){
-            state.pluginsConfigs = pluginsConfigs;
-        },
         setLanguages(state, languages){
             state.languages = languages;
         },
@@ -171,17 +120,8 @@ export const store = new Vuex.Store({
         setActionReturnedDataNested(state, actionReturnedDataArr){
             state.actionReturnedData[actionReturnedDataArr[0]] = actionReturnedDataArr[1];
         },
-        setGlobalData(state, global_data){
-            state.global_data = global_data;
-        },
         setHasPermission(state, hasPermission){
             state.hasPermission = hasPermission;
-        },
-        setLabels(state, labels){
-            state.labels = labels;
-        },
-        setTranslation(state, translation){
-            state.translation = translation;
         },
         setStoreResponse(state, storeResponse){
             state.storeResponse = storeResponse;
@@ -397,44 +337,6 @@ export const store = new Vuex.Store({
             }
             context.commit('setHasPermission', false);
             return false;
-        },
-        // used to get a label in the current language
-        __(context, request){
-            request = request.replace('/','.');
-            let transPathArr = request.split('.');
-            let allLabels = context.getters.get_labels;
-            let isOK = true;
-            let translationGroupName = request.split('::');
-
-            // Handle group translations
-            if(request.indexOf('::') !== -1){
-                let groupName = translationGroupName[0];
-                let labelKey = request.replace(groupName+'::','');
-                let transPathArr = labelKey.split('.');
-                let groupLabels = allLabels[groupName];
-
-                for (let key in transPathArr) {
-                    if (groupLabels[transPathArr[key]] === undefined) {
-                        isOK = false;
-                        context.commit('setTranslation', "* " + request);
-                        break;
-                    }
-                    groupLabels = groupLabels[transPathArr[key]];
-                }
-                allLabels = groupLabels;
-            }else {
-                for (let key in transPathArr) {
-                    if (allLabels[transPathArr[key]] === undefined) {
-                        isOK = false;
-                        context.commit('setTranslation', "* " + request);
-                        break;
-                    }
-                    allLabels = allLabels[transPathArr[key]];
-                }
-            }
-            if (isOK){
-                context.commit('setTranslation', allLabels);
-            }
         }
     }
 });

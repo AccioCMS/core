@@ -859,8 +859,11 @@ class PostModel extends Model{
      * @return object|null
      */
     public function mediaField($field){
-        if($this->media){
-            return $this->media->where('field', $field);
+        if(count($this->media)){
+            $results = $this->media->where('field', $field);
+            if(count($results)) {
+                return $results;
+            }
         }
 
         return null;
