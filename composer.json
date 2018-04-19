@@ -24,7 +24,7 @@
             "src/support/helpers.php"
         ],
         "psr-4": {
-            "Manaferra\\": "src/"
+            "Accio\\": "src/"
         }
     },
 
