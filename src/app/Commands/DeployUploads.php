@@ -56,11 +56,11 @@ class DeployUploads extends Command
             if(!file_exists(config('deploy.shared.to'))){
 
                 $this->comment("\nCloning storage to shared directory");
+
                 exec('cp -r '.storage_path().' '.config('deploy.shared.to').'/', $shellResponse, $status);
 
                 if ($status != 0) {
                     throw new \Exception("Storage could not be cloned!");
-                    return;
                 }
 
                 $this->info("Storage cloned");
@@ -73,7 +73,8 @@ class DeployUploads extends Command
     /**
      * Copy Uploads
      *
-     * @return $this;
+     * @return $this
+     * @throws \Exception
      */
     private function doCopyUplaods(){
         // Copy local uploads to shared storage directory
@@ -94,7 +95,6 @@ class DeployUploads extends Command
 
                 if ($status != 0) {
                     throw new \Exception("Local upload files could not be copied to destination directory");
-                    return;
                 }
 
                 $this->info("Local uploads copied!");
@@ -106,6 +106,7 @@ class DeployUploads extends Command
 
     /**
      * Create symlinks
+     *
      * @return $this
      */
     private function doSymLinks(){

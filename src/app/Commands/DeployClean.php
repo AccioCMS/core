@@ -53,7 +53,7 @@ class DeployClean extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @throws \Exception
      */
     public function handle(){
         if(config('deploy.clean_directories')){
@@ -78,7 +78,6 @@ class DeployClean extends Command
 
                     if ($status != 0) {
                         throw new \Exception("Command '$command' could not be run!");
-                        return;
                     }else {
                         $this->info("Directory " . $directory . ' cleaned.');
                     }
