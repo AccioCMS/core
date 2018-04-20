@@ -58,8 +58,9 @@ class DeployEnv extends Command
             exec($command, $shellResponse, $status);
 
             if ($status != 0) {
+                $this->error("Production Env file could not be renamed to .env");
                 throw new \Exception("Production Env file could not be renamed to .env");
-                return;
+                return false;
             }
 
             $this->info("Production env file renamed!");
