@@ -106,7 +106,6 @@ class DeploySetPermissions extends Command
                     exec($command, $shellResponse, $status);
                     if ($status != 0) {
                         throw new \Exception("Command '$command' could not be run!");
-                        return;
                     }
                 }
             }
@@ -116,7 +115,9 @@ class DeploySetPermissions extends Command
     }
 
     /**
+     *
      * Set apache's user & groups permissions
+     *
      * @throws \Exception
      */
     private function chown(){
@@ -128,8 +129,8 @@ class DeploySetPermissions extends Command
             foreach($chownPermissions  as $permission){
                 if(!isset($permission['group']) || !$permission['group']){
                     throw new \Exception("No group defined for path  '".permission['path']."'!");
-                    return;
                 }
+
                 if($permission['path'] && file_exists($permission['path'])) {
                     $command = "";
 
@@ -191,7 +192,6 @@ class DeploySetPermissions extends Command
                     exec($command, $shellResponse, $status);
                     if ($status != 0) {
                         throw new \Exception("Apache permission could not be set. Command '$command' could not be run!");
-                        return;
                     }
                 }
             }

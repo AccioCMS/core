@@ -43,7 +43,7 @@ class DeployDB extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @throws \Exception
      */
     public function handle()
     {
@@ -75,7 +75,6 @@ class DeployDB extends Command
 
                         if ($status != 0) {
                             throw new \Exception("Database '" . $file->getPathName() . "' not deployed!");
-                            return;
                         }else {
                             // Delete file
                             File::delete($file->getPathName());

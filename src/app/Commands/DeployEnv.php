@@ -31,20 +31,13 @@ class DeployEnv extends Command
         parent::__construct();
     }
 
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
     public function handle()
     {
-
         $this->comment("\nRenaming production env file");
 
         // Ensure .env.production file exists
         if(!file_exists(base_path('.env.production'))){
-            $this->error("Production Env file could not be found");
-            return;
+            throw new \Exception("Production Env file could not be found");
         }else{
 
             // Delete .env if it exists
@@ -59,7 +52,6 @@ class DeployEnv extends Command
 
             if ($status != 0) {
                 throw new \Exception("Production Env file could not be renamed to .env");
-                return;
             }
 
             $this->info("Production env file renamed!");
