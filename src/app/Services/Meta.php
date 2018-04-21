@@ -246,8 +246,8 @@ class  Meta
         }
 
         // Tags
-        if($postObj->cachedTags){
-            foreach($postObj->cachedTags as $tag){
+        if($postObj->tags){
+            foreach($postObj->tags as $tag){
                 Meta::set("article:tag", $tag->title, "propery");// Tag words associated with this article.
             }
         }
