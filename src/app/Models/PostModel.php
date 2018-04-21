@@ -620,57 +620,6 @@ class PostModel extends Model{
         }
         return $query;
     }
-    /**
-     * Get Cached Tags
-     *
-     * @return string
-     */
-    public function getCachedTagsAttribute()
-    {
-        // Find cached relations from this post type
-        $relations = TagRelation::getFromCache($this->getTable())->where('belongsToID',$this->postID);
-        $tagsID = $relations->pluck(['tagID'])->all();
-
-        // Find cached tags from relations
-        return \App\Models\Tag::getFromCache($this->getTable())->whereIn('tagID',$tagsID);
-    }
-
-    /**
-     * Cached categories that belong to a post
-     *
-     * @return string
-     */
-    public function getCachedCategoriesAttribute()
-    {
-        // Find cached relations from this post type
-        $relations = CategoryRelation::getFromCache($this->getTable())->where('belongsToID',$this->postID);
-        $categoriesID = $relations->pluck(['categoryID'])->all();
-
-        // Find cached categories from relations
-        if(Category::getFromCache()){
-            return Category::getFromCache()->whereIn('categoryID',$categoriesID);
-        }
-        return;
-    }
-
-    /**
-     * Get Primary Cached category
-     *
-     * @return string
-     */
-    public function getCachedCategoryAttribute()
-    {
-        // Find cached relations from this post type
-        $relations = CategoryRelation::getFromCache($this->getTable())->where('belongsToID',$this->postID );
-        $categoryID = $relations->pluck(['categoryID'])->first();
-
-        // Find cached categories from relations
-        if(Category::getFromCache()){
-            return Category::getFromCache()->where('categoryID',$categoryID)->first();
-        }
-
-        return;
-    }
 
     /**
      *
@@ -877,6 +826,58 @@ class PostModel extends Model{
     public function withMediaField($mediaField){
         $this->mediaField = $mediaField;
         return $this;
+    }
+
+    /**
+     * Get Cached Tags
+     *
+     * @return string
+     */
+    public function getCachedTagsAttribute()
+    {
+        // Find cached relations from this post type
+        $relations = TagRelation::getFromCache($this->getTable())->where('belongsToID',$this->postID);
+        $tagsID = $relations->pluck(['tagID'])->all();
+
+        // Find cached tags from relations
+        return \App\Models\Tag::getFromCache($this->getTable())->whereIn('tagID',$tagsID);
+    }
+
+    /**
+     * Cached categories that belong to a post
+     *
+     * @return string
+     */
+    public function getCachedCategoriesAttribute()
+    {
+        // Find cached relations from this post type
+        $relations = CategoryRelation::getFromCache($this->getTable())->where('belongsToID',$this->postID);
+        $categoriesID = $relations->pluck(['categoryID'])->all();
+
+        // Find cached categories from relations
+        if(Category::getFromCache()){
+            return Category::getFromCache()->whereIn('categoryID',$categoriesID);
+        }
+        return;
+    }
+
+    /**
+     * Get Primary Cached category
+     *
+     * @return string
+     */
+    public function getCachedCategoryAttribute()
+    {
+        // Find cached relations from this post type
+        $relations = CategoryRelation::getFromCache($this->getTable())->where('belongsToID',$this->postID );
+        $categoryID = $relations->pluck(['categoryID'])->first();
+
+        // Find cached categories from relations
+        if(Category::getFromCache()){
+            return Category::getFromCache()->where('categoryID',$categoryID)->first();
+        }
+
+        return;
     }
 
     /**

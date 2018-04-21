@@ -907,7 +907,7 @@ trait PostTrait{
      */
     public function printTags($customView = '', $ulClass =""){
         return new HtmlString(view()->make(($customView ? $customView : "vendor.tags.default"), [
-            'tagsList' => $this->cachedTags,
+            'tagsList' => $this->tags,
             'ulClass'=> $ulClass,
             'postTypeSlug' => $this->getTable()
 
@@ -920,7 +920,7 @@ trait PostTrait{
      * @return boolean Returns true if found
      */
     public function hasTags(){
-        if(isset($this->tags) || isset($this->cachedTags)){
+        if(isset($this->tags) || isset($this->tags)){
             return true;
         }
         return false;
