@@ -38,8 +38,8 @@ class DeployRelease extends Command
      */
     public function handle()
     {
-        $this->call('deploy:permissions');
         $this->call('deploy:clean');
+        $this->call('deploy:permissions');
         $this->call('deploy:uploads');
         $this->call('deploy:env');
         $this->call('deploy:db');

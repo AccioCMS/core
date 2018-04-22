@@ -400,22 +400,27 @@ class PostModel extends Model{
         $tmpTagIDs = [];
         $postResult = [];
 
-        foreach($this->tags as $tag){
+        $tags = $this->tags;
+        foreach($tags as $tag){
             $tmpTagIDs[] = $tag->tagID;
         }
 
         $count = 0;
         $posts = Post::getFromCache($this->getTable());
         foreach($posts as $post){
-            foreach($post->tags as $tag){
+            foreach($tags as $tag){
                 if(in_array($tag->tagID, $tmpTagIDs) && $post->postID != $this->postID && $count < $numberOfPosts){
                     $postResult[$post->postID] = $post;
                     $count++;
                 }
             }
+            if($count == $numberOfPosts){
+                break;
+            }
         }
         return $postResult;
     }
+
 
     /**
      * Delete caches of posts by post type
