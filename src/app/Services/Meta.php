@@ -18,8 +18,8 @@ class  Meta
      * @var array
      */
     private $allowedDuplicateMeta = [
-        "article:section",
-        "article:tag"
+      "article:section",
+      "article:tag"
     ];
 
     /**
@@ -52,6 +52,8 @@ class  Meta
      */
     private $modelData;
 
+    private $metaIsPrinted = false;
+
     /**
      * Set meta
      * @param $name
@@ -66,8 +68,8 @@ class  Meta
             if($overwrite) {
                 if (in_array($name, $this->allowedDuplicateMeta)) {
                     $this->metaList[$name][] = [
-                        'type' => $metaType,
-                        'content' => $content
+                      'type' => $metaType,
+                      'content' => $content
                     ];
                 } else {
 
@@ -77,8 +79,8 @@ class  Meta
                     }
 
                     $this->metaList[$name] = [
-                        'type' => $metaType,
-                        'content' => $content
+                      'type' => $metaType,
+                      'content' => $content
                     ];
                 }
             }
@@ -267,9 +269,11 @@ class  Meta
                 Meta::set("og:image:alt",$imageObj->description, "property");
             }
 
-            $image = explode("x", $imageObj->dimensions);
-            Meta::set("og:image:width", $image[0], "property");
-            Meta::set("og:image:height",$image[1], "property");
+            if($imageObj->dimensions) {
+                $image = explode("x", $imageObj->dimensions);
+                Meta::set("og:image:width", $image[0], "property");
+                Meta::set("og:image:height", $image[1], "property");
+            }
         }
         return $this;
     }
@@ -279,12 +283,31 @@ class  Meta
      * @return $this
      */
     public function printMetaTags(){
-        $this->printTitle();
-        $this->printMetaTagsList();
-        $this->printCanonical();
-        $this->printHrefLang();
+        if(!$this->getMetaIsPrinted()){
+            $this->printTitle();
+            $this->printMetaTagsList();
+            $this->printCanonical();
+            $this->printHrefLang();
+            $this->setMetaIsPrinted();
+        }
         return $this;
     }
+
+    /**
+     * Set if media is printed
+     */
+    public function setMetaIsPrinted(){
+        $this->metaIsPrinted = true;
+    }
+
+    /**
+     * Get if media is printed
+     */
+    public function getMetaIsPrinted(){
+        return $this->metaIsPrinted;
+    }
+
+
 
     /**
      * Print title
@@ -431,8 +454,8 @@ class  Meta
     public function setHrefLang($url, $hreflang){
         if($url && $hreflang) {
             $this->hreflang[] = [
-                'url' => $url,
-                'lang' => $hreflang
+              'url' => $url,
+              'lang' => $hreflang
             ];
         }
         return $this;
