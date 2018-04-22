@@ -22,7 +22,7 @@ trait CustomFieldsValuesTrait
      */
     public function customFieldValue($key){
         $value = null;
-        if($this->isCustomField($key)) {
+        if($this->hasCustomField($key)) {
             //if translate is enabled in a specific language
             if(isset($this->customFields->$key->{$this->getTranslateLanguage()})){
                 $value = $this->customFields->$key->{$this->getTranslateLanguage()};
@@ -44,7 +44,7 @@ trait CustomFieldsValuesTrait
      * @param $key
      * @return bool
      */
-    public function isCustomField($key){
+    public function hasCustomField($key){
         if($key !== 'customFields' && !array_key_exists($key, $this->getAttributes())){
             if(isset($this->customFields->$key)){
                 return true;
@@ -53,52 +53,57 @@ trait CustomFieldsValuesTrait
         return false;
     }
 
+
     /**
      * Replaces mediaIDs eith the actuall media object
      *
-     * @param array $customFields group of the custom field
      * @param array ...$slugs slugs of media in custom field group
      * @return array
      */
     public function getMediaFromCustomFields($customFields, ...$slugs){
-        $ids = [];
-        foreach($customFields as $customFieldsGroup){
-            foreach($customFieldsGroup as $group){
-                foreach($group as $field => $value){
-                    if(in_array($field, $slugs)){
-                        if(!is_array($value)){
-                            $ids[] = $value;
-                        }else{
-                            foreach($value as $subValue){
-                                $ids[] = $subValue;
-                            }
+        $mediaIDs = [];
+        foreach($customFields as $fields){
+            foreach($fields as $field => $value){
+                if(in_array($field, $slugs)){
+                    if(!is_array($value)){
+                        $mediaIDs[] = $value;
+                    }else{
+                        foreach($value as $subValue){
+                            $mediaIDs[] = $subValue;
                         }
                     }
                 }
             }
         }
-        $media = Media::whereIn("mediaID", $ids)->get()->keyBy("mediaID")->toArray();
+
+        $media = Media::whereIn("mediaID", $mediaIDs)->get()->keyBy("mediaID")->toArray();
 
         $object = [];
-        foreach($customFields as $cKey => $customFieldsGroup){
-            foreach($customFieldsGroup as $group){
-                foreach($group as $field => $value){
-                    if(in_array($field, $slugs)){
-                        if(!is_array($value)){
-                            $group->$field = new Media($media[$value]);
-                        }else{
-                            $tmp = [];
-                            foreach($value as $subValue){
+        $l = 0;
+        foreach($customFields as $fields){
+            $l++;
+            foreach($fields as $field => $value){
+                if(in_array($field, $slugs)){
+                    if(isset($media[$value])) {
+                        $tmp = [];
+                        if (!is_array($value)) {
+                            $fields->$field = new Media($media[$value]);
+                        } else {
+                            foreach ($value as $subValue) {
                                 $tmp[] = new Media($media[$value]);
                             }
-                            $group->$field = $tmp;
+                            $fields->$field = $tmp;
                         }
+                    }else{
+                        $fields->$field = null;
                     }
                 }
-                $object[$cKey][] = $group;
             }
+
+            $object[] = $fields;
         }
 
+        $object = (object) $object;
         return $object;
     }
 }

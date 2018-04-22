@@ -54,11 +54,11 @@ class CategoryModel extends Model{
      * @var array
      */
     protected $casts = [
-        'title' => 'object',
-        'description' => 'object',
-        'slug' => 'object',
-        'isVisible' => 'object',
-        'customFields' => 'object',
+      'title' => 'object',
+      'description' => 'object',
+      'slug' => 'object',
+      'isVisible' => 'object',
+      'customFields' => 'object',
     ];
 
     /**
@@ -96,17 +96,17 @@ class CategoryModel extends Model{
      */
     protected static function menuLinkPanel(){
         return [
-            'label' => 'Category',
-            'controller' => 'CategoryController',
-            'search' => [
-                'label' => trans('base.search'),
-                'placeholder' => trans('base.searchPlaceholder'),
-                'url' => route('backend.category.menuPanelItems', ['keyword' => ""])
-            ],
-            'items' => [
-                'label' => trans('base.latest'),
-                'url' => route('backend.category.menuPanelItems')
-            ],
+          'label' => 'Category',
+          'controller' => 'CategoryController',
+          'search' => [
+            'label' => trans('base.search'),
+            'placeholder' => trans('base.searchPlaceholder'),
+            'url' => route('backend.category.menuPanelItems', ['keyword' => ""])
+          ],
+          'items' => [
+            'label' => trans('base.latest'),
+            'url' => route('backend.category.menuPanelItems')
+          ],
         ];
     }
 
@@ -123,9 +123,9 @@ class CategoryModel extends Model{
         $postType = PostType::findByID($this->postTypeID);
 
         $data = [
-            'categoryID'    => $this->categoryID,
-            'categorySlug'  => $this->slug,
-            'postTypeSlug'  => cleanPostTypeSlug($postType->slug),
+          'categoryID'    => $this->categoryID,
+          'categorySlug'  => $this->slug,
+          'postTypeSlug'  => cleanPostTypeSlug($postType->slug),
         ];
 
         $this->setAutoTranslate($previousAutoTranslate);
@@ -217,20 +217,20 @@ class CategoryModel extends Model{
      */
     public function metaData(){
         Meta::setTitle($this->title)
-            ->set("description", $this->description)
-            ->set("og:type", "profile", "property")
-            ->set("og:title", $this->title, "property")
-            ->set("og:description", $this->description, "property")
-            ->set("og:url",$this->href, "property")
-            ->setCanonical($this->href)
-            ->setHrefLangData($this)
-            ->setWildcards([
-                '{title}' => $this->title,
-                '{siteTitle}' => settings('siteTitle')
-            ]);
+          ->set("description", $this->description)
+          ->set("og:type", "profile", "property")
+          ->set("og:title", $this->title, "property")
+          ->set("og:description", $this->description, "property")
+          ->set("og:url",$this->href, "property")
+          ->setCanonical($this->href)
+          ->setHrefLangData($this)
+          ->setWildcards([
+            '{title}' => $this->title,
+            '{siteTitle}' => settings('siteTitle')
+          ]);
     }
 
-     /**
+    /**
      * Get categories from cache. Cache is generated if not found
      *
      * @param  string $cacheName  Name of the cache ex "post_services". Prefix "categories_" is added automatically on cache name. Default: categories
@@ -244,10 +244,10 @@ class CategoryModel extends Model{
 
         //we need an empty cache to fill it later
         if(!Cache::has($cacheName)){
-            $cachedPosts = new \stdClass();
-            Cache::forever($cacheName,$cachedPosts);
+            $cachedItems = new \stdClass();
+            Cache::forever($cacheName,$cachedItems);
         }else{
-            $cachedPosts = Cache::get($cacheName);
+            $cachedItems = Cache::get($cacheName);
         }
 
         //set cache in this language

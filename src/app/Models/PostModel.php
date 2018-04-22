@@ -80,11 +80,11 @@ class PostModel extends Model{
      * @var array
      */
     protected $casts = [
-        'title' => 'object',
-        'slug' => 'object',
-        'content' => 'object',
-        'status' => 'object',
-        'customFields' => 'object',
+      'title' => 'object',
+      'slug' => 'object',
+      'content' => 'object',
+      'status' => 'object',
+      'customFields' => 'object',
     ];
 
     /**
@@ -154,7 +154,7 @@ class PostModel extends Model{
         }
 
         return $model->newQuery()->with(
-            is_string($relations) ? func_get_args() : $relations
+          is_string($relations) ? func_get_args() : $relations
         );
     }
 
@@ -175,18 +175,18 @@ class PostModel extends Model{
         $panels =[];
         foreach(PostType::getFromCache() as $postType){
             $panels[] = [
-                'label' => $postType->name,
-                'belongsTo' => $postType->slug,
-                'controller' => ($postType->hasCustomController() ? $postType->getCustomController() : 'PostController'),
-                'search' => [
-                    'label' => trans('base.search'),
-                    'placeholder' => trans('base.searchPlaceholder'),
-                    'url' => route('backend.post.menuPanelItems', ['keyword' => "", "postTypeSlug" => $postType->slug])
-                ],
-                'items' => [
-                    'label' => trans('base.latest'),
-                    'url' => route('backend.post.menuPanelItems', ["postTypeSlug" => $postType->slug])
-                ],
+              'label' => $postType->name,
+              'belongsTo' => $postType->slug,
+              'controller' => ($postType->hasCustomController() ? $postType->getCustomController() : 'PostController'),
+              'search' => [
+                'label' => trans('base.search'),
+                'placeholder' => trans('base.searchPlaceholder'),
+                'url' => route('backend.post.menuPanelItems', ['keyword' => "", "postTypeSlug" => $postType->slug])
+              ],
+              'items' => [
+                'label' => trans('base.latest'),
+                'url' => route('backend.post.menuPanelItems', ["postTypeSlug" => $postType->slug])
+              ],
             ];
         }
         return $panels;
@@ -202,10 +202,10 @@ class PostModel extends Model{
         $this->setAutoTranslate(false);
 
         $data = [
-            'postID'        => $this->postID,
-            'postSlug'      => $this->slug,
-            'date'          => date('Y-m-d',strtotime($this->created_at)),
-            'postTypeSlug'  => cleanPostTypeSlug($this->getTable())
+          'postID'        => $this->postID,
+          'postSlug'      => $this->slug,
+          'date'          => date('Y-m-d',strtotime($this->created_at)),
+          'postTypeSlug'  => cleanPostTypeSlug($this->getTable())
         ];
 
         $this->setAutoTranslate($previousAutoTranslate);
@@ -245,7 +245,7 @@ class PostModel extends Model{
                 return self::setCachePostType($cacheName, $languageSlug);
             }
         }else{
-        // Handle custom cache methods
+            // Handle custom cache methods
 
             // We need an empty cache to fill it later
             if(!Cache::has($cacheName)){
@@ -342,8 +342,8 @@ class PostModel extends Model{
             $posts = Cache::get("most_read_articles_ids");
             if(!isset($posts[$post->postID])){
                 $posts[$post->postID] = [
-                    'date' => $publishedDate,
-                    'count' => 0
+                  'date' => $publishedDate,
+                  'count' => 0
                 ];
             }
             $posts[$post->postID]['count'] += 1;
@@ -369,13 +369,13 @@ class PostModel extends Model{
         // if posts doesn't not exist in this language, query them
         if(!isset($cachedPosts->$languageSlug)){
             $posts = (new self())->setTable($postTypeSlug)
-                ->with('featuredImage')
-                ->with('categories')
-                ->with('media')
-                ->published($languageSlug)
-                ->limit(1000)
-                ->orderBy('published_at','DESC')
-                ->get();
+              ->with('featuredImage')
+              ->with('categories')
+              ->with('media')
+              ->published($languageSlug)
+              ->limit(1000)
+              ->orderBy('published_at','DESC')
+              ->get();
 
             $cachedPosts->$languageSlug = $posts;
 
@@ -447,15 +447,15 @@ class PostModel extends Model{
         //if posts doesn't  exists in this language, query them
         if(!isset($cachedPosts->$languageSlug)){
             $posts = (new self())->setTable($postTypeSlug)
-                ->join('categories_relations','categories_relations.belongsToID',$postTypeSlug.'.postID')
-                ->where('categories_relations.categoryID', '=', $categoryID)
-                ->with('featuredImage')
-                ->with('media')
-                ->published($languageSlug)
-                ->limit(1000)
-                ->orderBy($postTypeSlug.'.published_at','DESC')
-                ->get()
-                ->keyBy('postID');
+              ->join('categories_relations','categories_relations.belongsToID',$postTypeSlug.'.postID')
+              ->where('categories_relations.categoryID', '=', $categoryID)
+              ->with('featuredImage')
+              ->with('media')
+              ->published($languageSlug)
+              ->limit(1000)
+              ->orderBy($postTypeSlug.'.published_at','DESC')
+              ->get()
+              ->keyBy('postID');
 
             $cachedPosts->$languageSlug = $posts;
 
@@ -594,8 +594,8 @@ class PostModel extends Model{
             $languageSlug = App::getLocale();
         }
         return $query
-            ->where('status->' . $languageSlug, '!=', 'published')
-            ->where('published_at', '>=', new DateTime());
+          ->where('status->' . $languageSlug, '!=', 'published')
+          ->where('published_at', '>=', new DateTime());
     }
 
 
@@ -745,21 +745,21 @@ class PostModel extends Model{
      */
     public function metaData(){
         Meta::setTitle($this->title)
-            ->set("description", $this->content())
-            ->set("author", $this->cachedUser()->firstName." ".$this->cachedUser()->lastName)
-            ->set("og:type", "article", "property")
-            ->set("og:title", $this->title, "property")
-            ->set("og:description", $this->content(), "property")
-            ->set("og:url",$this->href, "property")
-            ->setImageOG($this->featuredImage)
-            ->setArticleOG($this)
-            ->setHrefLangData($this)
-            ->setCanonical($this->href)
-            ->setWildcards([
-                '{categoryTitle}'=>(isset($this->cachedCategory->title) ? $this->cachedCategory->title :  null),
-                '{title}' => $this->title,
-                '{siteTitle}' => settings('siteTitle')
-            ]);
+          ->set("description", $this->content())
+          ->set("author", $this->cachedUser()->firstName." ".$this->cachedUser()->lastName)
+          ->set("og:type", "article", "property")
+          ->set("og:title", $this->title, "property")
+          ->set("og:description", $this->content(), "property")
+          ->set("og:url",$this->href, "property")
+          ->setImageOG($this->featuredImage)
+          ->setArticleOG($this)
+          ->setHrefLangData($this)
+          ->setCanonical($this->href)
+          ->setWildcards([
+            '{categoryTitle}'=>(isset($this->cachedCategory->title) ? $this->cachedCategory->title :  null),
+            '{title}' => $this->title,
+            '{siteTitle}' => settings('siteTitle')
+          ]);
 
 
     }

@@ -38,9 +38,9 @@ trait PostTrait{
     }
     public function noty($type, $message, $key = ""){
         array_push($this->notyMessages,[
-            'key' => $key,
-            'type' => $type,
-            'message' => $message,
+          'key' => $key,
+          'type' => $type,
+          'message' => $message,
         ]);
         return;
     }
@@ -64,8 +64,8 @@ trait PostTrait{
             if(!$showUnPublished){
                 $post = $cachedPosts->filter(function ($postData) use($slug) {
                     return (
-                        $postData->slug == $slug &&
-                        $postData->status == 'published'
+                      $postData->slug == $slug &&
+                      $postData->status == 'published'
                     );
 
                 });
@@ -228,16 +228,16 @@ trait PostTrait{
             }
 
             return [
-                'error' => false,
-                'postID' => $postID,
-                'postType' => $data['postType'],
-                'noty' => $postObj->getNotyMessages()
+              'error' => false,
+              'postID' => $postID,
+              'postType' => $data['postType'],
+              'noty' => $postObj->getNotyMessages()
             ];
         }else{
             return [
-                'error' => true,
-                'errorMessages' => $errorMessages,
-                'noty' => $postObj->getNotyMessages()
+              'error' => true,
+              'errorMessages' => $errorMessages,
+              'noty' => $postObj->getNotyMessages()
             ];
         }
     }
@@ -252,9 +252,9 @@ trait PostTrait{
     private static function validateStore($data){
         // custom messages for validation
         $validationMessagesTemplate = array(
-            'required'=> "{{field}} can't be empty",
-            'email'=>"{{field}} must be an email",
-            'number'=>"{{field}} must be a number",
+          'required'=> "{{field}} can't be empty",
+          'email'=>"{{field}} must be an email",
+          'number'=>"{{field}} must be a number",
         );
         $validationMessages = array();
         $validationRules = array();
@@ -467,8 +467,8 @@ trait PostTrait{
         }
 
         return array(
-            'post' => $postObj,
-            'files' => $files
+          'post' => $postObj,
+          'files' => $files
         );
     }
 
@@ -551,11 +551,11 @@ trait PostTrait{
             $newCategoryRelation = [];
             foreach ($selectedCategories as $selectedCategory){
                 $newCategoryRelation[] = [
-                    'categoryID' => $selectedCategory['categoryID'],
-                    'belongsToID' => $postID,
-                    'belongsTo' => $postTypeSlug,
-                    "created_at" =>  \Carbon\Carbon::now(),
-                    "updated_at" => \Carbon\Carbon::now(),
+                  'categoryID' => $selectedCategory['categoryID'],
+                  'belongsToID' => $postID,
+                  'belongsTo' => $postTypeSlug,
+                  "created_at" =>  \Carbon\Carbon::now(),
+                  "updated_at" => \Carbon\Carbon::now(),
                 ];
                 $categoriesIDs[] = $selectedCategory['categoryID'];
             }
@@ -565,7 +565,7 @@ trait PostTrait{
                 // create task
                 Task::create('categories_relations', 'create', $newCategoryRelation, ['postID' => $postID, 'postType' => $postTypeSlug]);
             }else{
-            // if post is in the main database
+                // if post is in the main database
                 $insertedCategories = DB::table('categories_relations')->insert($newCategoryRelation);
                 if ($insertedCategories){
                     // create task
@@ -604,11 +604,11 @@ trait PostTrait{
                             $tagSlug = str_slug($selectedTag['title'],'-');
                             if(!$getCachedTags->contains($tagSlug)){
                                 $tagsID = DB::table('tags')->insertGetId([
-                                    'postTypeID' => $postType['postTypeID'],
-                                    'createdByUserID' => Auth::user()->userID,
-                                    'title' => $selectedTag['title'],
-                                    'description' => $selectedTag['description'],
-                                    'slug' => $tagSlug,
+                                  'postTypeID' => $postType['postTypeID'],
+                                  'createdByUserID' => Auth::user()->userID,
+                                  'title' => $selectedTag['title'],
+                                  'description' => $selectedTag['description'],
+                                  'slug' => $tagSlug,
                                 ]);
                             }
                         }else{
@@ -617,12 +617,12 @@ trait PostTrait{
 
                         //add new tag relationship
                         $newTagsRelations[] = [
-                            'tagID' => $tagsID,
-                            'belongsToID' => $postID,
-                            'belongsTo' => $postType['slug'],
-                            'language' => $langSlug,
-                            "created_at" =>  \Carbon\Carbon::now(),
-                            "updated_at" => \Carbon\Carbon::now(),
+                          'tagID' => $tagsID,
+                          'belongsToID' => $postID,
+                          'belongsTo' => $postType['slug'],
+                          'language' => $langSlug,
+                          "created_at" =>  \Carbon\Carbon::now(),
+                          "updated_at" => \Carbon\Carbon::now(),
                         ];
                         $tagsIDs[] = $tagsID;
                     }
@@ -633,7 +633,7 @@ trait PostTrait{
                 // create task
                 Task::create('tags_relations', 'create', $newTagsRelations, ['postID' => $postID, 'postType' => $postTypeSlug]);
             }else{
-             // if post is in the main database
+                // if post is in the main database
                 $insertedTags = DB::table('tags_relations')->insert($newTagsRelations);
                 if($insertedTags){
                     // create task
@@ -662,10 +662,10 @@ trait PostTrait{
         foreach($mediaFiles as $fileKey => $files){
             // feature image is treated as a default column
             if($fileKey == 'featuredImage'
-                || $fileKey == 'featuredVideo'
-                || in_array($fileKey, $filesToBeIgnored)
-                || substr($fileKey,0, 6) == 'plugin'
-                ){
+              || $fileKey == 'featuredVideo'
+              || in_array($fileKey, $filesToBeIgnored)
+              || substr($fileKey,0, 6) == 'plugin'
+            ){
                 continue;
             }
             //if not translatable
@@ -728,11 +728,11 @@ trait PostTrait{
         $advancedSearchFields = array();
         foreach ($postTypeFields as $fieldArray){
             if($fieldArray->type->inputType == "image"
-                || $fieldArray->type->inputType == "file"
-                || $fieldArray->type->inputType == "editor"
-                || $fieldArray->type->inputType == "checkbox"
-                || $fieldArray->type->inputType == "dropdown"
-                || $fieldArray->type->inputType == "radio"
+              || $fieldArray->type->inputType == "file"
+              || $fieldArray->type->inputType == "editor"
+              || $fieldArray->type->inputType == "checkbox"
+              || $fieldArray->type->inputType == "dropdown"
+              || $fieldArray->type->inputType == "radio"
             ){
                 continue;
             }
@@ -876,8 +876,8 @@ trait PostTrait{
     public function printFeaturedImage($width = null, $height = null, $defaultFeaturedImageURL = ''){
         if($this->hasFeaturedImage()){
             return new HtmlString(view()->make("vendor.posts.featuredImage", [
-                'imageURL' => $this->featuredImageURL($width, $height, $defaultFeaturedImageURL),
-                'featuredImage' => $this->featuredImage
+              'imageURL' => $this->featuredImageURL($width, $height, $defaultFeaturedImageURL),
+              'featuredImage' => $this->featuredImage
             ])->render());
         }
     }
@@ -891,8 +891,8 @@ trait PostTrait{
     public function printFeaturedVideo($coverImage = ''){
         if($this->hasFeaturedVideo()){
             return new HtmlString(view()->make("vendor.posts.featuredVideo", [
-                'coverImage' => $coverImage,
-                'featuredVideo' => $this->featuredVideo
+              'coverImage' => $coverImage,
+              'featuredVideo' => $this->featuredVideo
             ])->render());
         }
     }
@@ -907,9 +907,9 @@ trait PostTrait{
      */
     public function printTags($customView = '', $ulClass =""){
         return new HtmlString(view()->make(($customView ? $customView : "vendor.tags.default"), [
-            'tagsList' => $this->tags,
-            'ulClass'=> $ulClass,
-            'postTypeSlug' => $this->getTable()
+          'tagsList' => $this->tags,
+          'ulClass'=> $ulClass,
+          'postTypeSlug' => $this->getTable()
 
         ])->render());
     }
@@ -1055,10 +1055,10 @@ trait PostTrait{
         $baseRouteName = str_replace('_','.', $postType->slug);
 
         return [
-            'defaultRoute' => $baseRouteName.'.single',
-            'list' => [
-                $baseRouteName.'.single' => $postType->name.' single Post',
-            ]
+          'defaultRoute' => $baseRouteName.'.single',
+          'list' => [
+            $baseRouteName.'.single' => $postType->name.' single Post',
+          ]
         ];
     }
 
@@ -1072,12 +1072,12 @@ trait PostTrait{
         $baseRouteName = str_replace('_','.', $postType->slug);
 
         return [
-            'defaultRoute' => $baseRouteName.'.index',
-            'list' => [
-                $baseRouteName.'.index' => $postType->name.' Index'
-            ]
+          'defaultRoute' => $baseRouteName.'.index',
+          'list' => [
+            $baseRouteName.'.index' => $postType->name.' Index'
+          ]
         ];
     }
 
-   
+
 }
