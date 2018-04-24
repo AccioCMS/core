@@ -811,8 +811,6 @@ class PostModel extends Model{
                 '{title}' => $this->title,
                 '{siteTitle}' => settings('siteTitle')
             ]);
-
-
     }
 
     /**
@@ -851,7 +849,6 @@ class PostModel extends Model{
         return $query;
     }
 
-
     /**
      * Get media of a specific field
      *
@@ -868,6 +865,7 @@ class PostModel extends Model{
 
         return null;
     }
+
     /**
      * Set Media field
      *
