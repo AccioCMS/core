@@ -252,6 +252,10 @@ if(!function_exists('metaTags')) {
      * @return string
      */
     function metaTags($modelData = null, $customData = []){
+        if(\Accio\Support\Facades\Meta::getMetaIsPrinted()){
+            return;
+        }
+
         $currentMenuLink =  \App\Models\MenuLink::getActive();
 
         // Set model data

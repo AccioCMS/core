@@ -82,6 +82,14 @@ trait MenuLinkTrait{
         }
     }
 
+    /**
+     * Match route based on current menulink and route
+     *
+     * @param array $currentMenuLinkIDs
+     * @param object $menuLink
+     * @param object $currentRoute
+     * @param object $menuLinkRoute
+     */
     private static function matchRoute(&$currentMenuLinkIDs, $menuLink,$currentRoute, $menuLinkRoute){
         $menuLinksParams = self::decodeParams($menuLink->params);
 
@@ -132,6 +140,12 @@ trait MenuLinkTrait{
         }
     }
 
+    /**
+     * Check if the menulink has a category linked to currrent Meta model data
+     *
+     * @param array $currentMenuLinkIDs
+     * @param object $menuLink
+     */
     private static function checkCategoryMatch(&$currentMenuLinkIDs, $menuLink){
         // check for category match
         if (Meta::getModelData()
