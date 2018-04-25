@@ -120,9 +120,9 @@ trait PostTrait{
 
         if($cachedPosts) {
             if(!$showUnPublished){
-                $post = $cachedPosts->where('status', 'published')->where('id', $postID);
+                $post = $cachedPosts->where('status', 'published')->where('postID', $postID);
             }else{
-                $post = $cachedPosts->where('slug', $postID);
+                $post = $cachedPosts->where('postID', $postID);
             }
         }
 
