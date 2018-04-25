@@ -21,7 +21,7 @@
                 </div>
             </div>
 
-            <div id="popupButtons">
+            <div id="cropImageBtns">
                 <hr>
                 <div class="btn-container">
                     <button class="btn btn-warning" @click="cancelCrop">{{trans.__cancelBtn}}</button>
