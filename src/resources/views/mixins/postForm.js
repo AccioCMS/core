@@ -71,6 +71,7 @@ export const postForm = {
                     this.isCategoryRequired = resp.body.isCategoryRequired;
                     this.hasTags = resp.body.hasTags;
                     this.isTagRequired = resp.body.isTagRequired;
+                    this.isFeaturedImageRequired = resp.body.isFeaturedImageRequired;
                 });
 
             // get all categories of post type
@@ -271,6 +272,7 @@ export const postForm = {
                     this.hasCategories = resp.body.hasCategories;
                     this.isCategoryRequired = resp.body.isCategoryRequired;
                     this.isTagRequired = resp.body.isTagRequired;
+                    this.isFeaturedImageRequired = resp.body.isFeaturedImageRequired;
                     this.hasTags = resp.body.hasTags;
 
                     // TODO me i ndreq edhe custom fields edhe me ndrru ne nje funksion tjeter qita

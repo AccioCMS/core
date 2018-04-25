@@ -3,6 +3,7 @@ namespace Accio\App\Traits;
 
 use App\Models\Media;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Mockery\Exception;
 use Illuminate\Support\Facades\File;
@@ -179,6 +180,9 @@ trait MediaTrait{
                             }
                         }
                     }
+
+                    // delete cache
+                    Cache::flush();
 
                     // Fire event
                     Event::fire('media:created', [$media, $request]);

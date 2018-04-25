@@ -493,6 +493,10 @@
                         <a class="btn btn-danger" v-if="mediaSelectedFiles['featuredVideo']" @click="deleteSelectedMediaFile('featuredVideo', 0)">{{trans.__remove}}</a>
                     </div>
 
+                    <div class="form-group" style="clear: both; padding-top: 10px;">
+                        <div class="alert" v-if="StoreResponse.errors.files_featuredImage" v-for="error in StoreResponse.errors.files_featuredImage">{{ error }}</div>
+                    </div>
+
                 </div>
 
             </div>
@@ -798,6 +802,7 @@
                     selectedTags: this.selectedTags,
                     isCategoryRequired: this.isCategoryRequired,
                     isTagRequired: this.isTagRequired,
+                    isFeaturedImageRequired: this.isFeaturedImageRequired,
                     published_at: this.published_at,
                     createdByUserID: this.createdByUserID,
                     redirect: redirectChoice,

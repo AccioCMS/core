@@ -120,9 +120,9 @@ trait PostTrait{
 
         if($cachedPosts) {
             if(!$showUnPublished){
-                $post = $cachedPosts->where('status', 'published')->where('id', $postID);
+                $post = $cachedPosts->where('status', 'published')->where('postID', $postID);
             }else{
-                $post = $cachedPosts->where('slug', $postID);
+                $post = $cachedPosts->where('postID', $postID);
             }
         }
 
@@ -367,6 +367,14 @@ trait PostTrait{
             }
         }
 
+        // Validate tags
+        if($data['isFeaturedImageRequired']){
+            if(!isset($data['files']) || !isset($data['files']['featuredImage']) || (isset($data['files']['featuredImage']) && !count($data['files']['featuredImage']))){
+                $validationMessages["files_featuredImage.required"] = str_replace("{{field}}","Featured Image ",$validationMessagesTemplate["required"]);
+                $validationRules["files_featuredImage"] = 'required';
+                $validationValues["featuredImage"] = "NONE";
+            }
+        }
 
         // Validatate categories
         if($data['isCategoryRequired']){

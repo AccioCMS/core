@@ -3,6 +3,7 @@
 namespace Accio\App\Http\Controllers\Backend;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -101,6 +102,10 @@ class BaseMediaController extends MainController{
                     "updated_at" => \Carbon\Carbon::now(),
                 ]);
             }
+
+            // delete cache
+            Cache::flush();
+
             return "OK";
         }
         return "ERR";
@@ -123,6 +128,9 @@ class BaseMediaController extends MainController{
             // get file info from database
             $media = \App\Models\Media::find($file['mediaID']);
             if ($media->delete()){ // delete from database
+                // delete cache
+                Cache::flush();
+
                 if(file_exists($media->url)) {
                     unlink($media->url); // delete original file
                 }
@@ -187,6 +195,7 @@ class BaseMediaController extends MainController{
                 $originalImage->insert($watermark, 'center');
                 $originalImage->save($url, 100);
 
+
                 foreach(\App\Models\Media::$thumbSizes as $thumKey => $thumValue){
                     foreach ($thumValue as $thumParams){
                         $originalThumbWidth = (integer)$thumParams[0];
@@ -211,6 +220,9 @@ class BaseMediaController extends MainController{
                         }
                     }
                 }
+
+                // delete cache
+                Cache::flush();
 
             }else{
                 return "Some files could not be watermaked. Please select only image files.";
@@ -275,6 +287,9 @@ class BaseMediaController extends MainController{
         $img->crop($newWidth, $newHeight, $newX, $newY);
         $img->save($url, 100);
         $media->touch();
+
+        // delete cache
+        Cache::flush();
 
         // Create thumbs
         foreach(\App\Models\Media::$thumbSizes as $thumKey => $thumValue){

@@ -567,9 +567,6 @@ class AppInstall extends Command{
         if(
             // APP KEY is not a a random string
             ($this->config->get('app.key') && $this->config->get('app.key') !== 'SomeRandomString')
-
-            // .env file exists
-            || File::exists(app()->environmentFilePath())
         )
         {
             $this->failure(

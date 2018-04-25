@@ -438,7 +438,7 @@ class BasePostController extends MainController {
      *      postType - in which post type we are posting on
      *      ID (Only in update) - used when we are updating a post not storing a new one
      *
-     * @return array
+     *  @return array
      *
      * */
     public function store(Request $request){
@@ -727,6 +727,7 @@ class BasePostController extends MainController {
             'selectedTags' => $selectedTags,
             'hasTags' => $currentPostType->hasTags,
             'isTagRequired' => $currentPostType->isTagRequired,
+            'isFeaturedImageRequired' => $currentPostType->isFeaturedImageRequired,
             'createdByUserID' => $post->createdByUserID,
             'languages' => $languages,
         );

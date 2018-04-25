@@ -87,6 +87,21 @@
                                     </div>
                                 </div>
 
+                                <div class="form-group" id="form-group-isFeaturedImageRequired">
+                                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__isFeaturedImageRequired}}</label>
+                                    <div class="col-md-6 col-sm-6 col-xs-12">
+                                        <div id="isFeaturedImageRequired" class="btn-group" data-toggle="buttons">
+                                            <label class="btn btn-default yes" :class="{active: form.isFeaturedImageRequired}" @click="form.isFeaturedImageRequired = true">
+                                                <input type="radio" name="isFeaturedImageRequired" value="true"> &nbsp; {{trans.__true}} &nbsp;
+                                            </label>
+                                            <label class="btn btn-primary active no" :class="{active: !form.isFeaturedImageRequired}" @click="form.isFeaturedImageRequired = false">
+                                                <input type="radio" name="isFeaturedImageRequired" value="false"> {{trans.__false}}
+                                            </label>
+                                            <div class="alert" v-if="StoreResponse.errors.isFeaturedImageRequired" v-for="error in StoreResponse.errors.isFeaturedImageRequired">{{ error }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="form-group" id="form-group-hasFeaturedVideo">
                                     <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__hasFeaturedVideo}}</label>
                                     <div class="col-md-6 col-sm-6 col-xs-12">
@@ -333,6 +348,7 @@
                     this.form.isCategoryRequired = resp.body.details.isCategoryRequired;
                     this.form.isTagRequired = resp.body.details.isTagRequired;
                     this.form.hasFeaturedVideo = resp.body.details.hasFeaturedVideo;
+                    this.form.isFeaturedImageRequired = resp.body.details.isFeaturedImageRequired;
                     this.form.slug = resp.body.details.slug;
                     this.form.fields = JSON.parse(resp.body.details.fields);
 
@@ -359,6 +375,7 @@
                 __isCategoryRequired: this.__('postType.form.isCategoryRequired'),
                 __isTagRequired: this.__('postType.form.isTagRequired'),
                 __hasFeaturedVideo: this.__('postType.form.hasFeaturedVideo'),
+                __isFeaturedImageRequired: this.__('postType.form.isFeaturedImageRequired'),
                 __true: this.__('base.booleans.true'),
                 __false: this.__('base.booleans.false'),
                 __none: this.__('postType.form.belongsValues.none'),
@@ -404,6 +421,7 @@
                     isCategoryRequired: false,
                     isTagRequired: false,
                     hasFeaturedVideo: false,
+                    isFeaturedImageRequired: false,
                     slug: '',
                     dbTable: '',
                     isMultiple: false,
