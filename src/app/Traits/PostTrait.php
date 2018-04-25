@@ -367,6 +367,14 @@ trait PostTrait{
             }
         }
 
+        // Validate tags
+        if($data['isFeaturedImageRequired']){
+            if(!isset($data['files']) || !isset($data['files']['featuredImage']) || (isset($data['files']['featuredImage']) && !count($data['files']['featuredImage']))){
+                $validationMessages["files_featuredImage.required"] = str_replace("{{field}}","Featured Image ",$validationMessagesTemplate["required"]);
+                $validationRules["files_featuredImage"] = 'required';
+                $validationValues["featuredImage"] = "NONE";
+            }
+        }
 
         // Validatate categories
         if($data['isCategoryRequired']){

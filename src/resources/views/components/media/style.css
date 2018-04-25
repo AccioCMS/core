@@ -378,7 +378,17 @@
     box-shadow: -1px 0px 20px 1px #333;
     padding: 0;
 }
+#cropImageBtns{
+    clear: both;
+}
+#cropImageBtns hr{
+    margin: 0;
+    margin-bottom: 5px;
+}
 
+#cropImageBtns .btn-container{
+    text-align: right;
+}
 
 /******************************************/
 
@@ -502,7 +512,6 @@ label.btn.btn-default.active {
 }
 @media only screen and (max-width: 1600px) {
     #filesMediaPopup, #albumsContainer {
-        position: absolute;
         top: 50px;
         left: 0;
         right: 300px;
@@ -531,7 +540,6 @@ label.btn.btn-default.active {
 }
 @media only screen and (min-width: 1601px) {
     #filesMediaPopup, #albumsContainer {
-        position: absolute;
         top: 50px;
         left: 0;
         right: 300px;

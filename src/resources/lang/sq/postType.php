@@ -27,6 +27,7 @@ return [
         'isCategoryRequired' => 'Is category required',
         'hasTags' => 'Has tags',
         'isTagRequired' => 'Is tag required',
+        'isFeaturedImageRequired' => 'Is Featured image required',
         'hasFeaturedVideo' => 'Featured video',
     ),
 

@@ -233,6 +233,7 @@ class BasePostTypeController extends MainController{
         $postType->hasTags          = $request->hasTags;
         $postType->isTagRequired    = $request->isTagRequired;
         $postType->hasFeaturedVideo = $request->hasFeaturedVideo;
+        $postType->isFeaturedImageRequired = $request->isFeaturedImageRequired;
 
         // return results
         if ($postType->save()){
@@ -279,6 +280,7 @@ class BasePostTypeController extends MainController{
         $postType->isCategoryRequired = $request->isCategoryRequired;
         $postType->isTagRequired = $request->isTagRequired;
         $postType->hasFeaturedVideo = $request->hasFeaturedVideo;
+        $postType->isFeaturedImageRequired = $request->isFeaturedImageRequired;
 
         if($postType->save()){
             // delete fields
