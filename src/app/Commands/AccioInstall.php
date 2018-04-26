@@ -23,7 +23,7 @@ use Accio\App\Traits\GetAvailableOptions;
 use Accio\App\Traits\OutputStyles;
 use Illuminate\Config\Repository as ConfigRepository;
 
-class AppInstall extends Command{
+class AccioInstall extends Command{
 
     use OutputStyles, GetAvailableOptions;
 
@@ -32,7 +32,7 @@ class AppInstall extends Command{
      *
      * @var string
      */
-    protected $signature = 'app:install {--deleteUploads}';
+    protected $signature = 'accio:install {--deleteUploads}';
 
     /**
      * The console command description.

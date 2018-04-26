@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\File;
 use Accio\App\Traits\OutputStyles;
 use Accio\PackageServiceProvider;
 
-class AppUninstall extends Command
+class AccioUninstall extends Command
 {
 
     use OutputStyles;
@@ -18,7 +18,7 @@ class AppUninstall extends Command
      *
      * @var string
      */
-    protected $signature = 'app:uninstall';
+    protected $signature = 'accio:uninstall';
 
     /**
      * The console command description.
