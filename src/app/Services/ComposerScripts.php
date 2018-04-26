@@ -11,17 +11,17 @@ namespace Accio\App\Services;
 
 use Illuminate\Support\Facades\Artisan;
 
-class ComposerScripts extends Co
+class ComposerScripts
 {
     /**
+     * Handle the post-root-package-install Composer script.
      * After composer install is finished
      */
     public static function postPackageInstall(){
-        $static = new static();
-        $static->replaceExampleEnvWithEnv();
     }
 
     /**
+     * Handle the post-create-project-cmd Composer script.
      * After the project is created
      */
     public static function postCreateProject(){
@@ -29,11 +29,4 @@ class ComposerScripts extends Co
         Artisan::call('php artisan app:install');
     }
 
-    private  function replaceExampleEnvWithEnv(){
-        // rename
-        copy(base_path('.env.example'), base_path('.env'));
-
-        // remove .env.example
-        !unlink(base_path('.env.example'));
-    }
 }
