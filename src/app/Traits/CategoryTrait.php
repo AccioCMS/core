@@ -110,7 +110,6 @@ trait CategoryTrait{
             ];
 
             foreach (Language::all() as $language) {
-                $data['isVisible'][$language->slug] = true;
                 $data['slug'][$language->slug] = $this->translate($language->slug)->slug;
                 $data['label'][$language->slug] = $this->title;
             }
