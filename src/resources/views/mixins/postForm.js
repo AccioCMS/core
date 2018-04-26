@@ -40,7 +40,7 @@ export const postForm = {
                         this.slug[this.languages[k].slug] = "";
                         this.title[this.languages[k].slug] = "";
                         this.content[this.languages[k].slug] = "";
-                        this.selectedTags[this.languages[k].slug] = "";
+                        this.selectedTags[this.languages[k].slug] = [];
                     }
                     this.$store.commit('setLanguages', this.languages);
                 }).then( (resp) => {
