@@ -409,6 +409,7 @@
                                         <div class="form-group" :id="'form-group-tags_'+ lang.slug" v-if="hasTags">
                                             <label class="control-label col-md-2 col-sm-2 col-xs-12">{{trans.__tagsTitle}}</label>
                                             <div class="col-md-10 col-sm-10 col-xs-12">
+                                                <pre>{{ selectedTags }}</pre>
                                                 <multiselect
                                                         v-model="selectedTags[lang.slug]"
                                                         :options="tagsOptions"
