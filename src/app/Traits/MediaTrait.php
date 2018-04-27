@@ -146,36 +146,8 @@ trait MediaTrait{
                     if(in_array($extension, Media::$imageExtensions)){
                         foreach(Media::$thumbSizes as $thumKey => $thumValue){
                             if ($thumKey == "default" || $thumKey == $belongsToApp){ // only thumbs that are default and which belongs to this current app
-                                foreach ($thumValue as $thumbParams){
-                                    self::createThumb($media, $width, $height);
-
-                                    if (in_array($extension, Media::$imageExtensions)){
-                                        //@TODO check if thumb paths are writable
-                                        $thumbDir = $destinationPath."/".$thumbParams[0]."x".$thumbParams[1];
-
-                                        if(!File::exists($thumbDir)){
-                                            if(!File::makeDirectory($thumbDir, 0755, true)){
-                                                array_push($results, ['result_code' => 'failed','filename'=> $fileName, 'extension' => $extension, 'msg' => 'The directory  "'.$thumbDir.'" could not be created. Please contact your administrator', 'url' => '']);
-                                                continue;
-                                            }
-                                        }
-
-                                        //check if paths are writable
-                                        if(!File::isWritable($thumbDir)){
-                                            array_push($results, ['result_code' => 'failed','filename'=> $fileName, 'extension' => $extension, 'msg' => 'Thumb '.$thumbParams[0]."x".$thumbParams[1].' could not be create because the directory  "'.$thumbDir.'" is not writable. Please contact your administrator', 'url' => '']);
-                                            continue;
-                                        }
-
-                                        $img = Image::make($destinationOriginalPath);
-//                                    $resizedHeight = $thumbParams[0] * 2;
-//                                    $img->resize($resizedHeight, null, function ($constraint) {
-//                                        $constraint->aspectRatio();
-//                                    });
-
-                                        //$img->resizeCanvas($thumbParams[0], $thumbParams[1], 'center', false);
-                                        $img->fit($thumbParams[0], $thumbParams[1]);
-                                        $img->save($thumbDir.'/'.$fileName, 60);
-                                    }
+                                foreach ($thumValue as $thumbDimension){
+                                    self::createThumb($media, $thumbDimension[0], $thumbDimension[1]);
                                 }
                             }
                         }
@@ -253,7 +225,7 @@ trait MediaTrait{
      * @return boolean
      */
     public static function createThumb($imageObj, $width, $height=null){
-        $extension = File::extension( $imageObj->url);
+        $extension = File::extension($imageObj->url);
         $basePath = base_path('/');
 
         if (in_array($extension, Media::$imageExtensions)){

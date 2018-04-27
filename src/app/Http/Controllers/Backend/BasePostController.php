@@ -797,4 +797,43 @@ class BasePostController extends MainController {
 
         return array('redirectUrl' => $redirectUrl, 'view' => $view);
     }
+
+
+
+
+
+    /**
+     * **************************************************
+     *
+     * **************************************************
+     */
+
+    public function getDataForCreate($lang, $postTypeSlug){
+        // Languages
+        $languages = Language::getFromCache();
+        // Custom field groups
+        $customFieldsGroups = CustomFieldGroup::findGroups('post-type', 'create', 0, $postTypeSlug);
+        // post type
+        $postType = PostType::getFromCache()->where('slug', $postTypeSlug)->first();
+        // Categories (options to select)
+        $categories = array_values(App\Models\Category::getFromCache()->where("postTypeID", $postType->postTypeID)->toArray());
+        // get columns
+        $columns = $this->getColumns('en', $postTypeSlug);
+
+        return[
+            'postType' => $postType,
+            'languages' => $languages,
+            'categories' => $categories,
+            'customFieldsGroups' => $customFieldsGroups,
+            'column' => $columns['column'],
+            'inTableColumnsSlugs' => $columns['inTableColumnsSlugs'],
+            'allColumn' => $columns['allColumn'],
+        ];
+    }
+
+
+
+
+
+
 }

@@ -21,6 +21,7 @@ Route::group(['middleware' => ['auth:admin'], 'as' => 'backend.post.', 'namespac
     Route::get('/{lang}/json/posts/search/{post_type}/{term}', 'PostController@makeSearch')->name('makeSearch');
     Route::get('/{lang}/search-advanced/posts/{post_type}/{id}', 'PostController@searchAdvanced')->name('searchAdvanced');
     Route::get('/{lang}/post/json/menuPanelItems/{postTypeSlug}', 'PostController@menuPanelItems')->name('menuPanelItems');
+    Route::get('/{lang}/post/json/get-data-for-create/{postTypeSlug}', 'PostController@getDataForCreate')->name('getDataForCreate');
     /**
      * POST
      */

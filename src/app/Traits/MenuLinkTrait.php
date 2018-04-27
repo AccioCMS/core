@@ -452,15 +452,15 @@ trait MenuLinkTrait{
 
         foreach($menuLinks as $menuLink){
             if($menuLink->belongsTo == "post_type"){
-                $permission = User::hasAccess("PostType", "read");
+                $permission = User::hasAccess($menuLink->slug, "read");
             }elseif($menuLink->belongsTo == "category"){
                 $permission = User::hasAccess("Category", "read");
             }else{
-                $permission = User::hasAccess($menuLink->belongsTo, "update");
+                $permission = User::hasAccess($menuLink->slug, "update");
             }
 
             $routeURL = self::getActionOfLink($menuLink);
-            if($routeURL) {
+            if($routeURL){
                 $links[$count] = [
                     'label' => $menuLink->label,
                     'menuLinkID' => $menuLink->menuLinkID,
@@ -650,12 +650,13 @@ trait MenuLinkTrait{
             if(!$postType->isVisible){
                 continue;
             }
+
             $tmp = [
                 'label' => $postType->name,
                 'link' =>  '',
                 'module' => $postType['slug'],
                 'icon' => 'fa fa-thumb-tack',
-                'access' => User::hasAccess($postType['slug'], "read"),
+                'access' => User::hasAccess($postType['slug'],"read"),
                 'children' => [
                     [
                         'label' => 'List',

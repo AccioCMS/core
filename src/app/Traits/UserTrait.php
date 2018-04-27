@@ -151,7 +151,6 @@ trait UserTrait{
             }else{
                 $hasOwnership = true;
             }
-
             // don't give te user access if it has not permissions in a default allowed app and it a particular permission
             if(!$appPermission && !$hasSinglePermission){
                 return false;

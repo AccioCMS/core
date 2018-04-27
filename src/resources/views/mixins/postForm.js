@@ -24,11 +24,14 @@ export const postForm = {
             // display spinner
             this.$store.commit('setSpinner', true);
 
-            // List of all languages
-            var languagesPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/language/get-all?order=isDefault&type=desc')
-                .then((resp) => {
-                    this.languages = resp.body.data;
 
+            this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/post/json/get-data-for-create/'+this.$route.params.post_type)
+                .then((resp) => {
+                    /**
+                     *  Get and manipulate with languages
+                     */
+                    this.languages = resp.body.languages;
+                    let selectedTags = {};
                     for(var k in this.languages){
                         if(this.languages[k].isDefault){
                             this.defaultLangSlug = this.languages[k].slug;
@@ -40,45 +43,44 @@ export const postForm = {
                         this.slug[this.languages[k].slug] = "";
                         this.title[this.languages[k].slug] = "";
                         this.content[this.languages[k].slug] = "";
-                        this.selectedTags[this.languages[k].slug] = [];
+                        selectedTags[this.languages[k].slug] = [];
                     }
+                    this.selectedTags = selectedTags;
                     this.$store.commit('setLanguages', this.languages);
-                }).then( (resp) => {
-                    // ajax request to get custom fields
-                    this.$http.get(
-                        this.basePath+'/'+
-                        this.$route.params.adminPrefix+'/'+
-                        this.$route.params.lang+
-                        '/json/custom-fields/get-by-app/post-type/create/0/'+
-                        this.$route.params.post_type)
-                            .then((resp) => {
-                                this.loadCustomFields(resp.body, 'create');
-                            });
-                }).then((resp) => {
+
+                    /**
+                     *  Custom Field Groups
+                     */
+                    this.loadCustomFields(resp.body.customFieldsGroups, 'create');
+
+                    /**
+                     * Columns or post type fields
+                     * Prepare v-models (value placeholders for each field)
+                     */
                     this.getFieldsAndPrepareValues();
-                });
 
-            // get post type
-            var postTypePromise = this.$http.get(
-                this.basePath+'/'+
-                this.$route.params.adminPrefix+'/'+
-                this.$route.params.lang+
-                '/json/post-type/get-by-slug/'+
-                this.$route.params.post_type)
-                .then((resp) => {
-                    this.hasFeaturedVideo = resp.body.hasFeaturedVideo;
-                    this.hasCategories = resp.body.hasCategories;
-                    this.isCategoryRequired = resp.body.isCategoryRequired;
-                    this.hasTags = resp.body.hasTags;
-                    this.isTagRequired = resp.body.isTagRequired;
-                    this.isFeaturedImageRequired = resp.body.isFeaturedImageRequired;
-                });
+                    /**
+                     * Post type data
+                     */
+                    this.hasFeaturedVideo = resp.body.postType.hasFeaturedVideo;
+                    this.hasCategories = resp.body.postType.hasCategories;
+                    this.isCategoryRequired = resp.body.postType.isCategoryRequired;
+                    this.hasTags = resp.body.postType.hasTags;
+                    this.isTagRequired = resp.body.postType.isTagRequired;
+                    this.isFeaturedImageRequired = resp.body.postType.isFeaturedImageRequired;
 
-            // get all categories of post type
-            const categoriesOptions = [];
-            var categoryPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/category/get-all-without-pagination-by-post-type/'+this.$route.params.post_type)
-                .then((resp) => {
-                    this.categoriesOptions = resp.body;
+                    /**
+                     * Categories (options for the dropwdown)
+                     */
+                    this.categoriesOptions = resp.body.categories;
+
+                    // get plugin panels
+                    this.getPluginsPanel(['post', this.$route.params.post_type], 'create');
+
+                    const global = this;
+                    setTimeout(function (e) {
+                        global.$store.commit('setSpinner', false);
+                    }, 500);
                 });
 
             // get all tags of post type
@@ -88,56 +90,43 @@ export const postForm = {
                     this.tagsOptions = resp.body;
                 });
 
-            // when all ajax request are done
-            Promise.all([languagesPromise,categoryPromise,tagPromise,postTypePromise]).then(([v1,v2,v3,v4]) => {
-                // get plugin panels
-                this.getPluginsPanel(['post', this.$route.params.post_type], 'create');
-
-                const global = this;
-                setTimeout(function (e) {
-                    global.$store.commit('setSpinner', false);
-                }, 500);
-            });
         },
 
 
         // get and prepare fields of a post type
-        getFieldsAndPrepareValues(){
+        getFieldsAndPrepareValues(allColumn, inTableColumnsSlugs){
             // get the columns in from the post type table and set the form data to the column data
-            this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/'+ this.$route.params.post_type+'/columns')
-                .then((resp) => {
-                    this.columns = resp.body.allColumn;
-                    // this loop handles to populate the form with the arrays
-                    for(var k in this.columns){
-                        var tempArray = {};
-                        if(this.columns[k].multioptionValues != ""){
-                            if(this.columns[k].translatable){
-                                this.columns[k].value = this.makeMultiLanguageValue('array');
-                            }else{
-                                // add value to the object / this value will be used to store the input value
-                                this.columns[k].value = [];
-                            }
-
-                            // generate multioption values (options) array from the string
-                            this.columns[k].multioptionValues = this.generateMultioptionsValue(this.columns[k].multioptionValues, this.columns[k].type.inputType);
-
-                        }else{ // if it is not a multioption input type
-                            if(this.columns[k].translatable == true){
-                                // add value to the object / this value will be used to store the input value
-                                this.columns[k].value = this.columns[k].value = this.makeMultiLanguageValue();
-                            }else{
-                                this.columns[k].value = ""; // add value to the object / this value will be used to store the input value
-                            }
-                        }
-                        for(var key in this.columns[k]){
-                            tempArray[key] = this.columns[k][key];
-                        }
-                        this.form.push(
-                            tempArray
-                        );
+            this.columns = allColumn;
+            // this loop handles to populate the form with the arrays
+            for(var k in this.columns){
+                var tempArray = {};
+                if(this.columns[k].multioptionValues != ""){
+                    if(this.columns[k].translatable){
+                        this.columns[k].value = this.makeMultiLanguageValue('array');
+                    }else{
+                        // add value to the object / this value will be used to store the input value
+                        this.columns[k].value = [];
                     }
-                    this.columnSlugs = resp.body.inTableColumnsSlugs;
-                });
+
+                    // generate multioption values (options) array from the string
+                    this.columns[k].multioptionValues = this.generateMultioptionsValue(this.columns[k].multioptionValues, this.columns[k].type.inputType);
+
+                }else{ // if it is not a multioption input type
+                    if(this.columns[k].translatable == true){
+                        // add value to the object / this value will be used to store the input value
+                        this.columns[k].value = this.columns[k].value = this.makeMultiLanguageValue();
+                    }else{
+                        this.columns[k].value = ""; // add value to the object / this value will be used to store the input value
+                    }
+                }
+                for(var key in this.columns[k]){
+                    tempArray[key] = this.columns[k][key];
+                }
+                this.form.push(
+                    tempArray
+                );
+            }
+            this.columnSlugs = inTableColumnsSlugs;
         },
 
         // generate multioptions value (the options for dropdown, checkboxes and radio buttons)

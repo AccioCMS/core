@@ -27,6 +27,7 @@ return [
 
     'update' => 'update',
     'addImage' => 'Add image',
+    'watermark' => 'Watermark',
     'addFile' => 'Add file',
     'addVideo' => 'Add video',
     'change' => 'Change',

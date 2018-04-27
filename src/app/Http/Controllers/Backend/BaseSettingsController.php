@@ -26,6 +26,10 @@ class BaseSettingsController extends MainController{
             if ($media){
                 $settings['logo']['media'] = $media;
             }
+            $watermark = Media::where('mediaID',$settings['watermark']->value)->first();
+            if ($watermark){
+                $settings['watermark']['media'] = $watermark;
+            }
         }
         return $settings;
     }
