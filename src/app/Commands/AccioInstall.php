@@ -23,7 +23,7 @@ use Accio\App\Traits\GetAvailableOptions;
 use Accio\App\Traits\OutputStyles;
 use Illuminate\Config\Repository as ConfigRepository;
 
-class AppInstall extends Command{
+class AccioInstall extends Command{
 
     use OutputStyles, GetAvailableOptions;
 
@@ -32,7 +32,7 @@ class AppInstall extends Command{
      *
      * @var string
      */
-    protected $signature = 'app:install {--deleteUploads}';
+    protected $signature = 'accio:install {--deleteUploads}';
 
     /**
      * The console command description.
@@ -176,6 +176,10 @@ class AppInstall extends Command{
         if($this->isInstalled()){
             return false;
         }
+        
+        if(!$this->requirements->check($this)){
+            return false;
+        }
 
         // delete current .env file
         if(file_exists(app()->environmentFilePath())){
@@ -187,7 +191,11 @@ class AppInstall extends Command{
         if(!file_exists($envTemplate)){
             $envTemplate = stubPath('.env');
         }
+
+        // Rename .env.example to .env
         File::put(app()->environmentFilePath(), File::get($envTemplate));
+        // set app.key
+
         $this->config->set('app.key', 'SomeRandomString');
         $this->config->set('app.env', 'local');
 
@@ -309,7 +317,10 @@ class AppInstall extends Command{
         $this->clearCaches();
         $this->optimize();
 
-        exec('chmod -R 0777 '. uploadsPath().'/*');
+        // remove .env.example
+        if(file_exists(base_path('.env.example'))){
+            File::delete(base_path('.env.example'));
+        }
 
         $this->line('');
         $this->block('Success! CMS is now installed', 'fg=black;bg=green');
@@ -564,6 +575,7 @@ class AppInstall extends Command{
      * @return bool
      */
     private function isInstalled(){
+
         if(
             // APP KEY is not a a random string
             ($this->config->get('app.key') && $this->config->get('app.key') !== 'SomeRandomString')

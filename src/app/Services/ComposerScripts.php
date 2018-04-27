@@ -25,8 +25,7 @@ class ComposerScripts
      * After the project is created
      */
     public static function postCreateProject(){
-        // Install Accio
-        Artisan::call('php artisan app:install');
+        
     }
 
 }

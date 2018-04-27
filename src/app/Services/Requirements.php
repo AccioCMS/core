@@ -61,7 +61,7 @@ class Requirements
         $this->checkPermissions();
         if ($this->errors) {
             $console->line('');
-            $console->block('CMS cannot be installed. Please review the errors above before continuing.');
+            $console->block('Accio cannot be installed because your system doesn\'t meet minimal requirements. Please fix the errors above before retrying to install.');
             $console->line('');
         }
         return !$this->errors;
