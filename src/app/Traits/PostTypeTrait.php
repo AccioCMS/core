@@ -122,7 +122,7 @@ trait PostTypeTrait{
      * @return array
      */
     public static function getFields($post_type){
-        $postType = \App\Models\PostType::where('slug', $post_type)->select('fields')->first();
+        $postType = PostType::getFromCache()->where('slug', $post_type)->first();
         if($postType){
             return json_decode($postType->fields);
         }

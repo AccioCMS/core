@@ -245,12 +245,8 @@ class BaseTagController extends MainController{
             return $this->noPermission();
         }
 
-        $orderBy    = '';
-        $orderType  = '';
-        $pagination = '';
-        if(isset($_GET['pagination'])){
-            $pagination = $_GET['pagination'];
-        }
+        $orderBy    = 'tagID';
+        $orderType  = 'DESC';
         if(isset($_GET['order'])){
             $orderBy = $_GET['order'];
         }
@@ -266,7 +262,7 @@ class BaseTagController extends MainController{
                 $postTypeID
             )
         );
-        return Search::searchByTerm('tags',$term, Tag::$rowsPerPage, true, array(), $excludeColumns, $pagination, $orderBy, $orderType, '', $conditions);
+        return Search::searchByTerm('tags', $term, Tag::$rowsPerPage, true, array(), $excludeColumns, $orderBy, $orderType, '', $conditions);
     }
 
     /**
