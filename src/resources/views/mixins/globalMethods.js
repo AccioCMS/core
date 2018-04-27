@@ -43,7 +43,11 @@ export const globalMethods = {
         generateUrl(url){
             return this.baseURL+url;
         },
-        // repair url to get the thumb
+
+        /**
+         * get the urls for the files
+         * @param media
+         */
         constructUrl(image){
             var url = "";
             if(image.type == "image"){

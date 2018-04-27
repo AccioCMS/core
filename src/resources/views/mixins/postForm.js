@@ -16,7 +16,6 @@ export const postForm = {
             this.status = {};
             this.languages = '';
             this.defaultLangSlug = '';
-            this.activeLangsSlug = "";
             this.dateFormat = 'd MMMM yyyy';
             this.published_at = {date: '', time: {HH: "",mm: ""}, dateFormatted: ''};
             this.savedDropdownMenuVisible = false;
@@ -24,7 +23,7 @@ export const postForm = {
             // display spinner
             this.$store.commit('setSpinner', true);
 
-
+            // get data used in the form like post type, categories, post type fields, custum fields etc
             this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/post/json/get-data-for-create/'+this.$route.params.post_type)
                 .then((resp) => {
                     /**
@@ -57,11 +56,12 @@ export const postForm = {
                      * Columns or post type fields
                      * Prepare v-models (value placeholders for each field)
                      */
-                    this.getFieldsAndPrepareValues();
+                    this.getFieldsAndPrepareValues(resp.body.allColumn, resp.body.inTableColumnsSlugs);
 
                     /**
                      * Post type data
                      */
+                    this.postTypeID = resp.body.postType.postTypeID;
                     this.hasFeaturedVideo = resp.body.postType.hasFeaturedVideo;
                     this.hasCategories = resp.body.postType.hasCategories;
                     this.isCategoryRequired = resp.body.postType.isCategoryRequired;
@@ -74,22 +74,13 @@ export const postForm = {
                      */
                     this.categoriesOptions = resp.body.categories;
 
-                    // get plugin panels
+                    /**
+                     * get plugin panels
+                     */
                     this.getPluginsPanel(['post', this.$route.params.post_type], 'create');
 
-                    const global = this;
-                    setTimeout(function (e) {
-                        global.$store.commit('setSpinner', false);
-                    }, 500);
+                    this.$store.commit('setSpinner', false);
                 });
-
-            // get all tags of post type
-            const tagsOptions = [];
-            var tagPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/tags/get-all-without-pagination-by-post-type/'+this.$route.params.post_type)
-                .then((resp) => {
-                    this.tagsOptions = resp.body;
-                });
-
         },
 
 
@@ -178,7 +169,6 @@ export const postForm = {
             this.status = {};
             this.languages = '';
             this.defaultLangSlug = '';
-            this.activeLangsSlug = "";
             this.dateFormat = 'd MMMM yyyy';
             this.published_at = {date: '', time: {HH: "",mm: ""}, dateFormatted: ''};
             this.createdByUserID = 0;
@@ -258,6 +248,7 @@ export const postForm = {
                     this.title = resp.body.title;
                     this.content = resp.body.content;
                     this.status = resp.body.status;
+                    this.postTypeID = resp.body.postTypeID;
                     this.hasCategories = resp.body.hasCategories;
                     this.isCategoryRequired = resp.body.isCategoryRequired;
                     this.isTagRequired = resp.body.isTagRequired;
@@ -279,32 +270,56 @@ export const postForm = {
 
                     customFieldsValuesTmp = resp.body.customFieldsValues;
                     this.loadCustomFields(resp.body.customFieldsGroups, 'update');
+
+                    /**
+                     * Categories options
+                     */
+                    this.categoriesOptions = resp.body.categories;
+
                 }).then((resp) => {
                     // load the values of the custom fields
                     this.pupulateCustomFieldsValues(customFieldsValuesTmp);
+                    this.$store.commit('setSpinner', false);
                 });
+        },
 
-            // get all categories of post type
-            const categoriesOptions = [];
-            let categoryPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/category/get-all-without-pagination-by-post-type/'+this.$route.params.post_type)
-                .then((resp) => {
-                    this.categoriesOptions = resp.body;
-                });
-            // get all tags of post type
-            const tagsOptions = [];
-            let tagPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/tags/get-all-without-pagination-by-post-type/'+this.$route.params.post_type)
-                .then((resp) => {
-                    this.tagsOptions = resp.body;
-                });
+        /**
+         * Adding new tag if the tag doesn't exits in the database
+         * @param title tag name
+         * @param languageSlug
+         */
+        addTag (title, languageSlug) {
+            const tag = {
+                tagID: 0,
+                title: title,
+                description: "",
+                slug: "",
+            }
+            this.tagsOptions.push(tag);
+            let selectedTagsInLang = [];
+            for(let k in this.selectedTags[languageSlug]){
+                selectedTagsInLang.push(this.selectedTags[languageSlug][k]);
+            }
+            selectedTagsInLang.push(tag);
+            this.selectedTags[languageSlug] = selectedTagsInLang;
+        },
 
-            // when all ajax request are done
-            Promise.all([columnPromise,categoryPromise,tagPromise]).then(([v1,v2,v3]) => {
-                const global = this;
-                setTimeout(function (e) {
-                    global.$store.commit('setSpinner', false);
-                }, 500);
-            });
-        }
+        /**
+         * Search tags in the database
+         * @param term ( search term )
+         */
+        searchTagsOptions(term){
+            if(term.length > 1){
+                this.areTagsLoading = true;
+                this.tagsOptions = [];
+                // get all tags of post type
+                this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/tags/'+ this.postTypeID +'/search/'+term)
+                    .then((resp) => {
+                        this.areTagsLoading = false;
+                        this.tagsOptions = resp.body.data;
+                    });
+            }
+        },
 
     }
 };
