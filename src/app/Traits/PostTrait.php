@@ -163,6 +163,9 @@ trait PostTrait{
         $postObj = new \App\Models\Post();
         $postObj->setTable($data['postType']);
 
+        // Remove foreign key check
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
         // on create
         if(!isset($data['postID'])){
             $populatedFields = self::populateStoreColumns($postObj, $data);
@@ -600,7 +603,6 @@ trait PostTrait{
         if(count($selectedTags)){
             $tagsIDs = [];
             $postType = PostType::findBySlug($postTypeSlug);
-            $getCachedTags = \App\Models\Tag::getFromCache($postType['slug']);
 
             $newTagsRelations = [];
             foreach ($selectedTags as $langSlug => $selectedTagForLanguage){
@@ -610,15 +612,13 @@ trait PostTrait{
                         //insert tag if it doesn't exist
                         if($selectedTag['tagID'] == 0){
                             $tagSlug = str_slug($selectedTag['title'],'-');
-                            if(!$getCachedTags->contains($tagSlug)){
-                                $tagsID = DB::table('tags')->insertGetId([
-                                  'postTypeID' => $postType['postTypeID'],
-                                  'createdByUserID' => Auth::user()->userID,
-                                  'title' => $selectedTag['title'],
-                                  'description' => $selectedTag['description'],
-                                  'slug' => $tagSlug,
-                                ]);
-                            }
+                            $tagsID = DB::table('tags')->insertGetId([
+                                'postTypeID' => $postType['postTypeID'],
+                                'createdByUserID' => Auth::user()->userID,
+                                'title' => $selectedTag['title'],
+                                'description' => $selectedTag['description'],
+                                'slug' => $tagSlug,
+                            ]);
                         }else{
                             $tagsID = $selectedTag['tagID'];
                         }
