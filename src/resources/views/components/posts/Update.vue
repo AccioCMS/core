@@ -625,6 +625,13 @@
                 slug:{},
                 href:'',
                 status: {},
+                postTypeID: 0,
+                hasFeaturedVideo: false,
+                hasCategories: false,
+                hasTags: false,
+                isCategoryRequired: false,
+                isTagRequired: false,
+                isFeaturedImageRequired: false,
                 customFieldValues: {},
                 languages: '',
                 defaultLangSlug: '', // get the default language slug

@@ -605,6 +605,7 @@
                 hasTags: false,
                 isCategoryRequired: false,
                 isTagRequired: false,
+                isFeaturedImageRequired: false,
                 pluginsData: {},
                 languages: '',
                 defaultLangSlug: '', // get the default language slug
