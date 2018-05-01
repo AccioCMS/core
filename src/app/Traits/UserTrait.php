@@ -429,6 +429,46 @@ trait UserTrait{
     }
 
     /**
+     * Get an editor
+     *
+     * @return object
+     * @throws \Exception
+     */
+    public static function getAnEditor(){
+        $permission = new Permission();
+        $getPermission = $permission->where('app','global')->where('key', 'editor')->where('value', true)->get()->first();
+
+        if($getPermission){
+            $adminRelations  = RoleRelation::where('groupID', $getPermission->groupID)->first();
+            if($adminRelations){
+                return User::find($adminRelations->userID);
+            }
+        }
+
+        throw new \Exception("No admin user found.");
+    }
+
+    /**
+     * Get an editor
+     *
+     * @return object
+     * @throws \Exception
+     */
+    public static function getAnAuthor(){
+        $permission = new Permission();
+        $getPermission = $permission->where('app','global')->where('key', 'author')->where('value', true)->get()->first();
+
+        if($getPermission){
+            $adminRelations  = RoleRelation::where('groupID', $getPermission->groupID)->first();
+            if($adminRelations){
+                return User::find($adminRelations->userID);
+            }
+        }
+
+        throw new \Exception("No admin user found.");
+    }
+
+    /**
      * Assign roles to a user
      *
      * @param array $groups groups that are selected in frontend for the new or existing user

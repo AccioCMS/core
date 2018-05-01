@@ -499,6 +499,7 @@ trait PostTrait{
                 $primaryKey = "postID";
             }
 
+
             if($translatable){
                 if(is_array($formData['value']) && !count($formData['value'])){
                     foreach ($languages as $language){
@@ -516,11 +517,15 @@ trait PostTrait{
                         if($formData['isMultiple']){
                             $c = 0;
                             foreach ($valuesByLang as $singleValue){
-                                $tmpArr[$langSlug]['k_'.$c] = $singleValue[$primaryKey];
-                                $c++;
+                                if(isset($singleValue[$primaryKey])) {
+                                    $tmpArr[$langSlug]['k_' . $c] = $singleValue[$primaryKey];
+                                    $c++;
+                                }
                             }
                         }else{
-                            $tmpArr[$langSlug] = $valuesByLang[$primaryKey];
+                            if(isset($singleValue[$primaryKey])) {
+                                $tmpArr[$langSlug] = $valuesByLang[$primaryKey];
+                            }
                         }
                     }
                 }
@@ -529,11 +534,15 @@ trait PostTrait{
                 if($formData['isMultiple']){
                     $c = 0;
                     foreach ($formData['value'] as $singleValue){
-                        $tmpArr['k_'.$c] = $singleValue[$primaryKey];
-                        $c++;
+                        if(isset($singleValue[$primaryKey])) {
+                            $tmpArr['k_' . $c] = $singleValue[$primaryKey];
+                            $c++;
+                        }
                     }
                 }else{
-                    $tmpArr = $formData['value'][$primaryKey];
+                    if(isset($formData['value'][$primaryKey])){
+                        $tmpArr = $formData['value'][$primaryKey];
+                    }
                 }
             }
 
