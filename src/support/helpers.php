@@ -502,6 +502,6 @@ if (! function_exists('getPostType')) {
      */
     function getPostType(string $postType){
         // post type of pages
-        return \App\Models\PostType::getFromCache()['post_'.$postType];
+        return \App\Models\PostType::findBySlug($postType);
     }
 }

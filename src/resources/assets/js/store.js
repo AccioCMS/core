@@ -198,7 +198,6 @@ export const store = new Vuex.Store({
         store(context, object){
             return Vue.http.post(object.url, object.data)
                 .then((resp) => {
-                    console.log(resp.body);
                     context.commit('setStoreResponse', resp.body);
                     if(resp.statusText == "OK"){
                         var response = resp.body;
@@ -268,74 +267,73 @@ export const store = new Vuex.Store({
             let list = context.getters.get_list;
             let permissions = context.getters.get_global_data.permissions;
             let postTypes = context.getters.get_global_data.post_type_slugs;
-
-            //if admin
-            if(permissions['global'] !== undefined && permissions['global']['admin'] !== undefined){
-                context.commit('setHasPermission', true);
-                return true;
-            }
-
             let appPermission = false;
-            //if the user is an author or editor, it has rights in publish posts
-            if(permissions['global'] !== undefined){
-                if(permissions['global']['editor'] !== undefined || permissions['global']['author'] !== undefined) {
-                    let allowedApps = [];
-                    if(permissions['global']['editor'] !== undefined){
-                        allowedApps = ['Pages','Categories','Tags','Media'];
-                    }else if (permissions['global']['author'] !== undefined){
-                        allowedApps = ['Media'];
-                    }
+            let hasSinglePermission = false;
+
+            // handle global permissions (ex. Editor, Author)
+            if(permissions.global !== undefined){
+
+                //admin has access into all permissions
+                if(permissions.global.admin !== undefined){
+                    return true;
+                }
+
+                //editors and authors have access only in certain apps
+                if(permissions.global.editor !== undefined || permissions.global.author !== undefined) {
+                    let allowedApps = ['Pages','Categories','Tags','Media'];
 
                     if(allowedApps.indexOf(app) !== -1 || postTypes.indexOf(app) !== -1){
                         appPermission = true;
                     }
                 }
+
+                if(permissions.global.author !== undefined){
+                    if(key == 'read'){
+                        hasSinglePermission = true;
+                    }
+                }else{
+                    hasSinglePermission = true;
+                }
             }
 
             // if the user has a particular permission
-            let hasSinglePermission = false;
             if(permissions[app] !== undefined){
                 if (permissions[app][key] !== undefined){
                     hasSinglePermission = true;
-                }else{
-                    if(permissions['global'] !== undefined){
-                        if((permissions['global']['editor'] !== undefined || permissions['global']['author'] !== undefined) && appPermission) {
-                            hasSinglePermission = true;
-                        }
-                    }
                 }
             }
 
             //check author
-            if(permissions['global'] !== undefined && permissions['global']['author'] !== undefined){
+            if(permissions.global !== undefined && permissions.global.author !== undefined){
                 // has any permission
                 if(!appPermission && !hasSinglePermission){
-                    context.commit('setHasPermission', false);
+                    // context.commit('setHasPermission', false);
                     return false;
                 }
+
+
                 // has a specific permission and has ownership
                 if(appPermission || hasSinglePermission){
-                    context.commit('setHasPermission', true);
+                    // context.commit('setHasPermission', true);
                     return true;
                 }
-
-
             }
 
             //check editor
-            else if(permissions['global'] !== undefined && permissions['global']['editor'] !== undefined){
+            else if(permissions.global.author !== undefined && permissions.global.editor !== undefined){
                 if(appPermission || hasSinglePermission){
-                    context.commit('setHasPermission', true);
+                    // context.commit('setHasPermission', true);
                     return true;
                 }
             }
 
             //check specific permission
             else if (hasSinglePermission){
-                context.commit('setHasPermission', true);
+                // context.commit('setHasPermission', true);
                 return true;
             }
-            context.commit('setHasPermission', false);
+
+            // context.commit('setHasPermission', false);
             return false;
         }
     }

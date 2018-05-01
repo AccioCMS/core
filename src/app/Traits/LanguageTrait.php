@@ -271,7 +271,6 @@ trait LanguageTrait
             $list = $rows;
         }
 
-
         // loop throw the list
         foreach ($list as $row){
             foreach ($row as $key => $value){
@@ -295,14 +294,8 @@ trait LanguageTrait
                             $temporaryList["original_object_".$key] = $value;
                         }else{
                             // empty if there is no translation in the selected language
-                            $temporaryList[$key] = '';
-                        }
-                        if(!$jsonValue){
                             $temporaryList[$key] = $value;
                         }
-                    }
-                    if($key == "postID"){
-                        $temporaryList[$key] = $value;
                     }
                 }else{
                     if ($jsonValue && isset($jsonValue->$language)){

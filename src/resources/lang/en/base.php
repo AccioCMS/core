@@ -11,6 +11,7 @@ return [
     */
 
     'title' => 'Title',
+    'titleAdmin' => 'Accio Admin Panel',
     'about' => 'About',
     'content' => 'Content',
     'visible' => 'Visible',

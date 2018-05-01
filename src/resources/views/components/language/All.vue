@@ -110,7 +110,7 @@
             };
 
             // permissions
-            this.addPermission = this.hasPermission('Language','add');
+            this.addPermission = this.hasPermission('Language','create');
             this.hasDeletePermission = this.hasPermission('Language','delete');
             this.hasUpdatePermission = this.hasPermission('Language','update');
             // get the table data
