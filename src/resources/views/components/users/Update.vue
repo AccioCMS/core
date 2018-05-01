@@ -249,49 +249,46 @@
             };
 
             this.$store.commit('setSpinner', true);
+
             // List of all languages
             var languagesPromise = this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/language/get-all?order=isDefault&type=desc')
                 .then((resp) => {
-                    this.languages = resp.body.data;
-                    // make a key for each language in the about object
-                    for(let k in this.languages){
-                        if(this.languages[k].isDefault){
-                            this.activeLang = this.languages[k].slug;
-                        }
-                    }
-                });
+                this.languages = resp.body.data;
+            // make a key for each language in the about object
+            for(let k in this.languages){
+                if(this.languages[k].isDefault){
+                    this.activeLang = this.languages[k].slug;
+                }
+            }
+        });
 
-            // Get all groups
-            var groupsPromises = this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/user/get-groups')
-                .then((resp) => {
-                    this.groupsList = resp.body;
-                });
             // get user information
             var userDataPromise = this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/user/details/'+this.$route.params.id)
                 .then((resp) => {
-                    this.user.firstName = resp.body.details.firstName;
-                    this.user.lastName = resp.body.details.lastName;
-                    this.user.email = resp.body.details.email;
-                    this.user.phone = resp.body.details.phone;
-                    this.user.street = resp.body.details.street;
-                    this.user.country = resp.body.details.country;
-                    this.user.isActive = resp.body.details.isActive;
-                    this.user.about = resp.body.details.about;
-                    this.user.groups = resp.body.details.roles;
-                    if(resp.body.details.profile_image !== null){
-                        this.$store.commit('setMediaSelectedFiles', {'featuredImage':[resp.body.details.profile_image]});
-                        this.user.profileImageID = resp.body.details.profile_image.mediaID;
-                    }
-                });
+                this.user.firstName = resp.body.details.firstName;
+            this.user.lastName = resp.body.details.lastName;
+            this.user.email = resp.body.details.email;
+            this.user.phone = resp.body.details.phone;
+            this.user.street = resp.body.details.street;
+            this.user.country = resp.body.details.country;
+            this.user.isActive = resp.body.details.isActive;
+            this.user.about = resp.body.details.about;
+            this.user.groups = resp.body.details.roles;
+            this.groupsList = resp.body.allGroups;
+            if(resp.body.details.profile_image !== null){
+                this.$store.commit('setMediaSelectedFiles', {'featuredImage':[resp.body.details.profile_image]});
+                this.user.profileImageID = resp.body.details.profile_image.mediaID;
+            }
+        });
 
             this.user.id = this.$route.params.id;
 
             // when all ajax request are done
-            Promise.all([languagesPromise,groupsPromises, userDataPromise]).then(([v1,v2,v3]) => {
+            Promise.all([languagesPromise,userDataPromise]).then(([v1,v2,v3]) => {
                 // get plugin panels
                 this.getPluginsPanel(['users'], 'update');
-                this.$store.commit('setSpinner', false);
-            });
+            this.$store.commit('setSpinner', false);
+        });
         },
 
         components: { 'popup-media':PopupMedia },
@@ -335,14 +332,16 @@
                     error: "User could not be updated. Please try again later"
                 }).then((resp) => {
                     if(resp.code == 200){
-                        if(this.Auth.user.userID == resp.data.userID){
-                            this.Auth.user.firstName = resp.data.firstName;
-                            this.Auth.user.lastName = resp.data.lastName;
-                            this.Auth.user.avatar = this.basePath+'/'+this.mediaSelectedFiles['featuredImage'][0].fileDirectory+'/200x200/'+this.mediaSelectedFiles['featuredImage'][0].filename;
+                    if(this.Auth.user.userID == resp.data.userID){
+                        this.Auth.user.firstName = resp.data.firstName;
+                        this.Auth.user.lastName = resp.data.lastName;
+                        if(this.mediaSelectedFiles['featuredImage'] !== undefined) {
+                            this.Auth.user.avatar = this.basePath + '/' + this.mediaSelectedFiles['featuredImage'][0].fileDirectory + '/200x200/' + this.mediaSelectedFiles['featuredImage'][0].filename;
                         }
-                        this.onStoreBtnClicked('user-',redirectChoice);
                     }
-                });
+                    this.onStoreBtnClicked('user-',redirectChoice);
+                }
+            });
             },
             openMedia(){
                 this.$store.commit('setOpenMediaOptions', { multiple: false, has_multile_files: false, multipleInputs: false, format : 'image', inputName: 'featuredImage', langSlug: '', clear: true });

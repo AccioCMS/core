@@ -66,20 +66,27 @@ trait UserTrait{
         $hasSinglePermission = false;
 
         if(self::isDefaultGroup()){
+            $userSelfDataAccess = ($app == 'User' && $id == Auth::user()->userID);
+            $isPostType = isset(\App\Models\PostType::getFromCache()[$app]);
+
             if (self::isEditor()) {
                 $allowedApps = array('Pages', 'Category', 'Tags', 'Media');
+                $isAllowedApp = (
+                in_array($app, $allowedApps)
+                );
 
                 //if app is an allowed app or is a post type, pass the appPermission check
                 if(
-                    (
-                        //if is an allowed app
-                        in_array($app, $allowedApps)
-                        //is a post type
-                        || isset(\App\Models\PostType::getFromCache()[$app])
-                    )
+                  (
+                    $isAllowedApp
+                    || $isPostType
+                  )
 
-                    //is a language
-                    || ($app == "Language" && $key == "id" && $id)
+                  //is a language
+                  || ($app == "Language" && $key == "id" && $id)
+
+                  // User can manage his own data
+                  || $userSelfDataAccess
                 ){
                     $appPermission = true;
                     $hasSinglePermission = true;
@@ -87,29 +94,29 @@ trait UserTrait{
             }elseif(self::isAuthor()) {
                 $allowedApps = array('Media');
                 $isAllowedApp = (
-                    //if is an allowed app
-                    in_array($app, $allowedApps)
-                    //is a post type
-                    || isset(\App\Models\PostType::getFromCache()[$app])
+                in_array($app, $allowedApps)
                 );
 
                 //if app is an allowed ap or is a post type, pass the appPermission check
                 if(
-                    $isAllowedApp
+                  $isAllowedApp
+                  || $isPostType
 
-                    //authors have read access into all Categories, Tags and Languages
-                    || (
-                        in_array($app, array("Category", "Tags", "Language"))
+                  //authors have read access into all Categories, Tags and Languages
+                  || (
+                    in_array($app, array("Category", "Tags", "Language"))
 
-                        &&
+                    &&
 
-                        (
-                            //is a specific id (used for listing in dropdown in create)
-                            ($key == "id" && $id || $id === 'hasAll')
-                            //has only read access
-                            || in_array($key,array("read"))
-                        )
+                    (
+                        //is a specific id (used for listing in dropdown in create)
+                      ($key == "id" && $id || $id === 'hasAll')
+                      //has only read access
+                      || in_array($key,array("read"))
                     )
+                  )
+                  // User can manage his own data
+                  || $userSelfDataAccess
                 ) {
                     $appPermission = true;
                     $hasSinglePermission = true;
