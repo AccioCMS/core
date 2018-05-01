@@ -277,10 +277,10 @@
                     this.user.country = resp.body.details.country;
                     this.user.isActive = resp.body.details.isActive;
                     this.user.about = resp.body.details.about;
-                    this.user.groups = resp.body.selectedGroups;
-                    if(resp.body.profileImage !== null){
-                        this.$store.commit('setMediaSelectedFiles', {'featuredImage':[resp.body.profileImage]});
-                        this.user.profileImageID = resp.body.profileImage.mediaID;
+                    this.user.groups = resp.body.details.roles;
+                    if(resp.body.details.profile_image !== null){
+                        this.$store.commit('setMediaSelectedFiles', {'featuredImage':[resp.body.details.profile_image]});
+                        this.user.profileImageID = resp.body.details.profile_image.mediaID;
                     }
                 });
 

@@ -2,6 +2,7 @@
 
 namespace Accio\App\Http\Controllers\Backend;
 
+use Accio\App\Models\RoleRelationsModel;
 use App;
 
 use App\Models\Media;
@@ -152,13 +153,15 @@ class BaseUserController extends MainController{
         $user->country = $request->user['country'];
         $user->password = Hash::make($request->user['password']);
         $user->isActive = 1;
-        $user->groupIDs = $this->registerGroups($request->user['groups']);
         $user->slug = parent::generateSlug($request->user['firstName']." ".$request->user['lastName'], 'users', 'userID', '', 0, false);;
         $user->about = $request->user['about'];
         $user->profileImageID = $profileImageID;
         $user->gravatar = User::getGravatarFromEmail($request->user['email']);
 
         if ($user->save()){
+            // Add roles permissions
+            $user->assignRoles($request->user['groups']);
+
             $redirectParams = parent::redirectParams($request->redirect, 'user', $user->userID);
             $result = $this->response( 'User is created', 200, $user->userID, $redirectParams['view'], $redirectParams['redirectUrl']);
         }else{
@@ -188,6 +191,9 @@ class BaseUserController extends MainController{
         }
         $user = App\Models\User::find($id)->delete();
         if ($user){
+            // Delete all roles relations
+            RoleRelationsModel::where('userID',$id)->delete();
+
             $result = $this->response('User is deleted');
         }else{
             $result = $this->response( 'Internal server error. Please try again later', 500);
@@ -261,13 +267,15 @@ class BaseUserController extends MainController{
         $user->street = $request->user['street'];
         $user->country = $request->user['country'];
         $user->isActive = $request->user['isActive'];
-        $user->groupIDs = $this->registerGroups($request->user['groups']);
         $user->slug = parent::generateSlug($request->user['firstName']." ".$request->user['lastName'], 'users', 'userID', '', $request->user['id'], false);;
         $user->profileImageID = $profileImageID;
         $user->about = $request->user['about'];
         $user->gravatar = User::getGravatarFromEmail($request->user['email']);
 
         if ($user->save()){
+            // Add roles permissions
+            $user->assignRoles($request->user['groups']);
+
             $redirectParams = parent::redirectParams($request->redirect, 'user', $request->user['id']);
             $result = $this->response( 'User is update', 200, $request->user['id'], $redirectParams['view'], $redirectParams['redirectUrl'] );
             $result['data'] = $user;
@@ -287,18 +295,11 @@ class BaseUserController extends MainController{
             return $this->noPermission();
         }
 
-        $user = App\Models\User::find($id)->appendLanguageKeys();
-        $media = App\Models\Media::find($user->profileImageID);
+        $user = App\Models\User::with('roles','profileImage')->find($id)->appendLanguageKeys();
 
-        $final = array('details' => $user, 'profileImage' => $media, 'selectedGroups' => array());
-        $allGroups = UserGroup::all();
-        foreach ($allGroups as $group){
-            foreach ($user->groupIDs as $id){
-                if($id == $group->groupID){
-                    array_push($final['selectedGroups'], $group);
-                }
-            }
-        }
+        $final = [
+          'details' => $user
+        ];
 
         // Fire event
         $final['events'] = Event::fire('user:pre_update', [$final]);
@@ -435,23 +436,6 @@ class BaseUserController extends MainController{
         $fields = json_encode($request);
 
         return view(User::$backendPathToView.'all', compact('lang','view','hasAdvancedSearchData','advancedSearchData','pagination', 'fields', 'adminPrefix'));
-    }
-
-    /**
-     * Register user to groups
-     * @param array $selectedGroups groups that are selected in frontend for the new or existing user
-     * @return string|array key group and value boolean if the user is selected
-     * */
-    private  function registerGroups($selectedGroups){
-        // check if user has permissions to access this link
-        if(!User::hasAccess('user','update')){
-            return $this->noPermission();
-        }
-        $groups = [];
-        foreach ($selectedGroups as $group){
-            $groups[] = $group['groupID'];
-        }
-        return $groups;
     }
 
     public function mediaStore(Request $request){

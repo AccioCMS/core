@@ -402,17 +402,17 @@ class AccioInstall extends Command{
      *
      */
     private function createAdminUser(){
-        factory(User::class)->create([
+        $user = factory(User::class)->create([
             'firstName' => $this->ADMIN_FIRST_NAME,
             'lastName' => $this->ADMIN_LAST_NAME,
             'slug' => str_slug($this->ADMIN_FIRST_NAME.'-'.$this->ADMIN_LAST_NAME),
             'email' => $this->ADMIN_EMAIL,
             'password' => Hash::make($this->ADMIN_PASSWORD),
-            'isActive' => true,
-            'groupIDs' => [
-                1 => UserGroup::getAdminRole()->groupID
-            ]
+            'isActive' => true
         ]);
+
+        // assign role
+        $user->assignRoles([UserGroup::getAdminGroup()->groupID]);
     }
     /**
      * Calls the artisan key:generate to set the APP_KEY.

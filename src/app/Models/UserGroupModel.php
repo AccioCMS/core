@@ -21,18 +21,30 @@ class UserGroupModel extends Model{
     protected $table = "users_groups";
 
     /**
-     * Get an admin role
+     * Get admin group
      * @return object
      * @throws Exception
      */
-    public static function getAdminRole(){
-        $permission = new Permission();
-        $getPermission = $permission->where('app','global')->where('key', 'admin')->where('value', true)->get()->first();
+    public static function getAdminGroup(){
+        return self::where('slug', "admin")->get()->first();
+    }
 
-        if($getPermission){
-            return self::where('groupID', $getPermission->groupID)->get()->first();
-        }
-        Throw new Exception("No admin role found!");
+    /**
+     * Get an editor role
+     * @return object
+     * @throws Exception
+     */
+    public static function getEditorGroup(){
+        return self::where('slug', "editor")->get()->first();
+    }
+
+    /**
+     * Get an editor role
+     * @return object
+     * @throws Exception
+     */
+    public static function getAuthorGroup(){
+        return self::where('slug', "author")->get()->first();
     }
 
     /**

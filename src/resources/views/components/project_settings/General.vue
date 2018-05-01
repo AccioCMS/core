@@ -226,7 +226,7 @@
 
             this.$store.commit('setSpinner', true);
 
-            // TODO me i nxjerr krejt settings me nje request
+            //@TODO me i nxjerr krejt settings me nje request
 
             // get all user groups / roles
             var userGroupPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/permissions/users-groups')

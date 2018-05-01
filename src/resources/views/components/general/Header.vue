@@ -32,13 +32,14 @@
 </template>
 <script>
     import { globalComputed } from '../../mixins/globalComputed';
-    import { globalMethods } from '../../mixins/globalMethods';
     import { globalData } from '../../mixins/globalData';
     import { globalUpdated } from '../../mixins/globalUpdated';
+    import { globalMethods } from '../../mixins/globalMethods';
+
     export default{
         mixins: [globalComputed, globalMethods, globalData, globalUpdated],
-        mounted(){
-            this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/language/get-all?order=isDefault&type=desc')
+        created(){
+            this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/language/get-all?order=isDefault&type=desc&a1')
                 .then((resp) => {
                     this.languages = resp.body.data;
                 });

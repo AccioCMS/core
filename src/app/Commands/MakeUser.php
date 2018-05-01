@@ -69,14 +69,18 @@ class MakeUser extends Command
             $data['lastName'] = $this->option('last_name');
         }
 
-        if($this->option('role_id')){
-            $data['groupIDs'] = [ 1 => $this->option('role_id')];
-        }else{
-            $data['groupIDs'] = [ 1 => UserGroup::getAdminRole()->groupID];
-        }
-
         // Create the user
-        factory(User::class)->create($data);
+        $user = factory(User::class)->create($data);
+
+        // add a role
+        if($user){
+            if($this->option('role_id')){
+                $groupID = $this->option('role_id');
+            }else{
+                $groupID = UserGroup::getEditorGroup()->groupID;
+            }
+            $user->assignRoles([$groupID]);
+        }
 
         $this->info("User created successfully!");
     }
