@@ -66,7 +66,7 @@ trait UserTrait{
 
         if(self::isDefaultGroup()){
             if (self::isEditor()) {
-                $allowedApps = array('Pages', 'Categories', 'Tags', 'Media');
+                $allowedApps = array('Pages', 'Category', 'Tags', 'Media');
 
                 //if app is an allowed app or is a post type, pass the appPermission check
                 if(
@@ -98,7 +98,7 @@ trait UserTrait{
 
                     //authors have read access into all Categories, Tags and Languages
                     || (
-                        in_array($app, array("Categories", "Tags", "Language"))
+                        in_array($app, array("Category", "Tags", "Language"))
 
                         &&
 
