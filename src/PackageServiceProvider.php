@@ -39,7 +39,7 @@ class PackageServiceProvider extends ServiceProvider{
      * Example: 'ClassName' => 'Accio\App\Services\ClassName',
      * @var array
      */
-    protected $bindings = [];
+    public $bindings = [];
 
     /**
      * The Artisan commands provided by your application.
@@ -184,6 +184,7 @@ class PackageServiceProvider extends ServiceProvider{
 
         Event::fire('system:register', [$this]);
     }
+
 
     /**
      * Check if app is installed
