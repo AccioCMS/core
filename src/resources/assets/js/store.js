@@ -275,6 +275,7 @@ export const store = new Vuex.Store({
 
                 //admin has access into all permissions
                 if(permissions.global.admin !== undefined){
+                    context.commit('setHasPermission', true);
                     return true;
                 }
 
@@ -296,8 +297,6 @@ export const store = new Vuex.Store({
                 }
             }
 
-
-
             // if the user has a particular permission
             if(permissions[app] !== undefined){
                 if (permissions[app][key] !== undefined){
@@ -306,10 +305,6 @@ export const store = new Vuex.Store({
             }
 
             //check author
-
-            // has any permission
-            console.log("app:"+app+", key:"+key+", hasSinglePermission:"+hasSinglePermission+", appPermission:"+appPermission);
-
             if(permissions.global !== undefined && permissions.global.author !== undefined){
                 if(!appPermission && !hasSinglePermission){
                     context.commit('setHasPermission', false);
