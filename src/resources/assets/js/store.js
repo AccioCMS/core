@@ -275,12 +275,13 @@ export const store = new Vuex.Store({
 
                 //admin has access into all permissions
                 if(permissions.global.admin !== undefined){
+                    context.commit('setHasPermission', true);
                     return true;
                 }
 
                 //editors and authors have access only in certain apps
                 if(permissions.global.editor !== undefined || permissions.global.author !== undefined) {
-                    let allowedApps = ['Pages','Categories','Tags','Media'];
+                    let allowedApps = ['Pages','Category','Tags','Media'];
 
                     if(allowedApps.indexOf(app) !== -1 || postTypes.indexOf(app) !== -1){
                         appPermission = true;

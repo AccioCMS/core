@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: sopa
- * Date: 18/08/2017
- * Time: 10:32 PM
- */
 
 namespace Accio\App\Traits;
 

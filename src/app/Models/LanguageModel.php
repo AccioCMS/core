@@ -28,7 +28,7 @@ class LanguageModel extends Model{
      *
      * @var array $fillable
      */
-    protected $fillable = ['name','nativeName','slug','isDefault','isVisible'];
+    protected $fillable = ['createdByUserID','name','nativeName','slug','isDefault','isVisible'];
 
     /**
      * The primary key of the table
