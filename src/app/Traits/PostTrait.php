@@ -457,7 +457,7 @@ trait PostTrait{
         // finalize published at
         $postObj->published_at = $date;
 
-        if (!isset($data['postID'])){
+        if(!isset($data['postID'])){
             $postObj->created_at = Carbon::now();
         }
         $postObj->title = $data['title'];
@@ -499,7 +499,6 @@ trait PostTrait{
                 $primaryKey = "postID";
             }
 
-
             if($translatable){
                 if(is_array($formData['value']) && !count($formData['value'])){
                     foreach ($languages as $language){
@@ -523,7 +522,7 @@ trait PostTrait{
                                 }
                             }
                         }else{
-                            if(isset($singleValue[$primaryKey])) {
+                            if(isset($valuesByLang[$primaryKey])) {
                                 $tmpArr[$langSlug] = $valuesByLang[$primaryKey];
                             }
                         }
