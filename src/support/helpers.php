@@ -328,10 +328,11 @@ if(!function_exists('noPostTypeSlug')) {
     /**
      * Remove 'post_' from post type slug
      * @param $postTypeSlug
+     * @param string $replaceWith
      * @return mixed
      */
-    function cleanPostTypeSlug($postTypeSlug){
-        return str_replace('post_','',$postTypeSlug);
+    function cleanPostTypeSlug($postTypeSlug, $replaceWith = ''){
+        return str_replace('post_',$replaceWith,$postTypeSlug);
     }
 }
 
@@ -502,6 +503,6 @@ if (! function_exists('getPostType')) {
      */
     function getPostType(string $postType){
         // post type of pages
-        return \App\Models\PostType::getFromCache()['post_'.$postType];
+        return \App\Models\PostType::findBySlug($postType);
     }
 }

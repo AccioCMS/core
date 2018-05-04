@@ -31,8 +31,8 @@ class Backend{
             }
 
             if (Auth::check()) {
-                //set all permissions
-                User::setPermissions();
+                // get all permissions
+                Auth::user()->getPermissions();
 
                 // check permission language
                 if (!User::isDefaultGroup() && !User::hasAccess('Language', 'id', Language::current('languageID'))) {

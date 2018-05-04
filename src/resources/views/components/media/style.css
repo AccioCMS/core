@@ -1,7 +1,5 @@
 .mediaPopupWrapper{
     position: fixed;
-    height: 100%;
-    width: 100%;
     top: 0;
     left: 0;
     right: 0;
@@ -9,19 +7,20 @@
     background: rgba(0,0,0,0.5);
     z-index: 9999;
     padding: 50px;
-    overflow: auto;
 }
 .mediaPopupContainer{
-    height: 100%;
-    width: 100%;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
     background-color: #FFFFFF;
-    display: table;
-    border: 1px solid #999;
     box-shadow: -1px 0px 20px 1px #333;
+    z-index: 9999;
 }
 #popupContent{
-    display: table-row;
     width: 100%;
+    height: 100%;
     text-align: center;
     vertical-align: middle;
     background-color: #fff;
@@ -30,8 +29,7 @@
 #closePopupBtn, #closeCropBtn{
     margin-top: 5px;
     position: absolute;
-    right: 60px;
-    top: 50px;
+    right: 10px;
     color: #34495e;
     cursor: pointer;
 }
@@ -39,7 +37,6 @@
     z-index: 1;
 }
 .text-container{
-    display: table-cell;
     width: 100%;
     height: 100%;
     vertical-align: middle;
@@ -54,12 +51,13 @@
     height: 40px;
 }
 #popupButtons{
-    width: 100%;
-    height: 50px;
-    position: absolute;
+    bottom: 10px;
+    position: fixed;
+    left: 10px;
+    right: 10px;
     display: block;
-    background-color: #fff;
-    bottom: 0;
+    width: auto;
+    height: auto;
 }
 .popupContentLibrary #popupButtons{
     padding-top: 10px;
@@ -76,7 +74,7 @@
     overflow: hidden !important;
 }
 #tabs{
-    display: table-row;
+
     width: 100%;
     height: 50px;
 }
@@ -160,7 +158,7 @@
 .dropzone {
     min-height: 300px;
     border: 1px solid #e5e5e5;
-    display: table-cell;
+
     width: 100%;
     height: 100%;
     vertical-align: middle;
@@ -170,7 +168,7 @@
 .popupContentLibrary{}
 
 .imageWrapperPopupMedia{
-    display: table-cell;
+
     width: 100%;
     height: 100%;
 }
@@ -184,6 +182,7 @@
     padding: 15px;
     overflow: auto;
     padding-bottom:50px;
+    height: 83%;
 }
 #filesMediaPopup2, #albumsContainer{
     padding: 15px;
@@ -233,6 +232,12 @@
 }
 #editPanel{
     background-color: #e4e4e4;
+    overflow-y: scroll;
+    padding-bottom: 50px;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    height: 83%;
 }
 #editPanel h5{
     display: block;
@@ -512,7 +517,7 @@ label.btn.btn-default.active {
 }
 @media only screen and (max-width: 1600px) {
     #filesMediaPopup, #albumsContainer {
-        top: 50px;
+        top: 0;
         left: 0;
         right: 300px;
         bottom: 0;
@@ -524,23 +529,9 @@ label.btn.btn-default.active {
         overflow: auto;
         outline: 0;
     }
-    #editPanel {
-        overflow-y: scroll;
-        padding-bottom: 50px;
-        position: absolute;
-        top: 50px;
-        right: 0;
-        bottom: 0;
-    }
-    #editPanel2 {
-        overflow-y: scroll;
-        padding-bottom: 50px;
-        position: relative;
-    }
 }
 @media only screen and (min-width: 1601px) {
     #filesMediaPopup, #albumsContainer {
-        top: 50px;
         left: 0;
         right: 300px;
         bottom: 0;

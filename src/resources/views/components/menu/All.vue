@@ -44,7 +44,7 @@
                             <!-- LINK PANELS -->
                             <link-panel v-for="(panel, key, index) in linkPanels"
                                         :key="key"
-                                        :index="index"
+                                        :index="key"
                                         :panel="panel"
                                         :trans="trans"
                                         :languages="languages"

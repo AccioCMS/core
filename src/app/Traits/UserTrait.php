@@ -11,6 +11,7 @@
 namespace Accio\App\Traits;
 
 use App\Models\Permission;
+use App\Models\RoleRelation;
 use App\Models\User;
 use App\Models\UserGroup;
 use Illuminate\Support\HtmlString;
@@ -65,20 +66,27 @@ trait UserTrait{
         $hasSinglePermission = false;
 
         if(self::isDefaultGroup()){
+            $userSelfDataAccess = ($app == 'User' && $id == Auth::user()->userID);
+            $isPostType = isset(\App\Models\PostType::getFromCache()[$app]);
+
             if (self::isEditor()) {
-                $allowedApps = array('Pages', 'Categories', 'Tags', 'Media');
+                $allowedApps = array('Pages', 'Category', 'Tags', 'Media');
+                $isAllowedApp = (
+                in_array($app, $allowedApps)
+                );
 
                 //if app is an allowed app or is a post type, pass the appPermission check
                 if(
-                    (
-                        //if is an allowed app
-                        in_array($app, $allowedApps)
-                        //is a post type
-                        || isset(\App\Models\PostType::getFromCache()[$app])
-                    )
+                  (
+                    $isAllowedApp
+                    || $isPostType
+                  )
 
-                    //is a language
-                    || ($app == "Language" && $key == "id" && $id)
+                  //is a language
+                  || ($app == "Language" && $key == "id" && $id)
+
+                  // User can manage his own data
+                  || $userSelfDataAccess
                 ){
                     $appPermission = true;
                     $hasSinglePermission = true;
@@ -86,29 +94,29 @@ trait UserTrait{
             }elseif(self::isAuthor()) {
                 $allowedApps = array('Media');
                 $isAllowedApp = (
-                    //if is an allowed app
-                    in_array($app, $allowedApps)
-                    //is a post type
-                    || isset(\App\Models\PostType::getFromCache()[$app])
+                in_array($app, $allowedApps)
                 );
 
                 //if app is an allowed ap or is a post type, pass the appPermission check
                 if(
-                    $isAllowedApp
+                  $isAllowedApp
+                  || $isPostType
 
-                    //authors have read access into all Categories, Tags and Languages
-                    || (
-                        in_array($app, array("Categories", "Tags", "Language"))
+                  //authors have read access into all Categories, Tags and Languages
+                  || (
+                    in_array($app, array("Category", "Tags", "Language"))
 
-                        &&
+                    &&
 
-                        (
-                            //is a specific id (used for listing in dropdown in create)
-                            ($key == "id" && $id || $id === 'hasAll')
-                            //has only read access
-                            || in_array($key,array("read"))
-                        )
+                    (
+                        //is a specific id (used for listing in dropdown in create)
+                      ($key == "id" && $id || $id === 'hasAll')
+                      //has only read access
+                      || in_array($key,array("read"))
                     )
+                  )
+                  // User can manage his own data
+                  || $userSelfDataAccess
                 ) {
                     $appPermission = true;
                     $hasSinglePermission = true;
@@ -151,7 +159,6 @@ trait UserTrait{
             }else{
                 $hasOwnership = true;
             }
-
             // don't give te user access if it has not permissions in a default allowed app and it a particular permission
             if(!$appPermission && !$hasSinglePermission){
                 return false;
@@ -224,47 +231,36 @@ trait UserTrait{
     }
 
     /**
-     * Get roles of a user user
+     * Get permissions of the user
      *
-     * @param int $userID Default: Authenticated User
-     * @return object Return list of groups that the user belongs to
+     * @return array
      */
-    public static function roles($userID = 0){
-        if($userID){
-            $user = self::findByID($userID);
-        }else{
-            $user = Auth::user();
+    public function getPermissions(){
+        // return permissoins if they have already been requested
+        if(self::$permissions) {
+            return self::$permissions;
         }
-        $groupsID =  array_values((array) Auth::user()->groupIDs);
 
-        $groupsList = UserGroup::whereIn("groupID",$groupsID)->get();
-        return $groupsList;
-    }
-
-    /**
-     *  Get user's permissions from db and store them in a multidimensional array with app's name as a key
-     * */
-    public  static function setPermissions(){
-        $groupsID = array_values((array) Auth::user()->groupIDs);
-        $permissions = Permission::whereIn("groupID",$groupsID)->get();
-
-        foreach(self::roles() as $group){
-            if($group->isDefault){
+        $groupIDs = [];
+        foreach (Auth::user()->roles as $group) {
+            if ($group->isDefault) {
                 self::$permissions["global"]["isDefault"] = true;
-                break;
             }
+            $groupIDs[] = $group->groupID;
         }
 
-        //store permissions in a property
-        foreach ($permissions as $permission){
+        $permissions = Permission::whereIn("groupID", $groupIDs)->get();
+
+        // save values in keys & values for easy access
+        foreach ($permissions as $permission) {
             self::$permissions[$permission->app][$permission->key] = [
-                'value' => ($permission->ids !== NULL) ? array_values(json_decode($permission->ids, true)) : $permission->value,
-                'hasAll' => $permission['hasAll']
+              'value' => ($permission->ids !== NULL) ? array_values(json_decode($permission->ids, true)) : $permission->value,
+              'hasAll' => $permission['hasAll']
             ];
         }
-        return;
-    }
 
+        return self::$permissions;
+    }
 
     /**
      * Get a particular permission
@@ -275,17 +271,6 @@ trait UserTrait{
     public static function getPermission($app, $key, $userID = 0){
         //TODO $userID me mujt me i marr permissions e nje useri specifik
         return (isset(self::$permissions[$app][$key]) ? self::$permissions[$app][$key] : false);
-    }
-
-    /**
-     * Get all permissions of authenticated suer
-     *
-     * @param int $userID Default: Authenticated User
-     * @return array
-     */
-    public static function getPermissions($userID = 0){
-       //TODO $userID me mujt me i marr permissions e nje useri specifik
-        return self::$permissions;
     }
 
     /**
@@ -413,6 +398,109 @@ trait UserTrait{
         if(Auth::check()){
            return Auth::user()->isActive;
         }
+        return false;
+    }
+    /**
+     * Get the admin group
+     *
+     * @return mixed
+     * @throws \Exception
+     */
+    public function getAdminGroup(){
+        $find = UserGroup::where('slug','admin')->first();
+        if(!$find){
+            throw new \Exception("No admin group found");
+        }
+
+        return $find;
+    }
+
+    /**
+     * Get an admin
+     *
+     * @return object
+     * @throws \Exception
+     */
+    public static function getAnAdmin(){
+        $permission = new Permission();
+        $getPermission = $permission->where('app','global')->where('key', 'admin')->where('value', true)->get()->first();
+
+        if($getPermission){
+            $adminRelations  = RoleRelation::where('groupID', $getPermission->groupID)->first();
+            if($adminRelations){
+                return User::find($adminRelations->userID);
+            }
+        }
+
+        throw new \Exception("No admin user found.");
+    }
+
+    /**
+     * Get an editor
+     *
+     * @return object
+     * @throws \Exception
+     */
+    public static function getAnEditor(){
+        $permission = new Permission();
+        $getPermission = $permission->where('app','global')->where('key', 'editor')->where('value', true)->get()->first();
+
+        if($getPermission){
+            $adminRelations  = RoleRelation::where('groupID', $getPermission->groupID)->first();
+            if($adminRelations){
+                return User::find($adminRelations->userID);
+            }
+        }
+
+        throw new \Exception("No admin user found.");
+    }
+
+    /**
+     * Get an editor
+     *
+     * @return object
+     * @throws \Exception
+     */
+    public static function getAnAuthor(){
+        $permission = new Permission();
+        $getPermission = $permission->where('app','global')->where('key', 'author')->where('value', true)->get()->first();
+
+        if($getPermission){
+            $adminRelations  = RoleRelation::where('groupID', $getPermission->groupID)->first();
+            if($adminRelations){
+                return User::find($adminRelations->userID);
+            }
+        }
+
+        throw new \Exception("No admin user found.");
+    }
+
+    /**
+     * Assign roles to a user
+     *
+     * @param array $groups groups that are selected in frontend for the new or existing user
+     * @return bool
+     * */
+    public function assignRoles($groups){
+        // check if user has permissions to access this link
+        if(!self::hasAccess('user','update') && !self::hasAccess('user','create')){
+            return false;
+        }
+        // First delete all previous relations
+        RoleRelation::where('userID',$this->userID)->delete();
+
+        $roles = [];
+        foreach ($groups as $groupID=>$group){
+            $roles[] = [
+              'userID' => $this->userID,
+              'groupID' => (isset($group['groupID']) ? $group['groupID'] : $groupID)
+            ];
+        }
+
+        if(RoleRelation::insert($roles)){
+            return true;
+        }
+
         return false;
     }
 }

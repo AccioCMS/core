@@ -26,6 +26,35 @@ class BasePostController extends MainController {
     }
 
     /**
+     * Get all data needed in the post create form
+     * @param $lang: language
+     * @param $postTypeSlug
+     * @return array
+     */
+    public function getDataForCreate($lang, $postTypeSlug){
+        // Languages
+        $languages = Language::getFromCache();
+        // Custom field groups
+        $customFieldsGroups = CustomFieldGroup::findGroups('post-type', 'create', 0, $postTypeSlug);
+        // post type
+        $postType = PostType::getFromCache()->where('slug', $postTypeSlug)->first();
+        // Categories (options to select)
+        $categories = array_values(App\Models\Category::getFromCache()->where("postTypeID", $postType->postTypeID)->toArray());
+        // get columns
+        $columns = $this->getColumns('en', $postTypeSlug);
+
+        return[
+            'postType' => $postType,
+            'languages' => $languages,
+            'categories' => $categories,
+            'customFieldsGroups' => $customFieldsGroups,
+            'column' => $columns['column'],
+            'inTableColumnsSlugs' => $columns['inTableColumnsSlugs'],
+            'allColumn' => $columns['allColumn'],
+        ];
+    }
+
+    /**
      * Get posts to be displayed in menu panel
      *
      * @param string $lang
@@ -112,44 +141,100 @@ class BasePostController extends MainController {
     }
 
     /**
-     *  Get the column names
-     *  the column names of the specific post type
-     * */
-    public function getColumns($lang, $postType){
+     * Get the column names
+     * the column names of the specific post type
+     *
+     * @param $lang
+     * @param $postType
+     * @return array
+     */
+    public function getColumns($lang, $postType, $post = ""){
         // check if user has permissions to access this link
         if(!User::hasAccess($postType,'read')){
             return $this->noPermission();
         }
-        $fields = json_decode(\App\Models\PostType::where('slug', $postType)->select('fields')->first()->fields);
+        // fields of this post type
+        $fields = App\Models\PostType::getFields($postType);
+        // languages
+        $languages = Language::getFromCache();
+
         $column = array();
         $allColumn = array();
         $inTableColumnsSlugs = array();
+        $translatableFields = array();
+
         foreach ($fields as $field){
             if($field->inTable){
+                // add columns that should appear in table
                 array_push($column, $field);
                 array_push($inTableColumnsSlugs, $field->slug);
             }
 
-            // construct categories field (@If categories 0 it means it's value is all @else construct a array with categories slug)
-            if(count($field->categories)){
-                $categoriesTmp = [];
-                foreach ($field->categories as $category){
-                    if($category->slug === 0){
-                        $field->categories = 0;
-                        break;
+            /**
+             * prepare values for each field
+             * used when this function is called in detailsJson (update form of the post)
+             */
+            if (isset($post) && $post){
+                $slug = $field->slug;
+                if(!$field->translatable){
+                    if(array_key_exists($slug,$post->getAttributes())){
+                        if($field->type->inputType == "checkbox"){ // if input type is checkbox the value should be array
+                            $value = ($post->$slug) ? explode(",", $post->$slug) : [];
+                            $field->value = $value;
+                        }else if ($field->type->inputType == "date"){ // if input type is date remove the php time form the string
+                            $field->value = explode(" ", $post->$slug)[0];
+                        }else{
+                            $field->value = $post->$slug;
+                        }
                     }
-                    $categoriesTmp[] = $category->slug;
-                    $field->categories = $categoriesTmp;
+                }else{
+                    // populate the $translatableFields with the slugs of the fields that can be translated to use it below for the media array
+                    array_push($translatableFields, $slug);
+                    if(gettype($post->$slug) != "array" && json_decode($post->$slug) == null){
+                        $value = [];
+                    }else{
+                        $value = (array) json_decode($post->$slug);
+                    }
+                    // if there is a new language this code puts the new language key in the details
+                    foreach($languages as $lang){
+                        if(!key_exists($lang->slug, $value)){
+                            if($field->type->inputType == "checkbox"){
+                                $value[$lang->slug] = [];
+                            }else{
+                                $value[$lang->slug] = [];
+                            }
+                        }
+                    }
+                    $field->value = $value;
                 }
-            }else{
-                $field->categories = 0;
             }
 
-            // get data from database if custom field is "Dropdown from DB"
+
+            /**
+             * get data from database if custom field is "Dropdown from DB"
+             */
             if($field->type->inputType == "db"){
+
+                /**
+                 * construct categories field (@If categories 0 it means it's value is all @else construct a array with categories slug)
+                 * categories when field is dropdown from db (used to take posts of only a category)
+                 */
+                if(count($field->categories)){
+                    $categoriesTmp = [];
+                    foreach ($field->categories as $category){
+                        if($category->slug === 0){
+                            $field->categories = 0;
+                            break;
+                        }
+                        $categoriesTmp[] = $category->slug;
+                    }
+                    $field->categories = $categoriesTmp;
+                }else{
+                    $field->categories = 0;
+                }
+
                 if(count($field->dbTable)){
                     $table = $field->dbTable->name;
-                    // TODO :: me ndreq order edhe limit
                     $field->data = Language::filterRows(DB::table($table)->get(), false);
                     // if user add fullName as key
                     if($table == "users"){
@@ -164,7 +249,7 @@ class BasePostController extends MainController {
             }
             array_push($allColumn, $field);
         }
-        return array('column' => $column, 'inTableColumnsSlugs' => $inTableColumnsSlugs, 'allColumn' => $allColumn);
+        return array('column' => $column, 'inTableColumnsSlugs' => $inTableColumnsSlugs, 'allColumn' => $allColumn, 'translatableFields' => $translatableFields);
     }
 
 
@@ -541,14 +626,13 @@ class BasePostController extends MainController {
      * @param $id
      *
      * @return array JSON object with details for a specific post type
-     *
      */
     public function detailsJSON($lang, $post_type, $id){
         // check if user has permissions to access this link
         if(!User::hasAccess($post_type,'update', $id, true)){
             return $this->noPermission();
         }
-        // all languages
+        // languages
         $languages = Language::getFromCache();
 
         // Get post
@@ -560,80 +644,22 @@ class BasePostController extends MainController {
             $post = new Post();
             $post->setConnection('mysql_archive');
             $post = $post->find($id);
+            if(!$post){
+                return $this->response("There is no post with ID: " . $id, 404);
+            }
+
         }
         // request the url of the post
         $href = $post->href;
 
-        if(!$post){
-            return $this->response("This post could not be found!", 403);
-        }
         $post->setAutoTranslate(false);
 
-        $column = array(); // single column - used temporary in the loop
-        $allColumn = array(); // all columns - the form object used to construct the fields in the frontend
-        $inTableColumnsSlugs = array(); // get the columns that should appear in the table
-        $translatableFields = array();  // the fields that are translatable
+        $columns = $this->getColumns($lang, $post_type, $post);
 
-        $fields = App\Models\PostType::getFields($post_type);
-        foreach ($fields as $field){ // loop throw the fields to construct the final array $allColumn
-            if($field->inTable){
-                array_push($column, $field);
-                array_push($inTableColumnsSlugs, $field->slug);
-            }
-            $slug = $field->slug;
-            if(!$field->translatable){
-                if(isset($post->$slug)){
-                    if($field->type->inputType == "checkbox"){ // if input type is checkbox the value should be array
-                        $value = ($post->$slug) ? explode(",", $post->$slug) : [];
-                        $field->value = $value;
-                    }else if ($field->type->inputType == "date"){ // if input type is date remove the php time form the string
-                        $field->value = explode(" ", $post->$slug)[0];
-                    }else{
-                        $field->value = $post->$slug;
-                    }
-                }
-            }else{
-                // populate the $translatableFields with the slugs of the fields that can be translated to use it below for the media array
-                array_push($translatableFields, $slug);
-//                if(isset($post->$slug)){
-                    if(gettype($post->$slug) != "array" && json_decode($post->$slug) == null){
-                        $value = [];
-                    }else{
-                        $value = (array) json_decode($post->$slug);
-                    }
-                    // if there is a new language this code puts the new language key in the details
-                    foreach($languages as $lang){
-                        if(!key_exists($lang->slug, $value)){
-                            if($field->type->inputType == "checkbox"){
-                                $value[$lang->slug] = [];
-                            }else{
-                                $value[$lang->slug] = "";
-                            }
-                        }
-                    }
-                    $field->value = $value;
-//                }
-            }
-
-            // get data from database if custom field is "Dropdown from DB"
-            if($field->type->inputType == "db"){
-                if(count($field->dbTable)){
-                    $table = $field->dbTable->name;
-                    // TODO :: me ndreq order edhe limit
-                    $field->data = Language::filterRows(DB::table($table)->get(), false);
-
-                    if($table == "users"){
-                        $tmp = [];
-                        foreach ($field->data as $userItem){
-                            $userItem['fullName'] = $userItem['firstName']. " ". $userItem['lastName'];
-                            $tmp[] = $userItem;
-                        }
-                        $field->data = $tmp;
-                    }
-                }
-            }
-            array_push($allColumn, $field);
-        }
+        $column = $columns['column']; // single column - used temporary in the loop
+        $allColumn = $columns['allColumn']; // all columns - the form object used to construct the fields in the frontend
+        $inTableColumnsSlugs = $columns['inTableColumnsSlugs']; // get the columns that should appear in the table
+        $translatableFields = $columns['translatableFields'];  // the fields that are translatable
 
         // get the media relation joining the media table and the post
         $mediaRelationsResults = DB::table('media_relations')
@@ -708,7 +734,10 @@ class BasePostController extends MainController {
             $media = array_merge($media, $customFieldOBJ->getMedia());
         }
 
+        // post type
         $currentPostType = PostType::findBySlug($post_type);
+        // Categories (options to select)
+        $categories = array_values(App\Models\Category::getFromCache()->where("postTypeID", $currentPostType->postTypeID)->toArray());
 
         $response = array(
             'details' => $allColumn,
@@ -722,6 +751,7 @@ class BasePostController extends MainController {
             'media' => $media,
             'published_at' => $post->published_at,
             'selectedCategories' => $selectedCategories,
+            'postTypeID' => $currentPostType->postTypeID,
             'hasCategories' => $currentPostType->hasCategories,
             'isCategoryRequired' => $currentPostType->isCategoryRequired,
             'selectedTags' => $selectedTags,
@@ -729,6 +759,7 @@ class BasePostController extends MainController {
             'isTagRequired' => $currentPostType->isTagRequired,
             'isFeaturedImageRequired' => $currentPostType->isFeaturedImageRequired,
             'createdByUserID' => $post->createdByUserID,
+            'categories' => $categories,
             'languages' => $languages,
         );
         // Fire event
@@ -797,4 +828,5 @@ class BasePostController extends MainController {
 
         return array('redirectUrl' => $redirectUrl, 'view' => $view);
     }
+
 }

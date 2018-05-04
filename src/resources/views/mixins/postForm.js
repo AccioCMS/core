@@ -16,7 +16,6 @@ export const postForm = {
             this.status = {};
             this.languages = '';
             this.defaultLangSlug = '';
-            this.activeLangsSlug = "";
             this.dateFormat = 'd MMMM yyyy';
             this.published_at = {date: '', time: {HH: "",mm: ""}, dateFormatted: ''};
             this.savedDropdownMenuVisible = false;
@@ -24,11 +23,14 @@ export const postForm = {
             // display spinner
             this.$store.commit('setSpinner', true);
 
-            // List of all languages
-            var languagesPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/language/get-all?order=isDefault&type=desc')
+            // get data used in the form like post type, categories, post type fields, custum fields etc
+            this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/post/json/get-data-for-create/'+this.$route.params.post_type)
                 .then((resp) => {
-                    this.languages = resp.body.data;
-
+                    /**
+                     *  Get and manipulate with languages
+                     */
+                    this.languages = resp.body.languages;
+                    let selectedTags = {};
                     for(var k in this.languages){
                         if(this.languages[k].isDefault){
                             this.defaultLangSlug = this.languages[k].slug;
@@ -40,104 +42,82 @@ export const postForm = {
                         this.slug[this.languages[k].slug] = "";
                         this.title[this.languages[k].slug] = "";
                         this.content[this.languages[k].slug] = "";
-                        this.selectedTags[this.languages[k].slug] = [];
+                        selectedTags[this.languages[k].slug] = [];
                     }
+                    this.selectedTags = selectedTags;
                     this.$store.commit('setLanguages', this.languages);
-                }).then( (resp) => {
-                    // ajax request to get custom fields
-                    this.$http.get(
-                        this.basePath+'/'+
-                        this.$route.params.adminPrefix+'/'+
-                        this.$route.params.lang+
-                        '/json/custom-fields/get-by-app/post-type/create/0/'+
-                        this.$route.params.post_type)
-                            .then((resp) => {
-                                this.loadCustomFields(resp.body, 'create');
-                            });
-                }).then((resp) => {
-                    this.getFieldsAndPrepareValues();
+
+                    /**
+                     *  Custom Field Groups
+                     */
+                    this.loadCustomFields(resp.body.customFieldsGroups, 'create');
+
+                    /**
+                     * Columns or post type fields
+                     * Prepare v-models (value placeholders for each field)
+                     */
+                    this.getFieldsAndPrepareValues(resp.body.allColumn, resp.body.inTableColumnsSlugs);
+
+                    /**
+                     * Post type data
+                     */
+                    this.postTypeID = resp.body.postType.postTypeID;
+                    this.hasFeaturedVideo = resp.body.postType.hasFeaturedVideo;
+                    this.hasCategories = resp.body.postType.hasCategories;
+                    this.isCategoryRequired = resp.body.postType.isCategoryRequired;
+                    this.hasTags = resp.body.postType.hasTags;
+                    this.isTagRequired = resp.body.postType.isTagRequired;
+                    this.isFeaturedImageRequired = resp.body.postType.isFeaturedImageRequired;
+
+                    /**
+                     * Categories (options for the dropwdown)
+                     */
+                    this.categoriesOptions = resp.body.categories;
+
+                    /**
+                     * get plugin panels
+                     */
+                    this.getPluginsPanel(['post', this.$route.params.post_type], 'create');
+
+                    this.$store.commit('setSpinner', false);
                 });
-
-            // get post type
-            var postTypePromise = this.$http.get(
-                this.basePath+'/'+
-                this.$route.params.adminPrefix+'/'+
-                this.$route.params.lang+
-                '/json/post-type/get-by-slug/'+
-                this.$route.params.post_type)
-                .then((resp) => {
-                    this.hasFeaturedVideo = resp.body.hasFeaturedVideo;
-                    this.hasCategories = resp.body.hasCategories;
-                    this.isCategoryRequired = resp.body.isCategoryRequired;
-                    this.hasTags = resp.body.hasTags;
-                    this.isTagRequired = resp.body.isTagRequired;
-                    this.isFeaturedImageRequired = resp.body.isFeaturedImageRequired;
-                });
-
-            // get all categories of post type
-            const categoriesOptions = [];
-            var categoryPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/category/get-all-without-pagination-by-post-type/'+this.$route.params.post_type)
-                .then((resp) => {
-                    this.categoriesOptions = resp.body;
-                });
-
-            // get all tags of post type
-            const tagsOptions = [];
-            var tagPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/tags/get-all-without-pagination-by-post-type/'+this.$route.params.post_type)
-                .then((resp) => {
-                    this.tagsOptions = resp.body;
-                });
-
-            // when all ajax request are done
-            Promise.all([languagesPromise,categoryPromise,tagPromise,postTypePromise]).then(([v1,v2,v3,v4]) => {
-                // get plugin panels
-                this.getPluginsPanel(['post', this.$route.params.post_type], 'create');
-
-                const global = this;
-                setTimeout(function (e) {
-                    global.$store.commit('setSpinner', false);
-                }, 500);
-            });
         },
 
 
         // get and prepare fields of a post type
-        getFieldsAndPrepareValues(){
+        getFieldsAndPrepareValues(allColumn, inTableColumnsSlugs){
             // get the columns in from the post type table and set the form data to the column data
-            this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/'+ this.$route.params.post_type+'/columns')
-                .then((resp) => {
-                    this.columns = resp.body.allColumn;
-                    // this loop handles to populate the form with the arrays
-                    for(var k in this.columns){
-                        var tempArray = {};
-                        if(this.columns[k].multioptionValues != ""){
-                            if(this.columns[k].translatable){
-                                this.columns[k].value = this.makeMultiLanguageValue('array');
-                            }else{
-                                // add value to the object / this value will be used to store the input value
-                                this.columns[k].value = [];
-                            }
-
-                            // generate multioption values (options) array from the string
-                            this.columns[k].multioptionValues = this.generateMultioptionsValue(this.columns[k].multioptionValues, this.columns[k].type.inputType);
-
-                        }else{ // if it is not a multioption input type
-                            if(this.columns[k].translatable == true){
-                                // add value to the object / this value will be used to store the input value
-                                this.columns[k].value = this.columns[k].value = this.makeMultiLanguageValue();
-                            }else{
-                                this.columns[k].value = ""; // add value to the object / this value will be used to store the input value
-                            }
-                        }
-                        for(var key in this.columns[k]){
-                            tempArray[key] = this.columns[k][key];
-                        }
-                        this.form.push(
-                            tempArray
-                        );
+            this.columns = allColumn;
+            // this loop handles to populate the form with the arrays
+            for(var k in this.columns){
+                var tempArray = {};
+                if(this.columns[k].multioptionValues != ""){
+                    if(this.columns[k].translatable){
+                        this.columns[k].value = this.makeMultiLanguageValue('array');
+                    }else{
+                        // add value to the object / this value will be used to store the input value
+                        this.columns[k].value = [];
                     }
-                    this.columnSlugs = resp.body.inTableColumnsSlugs;
-                });
+
+                    // generate multioption values (options) array from the string
+                    this.columns[k].multioptionValues = this.generateMultioptionsValue(this.columns[k].multioptionValues, this.columns[k].type.inputType);
+
+                }else{ // if it is not a multioption input type
+                    if(this.columns[k].translatable == true){
+                        // add value to the object / this value will be used to store the input value
+                        this.columns[k].value = this.columns[k].value = this.makeMultiLanguageValue();
+                    }else{
+                        this.columns[k].value = ""; // add value to the object / this value will be used to store the input value
+                    }
+                }
+                for(var key in this.columns[k]){
+                    tempArray[key] = this.columns[k][key];
+                }
+                this.form.push(
+                    tempArray
+                );
+            }
+            this.columnSlugs = inTableColumnsSlugs;
         },
 
         // generate multioptions value (the options for dropdown, checkboxes and radio buttons)
@@ -189,7 +169,6 @@ export const postForm = {
             this.status = {};
             this.languages = '';
             this.defaultLangSlug = '';
-            this.activeLangsSlug = "";
             this.dateFormat = 'd MMMM yyyy';
             this.published_at = {date: '', time: {HH: "",mm: ""}, dateFormatted: ''};
             this.createdByUserID = 0;
@@ -269,6 +248,7 @@ export const postForm = {
                     this.title = resp.body.title;
                     this.content = resp.body.content;
                     this.status = resp.body.status;
+                    this.postTypeID = resp.body.postTypeID;
                     this.hasCategories = resp.body.hasCategories;
                     this.isCategoryRequired = resp.body.isCategoryRequired;
                     this.isTagRequired = resp.body.isTagRequired;
@@ -290,32 +270,56 @@ export const postForm = {
 
                     customFieldsValuesTmp = resp.body.customFieldsValues;
                     this.loadCustomFields(resp.body.customFieldsGroups, 'update');
+
+                    /**
+                     * Categories options
+                     */
+                    this.categoriesOptions = resp.body.categories;
+
                 }).then((resp) => {
                     // load the values of the custom fields
                     this.pupulateCustomFieldsValues(customFieldsValuesTmp);
+                    this.$store.commit('setSpinner', false);
                 });
+        },
 
-            // get all categories of post type
-            const categoriesOptions = [];
-            let categoryPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/category/get-all-without-pagination-by-post-type/'+this.$route.params.post_type)
-                .then((resp) => {
-                    this.categoriesOptions = resp.body;
-                });
-            // get all tags of post type
-            const tagsOptions = [];
-            let tagPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/tags/get-all-without-pagination-by-post-type/'+this.$route.params.post_type)
-                .then((resp) => {
-                    this.tagsOptions = resp.body;
-                });
+        /**
+         * Adding new tag if the tag doesn't exits in the database
+         * @param title tag name
+         * @param languageSlug
+         */
+        addTag (title, languageSlug) {
+            const tag = {
+                tagID: 0,
+                title: title,
+                description: "",
+                slug: "",
+            }
+            this.tagsOptions.push(tag);
+            let selectedTagsInLang = [];
+            for(let k in this.selectedTags[languageSlug]){
+                selectedTagsInLang.push(this.selectedTags[languageSlug][k]);
+            }
+            selectedTagsInLang.push(tag);
+            this.selectedTags[languageSlug] = selectedTagsInLang;
+        },
 
-            // when all ajax request are done
-            Promise.all([columnPromise,categoryPromise,tagPromise]).then(([v1,v2,v3]) => {
-                const global = this;
-                setTimeout(function (e) {
-                    global.$store.commit('setSpinner', false);
-                }, 500);
-            });
-        }
+        /**
+         * Search tags in the database
+         * @param term ( search term )
+         */
+        searchTagsOptions(term){
+            if(term.length > 1){
+                this.areTagsLoading = true;
+                this.tagsOptions = [];
+                // get all tags of post type
+                this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/tags/'+ this.postTypeID +'/search/'+term)
+                    .then((resp) => {
+                        this.areTagsLoading = false;
+                        this.tagsOptions = resp.body.data;
+                    });
+            }
+        },
 
     }
 };

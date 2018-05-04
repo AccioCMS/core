@@ -32,13 +32,13 @@
         },
         created() {
             // information about the authentication
-            this.$store.commit('setAuth', JSON.parse(this.auth));
-            this.$store.commit('setLabels', JSON.parse(this.labels));
-            this.$store.commit('setGlobalData', JSON.parse(this.global_data));
-            this.$store.commit('setPluginsConfigs', JSON.parse(this.plugins_configs));
             this.$store.commit('setBaseURL', this.base_url);
             this.$store.commit('setBasePath', this.base_path);
             this.$store.commit('setLogoutLink', this.logout_link);
+            this.$store.commit('setAuth', JSON.parse(this.auth));
+            this.$store.commit('setGlobalData', JSON.parse(this.global_data));
+            this.$store.commit('setLabels', JSON.parse(this.labels));
+            this.$store.commit('setPluginsConfigs', JSON.parse(this.plugins_configs));
 
             // set menu mode on refresh
             if(this.$route.query.mode !== undefined || this.$route.query.menu_link_id !== undefined){

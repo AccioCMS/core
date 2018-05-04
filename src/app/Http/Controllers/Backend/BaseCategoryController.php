@@ -509,15 +509,17 @@ class BaseCategoryController extends MainController {
                 ->get();
         }else if(User::getPermission($postType,'categories')){
             //has access into some categories
-            $allowedCategories = User::getPermissions()[$postType]['categories']['value'];
-            $list = DB::table('categories')
-                ->join('post_type', 'post_type.postTypeID', 'categories.postTypeID')
-                ->where('post_type.slug', $postType)
-                ->whereIn('categories.categoryID', $allowedCategories)
-                ->orderBy('name', 'postTypeID')
-                ->select('categories.categoryID','categories.title','categories.slug','categories.createdByUserID','categories.order','categories.featuredImageID',
-                    'categories.description','categories.created_at','categories.updated_at','post_type.name')
-                ->get();
+            $allowedCategories = Auth::user()->getPermission($postType,'categories');
+            if($allowedCategories) {
+                $list = DB::table('categories')
+                  ->join('post_type', 'post_type.postTypeID', 'categories.postTypeID')
+                  ->where('post_type.slug', $postType)
+                  ->whereIn('categories.categoryID', $allowedCategories['value'])
+                  ->orderBy('name', 'postTypeID')
+                  ->select('categories.categoryID', 'categories.title', 'categories.slug', 'categories.createdByUserID', 'categories.order', 'categories.featuredImageID',
+                    'categories.description', 'categories.created_at', 'categories.updated_at', 'post_type.name')
+                  ->get();
+            }
         }else{
             //or doesn't have access at all
             return [];

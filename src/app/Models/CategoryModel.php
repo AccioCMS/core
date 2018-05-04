@@ -252,7 +252,6 @@ class CategoryModel extends Model{
 
         //set cache in this language
         if(!isset($cachedItems->$languageSlug)){
-
             //handle post type cache
             $postTypeData = PostType::findBySlug($cacheName);
             if($postTypeData) {

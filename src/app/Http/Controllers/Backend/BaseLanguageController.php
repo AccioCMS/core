@@ -5,6 +5,7 @@ namespace Accio\App\Http\Controllers\Backend;
 use App;
 use App\Models\User;
 use App\Models\Language;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Validator;
@@ -119,6 +120,7 @@ class BaseLanguageController extends MainController{
         }
 
         $language = new Language();
+        $language->createdByUserID  = Auth::user()->userID;
         $language->name = $data->name;
         $language->nativeName = $data->nativeName;
         $language->isDefault = $data->isDefault;
@@ -208,6 +210,7 @@ class BaseLanguageController extends MainController{
 
         // update language query
         $language = Language::findOrFail($request->id);
+        $language->createdByUserID  = Auth::user()->userID;
         $language->isDefault = $request->isDefault;
         $language->isVisible = $request->isVisible;
 

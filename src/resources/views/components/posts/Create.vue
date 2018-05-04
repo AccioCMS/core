@@ -57,7 +57,7 @@
                                         <div class="form-group" :id="'form-group-slug_'+ lang.slug">
                                             <label class="control-label col-md-2 col-sm-2 col-xs-12">{{trans.__slug}}</label>
                                             <div class="col-md-10 col-sm-10 col-xs-12">
-                                                <input type="text" class="form-control" :id="'slug_'+lang.slug" v-model="slug[lang.slug]" @dblclick="removeReadonly('slug_'+lang.slug)" readonly>
+                                                <input type="text" class="form-control" :id="'slug_'+lang.slug" v-model="slug[lang.slug]" @dblclick="isSlugDisabled = false" :readonly="isSlugDisabled">
                                                 <img :src="resourcesUrl('/images/loading.svg')" class="slugLoading">
                                                 <div class="alert" v-if="StoreResponse.errors['slug_'+ lang.slug]" v-for="error in StoreResponse.errors['slug_'+ lang.slug]">{{ error }}</div>
                                             </div>
@@ -395,22 +395,29 @@
                                         <div class="form-group" :id="'form-group-tags_'+ lang.slug" v-if="hasTags">
                                             <label class="control-label col-md-2 col-sm-2 col-xs-12">{{trans.__tagsTitle}}</label>
                                             <div class="col-md-10 col-sm-10 col-xs-12">
-                                                <pre>{{ selectedTags }}</pre>
                                                 <multiselect
                                                         v-model="selectedTags[lang.slug]"
                                                         :options="tagsOptions"
-                                                        :tag-placeholder="trans.__multiselectAddTagPlaceholder"
-                                                        :placeholder="trans.__multiselectTagPlaceholder"
                                                         label="title"
                                                         track-by="title"
+                                                        placeholder="Type to search"
+                                                        open-direction="bottom"
                                                         :multiple="true"
+                                                        :searchable="true"
+                                                        :loading="areTagsLoading"
+                                                        :internal-search="false"
+                                                        :clear-on-select="true"
+                                                        :close-on-select="true"
+                                                        :show-no-results="false"
+                                                        :hide-selected="true"
                                                         :taggable="true"
-                                                        @tag="addTag($event, lang.slug)"></multiselect>
+                                                        @tag="addTag($event, lang.slug)"
+                                                        @search-change="searchTagsOptions">
+                                                </multiselect>
+
                                                 <div class="alert" v-if="StoreResponse.errors['tags_'+lang.slug]" v-for="error in StoreResponse.errors['tags_'+lang.slug]">{{ error }}</div>
                                             </div>
                                         </div>
-
-
 
                                         <!-- customFieldsWrapper -->
                                         <div class="customFieldsWrapper col-lg-12 col-md-12 col-xs-12" v-if="customFieldsGroups.length">
@@ -570,6 +577,7 @@
 
             this.loadCreateInputs();
         },
+
         data(){
             return{
                 pluginsPanels: [],
@@ -577,6 +585,7 @@
                 selectedCategories: [],
                 tagsOptions: [],
                 selectedTags: {},
+                areTagsLoading: false,
                 customFieldsGroups: [],
                 childrenFieldsGroups: [],
                 customFieldOriginalStructure: {},
@@ -584,20 +593,22 @@
                 columns: '',
                 columnSlugs: '',
                 selected: [],
+                isSlugDisabled: true,
                 form:[],
                 title:{},
                 content:{},
                 slug:{},
                 status: {},
+                postTypeID: 0,
                 hasFeaturedVideo: false,
                 hasCategories: false,
                 hasTags: false,
                 isCategoryRequired: false,
                 isTagRequired: false,
+                isFeaturedImageRequired: false,
                 pluginsData: {},
                 languages: '',
                 defaultLangSlug: '', // get the default language slug
-                activeLangsSlug: "",
                 dateFormat: 'd MMMM yyyy',
                 published_at: {date: '', time: {HH: "",mm: ""}, dateFormatted: ''},
                 savedDropdownMenuVisible: false,
@@ -605,29 +616,11 @@
             }
         },
         methods: {
-            // adding new tag
-            addTag (title, languageSlug) {
-                const tag = {
-                    tagID: 0,
-                    title: title,
-                    description: "",
-                    slug: "",
-                }
-                this.tagsOptions.push(tag);
-                let selectedTagsInLang = [];
-                for(let k in this.selectedTags[languageSlug]){
-                    selectedTagsInLang.push(this.selectedTags[languageSlug][k]);
-                }
-                selectedTagsInLang.push(tag);
-                this.selectedTags[languageSlug] = selectedTagsInLang;
-            },
-            resetForm(){
-                $("form input, form textarea").each(function(){
-                    $(this).val("");
-                });
-            },
-
-            // used in custom field to hide or show the field when it should or shouldn't displayed in a category
+            /**
+             * Used in custom field to hide or show the field when it should or shouldn't displayed in a category
+             * @param categories
+             * @returns {boolean}
+             */
             hasCategory(categories){
                 // if it is all
                 if(categories == 0){
@@ -643,7 +636,10 @@
                 return false;
             },
 
-            // store post in the database
+            /**
+             * store post in the database (makes store ajax request)
+             * @param redirectChoice where should user be redirected afet post is added
+             */
             store(redirectChoice){
                 this.$store.dispatch('openLoading');
                 // gets media files of custom fields and writes them to their v-models
@@ -657,6 +653,7 @@
                 }
                 this.published_at.dateFormatted = dateFormatted;
 
+                // request for the backend
                 var request = {
                     title: this.title,
                     content: this.content,
@@ -692,7 +689,15 @@
                     }
                 });
             },
-            // open the media popup and with his options
+
+            /**
+             * Open the media popup with his options
+             * @param format: what kind of files are we looking to select
+             * @param inputName: for wich field are the files being selected
+             * @param langSlug: in wich language
+             * @param multiple: does the field require multiple files
+             * @param clear: should the previous files be deselected
+             */
             openMedia(format, inputName, langSlug, multiple, clear){
                 this.$store.commit('setOpenMediaOptions', {
                     multiple: multiple,
@@ -705,39 +710,22 @@
                 });
                 this.$store.commit('setIsMediaOpen', true);
             },
+
+            /**
+             * Open media just for the feature image
+             * @param inputName
+             * @param formatType
+             */
             openMediaForFeatured(inputName, formatType){
                 this.$store.commit('setOpenMediaOptions', { multiple: false, has_multile_files: false, multipleInputs: false, format : formatType, inputName: inputName, langSlug: '', clear: false });
                 this.$store.commit('setIsMediaOpen', true);
             },
-            // repair url to get the thumb
-            constructUrl(media){
-                var url = "";
-                if(media.type == "image"){
-                    url = "/"+media.fileDirectory + "/200x200/" + media.filename;
-                }else if(media.type == "document"){
-                    url = this.documentIconUrl;
-                }else if(media.type == "video"){
-                    url = this.videoIconUrl;
-                }else if(media.type == "audio"){
-                    url = this.audioIconUrl;
-                }
-                return url;
-            },
-            // remove feature image
-            removeMediaFiles(){
-                this.$store.commit('setMediaSelectedFiles', "");
-            },
-            changeDefault(option){
-                this.form.isDefault = option;
-            },
-            change(option, index){
-                this.form[index].value = option;
-            },
-            // this function activated when languages dropdown is changed
-            languagesDropdownChanged(event){
-                this.activeLangsSlug = event.target.value;
-            },
-            // this function is used to remove the selected images in custom fields
+
+            /**
+             * Used to remove the selected images in custom fields
+             * @param key field key
+             * @param mediaID
+             */
             deleteSelectedMediaFile(key, mediaID){
                 var mediaArr = this.mediaSelectedFiles;
                 for(var k in mediaArr[key]){
@@ -752,21 +740,20 @@
                 this.$store.commit('setMediaSelectedFiles', "");
                 this.$store.commit('setMediaSelectedFiles', mediaArr);
             },
-            // call the createSlug function in vuejs
+
+            /**
+             * Call the createSlug function in vuejs
+             * @param title
+             * @param index
+             * @param langSlug
+             */
             createSlug(title, index, langSlug){
                 this.$store.dispatch('createSlug', {title: title, url: this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/check-slug/'+this.$route.params.post_type+"/"})
                     .then((response) => {
                         this.slug[langSlug] = response;
                         $("#slug_"+langSlug).val(response);
                     });
-            },
-            removeReadonly(id){
-                $("#"+id).attr("readonly",false);
-            },
-            slugChanged(id){
-                var val = $("#"+id).val();
-            },
-
+            }
         },
         computed: {
             isMediaOpen(){

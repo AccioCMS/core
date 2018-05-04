@@ -8,7 +8,6 @@ use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Accio\App\Commands\AppUninstall;
 use Accio\App\Commands\CheckRequirements;
 use Accio\App\Commands\DBExport;
 use Accio\App\Commands\DeployClean;
@@ -19,7 +18,8 @@ use Accio\App\Commands\DeploySetPermissions;
 use Accio\App\Commands\DeployUploads;
 use Accio\App\Commands\MakeArchive;
 use Accio\App\Commands\MakeDummy;
-use Accio\App\Commands\AppInstall;
+use Accio\App\Commands\AccioInstall;
+use Accio\App\Commands\AccioUninstall;
 use Accio\App\Commands\MakeTheme;
 use Accio\App\Commands\MakeUser;
 use Illuminate\Config\Repository as ConfigRepository;
@@ -39,7 +39,7 @@ class PackageServiceProvider extends ServiceProvider{
      * Example: 'ClassName' => 'Accio\App\Services\ClassName',
      * @var array
      */
-    protected $bindings = [];
+    public $bindings = [];
 
     /**
      * The Artisan commands provided by your application.
@@ -49,7 +49,6 @@ class PackageServiceProvider extends ServiceProvider{
     protected $commands = [
         MakeDummy::class,
         MakeUser::class,
-        AppInstall::class,
         MakeArchive::class,
         DBExport::class,
         DeployDB::class,
@@ -60,7 +59,8 @@ class PackageServiceProvider extends ServiceProvider{
         DeployRelease::class,
         MakeTheme::class,
         CheckRequirements::class,
-        AppUninstall::class,
+        AccioInstall::class,
+        AccioUninstall::class,
         PluginInstall::class
     ];
 
@@ -184,6 +184,7 @@ class PackageServiceProvider extends ServiceProvider{
 
         Event::fire('system:register', [$this]);
     }
+
 
     /**
      * Check if app is installed

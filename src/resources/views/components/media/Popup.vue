@@ -1,7 +1,7 @@
 <template>
     <div class="mediaPopupWrapper">
-        <i class="fa fa-times fa-2x" id="closePopupBtn" aria-hidden="true" @click="cancel"></i>
         <div class="mediaPopupContainer">
+            <i class="fa fa-times fa-2x" id="closePopupBtn" aria-hidden="true" @click="cancel"></i>
             <div id="tabs">
                 <div class="tabs-container">
                     <button class="btn btn-default" type="button" :class="{ active: activeView == 'upload' }" @click="redirect('upload')">{{trans.__upload}}</button>

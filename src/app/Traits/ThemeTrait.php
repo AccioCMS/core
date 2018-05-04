@@ -220,6 +220,17 @@ trait ThemeTrait
     }
 
     /**
+     * Get path of a css.
+     * If no $filename is given, css url will be returned
+     *
+     * @param string $fileName
+     * @return \Illuminate\Contracts\Routing\UrlGenerator|string
+     */
+    public static function cssPath($fileName = ''){
+        return base_path('themes/'.self::getActiveTheme().'/assets/css').($fileName ? '/'.$fileName : "");
+    }
+
+    /**
      * Get url of a js.
      * If no $filename is given, js url will be returned
      *
@@ -228,6 +239,17 @@ trait ThemeTrait
      */
     public static function jsUrl($fileName = ''){
         return url('themes/'.self::getActiveTheme().'/assets/js').($fileName ? '/'.$fileName : "");
+    }
+
+    /**
+     * Get path of a js.
+     * If no $filename is given, js url will be returned
+     *
+     * @param string $fileName
+     * @return \Illuminate\Contracts\Routing\UrlGenerator|string
+     */
+    public static function jsPath($fileName = ''){
+        return base_path('themes/'.self::getActiveTheme().'/assets/js').($fileName ? '/'.$fileName : "");
     }
 
     /**
@@ -333,7 +355,12 @@ trait ThemeTrait
 
         // mix css
         if(isset(self::config('mix')['styles']) && self::config('mix')['styles']){
-            $html .= '<link href="' . self::cssUrl(self::config('mix')['styles']) . '" ' . Meta::parseAttributes($defaultAttributes) . ' rel="stylesheet" type="text/css">' . "\n";
+            $url =  self::cssUrl(self::config('mix')['styles']) ;
+            // Add timestamp to the end of the file, for caching purposes
+            if(file_exists(self::cssPath(self::config('mix')['styles']))) {
+                $url .= "?".File::lastModified(self::cssPath(self::config('mix')['styles']));
+            }
+            $html .= '<link href="' . $url .'" ' . Meta::parseAttributes($defaultAttributes) . ' rel="stylesheet" type="text/css">' . "\n";
         }
         // Normal css
         else if ($cssFiles) {
@@ -350,6 +377,11 @@ trait ThemeTrait
                     $url = $cssFile['path'];
                 } else {
                     $url = self::cssUrl($cssFile['path']);
+
+                    // Add timestamp to the end of the file, for caching purposes
+                    if(file_exists(self::cssPath($cssFile['path']))) {
+                        $url .= "?".File::lastModified(self::cssPath($cssFile['path']));
+                    }
                 }
 
                 $html .= '<link href="' . $url . '" ' . Meta::parseAttributes($attributes) . ' rel="stylesheet" type="text/css">' . "\n";
@@ -375,7 +407,12 @@ trait ThemeTrait
 
         // Mix js
         if(isset(self::config('mix')['scripts']) && self::config('mix')['scripts']){
-            $html .= '<script src="'. self::jsUrl(self::config('mix')['scripts']) .'" '.Meta::parseAttributes($defaultAttributes).' type="text/javascript"></script>'."\n";
+            $url = self::jsUrl(self::config('mix')['scripts']);
+            // Add timestamp to the end of the file, for caching purposes
+            if(file_exists(self::jsPath(self::config('mix')['scripts']))) {
+                $url .= "?".File::lastModified(self::jsPath(self::config('mix')['scripts']));
+            }
+            $html .= '<script src="'. $url .'" '.Meta::parseAttributes($defaultAttributes).' type="text/javascript"></script>'."\n";
         }
         // Normal js
         else if ($jsFiles) {
@@ -391,6 +428,11 @@ trait ThemeTrait
                     $url = $jsFile['path'];
                 } else {
                     $url = self::jsUrl($jsFile['path']);
+
+                    // Add timestamp to the end of the file, for caching purposes
+                    if(file_exists(self::jsPath($jsFile['path']))) {
+                        $url .= "?".File::lastModified(self::jsPath($jsFile['path']));
+                    }
                 }
 
                 $html .= '<script src="'.$url .'" '.Meta::parseAttributes($attributes).' type="text/javascript"></script>'."\n";

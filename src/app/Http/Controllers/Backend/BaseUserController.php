@@ -2,6 +2,7 @@
 
 namespace Accio\App\Http\Controllers\Backend;
 
+use Accio\App\Models\RoleRelationsModel;
 use App;
 
 use App\Models\Media;
@@ -62,12 +63,12 @@ class BaseUserController extends MainController{
         // join parameters for the query
         // we are left joinin the the media table
         $joins = array(
-            [
-                'table' => 'media',
-                'type' => 'left',
-                'whereTable1' => "profileImageID",
-                'whereTable2' => "mediaID",
-            ]
+          [
+            'table' => 'media',
+            'type' => 'left',
+            'whereTable1' => "profileImageID",
+            'whereTable2' => "mediaID",
+          ]
         );
 
         $excludeColumns = array('remember_token', 'created_at', 'updated_at');
@@ -90,9 +91,9 @@ class BaseUserController extends MainController{
         $orderType = (isset($_GET['type'])) ? $orderType = $_GET['type'] : 'DESC';
 
         return DB::table('users')
-            ->leftJoin('media', 'users.profileImageID', '=', 'media.mediaID')
-            ->orderBy($orderBy, $orderType)
-            ->paginate(User::$rowsPerPage);
+          ->leftJoin('media', 'users.profileImageID', '=', 'media.mediaID')
+          ->orderBy($orderBy, $orderType)
+          ->paginate(User::$rowsPerPage);
     }
 
     /**
@@ -103,7 +104,7 @@ class BaseUserController extends MainController{
         if(!User::hasAccess('User','read')){
             return $this->noPermission();
         }
-        return \App\Models\UserGroup::all();
+        return UserGroup::all();
     }
 
     /**
@@ -117,17 +118,17 @@ class BaseUserController extends MainController{
         }
         // custom messages for validation
         $messages = array(
-            'email.required'=>'Hello You cant leave Email field empty',
-            'firstName.required'=>'Hello You cant leave name field empty',
+          'email.required'=>'Hello You cant leave Email field empty',
+          'firstName.required'=>'Hello You cant leave name field empty',
         );
 
         // validation
         $validator = Validator::make($request->user, [
-            'firstName' => 'required',
-            'lastName' => 'required',
-            'password' => 'required|same:confpassword',
-            'email' => 'required|unique:users',
-            'groups' => 'required',
+          'firstName' => 'required',
+          'lastName' => 'required',
+          'password' => 'required|same:confpassword',
+          'email' => 'required|unique:users',
+          'groups' => 'required',
         ], $messages);
 
         // if validation fails return json response
@@ -152,13 +153,15 @@ class BaseUserController extends MainController{
         $user->country = $request->user['country'];
         $user->password = Hash::make($request->user['password']);
         $user->isActive = 1;
-        $user->groupIDs = $this->registerGroups($request->user['groups']);
         $user->slug = parent::generateSlug($request->user['firstName']." ".$request->user['lastName'], 'users', 'userID', '', 0, false);;
         $user->about = $request->user['about'];
         $user->profileImageID = $profileImageID;
         $user->gravatar = User::getGravatarFromEmail($request->user['email']);
 
         if ($user->save()){
+            // Add roles permissions
+            $user->assignRoles($request->user['groups']);
+
             $redirectParams = parent::redirectParams($request->redirect, 'user', $user->userID);
             $result = $this->response( 'User is created', 200, $user->userID, $redirectParams['view'], $redirectParams['redirectUrl']);
         }else{
@@ -188,6 +191,9 @@ class BaseUserController extends MainController{
         }
         $user = App\Models\User::find($id)->delete();
         if ($user){
+            // Delete all roles relations
+            RoleRelationsModel::where('userID',$id)->delete();
+
             $result = $this->response('User is deleted');
         }else{
             $result = $this->response( 'Internal server error. Please try again later', 500);
@@ -221,23 +227,25 @@ class BaseUserController extends MainController{
      * */
     public function storeUpdate(Request $request){
         // check if user has permissions to access this link
-        if(!User::hasAccess('user','update')){
-            return $this->noPermission();
+        if(\Illuminate\Support\Facades\Auth::user()->userID != $request->user['id']) {
+            if (!User::hasAccess('user', 'update')) {
+                return $this->noPermission();
+            }
         }
 
         // Validate
         $messages = array(
-            'email.required'=>'Hello You cant leave Email field empty',
-            'firstName.required'=>'Hello You cant leave name field empty',
-            'firstName.min'=>'Hello The field has to be :min chars long',
+          'email.required'=>'Hello You cant leave Email field empty',
+          'firstName.required'=>'Hello You cant leave name field empty',
+          'firstName.min'=>'Hello The field has to be :min chars long',
         );
 
         // validation
         $validator = Validator::make($request->user, [
-            'firstName' => 'required',
-            'lastName' => 'required',
-            'email' => 'required',
-            'groups' => 'required',
+          'firstName' => 'required',
+          'lastName' => 'required',
+          'email' => 'required',
+          'groups' => 'required',
         ], $messages);
 
         // if validation fails return json response
@@ -261,13 +269,15 @@ class BaseUserController extends MainController{
         $user->street = $request->user['street'];
         $user->country = $request->user['country'];
         $user->isActive = $request->user['isActive'];
-        $user->groupIDs = $this->registerGroups($request->user['groups']);
         $user->slug = parent::generateSlug($request->user['firstName']." ".$request->user['lastName'], 'users', 'userID', '', $request->user['id'], false);;
         $user->profileImageID = $profileImageID;
         $user->about = $request->user['about'];
         $user->gravatar = User::getGravatarFromEmail($request->user['email']);
 
         if ($user->save()){
+            // Add roles permissions
+            $user->assignRoles($request->user['groups']);
+
             $redirectParams = parent::redirectParams($request->redirect, 'user', $request->user['id']);
             $result = $this->response( 'User is update', 200, $request->user['id'], $redirectParams['view'], $redirectParams['redirectUrl'] );
             $result['data'] = $user;
@@ -283,22 +293,18 @@ class BaseUserController extends MainController{
      * */
     public function detailsJSON($lang, $id){
         // check if user has permissions to access this link
-        if(!User::hasAccess('User','read')){
-            return $this->noPermission();
-        }
-
-        $user = App\Models\User::find($id)->appendLanguageKeys();
-        $media = App\Models\Media::find($user->profileImageID);
-
-        $final = array('details' => $user, 'profileImage' => $media, 'selectedGroups' => array());
-        $allGroups = UserGroup::all();
-        foreach ($allGroups as $group){
-            foreach ($user->groupIDs as $id){
-                if($id == $group->groupID){
-                    array_push($final['selectedGroups'], $group);
-                }
+        if(\Illuminate\Support\Facades\Auth::user()->userID != $id) {
+            if (!User::hasAccess('User', 'read')) {
+                return $this->noPermission();
             }
         }
+
+        $user = App\Models\User::with('roles','profileImage')->find($id)->appendLanguageKeys();
+
+        $final = [
+          'details' => $user,
+          'allGroups' => UserGroup::all()
+        ];
 
         // Fire event
         $final['events'] = Event::fire('user:pre_update', [$final]);
@@ -318,8 +324,8 @@ class BaseUserController extends MainController{
         }
         // validation
         $validator = Validator::make($request->all(), [
-            'password' => 'required|same:confpassword',
-            'id' => 'required',
+          'password' => 'required|same:confpassword',
+          'id' => 'required',
         ]);
 
         // if validation fails return json response
@@ -328,7 +334,7 @@ class BaseUserController extends MainController{
         }
 
         $user = User::where('userID', $request->id)->update([
-            'password' => $password = Hash::make($request->password)
+          'password' => $password = Hash::make($request->password)
         ]);
 
         if ($user){
@@ -366,12 +372,12 @@ class BaseUserController extends MainController{
         // join parameters for the query
         // we are left joining the the media table
         $joins = array(
-            [
-                'table' => 'media',
-                'type' => 'left',
-                'whereTable1' => "profileImageID",
-                'whereTable2' => "mediaID",
-            ]
+          [
+            'table' => 'media',
+            'type' => 'left',
+            'whereTable1' => "profileImageID",
+            'whereTable2' => "mediaID",
+          ]
         );
         return Search::advanced('users',$request, User::$rowsPerPage, $request->page, $joins);
     }
@@ -422,12 +428,12 @@ class BaseUserController extends MainController{
         // join parameters for the query
         // we are left joinin the the media table
         $joins = array(
-            [
-                'table' => 'media',
-                'type' => 'left',
-                'whereTable1' => "profileImageID",
-                'whereTable2' => "mediaID",
-            ]
+          [
+            'table' => 'media',
+            'type' => 'left',
+            'whereTable1' => "profileImageID",
+            'whereTable2' => "mediaID",
+          ]
         );
         $advancedSearchData = json_encode(Search::advanced('users',$request, User::$rowsPerPage,$pagination,$joins));
         $view = 'list'; // the view parameter used in Vuejs to tell which component should be loaded
@@ -435,23 +441,6 @@ class BaseUserController extends MainController{
         $fields = json_encode($request);
 
         return view(User::$backendPathToView.'all', compact('lang','view','hasAdvancedSearchData','advancedSearchData','pagination', 'fields', 'adminPrefix'));
-    }
-
-    /**
-     * Register user to groups
-     * @param array $selectedGroups groups that are selected in frontend for the new or existing user
-     * @return string|array key group and value boolean if the user is selected
-     * */
-    private  function registerGroups($selectedGroups){
-        // check if user has permissions to access this link
-        if(!User::hasAccess('user','update')){
-            return $this->noPermission();
-        }
-        $groups = [];
-        foreach ($selectedGroups as $group){
-            $groups[] = $group['groupID'];
-        }
-        return $groups;
     }
 
     public function mediaStore(Request $request){

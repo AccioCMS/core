@@ -163,6 +163,9 @@ trait PostTrait{
         $postObj = new \App\Models\Post();
         $postObj->setTable($data['postType']);
 
+        // Remove foreign key check
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
         // on create
         if(!isset($data['postID'])){
             $populatedFields = self::populateStoreColumns($postObj, $data);
@@ -454,7 +457,7 @@ trait PostTrait{
         // finalize published at
         $postObj->published_at = $date;
 
-        if (!isset($data['postID'])){
+        if(!isset($data['postID'])){
             $postObj->created_at = Carbon::now();
         }
         $postObj->title = $data['title'];
@@ -513,11 +516,15 @@ trait PostTrait{
                         if($formData['isMultiple']){
                             $c = 0;
                             foreach ($valuesByLang as $singleValue){
-                                $tmpArr[$langSlug]['k_'.$c] = $singleValue[$primaryKey];
-                                $c++;
+                                if(isset($singleValue[$primaryKey])) {
+                                    $tmpArr[$langSlug]['k_' . $c] = $singleValue[$primaryKey];
+                                    $c++;
+                                }
                             }
                         }else{
-                            $tmpArr[$langSlug] = $valuesByLang[$primaryKey];
+                            if(isset($valuesByLang[$primaryKey])) {
+                                $tmpArr[$langSlug] = $valuesByLang[$primaryKey];
+                            }
                         }
                     }
                 }
@@ -526,11 +533,15 @@ trait PostTrait{
                 if($formData['isMultiple']){
                     $c = 0;
                     foreach ($formData['value'] as $singleValue){
-                        $tmpArr['k_'.$c] = $singleValue[$primaryKey];
-                        $c++;
+                        if(isset($singleValue[$primaryKey])) {
+                            $tmpArr['k_' . $c] = $singleValue[$primaryKey];
+                            $c++;
+                        }
                     }
                 }else{
-                    $tmpArr = $formData['value'][$primaryKey];
+                    if(isset($formData['value'][$primaryKey])){
+                        $tmpArr = $formData['value'][$primaryKey];
+                    }
                 }
             }
 
@@ -600,7 +611,6 @@ trait PostTrait{
         if(count($selectedTags)){
             $tagsIDs = [];
             $postType = PostType::findBySlug($postTypeSlug);
-            $getCachedTags = \App\Models\Tag::getFromCache($postType['slug']);
 
             $newTagsRelations = [];
             foreach ($selectedTags as $langSlug => $selectedTagForLanguage){
@@ -610,15 +620,13 @@ trait PostTrait{
                         //insert tag if it doesn't exist
                         if($selectedTag['tagID'] == 0){
                             $tagSlug = str_slug($selectedTag['title'],'-');
-                            if(!$getCachedTags->contains($tagSlug)){
-                                $tagsID = DB::table('tags')->insertGetId([
-                                  'postTypeID' => $postType['postTypeID'],
-                                  'createdByUserID' => Auth::user()->userID,
-                                  'title' => $selectedTag['title'],
-                                  'description' => $selectedTag['description'],
-                                  'slug' => $tagSlug,
-                                ]);
-                            }
+                            $tagsID = DB::table('tags')->insertGetId([
+                                'postTypeID' => $postType['postTypeID'],
+                                'createdByUserID' => Auth::user()->userID,
+                                'title' => $selectedTag['title'],
+                                'description' => $selectedTag['description'],
+                                'slug' => $tagSlug,
+                            ]);
                         }else{
                             $tagsID = $selectedTag['tagID'];
                         }

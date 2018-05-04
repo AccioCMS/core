@@ -156,9 +156,15 @@ class BasePostTypeController extends MainController{
         if(isset($data['postTypes'])){
             unset($data['postTypes']);
         }
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
         // loop throw the item array (ids) and delete them
         foreach($data as $id){
             $postType = PostType::findByID($id);
+            if(!$postType){
+                continue;
+            }
+            App\Models\Category::where('postTypeID', $id)->delete();
+
             if(PostType::hasPosts($postType->slug) && PostType::isInMenuLinks($id)){
                 return $this->response( "You can't delete this Post Type because there are posts associated with it.", 403);
             }
@@ -166,6 +172,7 @@ class BasePostTypeController extends MainController{
             if(!$postType) {
                 return $this->response( 'Post types could not be deleted. Please try again later or contact your Administrator!', 500);
             }
+
             Schema::drop($postType->slug);
             $filename = ucfirst(camel_case($postType->slug));
             $path = base_path().'/routes/'.$filename.'.php';

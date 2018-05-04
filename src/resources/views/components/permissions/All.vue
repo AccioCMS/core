@@ -86,7 +86,7 @@
         mixins: [globalComputed, globalMethods, globalData, globalUpdated, lists],
         created(){
             this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/permissions/users-groups';
-            this.deleteUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/permissions/delete';
+            this.deleteUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/permissions/delete/';
             this.bulkDeleteUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/json/permissions/bulk-delete';
         },
         mounted() {

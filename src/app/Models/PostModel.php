@@ -691,7 +691,7 @@ class PostModel extends Model{
      */
     public function href($routeName = '', $customAttributes = []){
         if(!$routeName) {
-            $routeName = str_replace("_", ".", $this->getTable()) . '.single';
+            $routeName = cleanPostTypeSlug($this->getTable(),'post.') . '.single';
         }
 
         $getRoute = Route::getRoutes()->getByName($routeName);
@@ -701,8 +701,7 @@ class PostModel extends Model{
             // translating language
             if($this->getTranslateLanguage()){
                 $languageSlug = $this->getTranslateLanguage();
-            }
-            else{
+            }else{
                 $languageSlug = App::getLocale();
             }
 

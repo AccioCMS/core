@@ -8,7 +8,7 @@ export const globalMethods = {
         // call checkPermission method of vuex and return his answer
         hasPermission(app,key){
             this.$store.dispatch('checkPermission', {app: app, key: key});
-            return this.getHasPermission;
+            return this.getHasPermission; // This is causing a loop @todo
         },
         redirect(name, id, path = '', params = '', query = ''){
             if(id === undefined){
@@ -43,7 +43,11 @@ export const globalMethods = {
         generateUrl(url){
             return this.baseURL+url;
         },
-        // repair url to get the thumb
+
+        /**
+         * get the urls for the files
+         * @param media
+         */
         constructUrl(image){
             var url = "";
             if(image.type == "image"){

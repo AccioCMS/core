@@ -2,6 +2,7 @@
 
 namespace Accio\App\Http\Controllers\Backend;
 
+use App\Models\Settings;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
@@ -155,6 +156,20 @@ class BaseMediaController extends MainController{
      *  Assign watermark to media images
      * */
     public function assignWatermark(Request $request){
+        // Verify watermark
+        $watermarkMediaID = Settings::where("settingsKey", "watermark")->first();
+        if(!$watermarkMediaID){
+            return $this->response("Watermark is not selected, Go to settings select watermark", 500);
+        }
+        $watermarkUrl = Media::find($watermarkMediaID)->first();
+        if(!$watermarkUrl){
+            return $this->response("Watermark is not selected, Go to settings select watermark", 500);
+        }
+        $watermarkUrl = $watermarkUrl->url;
+        // does watermark exist
+        if(!File::exists(base_path($watermarkUrl))){
+            return $this->response("Watermark is not selected, Go to settings select watermark", 500);
+        }
 
         foreach ($request->all() as $key => $file){
             // check if user has permissions to access this link
@@ -163,6 +178,7 @@ class BaseMediaController extends MainController{
             }
 
             if ($file['type'] == "image"){
+
                 // mark original image
                 // original image
                 $url = strpos($file['url'], '?');
@@ -181,20 +197,17 @@ class BaseMediaController extends MainController{
                 if(!File::exists($url)){
                     throw new \Exception("File: ".$url." doesn't exists.");
                 }
-                // does watermark exist
-                if(!File::exists(base_path("public/images/watermark.png"))){
-                    throw new \Exception("Watermark in: 'public/images/watermark.png' doesn't exists.");
-                }
+
                 // get watermark
-                $watermark = Image::make('public/images/watermark.png');
+                $watermark = Image::make($watermarkUrl);
 
                 // resize watermark
-                $watermark->resize($width, null, function ($constraint) {
+                $watermark->resize($width, null, function ($constraint){
                     $constraint->aspectRatio();
                 });
                 $originalImage->insert($watermark, 'center');
                 $originalImage->save($url, 100);
-
+                $this->deleteThumb($file);
 
                 foreach(\App\Models\Media::$thumbSizes as $thumKey => $thumValue){
                     foreach ($thumValue as $thumParams){
@@ -209,7 +222,7 @@ class BaseMediaController extends MainController{
                             if(file_exists($path)){
                                 // mark thumb image
                                 $thumb = Image::make($path);
-                                $watermark = Image::make('public/images/watermark.png');
+                                $watermark = Image::make($watermarkUrl);
                                 // resize watermark
                                 $watermark->resize($thumbWidth, null, function ($constraint) {
                                     $constraint->aspectRatio();
@@ -223,12 +236,43 @@ class BaseMediaController extends MainController{
 
                 // delete cache
                 Cache::flush();
-
             }else{
                 return "Some files could not be watermaked. Please select only image files.";
             }
         }
         return "OK";
+    }
+
+    /**
+     * Deletes thumbs (not the default ones of cms) for a image
+     * @param $image
+     */
+    private function deleteThumb($image){
+        // list default thumb sizes in a array (use to ignore them, not delete them)
+        $thumbSizesToNotBeDeleted = [];
+        foreach(Media::$thumbSizes as $thumbSizesArr){
+            foreach($thumbSizesArr as $thumbSize){
+                if(count($thumbSize) == 2){
+                    $thumbSizesToNotBeDeleted[] = $thumbSize[0] . "x" . $thumbSize[1];
+                }
+            }
+        }
+
+        // delete all thumbs of a image
+        $allDirs = [];
+        if (is_dir(base_path($image['fileDirectory']))){
+            if ($dh = opendir(base_path($image['fileDirectory']))){
+                while (($thumbDir = readdir($dh)) !== false){
+                    if(is_dir(base_path($image['fileDirectory']."/$thumbDir")) && $thumbDir != "original"){
+                        if(!in_array($thumbDir, $thumbSizesToNotBeDeleted) && file_exists(base_path($image['fileDirectory']."/$thumbDir/".$image['filename']))){
+                            unlink(base_path($image['fileDirectory']."/$thumbDir/".$image['filename']));
+                        }
+                    }
+                    $allDirs[] = $thumbDir;
+                }
+                closedir($dh);
+            }
+        }
     }
 
     /**
@@ -287,6 +331,8 @@ class BaseMediaController extends MainController{
         $img->crop($newWidth, $newHeight, $newX, $newY);
         $img->save($url, 100);
         $media->touch();
+
+        $this->deleteThumb($media);
 
         // delete cache
         Cache::flush();

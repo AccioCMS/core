@@ -24,8 +24,8 @@
 
                             <div class="" role="tabpanel" data-example-id="togglable-tabs" v-if="!spinner"><!-- TAB WRAPPER -->
                                 <!-- TABS -->
-                                <ul id="myTab" class="nav nav-tabs bar_tabs" role="tablist" v-if="Object.keys(languages).length > 1">
-                                    <li role="presentation" class="langTabs" :class="{active: activeLang == lang.slug}"
+                                <ul id="myTab" class="nav nav-tabs bar_tabs" v-if="Object.keys(languages).length > 1">
+                                    <li :id="'tabBtn-'+lang.slug" class="langTabs" :class="{active: activeLang == lang.slug}"
                                         v-if="hasPermissionForLang(lang.languageID)"
                                         v-for="(lang, count) in languages"
                                         @click="activeLang = lang.slug">

@@ -53,7 +53,7 @@
 
                     <spinner :width="'30px'" :height="'30px'" :border="'5px'" v-if="spinner"></spinner>
 
-                    <div :class="{'imageWrapper':true, 'active': isFileSelected(image.mediaID)}" v-for="(image, index) in getMediaList" @click="selectFile" :id="image.mediaID" :data-index="index" v-if="shouldHide(image.type,image.mediaID)">
+                    <div v-if="shouldHide(image.type,image.mediaID) && !spinner && !noResults" :class="{'imageWrapper':true, 'active': isFileSelected(image.mediaID)}" v-for="(image, index) in getMediaList" @click="selectFile" :id="image.mediaID" :data-index="index">
                         <div class="singleImgContainer">
                             <img :src="generateUrl(constructUrl(image))" draggable="false" v-if="image.type == 'image'">
                             <img :src="resourcesUrl(constructUrl(image))" draggable="false" v-else>
@@ -479,7 +479,7 @@
 
                 this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/search', request)
                     .then((resp) => {
-                        if(resp.body.length){
+                        if(!resp.body.length){
                             this.noResults = true;
                         }else{
                             this.$store.commit('setMediaList', resp.body);

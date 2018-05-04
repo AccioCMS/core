@@ -62,6 +62,26 @@
                     </div>
                 </div>
 
+                <div class="form-group" id="form-group-watermark">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__watermark}}</label>
+                    <div class="imagePrevContainer col-md-9 col-sm-9 col-xs-12">
+
+                        <div class="imageSingleThumb" v-if="mediaSelectedFiles['watermark']">
+                            <i class="fa fa-close closeBtnForPrevImages" @click="deleteSelectedMediaFile('watermark', 0)"></i>
+                            <img :src="generateUrl(constructUrl(mediaSelectedFiles['watermark'][0]))">
+                        </div>
+
+                        <div class="clearfix"></div>
+
+                        <a class="btn btn-info" @click="openMedia('image', 'watermark')" id="openMediaWatermark">
+                            <span v-if="!mediaSelectedFiles['watermark']">{{trans.__addImage}}</span>
+                            <span v-if="mediaSelectedFiles['watermark']">{{trans.__change}}</span>
+                        </a>
+
+                        <div class="alert" v-if="StoreResponse.errors.logo" v-for="error in StoreResponse.errors.logo">{{ error }}</div>
+                    </div>
+                </div>
+
                 <div class="form-group clearfix" id="form-group-defaultLanguage">
                     <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__defaultLanguage}}</label>
                     <div class="col-md-9 col-sm-9 col-xs-12">
@@ -174,6 +194,7 @@
                     defaultUserRole: '',
                     timezone: '',
                     logo: '',
+                    watermark: '',
                     defaultLanguage: '',
                     homepageID: '',
                     activeTheme: '',
@@ -194,8 +215,9 @@
                 __timezone: this.__('settings.timezone'),
                 __logo: this.__('settings.logo'),
                 __defaultLanguage: this.__('settings.defaultLanguage'),
-                __frontPage: this.__('settings.frontPage'),
+                __frontPage: this.__('settings.homepage'),
                 __addImage: this.__('media.addImage'),
+                __watermark: this.__('media.watermark'),
                 __change: this.__('media.change'),
                 __globalSaveBtn: this.__('base.saveBtn'),
                 __true: this.__('base.booleans.true'),
@@ -204,7 +226,7 @@
 
             this.$store.commit('setSpinner', true);
 
-            // TODO me i nxjerr krejt settings me nje request
+            //@TODO me i nxjerr krejt settings me nje request
 
             // get all user groups / roles
             var userGroupPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/permissions/users-groups')
@@ -243,9 +265,16 @@
                     this.form.activateMobileTheme = resp.body.activateMobileTheme.value;
                     this.form.mobileActiveTheme = resp.body.mobileActiveTheme.value;
                     this.form.logo = resp.body.logo.value;
+
+                    let media = {};
                     if(resp.body.logo && resp.body.logo !== undefined && resp.body.logo.media !== undefined && Object.keys(resp.body.logo.media).length != 0){
-                        this.$store.commit('setMediaSelectedFiles', {'logo': [resp.body.logo.media]});
+                        media['logo'] = [resp.body.logo.media];
                     }
+                    this.form.watermark = resp.body.watermark.value;
+                    if(resp.body.watermark && resp.body.watermark !== undefined && resp.body.watermark.media !== undefined && Object.keys(resp.body.watermark.media).length != 0){
+                        media['watermark'] = [resp.body.watermark.media];
+                    }
+                    this.$store.commit('setMediaSelectedFiles', media);
                 });
 
             // when all ajax request are done
@@ -261,6 +290,10 @@
             store(){
                 if(this.mediaSelectedFiles['logo'] !== undefined && this.mediaSelectedFiles['logo'][0] !== undefined){
                     this.form.logo = this.mediaSelectedFiles['logo'][0].mediaID;
+                }
+
+                if(this.mediaSelectedFiles['watermark'] !== undefined && this.mediaSelectedFiles['watermark'][0] !== undefined){
+                    this.form.watermark = this.mediaSelectedFiles['watermark'][0].mediaID;
                 }
 
                 const request = {
@@ -284,6 +317,10 @@
                 var mediaArr = this.mediaSelectedFiles;
                 for(var k in mediaArr[key]){
                     if(key == "logo"){
+                        delete mediaArr[key];
+                        continue;
+                    }
+                    if(key == "watermark"){
                         delete mediaArr[key];
                         continue;
                     }

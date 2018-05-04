@@ -19,7 +19,7 @@ class UserModel extends Authenticatable
 
     /** @var array $fillable fields that can be filled in CRUD*/
     protected $fillable = [
-        'firstName','lastName','email', 'password','phone','address','country','groupIDs', 'isActive','profileImageID','about','slug','gravatar'
+        'firstName','lastName','email', 'password','phone','address','country','isActive','profileImageID','about','slug','gravatar'
     ];
     //TODO me ja shtu "slug" userave (emri-mbiemri) sepse po na duhet ne front-end
 
@@ -29,8 +29,7 @@ class UserModel extends Authenticatable
     ];
     /** @var array column data-types **/
     protected $casts = [
-        'about' => 'object',
-        'groupIDs' => 'object'
+        'about' => 'object'
     ];
 
     /** @var array translatable json columns **/
@@ -99,11 +98,6 @@ class UserModel extends Authenticatable
     {
         parent::__construct($attributes);
         Event::fire('user:construct', [$this]);
-    }
-
-    //TODO sun po e gjej a perdoret najkund qe me e fshi
-    public function profileImage(){
-        return $this->hasOne('App\Models\Media','mediaID', 'profileImageID');
     }
 
     /**
@@ -273,6 +267,30 @@ class UserModel extends Authenticatable
     public function posts()
     {
         return $this->hasMany('App\Models\Post', 'createdByUserID');
+    }
+
+    /**
+     * Get user roles
+     * @return HasManyThrough
+     */
+    public function roles()
+    {
+        return $this->hasManyThrough(
+          'App\Models\UserGroup',
+          'App\Models\RoleRelation',
+          'userID',
+          'groupID',
+          'userID',
+          'groupID');
+    }
+
+
+    /**
+     * Get profile image
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function profileImage(){
+        return $this->hasOne('App\Models\Media','mediaID', 'profileImageID');
     }
 
     /**

@@ -22,7 +22,7 @@
                     <div class="title">
                         <?php
                             if (!isset($message)){
-                                echo "YOU DON'T HAVE PERMISSIONS FOR THIS ACTION";
+                                echo "You don't have sufficient permissions to perform this action!";
                             }else{
                                 echo $message;
                             }

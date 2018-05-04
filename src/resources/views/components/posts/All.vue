@@ -137,9 +137,10 @@
         },
         mounted() {
             // permissions
-            this.hasAddPermission = this.hasPermission('create');
-            this.hasDeletePermission = this.hasPermission('delete');
-            this.hasUpdatePermission = this.hasPermission('update');
+            this.hasAddPermission = this.hasPermission(this.$route.params.post_type, 'create');
+            this.hasDeletePermission = this.hasPermission(this.$route.params.post_type, 'delete');
+            this.hasUpdatePermission = this.hasPermission(this.$route.params.post_type, 'update');
+
             // translations
             this.trans = {
                 __title: this.__('post.title'),
@@ -198,7 +199,7 @@
         methods: {
             // check if user is owner of the post
             isOwner(createdByUserID, hasPermission){
-                if(this.getGlobalData.permissions['global'] !== undefined && this.getGlobalData.permissions['global']['author'] !== undefined){
+                if(this.getGlobalData.permissions.global !== undefined && this.getGlobalData.permissions.global.author !== undefined){
                     if(hasPermission){
                         if(this.getGlobalData.user.userID == createdByUserID){
                             return true;
