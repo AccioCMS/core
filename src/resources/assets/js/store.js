@@ -1,7 +1,7 @@
 import Vuex from 'vuex'
 import Vue from 'vue'
 
-import Bootstrap from '../../../../../../../resources/assets/js/bootstrap-vuex';
+import Bootstrap from './bootstrap-vuex';
 import  media from '../../views/components/media/media'
 import  users  from '../../views/components/users/users'
 import  tags  from '../../views/components/tags/tags'
