@@ -340,9 +340,10 @@
         },
         mounted() {
             this.$store.commit('setSpinner', true);
-            // get language information
+            // get post type data
             this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/post-type/details/'+this.$route.params.id)
                 .then((resp) => {
+                    this.form.id = resp.body.details.postTypeID;
                     this.form.name = resp.body.details.name;
                     this.form.isVisible = resp.body.details.isVisible;
                     this.form.isCategoryRequired = resp.body.details.isCategoryRequired;
@@ -351,6 +352,7 @@
                     this.form.isFeaturedImageRequired = resp.body.details.isFeaturedImageRequired;
                     this.form.slug = resp.body.details.slug;
                     this.form.fields = JSON.parse(resp.body.details.fields);
+                    this.dbTables = resp.body.dbTables;
 
                     const categories = resp.body.categories;
                     this.categories.push({title: 'All', slug: 0});
@@ -360,8 +362,6 @@
                     this.$store.commit('setSpinner', false);
                 });
 
-            // set form id by getting it from the store
-            this.form.id = this.$route.params.id;
             // translations
             this.trans = {
                 __title: this.__('postType.updateTitle'),
@@ -399,12 +399,6 @@
                 __globalUpdateAndNewBtn: this.__('base.updateAndNewBtn'),
                 __globalCancelBtn: this.__('base.cancelBtn'),
             };
-
-            // get table names for custom fields ( table names that can be used to make the values of a dropdown field )
-            this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/post-type/get-tables')
-                .then((resp) => {
-                    this.dbTables = resp.body;
-                });
         },
         data(){
             return{

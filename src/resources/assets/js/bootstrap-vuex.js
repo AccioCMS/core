@@ -14,6 +14,7 @@ export default {
         pluginsConfigs: [],
         labels: {},
         openModule: '',
+        languages: {},
         auth: {
             user: {},
         },
@@ -44,6 +45,9 @@ export default {
         },
         get_menu_mode(state){
             return state.menuMode;
+        },
+        get_languages(state){
+            return state.languages;
         },
         get_menu_link_list(state){
             return state.menuLinkList;
@@ -82,6 +86,9 @@ export default {
         },
         setMenuMode(state, menuMode){
             state.menuMode = menuMode;
+        },
+        setLanguages(state, languages){
+            state.languages = languages;
         },
         setMenuLinkList(state, menuLinkList){
             state.menuLinkList = menuLinkList;

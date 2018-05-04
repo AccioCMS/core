@@ -59,6 +59,7 @@
                         <div class="x_title">
                             <label>{{trans.__menuName}}: </label>
                             <input class="menuNameInput" v-model="selectedMenu.title">
+                            <a @click="deleteMenu" class="deleteMenuLink">{{trans.__delete}}</a>
                             <div class="clearfix"></div>
                         </div>
 
@@ -259,6 +260,7 @@
                 __globalSubmitBtn: this.__('base.submitBtn'),
                 __globalCancelBtn: this.__('base.cancelBtn'),
                 __globalSaveBtn: this.__('base.saveBtn'),
+                __delete: this.__('base.deleteBtn'),
                 __clickHereEdit: this.__('base.clickHereEdit'),
                 __postTypeTitle: this.__('postType.title'),
                 __postTypesTitle: this.__('postType.titlePlural'),
@@ -312,18 +314,45 @@
             }
         },
         methods:{
+            /**
+             * Change the selected menu
+             */
             changeSelectedMenu(){
                 this.redirect('menu-list',this.selectedMenuID);
                 location.reload();
             },
 
-            // hide menu link edit panel // cancel editing post
+            /**
+             * Delete the selected menu
+             */
+            deleteMenu(){
+                this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/menu/delete/'+this.selectedMenuID)
+                    .then((resp) => {
+                        if(resp.body.code == 200){
+                            this.noty("success",'bottomLeft',resp.body.message,3000);
+                            this.redirect('menu-list',resp.body.id);
+                            location.reload();
+                        }else{
+                            this.noty("error",'bottomLeft',resp.body.message,3000);
+                        }
+
+                    });
+            },
+
+            /**
+             * hide menu link edit panel // cancel editing post
+             * @param e event
+             */
             cancelEditLinkPanel(e){
                 e.preventDefault();
                 $(".openEditLinkPanelPanel").slideUp(100);
             },
 
-            // hide single method in posts and post type menu links
+            /**
+             * hide single method in posts and post type menu links
+             * @param method
+             * @returns {boolean}
+             */
             shouldHide(method){
                 var linkType = this.selectedMenuInfoToChange.linkType;
                 if(linkType == "posts"){
@@ -338,13 +367,19 @@
                 return true;
             },
 
-            // open edit panel for menu link
+            /**
+             * open edit panel for menu link
+             * @param key
+             */
             openEditLinkPanel(key){
                 this.selectedLinkKey = key;
                 this.getSelectedMenuLinkData(this.menuLinkList);
             },
 
-            // the data of a menu link
+            /**
+             * the data of a menu link
+             * @param menuLinkList
+             */
             getSelectedMenuLinkData(menuLinkList){
                 for(var k in menuLinkList){
                     if(menuLinkList[k].menuLinkID == this.selectedLinkKey){
