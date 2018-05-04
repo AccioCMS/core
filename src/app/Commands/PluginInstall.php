@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Accio\App\Traits\OutputStyles;
+use Cz\Git\GitRepository;
 
 class PluginInstall extends Command
 {
@@ -79,6 +80,9 @@ class PluginInstall extends Command
      * @throws \Exception
      */
     public function handle(){
+        //$repo = GitRepository::cloneRepository('git@github.com:manaferra/Posts-Position-Manager-Plugin.git', base_path("test"));
+        die();
+
         // Ensure there are no caches
         $this->callSilent('cache:clear');
 
