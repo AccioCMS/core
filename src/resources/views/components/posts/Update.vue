@@ -595,7 +595,7 @@
                 __globalUpdateAndCloseBtn: this.__('base.updateAndCloseBtn'),
                 __globalUpdateAndNewBtn: this.__('base.updateAndNewBtn'),
                 __globalCancelBtn: this.__('base.cancelBtn'),
-                __pluginAppName: this.__('media.appName'),
+                __pluginAppName: this.__('plugin.appName'),
             };
         },
         mounted() {

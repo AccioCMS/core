@@ -170,14 +170,14 @@
         created(){
             // translations
             this.trans = {
-                __listTableTitle: this.__('Permissions.listTableTitle'),
-                __name: this.__('Permissions.listTableColumns.name'),
-                __globalPermissions: this.__('Permissions.globalPermissions'),
-                __hasAdminAccess: this.__('Permissions.hasAdminAccess'),
-                __author: this.__('Permissions.author'),
-                __categories: this.__('Permissions.categories'),
-                __hasAll: this.__('Permissions.hasAll'),
-                __urlAccessToLanguages: this.__('Permissions.urlAccessToLanguages'),
+                __listTableTitle: this.__('permissions.listTableTitle'),
+                __name: this.__('permissions.listTableColumns.name'),
+                __globalPermissions: this.__('permissions.globalPermissions'),
+                __hasAdminAccess: this.__('permissions.hasAdminAccess'),
+                __author: this.__('permissions.author'),
+                __categories: this.__('permissions.categories'),
+                __hasAll: this.__('permissions.hasAll'),
+                __urlAccessToLanguages: this.__('permissions.urlAccessToLanguages'),
                 __saveBtn: this.__('base.saveBtn'),
                 __cancelBtn: this.__('base.cancelBtn'),
             };

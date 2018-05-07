@@ -341,11 +341,12 @@ trait ThemeTrait
 
     /**
      * Print Theme css as configured on /public/{YOUR THEME NAME}/config/theme.php
+     * @param true $header where we are printing header or footer css
      * @param array $files List of css files to be printed
      * @param array $defaultAttributes Default attribute to be assigned to all js files.
      * @return string
      */
-    public static function css($defaultAttributes = [], $files = []){
+    public static function css($header = true, $defaultAttributes = [], $files = []){
         $html = '';
         if($files){
             $cssFiles = $files;
@@ -353,18 +354,23 @@ trait ThemeTrait
             $cssFiles = self::config('css');
         }
 
-        // mix css
-        if(isset(self::config('mix')['styles']) && self::config('mix')['styles']){
-            $url =  self::cssUrl(self::config('mix')['styles']) ;
-            // Add timestamp to the end of the file, for caching purposes
-            if(file_exists(self::cssPath(self::config('mix')['styles']))) {
-                $url .= "?".File::lastModified(self::cssPath(self::config('mix')['styles']));
-            }
-            $html .= '<link href="' . $url .'" ' . Meta::parseAttributes($defaultAttributes) . ' rel="stylesheet" type="text/css">' . "\n";
-        }
-        // Normal css
-        else if ($cssFiles) {
+        if ($cssFiles) {
             foreach ($cssFiles as $cssFile) {
+                // exclude merge files
+                if (isset($cssFile['merge']) && $cssFile['merge']) {
+                    continue;
+                }
+
+                // exclude header
+                if ($header) {
+                    if(isset($cssFile['showInHeader']) && !$cssFile['showInHeader']) {
+                        continue;
+                    }
+                }else{ // exclude footer css
+                    if(!isset($cssFile['showInHeader']) || (isset($cssFile['showInHeader']) && $cssFile['showInHeader'])) {
+                        continue;
+                    }
+                }
 
                 // Attributes
                 $attributes = $defaultAttributes;
@@ -393,11 +399,12 @@ trait ThemeTrait
     /**
      * Print Theme javascripts as configured on /public/{YOUR THEME NAME}/config/theme.php
      *
+     * @param true $header where we are printing header or footer js
      * @param array $defaultAttributes Default attribute to be assigned to all js files.
      * @param array $files List of js files to be printed
      * @return string
      */
-    public static function js($defaultAttributes = [], $files = []){
+    public static function js($header = true, $defaultAttributes = [], $files = []){
         $html = '';
         if($files){
             $jsFiles = $files;
@@ -405,21 +412,27 @@ trait ThemeTrait
             $jsFiles = self::config('js');
         }
 
-        // Mix js
-        if(isset(self::config('mix')['scripts']) && self::config('mix')['scripts']){
-            $url = self::jsUrl(self::config('mix')['scripts']);
-            // Add timestamp to the end of the file, for caching purposes
-            if(file_exists(self::jsPath(self::config('mix')['scripts']))) {
-                $url .= "?".File::lastModified(self::jsPath(self::config('mix')['scripts']));
-            }
-            $html .= '<script src="'. $url .'" '.Meta::parseAttributes($defaultAttributes).' type="text/javascript"></script>'."\n";
-        }
-        // Normal js
-        else if ($jsFiles) {
+         if ($jsFiles) {
             foreach ($jsFiles as $jsFile) {
+                // exclude merge files
+                if (isset($jsFile['merge']) && $jsFile['merge']) {
+                    continue;
+                }
+
+                // exclude header
+                if ($header) {
+                    if(isset($jsFile['showInHeader']) && !$jsFile['showInHeader']) {
+                        continue;
+                    }
+                }else{ // exclude footer css
+                    if(!isset($jsFile['showInHeader']) || (isset($jsFile['showInHeader']) && $jsFile['showInHeader'])) {
+                        continue;
+                    }
+                }
+
                 // Attributes
                 $attributes = $defaultAttributes;
-                if (isset($cssFile['attributes'])) {
+                if (isset($jsFile['attributes'])) {
                     $attributes = array_merge($defaultAttributes, $jsFile['attributes']);
                 }
 

@@ -20,12 +20,14 @@ if (! function_exists('css')) {
 
     /**
      * Print Theme css as configured on /public/{YOUR THEME NAME}/config/theme.php
+     *
+     * @param true $header where we are printing header or footer css
      * @param array $files List of css files to be printed
      * @param array $defaultAttributes Default attribute to be assigned to all js files.
      * @return string
      */
-    function css($defaultAttributes = [], $files = []){
-        return \App\Models\Theme::css($defaultAttributes, $files);
+    function css($header = true, $defaultAttributes = [], $files = []){
+        return \App\Models\Theme::css($header, $defaultAttributes, $files);
     }
 }
 
@@ -88,12 +90,13 @@ if (! function_exists('js')) {
     /**
      * Print Theme javascripts as configured on /public/{YOUR THEME NAME}/config/theme.php
      *
+     * @param true $header where we are printing header or footer js
      * @param array $defaultAttributes Default attribute to be assigned to all js files.
      * @param array $files List of js files to be printed
      * @return string
      */
-    function js($defaultAttributes = [], $files = []){
-        return \App\Models\Theme::js($defaultAttributes, $files);
+    function js($header = true, $defaultAttributes = [], $files = []){
+        return \App\Models\Theme::js($header, $defaultAttributes, $files);
     }
 }
 

@@ -88,9 +88,9 @@
             // get all settings
             this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/settings/get-settings')
                 .then((resp) => {
-                    this.form.trackingCode = resp.body.trackingCode.value;
-                    this.form.useTagManager = resp.body.useTagManager.value;
-                    this.form.tagManager = resp.body.tagManager.value;
+                    this.form.trackingCode = resp.body.settings.trackingCode.value;
+                    this.form.useTagManager = resp.body.settings.useTagManager.value;
+                    this.form.tagManager = resp.body.settings.tagManager.value;
                     this.spinner = false;
                 });
         },
