@@ -54,3 +54,9 @@ table th, table td{
 .nav-tabs li{
     cursor: pointer;
 }
+.deleteMenuLink{
+    float: right;
+    margin-top: 6px;
+    color: #d20404;
+    cursor: pointer;
+}

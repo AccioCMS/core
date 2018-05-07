@@ -572,7 +572,7 @@
                 __globalSaveAndCloseBtn: this.__('base.saveAndCloseBtn'),
                 __globalSaveAndNewBtn: this.__('base.saveAndNewBtn'),
                 __globalCancelBtn: this.__('base.cancelBtn'),
-                __pluginAppName: this.__('media.appName'),
+                __pluginAppName: this.__('plugin.appName'),
             };
 
             this.loadCreateInputs();

@@ -77,7 +77,7 @@
     import { globalUpdated } from '../../mixins/globalUpdated';
     export default{
         mixins: [globalComputed, globalMethods, globalData, globalUpdated],
-        props:['applicationMenuLinks','cmsMenus','isPluginApp', 'is_plugin_app'],
+        props:['applicationMenuLinks','cmsMenus','isPluginApp'],
         methods: {
             // change the menu mode (switch between cms and application menu)
             changeMenuMode(mode){

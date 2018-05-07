@@ -7,6 +7,7 @@ use App\Models\Media;
 use App\Models\Permalink;
 use App\Models\Settings;
 use App\Models\Theme;
+use App\Models\UserGroup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -31,9 +32,21 @@ class BaseSettingsController extends MainController{
                 $settings['watermark']['media'] = $watermark;
             }
         }
-        return $settings;
-    }
+        // user groups
+        $userGroups = UserGroup::all();
+        // get all posts
+        $posts = DB::table('post_pages')->get();
+        $posts = Language::filterRows($posts, false);
+        // theme configs
+        $themeConfigs = $this->getThemeConfigs();
 
+        return [
+            'settings' => $settings,
+            'userGroups' => $userGroups,
+            'pages' => $posts,
+            'themeConfigs' => $themeConfigs,
+        ];
+    }
 
     /**
      * @return array configs of all themes

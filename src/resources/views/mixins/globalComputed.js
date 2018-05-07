@@ -33,6 +33,10 @@ export const globalComputed = {
             // returns the list used to populate tables of apps
             return this.$store.getters.get_list;
         },
+        // get languages
+        getLanguages(){
+            return this.$store.getters.get_languages;
+        },
         // get the max pagination number from $store
         getMaxPag(){
             return this.$store.getters.get_maxPaginationNr;

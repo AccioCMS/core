@@ -137,7 +137,7 @@
         },
         data(){
             return{
-                selected : [],
+                selected: [],
                 pluginsPanels: [],
                 pluginsData: {},
                 form:{

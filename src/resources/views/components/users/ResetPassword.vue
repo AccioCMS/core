@@ -12,10 +12,10 @@
                     <form class="form-horizontal form-label-left" id="storeUser" enctype="multipart/form-data">
 
                         <div class="form-group" id="form-group-password">
-                            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__password}}</label>
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ trans.__password }}</label>
                             <div class="col-md-9 col-sm-9 col-xs-12">
                                 <input type="password" class="form-control" v-model="user.password">
-                                <div class="alert"></div>
+                                <div class="alert" v-if="StoreResponse.errors.password" v-for="error in StoreResponse.errors.password">{{ error }}</div>
                             </div>
                         </div>
 
@@ -23,7 +23,7 @@
                             <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__confirmPassword}}</label>
                             <div class="col-md-9 col-sm-9 col-xs-12">
                                 <input type="password" class="form-control" v-model="user.confpassword">
-                                <div class="alert"></div>
+                                <div class="alert" v-if="StoreResponse.errors.confpassword" v-for="error in StoreResponse.errors.confpassword">{{ error }}</div>
                             </div>
                         </div>
 
@@ -81,22 +81,11 @@
             },
             resetPassword(e){
                 this.$store.dispatch('openLoading');
-                this.$http.post(this.basePath+'/'+this.getAdminPrefix+'/json/user/resetPassword', this.user)
-                    .then((resp) => {
-                        this.$store.dispatch('closeLoading');
-                        if(resp.statusText == "OK"){
-                            var response = resp.body;
-                            this.$store.dispatch('handleErrors', {response});
-                            this.resetForm();
-                        }else{
-                            new Noty({
-                                type: "error",
-                                layout: 'bottomLeft',
-                                text: "Password could not be updated. Please try again later."
-                            }).show();
-                        }
-
-                    });
+                this.$store.dispatch('store',{
+                    data: this.user,
+                    url: this.basePath+'/'+this.getAdminPrefix+'/json/user/resetPassword',
+                    error: "Password could not be reseted. Please try again later."
+                });
             }
         },
     }

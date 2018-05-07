@@ -188,7 +188,7 @@
         },
         methods: {
             // method responsible to sort (re-order) the list
-            orderRows( event, ui ) {
+            orderRows( event, ui ){
                 console.log("order updated");
                 this.$store.dispatch('sort', {url: this.basePath+'/'+this.getAdminPrefix+'/json/category/sort', error: "List could not be sort"});
             },

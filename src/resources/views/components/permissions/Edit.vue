@@ -170,87 +170,89 @@
         created(){
             // translations
             this.trans = {
-                __listTableTitle: this.__('Permissions.listTableTitle'),
-                __name: this.__('Permissions.listTableColumns.name'),
-                __globalPermissions: this.__('Permissions.globalPermissions'),
-                __hasAdminAccess: this.__('Permissions.hasAdminAccess'),
-                __author: this.__('Permissions.author'),
-                __categories: this.__('Permissions.categories'),
-                __hasAll: this.__('Permissions.hasAll'),
-                __urlAccessToLanguages: this.__('Permissions.urlAccessToLanguages'),
+                __listTableTitle: this.__('permissions.listTableTitle'),
+                __name: this.__('permissions.listTableColumns.name'),
+                __globalPermissions: this.__('permissions.globalPermissions'),
+                __hasAdminAccess: this.__('permissions.hasAdminAccess'),
+                __author: this.__('permissions.author'),
+                __categories: this.__('permissions.categories'),
+                __hasAll: this.__('permissions.hasAll'),
+                __urlAccessToLanguages: this.__('permissions.urlAccessToLanguages'),
                 __saveBtn: this.__('base.saveBtn'),
                 __cancelBtn: this.__('base.cancelBtn'),
             };
 
             this.$store.commit('setSpinner', true);
-            this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/language/get-default-language')
+            this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/permissions/get-all-permissions-options')
                 .then((resp) => {
-                    this.defaultLanguage = resp.body;
-                }).then(() => {
-                    this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/permissions/get-all-permissions-options')
-                        .then((resp) => {
-                            var permissions = resp.body;
-                            // create value containers
-                            for(let k in permissions){
-                                if(permissions[k].categories !== undefined){
-                                    permissions[k].categoriesValues = [];
-                                }
-                                permissions[k].hasAll = false;
-                                permissions[k].defaultPermissionsValues = []; // default values as a array
-                                if(permissions[k].customPermissions !== undefined){ // if there has custom permissions
-                                    permissions[k].customPermissionsValues = {}; // create object for the values of custom permissions inputs
+                    // make a key for each language in the about object
+                    for(let k in this.getLanguages){
+                        if(this.getLanguages[k].isDefault){
+                            this.defaultLanguage = this.getLanguages[k];
+                        }
+                    }
 
-                                    for(let cKey in permissions[k].customPermissions){
+                    var permissions = resp.body;
+                    // create value containers
+                    for(let k in permissions){
+                        if(permissions[k].categories !== undefined){
+                            permissions[k].categoriesValues = [];
+                        }
+                        permissions[k].hasAll = false;
+                        permissions[k].defaultPermissionsValues = []; // default values as a array
+                        if(permissions[k].customPermissions !== undefined){ // if there has custom permissions
+                            permissions[k].customPermissionsValues = {}; // create object for the values of custom permissions inputs
 
-                                        // if custom permission is of type select make a array for his values
-                                        if(permissions[k].customPermissions[cKey].type == 'select'){
-                                            permissions[k].customPermissionsValues[cKey] = [];
-                                            // set default language selected by default (in the language multiselect, customPermissionValue)
-                                            if(k == "Language" && cKey == "id" && this.$route.params.id == 0){
-                                                permissions[k].customPermissionsValues[cKey].push({languageID: this.defaultLanguage.languageID, title: this.defaultLanguage.name});
-                                            }
-                                        }else{
-                                            // if custom permission is simple checkbox
-                                            permissions[k].customPermissionsValues[cKey] = false;
-                                        }
+                            for(let cKey in permissions[k].customPermissions){
+
+                                // if custom permission is of type select make a array for his values
+                                if(permissions[k].customPermissions[cKey].type == 'select'){
+                                    permissions[k].customPermissionsValues[cKey] = [];
+                                    // set default language selected by default (in the language multiselect, customPermissionValue)
+                                    if(k == "Language" && cKey == "id" && this.$route.params.id == 0){
+                                        permissions[k].customPermissionsValues[cKey].push({languageID: this.defaultLanguage.languageID, title: this.defaultLanguage.name});
                                     }
+                                }else{
+                                    // if custom permission is simple checkbox
+                                    permissions[k].customPermissionsValues[cKey] = false;
                                 }
                             }
+                        }
+                    }
 
-                            if(this.$route.params.id == 0){
-                                // if we are creating a new group
-                                this.permissions = permissions;
+                    if(this.$route.params.id == 0){
+                        // if we are creating a new group
+                        this.permissions = permissions;
+                        this.$store.commit('setSpinner', false);
+                    }else{
+                        // if we are updating a group
+                        this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/json/permissions/get-list-values', {ID: this.$route.params.id, permissions: permissions})
+                            .then((resp) => {
+                                this.permissions = resp.body.permissions;
+                                this.name = resp.body.name;
+                                // populate global permissions
+                                for(let k in resp.body.globalPermissions){
+                                    this.globalPermissions[k] = resp.body.globalPermissions[k];
+                                }
                                 this.$store.commit('setSpinner', false);
-                            }else{
-                                // if we are updating a group
-                                this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/json/permissions/get-list-values', {ID: this.$route.params.id, permissions: permissions})
-                                    .then((resp) => {
-                                        this.permissions = resp.body.permissions;
-                                        this.name = resp.body.name;
-                                        // populate global permissions
-                                        for(let k in resp.body.globalPermissions){
-                                            this.globalPermissions[k] = resp.body.globalPermissions[k];
-                                        }
-                                        this.$store.commit('setSpinner', false);
-                                    }, response => {
-                                        // if a error happens
-                                        this.$store.commit('setSpinner', false);
-                                        new Noty({
-                                            type: "error",
-                                            layout: 'bottomLeft',
-                                            text: response.statusText
-                                        }).show();
-                                    });
-                            }
-                        }, response => {
-                            // if a error happens
-                            this.$store.commit('setSpinner', false);
-                            new Noty({
-                                type: "error",
-                                layout: 'bottomLeft',
-                                text: response.statusText
-                            }).show();
-                        });
+                            }, response => {
+                                // if a error happens
+                                this.$store.commit('setSpinner', false);
+                                new Noty({
+                                    type: "error",
+                                    layout: 'bottomLeft',
+                                    text: response.statusText
+                                }).show();
+                            });
+                    }
+                }, response => {
+                    // if a error happens
+                    this.$store.commit('setSpinner', false);
+                    new Noty({
+                        type: "error",
+                        layout: 'bottomLeft',
+                        text: response.statusText
+                    }).show();
                 });
         },
         data(){

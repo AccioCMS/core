@@ -93,12 +93,12 @@
             this.getListData();
             // translations
             this.trans = {
-                __title: this.__('Permissions.title'),
-                __listTitle: this.__('Permissions.listTitle'),
-                __listTableTitle: this.__('Permissions.listTableTitle'),
-                __name: this.__('Permissions.listTableColumns.name'),
-                __id: this.__('Permissions.listTableColumns.id'),
-                __slug: this.__('Permissions.listTableColumns.slug'),
+                __title: this.__('permissions.title'),
+                __listTitle: this.__('permissions.listTitle'),
+                __listTableTitle: this.__('permissions.listTableTitle'),
+                __name: this.__('permissions.listTableColumns.name'),
+                __id: this.__('permissions.listTableColumns.id'),
+                __slug: this.__('permissions.listTableColumns.slug'),
                 __action: this.__('base.action'),
                 __deleteBtn: this.__('base.deleteBtn'),
                 __updateBtn: this.__('base.updateBtn'),

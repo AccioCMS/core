@@ -117,6 +117,7 @@
             // get language information
             this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/language/details/'+this.$route.params.id)
                 .then((resp) => {
+                    this.form.id = resp.body.details.languageID;
                     this.form.name = resp.body.details.name;
                     this.form.nativeName = resp.body.details.nativeName;
                     this.form.isDefault = resp.body.details.isDefault;
@@ -124,8 +125,6 @@
                     this.form.slug = resp.body.details.slug;
                     this.$store.commit('setSpinner', false);
                 });
-            // set form id by getting it from the store
-            this.form.id = this.$route.params.id;
             // translations
             this.trans = {
                 __title: this.__('language.updateTitle'),
