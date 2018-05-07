@@ -1,6 +1,5 @@
 import Vuex from 'vuex'
 import Vue from 'vue'
-
 import Bootstrap from './bootstrap-vuex';
 import  media from '../../views/components/media/media'
 import  users  from '../../views/components/users/users'
@@ -12,7 +11,6 @@ import  menu  from '../../views/components/menu/menu'
 import  language  from '../../views/components/language/language'
 import  custom_fields  from '../../views/components/custom_fields/custom_fields'
 import  category  from '../../views/components/category/category'
-
 
 Vue.use(Vuex);
 
@@ -27,7 +25,6 @@ export const store = new Vuex.Store({
         list: '',
         inputErrorsExist: false,
         inputErrorsMsg: [],
-        languages: {},
         postType: '',
         actionReturnedData: {},
         hasPermission: false,
@@ -67,9 +64,6 @@ export const store = new Vuex.Store({
         get_list(state){
             return state.list;
         },
-        get_languages(state){
-            return state.languages;
-        },
         get_post_type(state){
             return state.postType;
         },
@@ -107,9 +101,6 @@ export const store = new Vuex.Store({
         },
         pushToList(state, obj){
             state.list.push(obj);
-        },
-        setLanguages(state, languages){
-            state.languages = languages;
         },
         setPostType(state, postType){
             state.postType = postType;

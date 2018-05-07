@@ -618,4 +618,31 @@ class BaseMenuController extends MainController{
         return $this->response('Menu relations are stored successfully');
     }
 
+    /**
+     * Delete menu with his menu links
+     *
+     * @param $lang
+     * @param $menuID
+     * @return array
+     */
+    public function deleteMenu($lang, $menuID){
+        // check if user has permissions to access this link
+        if(!User::hasAccess('Menu','delete')){
+            return $this->noPermission();
+        }
+
+        $menu = Menu::find($menuID);
+        if(!$menu){
+            return $this->response("Menu doesn't exist", 400);
+        }
+
+        if(!$menu->isPrimary){
+            $menuLinks = MenuLink::where('menuID', $menuID);
+            $menuLinks->delete();
+            $menu->delete();
+            return $this->response("Menu deleted", 200, Menu::getPrimaryMenuID());
+        }else{
+            return $this->response("Primary menu can not be deleted", 400);
+        }
+    }
 }

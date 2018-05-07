@@ -14,6 +14,7 @@ Route::group(['middleware' => ['auth:admin'], 'as' => 'backend.menu.', 'namespac
     Route::get('/{lang}/json/menu/details/{id}', 'MenuController@detailsJSON')->name('detailsJSON');
     Route::get('/{lang}/json/menu/get-related-apps/{menuLinkID}', 'MenuController@getRelatedApps')->name('getRelatedApps');
     Route::get('/{lang}/menuLinkPanels','MenuController@menuLinkPanels')->name('menuLinkPanels');
+    Route::get('/{lang}/menu/delete/{menuID}','MenuController@deleteMenu')->name('deleteMenu');
 
     /**
      * POST

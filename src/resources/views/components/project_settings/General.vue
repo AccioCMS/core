@@ -116,26 +116,24 @@
                     <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__activateMobileTheme}}</label>
                     <div class="col-md-9 col-sm-9 col-xs-12" >
                         <div class="btn-group" data-toggle="buttons">
-                            <label class="btn btn-default" :class="{active: this.form.activateMobileTheme} == true" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="form.activateMobileTheme = true">
+                            <label class="btn btn-default" :class="{active: form.activateMobileTheme}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="form.activateMobileTheme = true">
                                 <input type="radio" value="true"> &nbsp; {{trans.__true}} &nbsp;
                             </label>
-                            <label class="btn btn-primary" :class="{active: !this.form.activateMobileTheme == false}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="form.activateMobileTheme = false">
+                            <label class="btn btn-primary" :class="{active: !form.activateMobileTheme}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="form.activateMobileTheme = false">
                                 <input type="radio" value="false"> {{trans.__false}}
                             </label>
                         </div>
                     </div>
                 </div>
 
-
                 <div class="form-group clearfix" id="form-group-activeTheme">
                     <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__mobileActiveTheme}}</label>
                     <div class="col-md-9 col-sm-9 col-xs-12">
-                        <select v-model="form.mobileActiveTheme" :disabled="!this.form.activateMobileTheme"  id="activeTheme" name="activeTheme" class="form-control">
+                        <select v-model="form.mobileActiveTheme" :disabled="!form.activateMobileTheme"  id="activeTheme" name="activeTheme" class="form-control">
                             <option :value="theme.namespace" v-for="theme in themesList">{{ theme.Title }}</option>
                         </select>
                     </div>
                 </div>
-
 
                 <div class="form-group clearfix">
                     <div class="col-md-3 col-sm-3 col-xs-12"></div>
@@ -226,61 +224,40 @@
 
             this.$store.commit('setSpinner', true);
 
-            //@TODO me i nxjerr krejt settings me nje request
-
-            // get all user groups / roles
-            var userGroupPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/permissions/users-groups')
-                .then((resp) => {
-                    this.userRoles = resp.body.list;
-                });
-
             // get all languages
-            var languagesPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/language/get-all')
-                .then((resp) => {
-                    this.languageList = resp.body.data;
-                });
-
-            // get all pages
-            var pagesPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all-posts-without-pagination/post_pages')
-                .then((resp) => {
-                    this.pagesList = resp.body;
-                });
-
-            // get all themes
-            var themesPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/settings/get-theme-configs')
-                .then((resp) => {
-                    this.themesList = resp.body;
-                });
+            this.languageList = this.getLanguages;
 
             // get all settings
             var settingsPromise = this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/settings/get-settings')
                 .then((resp) => {
-                    this.form.siteTitle = resp.body.siteTitle.value;
-                    this.form.adminEmail = resp.body.adminEmail.value;
-                    this.form.defaultUserRole = resp.body.defaultUserRole.value;
-                    this.form.timezone = resp.body.timezone.value;
-                    this.form.defaultLanguage = resp.body.defaultLanguage.value;
-                    this.form.homepageID = resp.body.homepageID.value;
-                    this.form.activeTheme = resp.body.activeTheme.value;
-                    this.form.activateMobileTheme = resp.body.activateMobileTheme.value;
-                    this.form.mobileActiveTheme = resp.body.mobileActiveTheme.value;
-                    this.form.logo = resp.body.logo.value;
+                    this.userRoles = resp.body.userGroups;
+                    this.pagesList = resp.body.pages;
+                    this.themesList = resp.body.themeConfigs;
+
+                    this.form.siteTitle = resp.body.settings.siteTitle.value;
+                    this.form.adminEmail = resp.body.settings.adminEmail.value;
+                    this.form.defaultUserRole = resp.body.settings.defaultUserRole.value;
+                    this.form.timezone = resp.body.settings.timezone.value;
+                    this.form.defaultLanguage = resp.body.settings.defaultLanguage.value;
+                    this.form.homepageID = resp.body.settings.homepageID.value;
+                    this.form.activeTheme = resp.body.settings.activeTheme.value;
+                    this.form.activateMobileTheme = resp.body.settings.activateMobileTheme.value;
+                    this.form.mobileActiveTheme = resp.body.settings.mobileActiveTheme.value;
+                    this.form.logo = resp.body.settings.logo.value;
 
                     let media = {};
-                    if(resp.body.logo && resp.body.logo !== undefined && resp.body.logo.media !== undefined && Object.keys(resp.body.logo.media).length != 0){
-                        media['logo'] = [resp.body.logo.media];
+                    if(resp.body.settings.logo && resp.body.settings.logo !== undefined && resp.body.settings.logo.media !== undefined && Object.keys(resp.body.settings.logo.media).length != 0){
+                        media['logo'] = [resp.body.settings.logo.media];
                     }
-                    this.form.watermark = resp.body.watermark.value;
-                    if(resp.body.watermark && resp.body.watermark !== undefined && resp.body.watermark.media !== undefined && Object.keys(resp.body.watermark.media).length != 0){
-                        media['watermark'] = [resp.body.watermark.media];
+                    this.form.watermark = resp.body.settings.watermark.value;
+                    if(resp.body.settings.watermark && resp.body.settings.watermark !== undefined && resp.body.settings.watermark.media !== undefined && Object.keys(resp.body.settings.watermark.media).length != 0){
+                        media['watermark'] = [resp.body.settings.watermark.media];
                     }
                     this.$store.commit('setMediaSelectedFiles', media);
+                }).then((resp) => {
+                    this.$store.commit('setSpinner', false);
                 });
 
-            // when all ajax request are done
-            Promise.all([userGroupPromise,languagesPromise,pagesPromise, settingsPromise]).then(([v1,v2,v3,v4]) => {
-                this.$store.commit('setSpinner', false);
-            });
         },
         methods: {
             openMedia(format, inputName){

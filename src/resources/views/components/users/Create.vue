@@ -244,31 +244,22 @@
                 __globalCancelBtn: this.__('base.cancelBtn'),
             };
 
-            // List of all languages
-            var languagesPromise = this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/language/get-all?order=isDefault&type=desc')
-                .then((resp) => {
-                    this.languages = resp.body.data;
-                    // make a key for each language in the about object
-                    for(let k in this.languages){
-                        if(this.languages[k].isDefault){
-                            this.activeLang = this.languages[k].slug;
-                        }
-                        this.user.about[this.languages[k].slug] = '';
-                    }
-                });
+            this.languages = this.getLanguages;
+            // make a key for each language in the about object
+            for(let k in this.languages){
+                if(this.languages[k].isDefault){
+                    this.activeLang = this.languages[k].slug;
+                }
+                this.user.about[this.languages[k].slug] = '';
+            }
 
-            var groupsPromises = this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/user/get-groups')
+            this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/user/get-groups')
                 .then((resp) => {
                     this.groupsList = resp.body;
+                }).then((resp) => {
+                    this.getPluginsPanel(['users'], 'create');
+                    this.$store.commit('setSpinner', false);
                 });
-
-            // when all ajax request are done
-            Promise.all([languagesPromise,groupsPromises]).then(([v1,v2]) => {
-                // get plugin panels
-                this.getPluginsPanel(['users'], 'create');
-                this.$store.commit('setSpinner', false);
-            });
-
         },
         components: { 'popup-media':PopupMedia },
         data(){

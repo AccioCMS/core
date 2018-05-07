@@ -341,7 +341,7 @@ class BasePostTypeController extends MainController{
 
         $categories = Language::filterRows($categories, false);
 
-        $final = array('details' => $postType, 'categories' => $categories);
+        $final = array('details' => $postType, 'categories' => $categories, 'dbTables' => $this->getTables());
 
         // Fire event
         $final['events'] = Event::fire('postType:pre_update', [$final]);

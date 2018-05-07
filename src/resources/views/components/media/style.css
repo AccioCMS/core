@@ -215,6 +215,7 @@
     color: #666 !important;
     font-size: 12px !important;
     margin-top: 5px;
+    word-break: break-all;
 }
 .singleImgContainer{
     width: 100%;
