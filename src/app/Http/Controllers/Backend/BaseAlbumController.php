@@ -102,13 +102,13 @@ class BaseAlbumController extends MainController{
             'album'              => $list,
             'images'             => $mediaList,
             'pagination'         => 1,
-            'imagesExtensions'   => config('image.image_extensions'),
-            'videoExtensions'    => config('image.video_extensions'),
-            'videoIconUrl'       => config('image.video_icon_url'),
-            'audioExtensions'    => config('image.video_extensions'),
-            'audioIconUrl'       => config('image.audio_icon_url'),
-            'documentExtensions' => config('image.document_extensions'),
-            'documentIconUrl'    => config('image.document_icon_url'),
+            'imagesExtensions'   => config('media.image_extensions'),
+            'videoExtensions'    => config('media.video_extensions'),
+            'videoIconUrl'       => config('media.video_icon_url'),
+            'audioExtensions'    => config('media.video_extensions'),
+            'audioIconUrl'       => config('media.audio_icon_url'),
+            'documentExtensions' => config('media.document_extensions'),
+            'documentIconUrl'    => config('media.document_icon_url'),
         );
 
         $response['events'] = Event::fire('album:pre_update', [$response]);

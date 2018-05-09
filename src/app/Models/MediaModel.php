@@ -129,7 +129,7 @@ class MediaModel extends Model{
      * @return array all allowed extensions
      */
     public static function allowedExtensions(){
-        return array_merge(config('image.image_extensions'), config('image.document_extensions'), config('image.audio_extensions'), config('image.video_extensions'));
+        return array_merge(config('media.image_extensions'), config('media.document_extensions'), config('media.audio_extensions'), config('media.video_extensions'));
     }
 
     /**

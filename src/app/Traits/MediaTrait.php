@@ -113,7 +113,7 @@ trait MediaTrait{
                 $media->fileDirectory = $fileDirectory;
                 $media->filesize = round(($fileSize/1000),2);
 
-                if(in_array($extension, config('image.image_extensions'))){
+                if(in_array($extension, config('media.image_extensions'))){
                     $media->type = "image";
                     // if the uploaded file is a image set his dimensions in the database
                     $img = Image::make($destinationOriginalPath);
@@ -121,11 +121,11 @@ trait MediaTrait{
                     $height = $img->height();
                     $media->dimensions = $width."x".$height;
 
-                }else if(in_array($extension, config('image.document_extensions'))){
+                }else if(in_array($extension, config('media.document_extensions'))){
                     $media->type = "document";
-                }else if(in_array($extension, config('image.audio_extensions'))){
+                }else if(in_array($extension, config('media.audio_extensions'))){
                     $media->type = "audio";
-                }else if(in_array($extension, config('image.video_extensions'))){
+                }else if(in_array($extension, config('media.video_extensions'))){
                     $media->type = "video";
                 }
 
@@ -143,13 +143,13 @@ trait MediaTrait{
                     }
 
                     // optimize original image
-                    if(config('image.optimize_original_image')) {
+                    if(config('media.optimize_original_image')) {
                         $this->optimize($destinationOriginalDirectory . '/' . $fileName);
                     }
 
                     // Create thumbs
-                    if(in_array($extension, config('image.image_extensions'))){
-                        foreach(config('image.default_thumb_size') as $thumKey => $thumValue){
+                    if(in_array($extension, config('media.image_extensions'))){
+                        foreach(config('media.default_thumb_size') as $thumKey => $thumValue){
                             if ($thumKey == "default" || $thumKey == $belongsToApp){ // only thumbs that are default and which belongs to this current app
                                 foreach ($thumValue as $thumbDimension){
                                     $this->createThumb($media, $thumbDimension[0], $thumbDimension[1]);
@@ -233,7 +233,7 @@ trait MediaTrait{
         $extension = File::extension($imageObj->url);
         $basePath = base_path('/');
 
-        if (in_array($extension, config('image.image_extensions'))){
+        if (in_array($extension, config('media.image_extensions'))){
             //thumb can only be created if original source exist
             if(file_exists($basePath.$imageObj->url) && File::size($basePath.$imageObj->url)) {
                 $thumbDir = base_path($imageObj->fileDirectory . "/" . $width.($height ? 'x'.$height : ""));
