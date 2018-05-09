@@ -2,6 +2,7 @@
 
 namespace Accio\App\Http\Controllers\Backend;
 
+use HTMLMin\HTMLMin\HTMLMin;
 use Illuminate\Routing\Controller;
 use App;
 use Illuminate\Support\Facades\Auth;
