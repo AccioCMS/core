@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use DB;
 use Auth;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
-
+use ImageOptimizer;
 
 trait MediaTrait{
 
@@ -24,7 +24,7 @@ trait MediaTrait{
      *
      * @return array
      */
-    public static function upload($request, $belongsToApp = ''){
+    public function upload($request, $belongsToApp = ''){
         $results = array();
         $carbon = new Carbon();
 
@@ -113,7 +113,7 @@ trait MediaTrait{
                 $media->fileDirectory = $fileDirectory;
                 $media->filesize = round(($fileSize/1000),2);
 
-                if(in_array($extension, Media::$imageExtensions)){
+                if(in_array($extension, config('image.image_extensions'))){
                     $media->type = "image";
                     // if the uploaded file is a image set his dimensions in the database
                     $img = Image::make($destinationOriginalPath);
@@ -121,11 +121,11 @@ trait MediaTrait{
                     $height = $img->height();
                     $media->dimensions = $width."x".$height;
 
-                }else if(in_array($extension, Media::$documentExtensions)){
+                }else if(in_array($extension, config('image.document_extensions'))){
                     $media->type = "document";
-                }else if(in_array($extension, Media::$audioExtensions)){
+                }else if(in_array($extension, config('image.audio_extensions'))){
                     $media->type = "audio";
-                }else if(in_array($extension, Media::$videoExtensions)){
+                }else if(in_array($extension, config('image.video_extensions'))){
                     $media->type = "video";
                 }
 
@@ -142,12 +142,17 @@ trait MediaTrait{
                         ]);
                     }
 
+                    // optimize original image
+                    if(config('image.optimize_original_image')) {
+                        $this->optimize($destinationOriginalDirectory . '/' . $fileName);
+                    }
+
                     // Create thumbs
-                    if(in_array($extension, Media::$imageExtensions)){
-                        foreach(Media::$thumbSizes as $thumKey => $thumValue){
+                    if(in_array($extension, config('image.image_extensions'))){
+                        foreach(config('image.default_thumb_size') as $thumKey => $thumValue){
                             if ($thumKey == "default" || $thumKey == $belongsToApp){ // only thumbs that are default and which belongs to this current app
                                 foreach ($thumValue as $thumbDimension){
-                                    self::createThumb($media, $thumbDimension[0], $thumbDimension[1]);
+                                    $this->createThumb($media, $thumbDimension[0], $thumbDimension[1]);
                                 }
                             }
                         }
@@ -195,7 +200,7 @@ trait MediaTrait{
         if(file_exists(base_path($thumbPath))){
             return asset($thumbPath);
         }else{
-            if(self::createThumb($imageObj, $width, $height)){
+            if($this->createThumb($imageObj, $width, $height)){
                 return asset($thumbPath);
             }
         }
@@ -211,7 +216,7 @@ trait MediaTrait{
      * @return object
      */
     public function makeThumb($width, $height=null){
-        self::createThumb($this, $width, $height);
+        $this->createThumb($this, $width, $height);
         return $this;
     }
 
@@ -224,11 +229,11 @@ trait MediaTrait{
      *
      * @return boolean
      */
-    public static function createThumb($imageObj, $width, $height=null){
+    public function createThumb($imageObj, $width, $height=null){
         $extension = File::extension($imageObj->url);
         $basePath = base_path('/');
 
-        if (in_array($extension, Media::$imageExtensions)){
+        if (in_array($extension, config('image.image_extensions'))){
             //thumb can only be created if original source exist
             if(file_exists($basePath.$imageObj->url) && File::size($basePath.$imageObj->url)) {
                 $thumbDir = base_path($imageObj->fileDirectory . "/" . $width.($height ? 'x'.$height : ""));
@@ -253,10 +258,24 @@ trait MediaTrait{
                 $img->fit($width, $height);
 
                 if ($img->save($thumbDir . '/' . $imageObj->filename, 60)) {
+                    // optimize image
+                    $this->optimize($thumbDir . '/' . $imageObj->filename);
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    /**
+     * Compress & optimize an image
+     * @param string $pathToImage
+     * @param string|null $pathToOutput
+     *
+     * @return $this
+     */
+    public function optimize(string $pathToImage, string $pathToOutput = null){
+        ImageOptimizer::optimize($pathToImage,$pathToOutput);
+        return $this;
     }
 }

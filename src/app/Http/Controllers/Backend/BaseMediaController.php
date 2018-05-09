@@ -29,7 +29,7 @@ class BaseMediaController extends MainController{
         if(!User::hasAccess('Media','create')){
             return $this->noPermission();
         }
-        return Media::upload($request);
+        return (new Media())->upload($request);
     }
 
     /**
@@ -47,13 +47,13 @@ class BaseMediaController extends MainController{
             'list'               => $list,
             'count'              => $list->count(),
             'pagination'         => $pagination,
-            'imagesExtensions'   => Media::$imageExtensions,
-            'videoExtensions'    => Media::$videoExtensions,
-            'videoIconUrl'       => Media::$videoIconUrl,
-            'audioExtensions'    => Media::$audioExtensions,
-            'audioIconUrl'       => Media::$audioIconUrl,
-            'documentExtensions' => Media::$documentExtensions,
-            'documentIconUrl'    => Media::$documentIconUrl,
+            'imagesExtensions'   => config('image.image_extensions'),
+            'videoExtensions'    => config('image.video_extensions'),
+            'videoIconUrl'       => config('image.video_icon_url'),
+            'audioExtensions'    => config('image.video_extensions'),
+            'audioIconUrl'       => config('image.audio_icon_url'),
+            'documentExtensions' => config('image.document_extensions'),
+            'documentIconUrl'    => config('image.document_icon_url'),
         ];
 
         $results['events'] = Event::fire('media:pre_update', [$results]);
@@ -135,7 +135,7 @@ class BaseMediaController extends MainController{
                 if(file_exists($media->url)) {
                     unlink($media->url); // delete original file
                 }
-                foreach(\App\Models\Media::$thumbSizes as $thumKey => $thumValue){ // loop throw all thumbs and delete them
+                foreach(config('image.default_thumb_size') as $thumKey => $thumValue){ // loop throw all thumbs and delete them
                     foreach ($thumValue as $thumParams){
                         $folderName = $thumParams[0] ."x".$thumParams[1];
                         $path = $media->fileDirectory."/".$folderName."/".$media->filename;
@@ -209,7 +209,7 @@ class BaseMediaController extends MainController{
                 $originalImage->save($url, 100);
                 $this->deleteThumb($file);
 
-                foreach(\App\Models\Media::$thumbSizes as $thumKey => $thumValue){
+                foreach(config('image.default_thumb_size') as $thumKey => $thumValue){
                     foreach ($thumValue as $thumParams){
                         $originalThumbWidth = (integer)$thumParams[0];
                         if($originalThumbWidth >= 300 || $originalThumbWidth == 200){
@@ -250,7 +250,7 @@ class BaseMediaController extends MainController{
     private function deleteThumb($image){
         // list default thumb sizes in a array (use to ignore them, not delete them)
         $thumbSizesToNotBeDeleted = [];
-        foreach(Media::$thumbSizes as $thumbSizesArr){
+        foreach(config('image.default_thumb_size') as $thumbSizesArr){
             foreach($thumbSizesArr as $thumbSize){
                 if(count($thumbSize) == 2){
                     $thumbSizesToNotBeDeleted[] = $thumbSize[0] . "x" . $thumbSize[1];
@@ -338,10 +338,10 @@ class BaseMediaController extends MainController{
         Cache::flush();
 
         // Create thumbs
-        foreach(\App\Models\Media::$thumbSizes as $thumKey => $thumValue){
+        foreach(config('image.default_thumb_size') as $thumKey => $thumValue){
             if ($thumKey == "default" || $thumKey == $app){ // create only the thumbs that are needed for a app
                 foreach ($thumValue as $thumParams){
-                    if (in_array($extension, \App\Models\Media::$imageExtensions)){
+                    if (in_array($extension, config('image.image_extensions'))){
                         $thumbDir = $destinationPath."/".$thumParams[0]."x".$thumParams[1];
                         if(!is_dir($thumbDir)){
                             mkdir($thumbDir, 0700);
