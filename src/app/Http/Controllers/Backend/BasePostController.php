@@ -675,7 +675,10 @@ class BasePostController extends MainController {
         $media = array(); // the object media used for the media custom fields in the front end
         if ($post->featuredImageID){
             $featuredImage = Media::find($post->featuredImageID);
-            $media["featuredImage"][] = $featuredImage;
+            // set feature image if it exist
+            if($featuredImage){
+                $media["featuredImage"][] = $featuredImage;
+            }
         }
         if ($post->featuredVideoID){
             $featuredVideo = Media::find($post->featuredVideoID);

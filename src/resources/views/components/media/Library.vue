@@ -64,7 +64,7 @@
                 </div>
 
 
-                <div class="col-lg-4 col-md-5 col-sm-6 col-xs-6" id="editPanel2" v-if="selectedFiles[0] !== undefined">
+                <div class="col-lg-4 col-md-5 col-sm-6 col-xs-6" id="editPanel" v-if="selectedFiles[0] !== undefined">
 
                     <template v-if="Object.keys(selectedFiles).length == 1">
                         <div class="row clearfix">
@@ -462,7 +462,7 @@
                     type: type,
                     from: from,
                     to: to
-                 };
+                };
 
                 // make ajax request
                 this.noResults = false;
@@ -553,7 +553,7 @@
                                         multiFilesSelectedIndexes.push(sCount);
                                     }
                                     multiFilesSelectedIndexes.push(currentClicked);
-                                // if the first selected element has a lower index as the current selected
+                                    // if the first selected element has a lower index as the current selected
                                 }else if(firstChild > currentClicked){
                                     $(".imageWrapper.active").removeClass("active");
                                     for(var sCount = firstChild; sCount > currentClicked; sCount--){
@@ -586,8 +586,8 @@
                         this.selectedFiles.push(this.getMediaList[multiFilesSelectedIndexes[k]]);
                     }
 
-                // if there is only a file selected
-                // make selected list
+                    // if there is only a file selected
+                    // make selected list
                 }else{
                     for(var i = 0; i < this.getMediaList.length; i++){
                         // if it is being selected insert it into the selected array
@@ -683,12 +683,12 @@
             },
             // delete the selected media file
             deleteSelected(){
-              // open loading
-              this.$store.dispatch('openLoading');
-              let selectedFiles = this.selectedFiles;
-              this.selectedFiles = [];
+                // open loading
+                this.$store.dispatch('openLoading');
+                let selectedFiles = this.selectedFiles;
+                this.selectedFiles = [];
 
-              this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/delete', selectedFiles)
+                this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/delete', selectedFiles)
                     .then((resp) => {
                         if(resp.body == "OK"){
                             this.reset(false);
@@ -719,11 +719,11 @@
                     });
             },
             setWatermark(){
-              // open loading
-              this.$store.dispatch('openLoading');
+                // open loading
+                this.$store.dispatch('openLoading');
 
-              var global = this;
-              this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/assign-watermark', this.selectedFiles)
+                var global = this;
+                this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/assign-watermark', this.selectedFiles)
                     .then((resp) => {
                         // if response is ok - if watermarks are set
                         if(resp.body == "OK"){

@@ -1,5 +1,5 @@
 <template>
-    <div class="right_col" role="main">
+    <div class="right_col mainBaseMedia" role="main">
         <div class="componentsWs">
             <div class="page-title col-lg-12 col-md-12 col-sm-12 col-xs-12 ">
                 <div class="title_left">
@@ -31,10 +31,10 @@
 
                 <library v-if="activeView == 'library'" :multiple="true" :multipleInputs="true" :isAlbum="false" ref="library"></library>
 
-                <div v-if="activeView == 'albums'">
+                <template v-if="activeView == 'albums'">
                     <library v-if="getAlbumID != 0" :multiple="true" :multipleInputs="true" :isAlbum="true" ref="album"></library>
                     <albums v-if="getAlbumID == 0" :menu_link_id="$route.query.menu_link_id"></albums>
-                </div>
+                </template>
 
             </div>
 

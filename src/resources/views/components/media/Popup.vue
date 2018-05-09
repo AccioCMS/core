@@ -17,10 +17,10 @@
                            ref="library"
                            :isAlbum="false"></popup-library>
 
-            <div v-if="activeView == 'albums'">
+            <template v-if="activeView == 'albums'">
                 <popup-library v-if="getAlbumID != 0" ref="album" :isAlbum="true"></popup-library>
                 <albums v-if="getAlbumID == 0" :menu_link_id="$route.query.menu_link_id"></albums>
-            </div>
+            </template>
 
         </div>
     </div>

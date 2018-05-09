@@ -37,6 +37,9 @@
 #closeCropBtn{
     z-index: 1;
 }
+#filesMediaPopup{
+    height: calc(100% - 150px);
+}
 .text-container{
     width: 100%;
     height: 100%;
@@ -179,11 +182,11 @@
     padding: 0;
     height: 100%;
 }
-#filesMediaPopup, #albumsContainer{
+#albumsContainer{
     padding: 15px;
     overflow: auto;
     padding-bottom:50px;
-    height: calc(100% - 150px);
+    height: 100%;
 }
 #filesMediaPopup2, #albumsContainer{
     padding: 15px;
@@ -254,6 +257,9 @@
     font-size: 12px;
     word-break: break-all;
 }
+.multiselect span{
+    display: inline !important;
+}
 #editPanel hr{
     margin-top: 30px;
 }
@@ -293,15 +299,16 @@
 #detailsImage{
     width: 100%;
 }
-#editPanel2{
+.mainBaseMedia #editPanel{
     background-color: #e4e4e4;
+    top: 0;
 }
-#editPanel2 h5{
+.mainBaseMedia #editPanel h5{
     display: block;
     text-align: left;
     margin-left: 10px;
 }
-#editPanel2 span{
+.mainBaseMedia #editPanel span{
     text-align: left;
     clear: both;
     display: block;
@@ -309,40 +316,40 @@
     font-size: 12px;
     word-break: break-all;
 }
-#editPanel2 hr{
+.mainBaseMedia #editPanel hr{
     margin-top: 30px;
 }
-#editPanel2 span#filename{
+.mainBaseMedia #editPanel span#filename{
     color: #333;
 }
-#editPanel2 img#detailsUrl{
+.mainBaseMedia #editPanel img#detailsUrl{
     width: 100%;
 }
-#editPanel2 #editImage{
+.mainBaseMedia #editPanel #editImage{
     color: #0096dc;
     display: block;
     text-align: left;
     margin-top: 5px;
     cursor: pointer;
 }
-#editPanel2 #deleteImage{
+.mainBaseMedia #editPanel #deleteImage{
     color: #df0000;
     display: block;
     text-align: left;
     margin-top: 5px;
     cursor: pointer;
 }
-#editPanel2 #deleteImageMulti{
+.mainBaseMedia #editPanel #deleteImageMulti{
     margin-top: 10px;
 }
-#editPanel2 #assignWatermarkBtn{
+.mainBaseMedia #editPanel #assignWatermarkBtn{
     color: #14cf95;
     display: block;
     text-align: left;
     margin-top: 5px;
     cursor: pointer;
 }
-#editPanel2 #assignWatermarkBtnMulti{
+.mainBaseMedia #editPanel #assignWatermarkBtnMulti{
     margin-top: 10px;
 }
 .detailsFromContainer .form-group{
@@ -462,6 +469,7 @@ div.image-decorator {
 .albumPanel{
     margin:0;
     padding:0;
+    height: 100%;
 }
 .albumTitle{
     margin:0;
@@ -478,6 +486,7 @@ div.image-decorator {
 .albumPanelContent{
     margin:0;
     padding:0;
+    height: calc(100% - 150px);
 }
 .albumWrapper{
     margin-top: 30px;
@@ -513,6 +522,12 @@ div.image-decorator {
     height: 35px;
     width: 100%;
     text-align: center;
+}
+.albumsHeader h2,.albumsHeader button {
+    float: left;
+}
+.albumsHeader h2{
+    margin-left: 20px;
 }
 label.btn.btn-default.active {
     color: #333 !important;
@@ -553,7 +568,7 @@ label.btn.btn-default.active {
         right: 0;
         bottom: 0;
     }
-    #editPanel2 {
+    .mainBaseMedia #editPanel {
         overflow-y: scroll;
         padding-bottom: 50px;
         position: relative;

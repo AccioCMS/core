@@ -74,6 +74,15 @@ export const postForm = {
                      */
                     this.categoriesOptions = resp.body.categories;
 
+                    // if url query category make that category selected
+                    if(Object.keys(this.$route.query).length && this.$route.query.category !== undefined){
+                        for(let k in this.categoriesOptions){
+                            if(this.categoriesOptions[k].categoryID == this.$route.query.category){
+                                this.selectedCategories[0] = this.categoriesOptions[k];
+                            }
+                        }
+                    }
+
                     /**
                      * get plugin panels
                      */

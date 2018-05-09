@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Accio\Support\Facades\Search;
 use App\Models\User;
 use App\Models\Language;
+use ImageOptimizer;
 
 class MainController extends Controller{
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
