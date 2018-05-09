@@ -269,13 +269,16 @@ trait MediaTrait{
 
     /**
      * Compress & optimize an image
+     *
      * @param string $pathToImage
      * @param string|null $pathToOutput
      *
      * @return $this
      */
     public function optimize(string $pathToImage, string $pathToOutput = null){
-        ImageOptimizer::optimize($pathToImage,$pathToOutput);
+        if(config('media.optimize_image')) {
+            ImageOptimizer::optimize($pathToImage, $pathToOutput);
+        }
         return $this;
     }
 }
