@@ -249,16 +249,13 @@
     text-align: left;
     margin-left: 10px;
 }
-#editPanel span{
+#editPanel .mediaDescriptions span{
     text-align: left;
     clear: both;
     display: block;
     margin-top: 5px;
     font-size: 12px;
     word-break: break-all;
-}
-.multiselect span{
-    display: inline !important;
 }
 #editPanel hr{
     margin-top: 30px;
@@ -308,7 +305,7 @@
     text-align: left;
     margin-left: 10px;
 }
-.mainBaseMedia #editPanel span{
+.mainBaseMedia #editPanel .mediaDescriptions span{
     text-align: left;
     clear: both;
     display: block;
