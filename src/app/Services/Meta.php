@@ -367,23 +367,26 @@ class  Meta
      * @return string in form of param="value"
      */
     public function parseAttributes($attributes){
-        $htmlMeta = '';
-        foreach($attributes as $key=>$value){
-            // false async means no async
-            if($key == 'async' && $value == false){
-                continue;
-            }
-            //convert boolean to string
-            if($value === false){
-                $value = 'false';
-            }
-            else if($value === true){
-                $value = 'true';
-            }
+        if($attributes) {
+            $htmlMeta = ' ';
+            foreach ($attributes as $key => $value) {
+                // false async means no async
+                if ($key == 'async' && $value == false) {
+                    continue;
+                }
+                //convert boolean to string
+                if ($value === false) {
+                    $value = 'false';
+                } else if ($value === true) {
+                    $value = 'true';
+                }
 
-            $htmlMeta .= $key.'="'.$value.'" ';
+                $htmlMeta .= $key . '="' . $value . '" ';
+            }
+            return $htmlMeta;
+
         }
-        return $htmlMeta;
+        return ;
     }
 
     /**
