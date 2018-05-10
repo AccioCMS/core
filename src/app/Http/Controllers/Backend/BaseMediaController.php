@@ -4,6 +4,7 @@ namespace Accio\App\Http\Controllers\Backend;
 
 use App\Models\Settings;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
@@ -42,7 +43,6 @@ class BaseMediaController extends MainController{
             return $this->noPermission();
         }
         $list = Pagination::infiniteScrollPagination('media', $pagination, Media::$infinitPaginationShow);
-
         $results = [
             'list'               => $list,
             'count'              => $list->count(),
@@ -126,9 +126,17 @@ class BaseMediaController extends MainController{
             if(!User::hasAccess('Media','delete',$file['mediaID'], true)){
                 return $this->noPermission();
             }
+
+            // delete from album relations
+            $relationDeletePass = true;
+            $albumRelations = DB::table("album_relations")->where('mediaID', $file['mediaID']);
+            if($albumRelations->count() && !$albumRelations->delete()){
+                $relationDeletePass = false;
+            }
+
             // get file info from database
             $media = \App\Models\Media::find($file['mediaID']);
-            if ($media->delete()){ // delete from database
+            if ($relationDeletePass && $media->delete()){ // delete from database
                 // delete cache
                 Cache::flush();
 

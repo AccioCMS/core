@@ -82,7 +82,7 @@
 
                                 </template>
                             </div>
-                            <div :class="{'col-lg-12 col-md-12 col-sm-12': selectedFiles[0].type == 'video', 'col-lg-6 col-md-6 col-sm-6': selectedFiles[0].type != 'video'}">
+                            <div class="mediaDescriptions" :class="{'col-lg-12 col-md-12 col-sm-12': selectedFiles[0].type == 'video', 'col-lg-6 col-md-6 col-sm-6': selectedFiles[0].type != 'video'}">
 
                                 <span id="filename">{{ selectedFiles[0].filename }}</span>
                                 <span id="filesize">{{ selectedFiles[0].filesize }} Mb</span>
@@ -91,10 +91,8 @@
                                 <span id="typeDetails">{{ selectedFiles[0].type }}</span>
 
                                 <a id="editImage" v-if="selectedFiles[0].type == 'image' && hasUpdatePermission" @click="openCropWindow">{{trans.__editBtn}}</a>
-
                                 <a id="assignWatermarkBtn" @click="openModal" class="watermarkBtn" v-if="hasUpdatePermission && selectedFiles[0].type != 'video'">{{trans.__watermarkBtn}}</a>
                                 <a id="deleteImage" @click="openModal" class="deleteImageBtn" v-if="hasDeletePermission">{{trans.__deleteBtn}}</a>
-
                             </div>
                         </div>
 
