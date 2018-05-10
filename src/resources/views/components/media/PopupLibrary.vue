@@ -63,7 +63,7 @@
 
                 </div>
 
-                <div class="col-lg-3 col-md-5 col-sm-8 col-xs-12" id="editPanel" v-if="selectedFiles[0] !== undefined">
+                <div class="col-lg-3 col-md-5 col-sm-8 col-xs-12" id="editPanel" v-if="Object.keys(selectedFiles).length">
 
                     <template v-if="Object.keys(selectedFiles).length == 1">
                         <div class="row clearfix">
@@ -78,7 +78,6 @@
                                             <source :src="generateUrl(constructUrl(selectedFiles[0], true))" :type="'video/'+selectedFiles[0].extension" width="100%" height="100%" />
                                         </video>
                                     </figure>
-
                                 </template>
                             </div>
 
@@ -145,11 +144,10 @@
                         </div>
                     </template>
 
-                    <div class="row clearfix multiselect" v-if="multiselect && Object.keys(this.selectedFiles).length > 1">
+                    <div class="row clearfix" v-if="Object.keys(selectedFiles).length > 1">
                         <a id="assignWatermarkBtnMulti" @click="openModal" class="watermarkBtn btn btn-info">{{trans.__watermarkBtn}}</a>
                         <a id="deleteImageMulti" @click="openModal" class="deleteImageBtn btn btn-danger">{{trans.__deleteBtn}}</a>
                     </div>
-
                 </div>
 
                 <div id="popupButtons" class="col-lg-12 col-md-12">
@@ -492,7 +490,7 @@
                 this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/media/json/get-list/'+ 1)
                     .then((resp) => {
                         this.$store.commit('setMediaList', resp.body.list);
-                        this.refreshImages();
+                        this.refreshImageUrls();
 
                         this.$store.state.pagination = parseInt(resp.body.pagination);
                         this.$store.state.imagesExtensions = resp.body.imagesExtensions;
@@ -639,10 +637,8 @@
                         });
 
                 }else if(this.selectedFiles.length > 1){
-                    $("#editPanel .row").hide(50);
                     this.multiselect = true;
                 }else{
-                    $("#editPanel .row").hide(50);
                     this.multiselect = false;
                 }
             },
