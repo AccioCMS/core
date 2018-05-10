@@ -485,7 +485,7 @@
              * Rest media list when media is edited
              * @param updateImgInEditPanel
              */
-            reset(updateImgInEditPanel){
+            reset(updateImgInEditPanel = true){
                 // Get the first 100 results
                 this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/media/json/get-list/'+ 1)
                     .then((resp) => {
@@ -535,10 +535,8 @@
                     var rand = Math.floor((Math.random() * 100) + 1);
                     this.selectedFiles[i].url = this.selectedFiles[i].url + "?"+rand;
                 }
-                if(updateImgInEditPanel){
-                    var src = $("#detailsImage").attr('src');
-                    $("#detailsImage").attr('src', src+"?"+rand);
-                }
+                let src = $("#detailsImage").attr('src');
+                $("#detailsImage").attr('src', src+"?"+rand);
             },
 
             selectFile(event){
