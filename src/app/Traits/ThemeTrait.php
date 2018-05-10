@@ -349,51 +349,70 @@ trait ThemeTrait
     public static function css($header = true, $defaultAttributes = [], $files = []){
         $html = '';
         if($files){
-            $cssFiles = $files;
+            $files = $files;
         }else{
-            $cssFiles = self::config('css');
+            $files = self::config('css');
         }
 
-        if ($cssFiles) {
-            foreach ($cssFiles as $cssFile) {
+        if ($files) {
+            foreach ($files as $file) {
                 // exclude merge files
-                if (isset($cssFile['merge']) && $cssFile['merge']) {
+                if (isset($file['merge']) && $file['merge']) {
                     continue;
                 }
 
                 // exclude header
                 if ($header) {
-                    if(isset($cssFile['showInHeader']) && !$cssFile['showInHeader']) {
+                    if(isset($file['showInHeader']) && !$file['showInHeader']) {
                         continue;
                     }
                 }else{ // exclude footer css
-                    if(!isset($cssFile['showInHeader']) || (isset($cssFile['showInHeader']) && $cssFile['showInHeader'])) {
+                    if(!isset($file['showInHeader']) || (isset($file['showInHeader']) && $file['showInHeader'])) {
                         continue;
                     }
                 }
 
                 // Attributes
                 $attributes = $defaultAttributes;
-                if (isset($cssFile['attributes'])) {
-                    $attributes = array_merge($defaultAttributes, $cssFile['attributes']);
+                if (isset($file['attributes'])) {
+                    $attributes = array_merge($defaultAttributes, $file['attributes']);
                 }
 
-                // Handle absolute url file name
-                if (strpos($cssFile['path'], 'http') || strpos($cssFile['path'], '/')) {
-                    $url = $cssFile['path'];
-                } else {
-                    $url = self::cssUrl($cssFile['path']);
-
-                    // Add timestamp to the end of the file, for caching purposes
-                    if(file_exists(self::cssPath($cssFile['path']))) {
-                        $url .= "?".File::lastModified(self::cssPath($cssFile['path']));
+                if(self::isInline($file)) {
+                    if (file_exists(self::cssPath($file['path']))) {
+                        $html .= '<style type="text/css">' . Meta::parseAttributes($attributes) . '>'.File::get(self::cssPath($file['path'])).'</style>' . "\n";
                     }
-                }
+                }else{
+                    // Handle absolute url file name
+                    if (strpos($file['path'], 'http') || strpos($file['path'], '/')) {
+                        $url = $file['path'];
+                    } else {
+                        $url = self::cssUrl($file['path']);
 
-                $html .= '<link href="' . $url . '" ' . Meta::parseAttributes($attributes) . ' rel="stylesheet" type="text/css">' . "\n";
+                        // Add timestamp to the end of the file, for caching purposes
+                        if (file_exists(self::cssPath($file['path']))) {
+                            $url .= "?" . File::lastModified(self::cssPath($file['path']));
+                        }
+                    }
+
+                    $html .= '<link href="' . $url . '" ' . Meta::parseAttributes($attributes) . ' rel="stylesheet" type="text/css">' . "\n";
+                }
             }
         }
         return $html;
+    }
+
+    /**
+     * Check whether a css or js should be printed as inline
+     *
+     * @param array $file
+     * @return boolean
+     */
+    private static function isInline($file){
+        if(isset($file['inline']) && $file['inline']){
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -407,48 +426,54 @@ trait ThemeTrait
     public static function js($header = true, $defaultAttributes = [], $files = []){
         $html = '';
         if($files){
-            $jsFiles = $files;
+            $files = $files;
         }else{
-            $jsFiles = self::config('js');
+            $files = self::config('js');
         }
 
-         if ($jsFiles) {
-            foreach ($jsFiles as $jsFile) {
+         if ($files) {
+            foreach ($files as $file) {
                 // exclude merge files
-                if (isset($jsFile['merge']) && $jsFile['merge']) {
+                if (isset($file['merge']) && $file['merge']) {
                     continue;
                 }
 
                 // exclude header
                 if ($header) {
-                    if(isset($jsFile['showInHeader']) && !$jsFile['showInHeader']) {
+                    if(isset($file['showInHeader']) && !$file['showInHeader']) {
                         continue;
                     }
                 }else{ // exclude footer css
-                    if(!isset($jsFile['showInHeader']) || (isset($jsFile['showInHeader']) && $jsFile['showInHeader'])) {
+                    if(!isset($file['showInHeader']) || (isset($file['showInHeader']) && $file['showInHeader'])) {
                         continue;
                     }
                 }
 
                 // Attributes
                 $attributes = $defaultAttributes;
-                if (isset($jsFile['attributes'])) {
-                    $attributes = array_merge($defaultAttributes, $jsFile['attributes']);
+                if (isset($file['attributes'])) {
+                    $attributes = array_merge($defaultAttributes, $file['attributes']);
                 }
 
-                // Handle absolute url file name
-                if (strpos($jsFile['path'], 'http') || strpos($jsFile['path'], '/')) {
-                    $url = $jsFile['path'];
-                } else {
-                    $url = self::jsUrl($jsFile['path']);
-
-                    // Add timestamp to the end of the file, for caching purposes
-                    if(file_exists(self::jsPath($jsFile['path']))) {
-                        $url .= "?".File::lastModified(self::jsPath($jsFile['path']));
+                if(self::isInline($file)) {
+                    if (file_exists(self::jsPath($file['path']))) {
+                        $html .= '<script type="text/javascript" ' . Meta::parseAttributes($attributes) . '>'.File::get(self::jsPath($file['path'])).'</script>' . "\n";
                     }
-                }
+                }else {
+                    // Handle absolute url file name
+                    if (strpos($file['path'], 'http') || strpos($file['path'], '/')) {
+                        $url = $file['path'];
+                    } else {
+                        $url = self::jsUrl($file['path']);
 
-                $html .= '<script src="'.$url .'" '.Meta::parseAttributes($attributes).' type="text/javascript"></script>'."\n";
+                        // Add timestamp to the end of the file, for caching purposes
+                        if (file_exists(self::jsPath($file['path']))) {
+                            $url .= "?" . File::lastModified(self::jsPath($file['path']));
+                        }
+                    }
+
+                    $html .= '<script src="' . $url . '" ' . Meta::parseAttributes($attributes) . ' type="text/javascript"></script>' . "\n";
+                }
             }
         }
         return $html;

@@ -370,6 +370,7 @@ class  Meta
 
             $htmlMeta .= $key.'="'.$value.'" ';
         }
+
         return $htmlMeta;
     }
 
