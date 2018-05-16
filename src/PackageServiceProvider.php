@@ -1,6 +1,8 @@
 <?php
 
 namespace Accio;
+use Accio\App\Commands\PostCreateProject;
+use Accio\App\Commands\PostPackageInstall;
 use Accio\App\Commands\SetWritePermissions;
 use App\Models\Plugin;
 use Illuminate\Routing\Router;
@@ -63,7 +65,9 @@ class PackageServiceProvider extends ServiceProvider{
         AccioInstall::class,
         AccioUninstall::class,
         PluginInstall::class,
-        SetWritePermissions::class
+        SetWritePermissions::class,
+        PostPackageInstall::class,
+        PostCreateProject::class
     ];
 
     /**

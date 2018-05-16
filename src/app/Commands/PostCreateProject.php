@@ -12,7 +12,7 @@ use Illuminate\Console\Command;
 use Accio\App\Services\Requirements;
 use Accio\App\Traits\OutputStyles;
 
-class CheckRequirements extends Command
+class PostCreateProject extends Command
 {
     use OutputStyles;
 
@@ -21,7 +21,7 @@ class CheckRequirements extends Command
      *
      * @var string
      */
-    protected $signature = 'check:requirements';
+    protected $signature = 'accio::postCreateProject';
 
 
     /**
@@ -44,15 +44,11 @@ class CheckRequirements extends Command
     /**
      * Execute the console command.
      *
-     * @param Requirements $requirements
      * @return mixed
      */
-    public function handle(Requirements $requirements)
+    public function handle()
     {
-        if($requirements->check($this)){
-            $this->block(' -- You are all set :) -- ', 'fg=white;bg=green;options=bold');
-            $this->line('');
-        }
+
     }
 
 }
