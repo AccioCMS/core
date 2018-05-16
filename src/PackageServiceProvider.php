@@ -1,6 +1,7 @@
 <?php
 
 namespace Accio;
+use Accio\App\Commands\SetWritePermissions;
 use App\Models\Plugin;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\File;
@@ -61,7 +62,8 @@ class PackageServiceProvider extends ServiceProvider{
         CheckRequirements::class,
         AccioInstall::class,
         AccioUninstall::class,
-        PluginInstall::class
+        PluginInstall::class,
+        SetWritePermissions::class
     ];
 
     /**

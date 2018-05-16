@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\UserGroup;
 use Doctrine\DBAL\Driver\PDOException;
 use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
@@ -22,6 +23,7 @@ use Mockery\Exception;
 use Accio\App\Traits\GetAvailableOptions;
 use Accio\App\Traits\OutputStyles;
 use Illuminate\Config\Repository as ConfigRepository;
+use Symfony\Component\Process\Process;
 
 class AccioInstall extends Command{
 
@@ -146,6 +148,16 @@ class AccioInstall extends Command{
     private $config;
 
     /**
+     * @var Filesystem
+     */
+    private $filesystem;
+
+    /**
+     * @var Process
+     */
+    private $process;
+
+    /**
      * MakeInstall constructor.
      *
      * @param Requirements $requirements
@@ -156,21 +168,25 @@ class AccioInstall extends Command{
     public function __construct(
         ConfigRepository $config,
         Requirements $requirements,
-        Environment $environment
+        Environment $environment,
+        Filesystem $filesystem
     ){
         parent::__construct();
 
         $this->config = $config;
         $this->requirements = $requirements;
         $this->env = $environment;
+        $this->filesystem = $filesystem;
+        $this->process = new Process($this);
     }
-
+    
     /**
      * Execute the console command.
      *
      * @throws \Exception
      */
     public function handle(){
+
         $this->clearCaches();
 
         if($this->isInstalled()){
@@ -607,4 +623,5 @@ class AccioInstall extends Command{
             throw  new \Exception('Langauge could not be found in ISO 639.1 list!');
         }
     }
+
 }
