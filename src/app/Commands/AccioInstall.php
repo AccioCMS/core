@@ -179,7 +179,8 @@ class AccioInstall extends Command{
         $this->filesystem = $filesystem;
         $this->process = new Process($this);
     }
-    
+
+
     /**
      * Execute the console command.
      *
@@ -197,84 +198,114 @@ class AccioInstall extends Command{
             return false;
         }
 
-        // delete current .env file
-        if(file_exists(app()->environmentFilePath())){
-            File::delete(app()->environmentFilePath());
-        }
+        $this
+          ->renameEnvFile()
+          ->setEnvValues()
+          ->welcomeMessage()
+          ->setBar()
+          ->askInstallingQuestions()
+          ->saveConfiguration()
+          ->deleteUploads()
+          ->runMigration()
+          ->createDummyContent()
+          ->generateKey()
+          ->successfullyInstalled();
+        return;
+    }
 
-        // get .env.example or stub file
-        $envTemplate = base_path('.env.example');
-        if(!file_exists($envTemplate)){
-            $envTemplate = stubPath('.env');
-        }
-
-        // Rename .env.example to .env
-        File::put(app()->environmentFilePath(), File::get($envTemplate));
-        // set app.key
-
-        $this->config->set('app.key', 'SomeRandomString');
-        $this->config->set('app.env', 'local');
-
-        $this->block(' -- Welcome to CMS -- ', 'fg=white;bg=green;options=bold');
-        $this->line('');
-        $this->line('Please answer the following questions:');
-        $this->line('');
-
-        // show Bar
-        $steps = 14;
+    /**
+     * Set progress bar
+     *
+     * @param int $steps
+     * @return $this
+     */
+    private function setBar($steps = 14){
         if($this->option('deleteUploads')){
             $steps++;
         }
 
         $this->bar = $this->output->createProgressBar($steps);
 
-        $this->APP_NAME = $this->ask('Your Site Name', config('app.name'));
-        $this->APP_URL = $this->ask('Your App URL', config('app.url'));
-        $this->DB_TYPE = $this->ask('Your Database type', config('database.default'));
-        $this->DB_HOST = $this->ask('Your DB_HOST', config('database.connections.'.$this->DB_TYPE.'.host'));
-        $this->DB_PORT = $this->ask('Your DB PORT', config('database.connections.'.$this->DB_TYPE.'.port'));
-        $this->DB_DATABASE = $this->ask('Your Database Name', config('database.connections.'.$this->DB_TYPE.'.database'));
-        $this->DB_USERNAME = $this->ask('Your DB Username', config('database.connections.'.$this->DB_TYPE.'.username'));
-        $this->DB_PASSWORD = $this->ask('Your DB Password', config('database.connections.'.$this->DB_TYPE.'.password'));
+        return $this;
+    }
+    /**
+     * Set welcome message
+     *
+     * @return $this
+     */
+    private function welcomeMessage(){
+        $this->block(' -- Welcome to CMS -- ', 'fg=white;bg=green;options=bold');
+        $this->line('');
+        $this->line('Please answer the following questions:');
+        $this->line('');
 
-        // Validate Database
-        $this->validateDatabase();
+        return $this;
+    }
+    /**
+     * The response when accio is installed sucessfully
+     * @return $this
+     */
+    private function successfullyInstalled(){
+        $this->line('');
+        $this->block('Success! CMS is now installed', 'fg=black;bg=green');
+        $this->line('');
+        $this->header('Next steps');
+        $this->line('');
 
-        $regions = $this->getTimezoneRegions();
-        $this->TIMEZONE = $this->choice('Timezone region', array_keys($regions), 0);
-        if ($this->TIMEZONE !== 'UTC') {
-            $locations = $this->getTimezoneLocations($regions[$this->TIMEZONE]);
-            $this->TIMEZONE .= '/' . $this->choice('Timezone location', $locations, 0);
+        $instructions = [
+          'Visit your website <options=bold>' . $this->APP_URL . '</>',
+          'Visit administration panel <options=bold>' .$this->APP_URL.'/'.config('project.adminPrefix'). '</> & login with the details you provided to get started',
+        ];
+        foreach ($instructions as $i => $instruction) {
+            if ($i !== 0) {
+                $instruction = $i . '. ' . $instruction;
+            }
+            $this->comment($instruction);
+            $this->line('');
         }
-
-        $this->askAboutDefaultLanguage();
-        $this->ADMIN_FIRST_NAME = $this->ask('Your First Name');
-        $this->ADMIN_LAST_NAME = $this->ask('Your Last Name');
-        $this->ADMIN_EMAIL = $this->ask('Your Email');
-        $this->ADMIN_PASSWORD = $this->ask('Set Your Admin Password');
-
-        $this->saveConfiguration();
-
-        if($this->option('deleteUploads')){
-            $this->info("Deleting uploads");
-            File::deleteDirectory(public_path('uploads'), true);
-            $this->advanceBar();
-        }
-
+        return $this;
+    }
+    /**
+     * Run migration
+     *
+     * @return $this
+     */
+    private function runMigration(){
         $this->info("Running database migration");
         $this->call('migrate',['--force' => true]);
         $this->advanceBar();
 
         $this->clearCaches();
         $this->optimize();
+        return $this;
+    }
+    /**
+     * Delete uploads
+     * @return $this
+     */
+    private function deleteUploads(){
+        if($this->option('deleteUploads')){
+            $this->info("Deleting uploads");
+            File::deleteDirectory(public_path('uploads'), true);
+            $this->advanceBar();
+        }
+        return $this;
+    }
 
+    /**
+     * Create dummy content
+     *
+     * @return $this
+     * @throws \Exception
+     */
+    private function createDummyContent(){
         // Create Default Language
         $this->info("Creating default language");
         factory(\App\Models\Language::class)->create([
-            'name' => $this->PRIMARY_LANGUAGE->name,
-            'nativeName' => $this->PRIMARY_LANGUAGE->nativeName,
-            'slug' => $this->PRIMARY_LANGUAGE->slug,
-            'isDefault' => true
+          'name' => $this->PRIMARY_LANGUAGE->name,
+          'nativeName' => $this->PRIMARY_LANGUAGE->nativeName,
+          'slug' => $this->PRIMARY_LANGUAGE->slug,
+          'isDefault' => true
         ]);
         $this->advanceBar();
 
@@ -329,37 +360,14 @@ class AccioInstall extends Command{
         $menuSeeder->addCategoryToMenu($menu);
         $this->advanceBar();
 
-        $this->generateKey();
-        $this->clearCaches();
-        $this->optimize();
-
-        // remove .env.example
-        if(file_exists(base_path('.env.example'))){
-            File::delete(base_path('.env.example'));
-        }
-
-        $this->line('');
-        $this->block('Success! CMS is now installed', 'fg=black;bg=green');
-        $this->line('');
-        $this->header('Next steps');
-        $this->line('');
-
-        $instructions = [
-            'Visit your website <options=bold>' . $this->APP_URL . '</>',
-            'Visit administration panel <options=bold>' .$this->APP_URL.'/'.config('project.adminPrefix'). '</> & login with the details you provided to get started',
-        ];
-        foreach ($instructions as $i => $instruction) {
-            if ($i !== 0) {
-                $instruction = $i . '. ' . $instruction;
-            }
-            $this->comment($instruction);
-            $this->line('');
-        }
-        return;
+        return $this;
     }
+
 
     /**
      * Save configuration in .env file and in config run time
+     *
+     * @return $this
      */
     private function saveConfiguration(){
         $this->info("Writing configuration file");
@@ -391,7 +399,45 @@ class AccioInstall extends Command{
         FILe::put(config_path('app.php'), $newContent);
 
         $this->advanceBar();
+
+        return $this;
     }
+
+    /**
+     * Ask installing questions
+     *
+     * @return $this
+     * @throws \Exception
+     */
+    private function askInstallingQuestions(){
+        $this->APP_NAME = $this->ask('Your Site Name', config('app.name'));
+        $this->APP_URL = $this->ask('Your App URL', config('app.url'));
+        $this->DB_TYPE = $this->ask('Your Database type', config('database.default'));
+        $this->DB_HOST = $this->ask('Your DB_HOST', config('database.connections.'.$this->DB_TYPE.'.host'));
+        $this->DB_PORT = $this->ask('Your DB PORT', config('database.connections.'.$this->DB_TYPE.'.port'));
+        $this->DB_DATABASE = $this->ask('Your Database Name', config('database.connections.'.$this->DB_TYPE.'.database'));
+        $this->DB_USERNAME = $this->ask('Your DB Username', config('database.connections.'.$this->DB_TYPE.'.username'));
+        $this->DB_PASSWORD = $this->ask('Your DB Password', config('database.connections.'.$this->DB_TYPE.'.password'));
+
+        // Validate Database
+        $this->validateDatabase();
+
+        $regions = $this->getTimezoneRegions();
+        $this->TIMEZONE = $this->choice('Timezone region', array_keys($regions), 0);
+        if ($this->TIMEZONE !== 'UTC') {
+            $locations = $this->getTimezoneLocations($regions[$this->TIMEZONE]);
+            $this->TIMEZONE .= '/' . $this->choice('Timezone location', $locations, 0);
+        }
+
+        $this->askAboutDefaultLanguage();
+        $this->ADMIN_FIRST_NAME = $this->ask('Your First Name');
+        $this->ADMIN_LAST_NAME = $this->ask('Your Last Name');
+        $this->ADMIN_EMAIL = $this->ask('Your Email');
+        $this->ADMIN_PASSWORD = $this->ask('Set Your Admin Password');
+
+        return $this;
+    }
+
 
     /**
      * Set CMS Settings
@@ -438,6 +484,9 @@ class AccioInstall extends Command{
         $this->info('Generating application key');
         $this->callSilent('key:generate', ['--force' => true]);
         $this->advanceBar();
+
+        $this->clearCaches();
+        $this->optimize();
     }
 
     /**
@@ -464,6 +513,43 @@ class AccioInstall extends Command{
         }
     }
 
+    /**
+     * Rename .env file
+     *
+     * @return $this
+     */
+    private function renameEnvFile(){
+        // delete current .env file
+        if(file_exists(app()->environmentFilePath())){
+            File::delete(app()->environmentFilePath());
+        }
+
+        // get .env.example or stub file
+        $envTemplate = base_path('.env.example');
+        if(!file_exists($envTemplate)){
+            $envTemplate = stubPath('.env');
+        }
+
+        // Rename .env.example to .env
+        File::put(app()->environmentFilePath(), File::get($envTemplate));
+
+        // remove .env.example
+        if(file_exists(base_path('.env.example'))){
+            File::delete(base_path('.env.example'));
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set env values
+     */
+    private function setEnvValues(){
+        $this->config->set('app.key', 'SomeRandomString');
+        $this->config->set('app.env', 'local');
+
+        return $this;
+    }
 
     /**
      * Validate Database
