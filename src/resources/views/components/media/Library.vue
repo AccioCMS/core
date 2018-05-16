@@ -64,7 +64,7 @@
                 </div>
 
 
-                <div class="col-lg-4 col-md-5 col-sm-6 col-xs-6" id="editPanel2" v-if="selectedFiles[0] !== undefined">
+                <div class="col-lg-4 col-md-5 col-sm-6 col-xs-6" id="editPanel" v-if="selectedFiles[0] !== undefined">
 
                     <template v-if="Object.keys(selectedFiles).length == 1">
                         <div class="row clearfix">
@@ -82,7 +82,7 @@
 
                                 </template>
                             </div>
-                            <div :class="{'col-lg-12 col-md-12 col-sm-12': selectedFiles[0].type == 'video', 'col-lg-6 col-md-6 col-sm-6': selectedFiles[0].type != 'video'}">
+                            <div class="mediaDescriptions" :class="{'col-lg-12 col-md-12 col-sm-12': selectedFiles[0].type == 'video', 'col-lg-6 col-md-6 col-sm-6': selectedFiles[0].type != 'video'}">
 
                                 <span id="filename">{{ selectedFiles[0].filename }}</span>
                                 <span id="filesize">{{ selectedFiles[0].filesize }} Mb</span>
@@ -91,10 +91,8 @@
                                 <span id="typeDetails">{{ selectedFiles[0].type }}</span>
 
                                 <a id="editImage" v-if="selectedFiles[0].type == 'image' && hasUpdatePermission" @click="openCropWindow">{{trans.__editBtn}}</a>
-
                                 <a id="assignWatermarkBtn" @click="openModal" class="watermarkBtn" v-if="hasUpdatePermission && selectedFiles[0].type != 'video'">{{trans.__watermarkBtn}}</a>
                                 <a id="deleteImage" @click="openModal" class="deleteImageBtn" v-if="hasDeletePermission">{{trans.__deleteBtn}}</a>
-
                             </div>
                         </div>
 
@@ -462,7 +460,7 @@
                     type: type,
                     from: from,
                     to: to
-                 };
+                };
 
                 // make ajax request
                 this.noResults = false;
@@ -553,7 +551,7 @@
                                         multiFilesSelectedIndexes.push(sCount);
                                     }
                                     multiFilesSelectedIndexes.push(currentClicked);
-                                // if the first selected element has a lower index as the current selected
+                                    // if the first selected element has a lower index as the current selected
                                 }else if(firstChild > currentClicked){
                                     $(".imageWrapper.active").removeClass("active");
                                     for(var sCount = firstChild; sCount > currentClicked; sCount--){
@@ -586,8 +584,8 @@
                         this.selectedFiles.push(this.getMediaList[multiFilesSelectedIndexes[k]]);
                     }
 
-                // if there is only a file selected
-                // make selected list
+                    // if there is only a file selected
+                    // make selected list
                 }else{
                     for(var i = 0; i < this.getMediaList.length; i++){
                         // if it is being selected insert it into the selected array
@@ -683,12 +681,12 @@
             },
             // delete the selected media file
             deleteSelected(){
-              // open loading
-              this.$store.dispatch('openLoading');
-              let selectedFiles = this.selectedFiles;
-              this.selectedFiles = [];
+                // open loading
+                this.$store.dispatch('openLoading');
+                let selectedFiles = this.selectedFiles;
+                this.selectedFiles = [];
 
-              this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/delete', selectedFiles)
+                this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/delete', selectedFiles)
                     .then((resp) => {
                         if(resp.body == "OK"){
                             this.reset(false);
@@ -719,11 +717,11 @@
                     });
             },
             setWatermark(){
-              // open loading
-              this.$store.dispatch('openLoading');
+                // open loading
+                this.$store.dispatch('openLoading');
 
-              var global = this;
-              this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/assign-watermark', this.selectedFiles)
+                var global = this;
+                this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/assign-watermark', this.selectedFiles)
                     .then((resp) => {
                         // if response is ok - if watermarks are set
                         if(resp.body == "OK"){

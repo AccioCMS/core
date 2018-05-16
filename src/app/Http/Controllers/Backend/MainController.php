@@ -2,6 +2,7 @@
 
 namespace Accio\App\Http\Controllers\Backend;
 
+use HTMLMin\HTMLMin\HTMLMin;
 use Illuminate\Routing\Controller;
 use App;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,7 @@ use Illuminate\Http\Request;
 use Accio\Support\Facades\Search;
 use App\Models\User;
 use App\Models\Language;
+use ImageOptimizer;
 
 class MainController extends Controller{
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;

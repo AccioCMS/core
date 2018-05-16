@@ -63,80 +63,11 @@ class MediaModel extends Model{
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
 
     /**
-     * File extensions that are allowed to be uploaded from admin panel
-     *
-     * @var array $extensions
-     */
-    public static $extensions = array('jpg','png','jpeg','pdf','txt');
-
-    /**
-     * Image extensions that are allowed to be uploaded
-     *
-     * @var array $imageExtensions
-     */
-    public static $imageExtensions = array('jpg','png','jpeg');
-
-    /**
-     * Documents extensions that are allowed to be uploaded.
-     *
-     * @var array $documentExtensions
-     */
-    public static $documentExtensions = array('pdf','doc','docs','xls','xlsx','csv','txt');
-
-    /**
-     * Document icon path that should be shown in admin interface
-     *
-     * @var string $documentIconUrl
-     */
-    public static $documentIconUrl = "/images/document.png";
-
-    /**
-     * Video extensions that are allowed to be uploaded.
-     *
-     * @var array $videoExtensions
-     */
-    public static $videoExtensions = array('mp4','flv','mov');
-
-    /**
-     * Video icon path that should be shown in admin interface
-     *
-     * @var string $videoIconUrl
-     */
-    public static $videoIconUrl = "/images/video.png";
-
-    /**
-     * Audio extensions that are allowed to be uploaded.
-     *
-     * @var array $videoExtensions
-     */
-    public static $audioExtensions = array('mp3','ogg');
-
-    /**
-     * Audio icon path that should be shown in admin interface
-     *
-     * @var string $audioIconUrl
-     */
-    public static $audioIconUrl = "/images/audio.png";
-
-    /**
      * The number of media files to show while scrolling in the library list
      *
      * @var int $infinitPaginationShow
      */
     public static $infinitPaginationShow = 100;
-
-    /** @var array $thumbSizes Default thumb sizes of the app*/
-    //@TODO should be defined in each model respectively
-    //@TODO handle thumbs that have only a fixed width,
-    //@TODO handle thumbs that have only a fixed height
-    public static $thumbSizes = [
-        'default' => [
-            [200,200]
-        ],
-        'users' => [
-            [100,100],
-        ],
-    ];
 
     /**
      * @inheritdoc
@@ -198,7 +129,7 @@ class MediaModel extends Model{
      * @return array all allowed extensions
      */
     public static function allowedExtensions(){
-        return array_merge(self::$audioExtensions, self::$documentExtensions, self::$imageExtensions, self::$videoExtensions);
+        return array_merge(config('media.image_extensions'), config('media.document_extensions'), config('media.audio_extensions'), config('media.video_extensions'));
     }
 
     /**

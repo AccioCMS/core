@@ -63,7 +63,7 @@
 
                 </div>
 
-                <div class="col-lg-3 col-md-5 col-sm-8 col-xs-12" id="editPanel" v-if="selectedFiles[0] !== undefined">
+                <div class="col-lg-3 col-md-5 col-sm-8 col-xs-12" id="editPanel" v-if="Object.keys(selectedFiles).length">
 
                     <template v-if="Object.keys(selectedFiles).length == 1">
                         <div class="row clearfix">
@@ -78,11 +78,10 @@
                                             <source :src="generateUrl(constructUrl(selectedFiles[0], true))" :type="'video/'+selectedFiles[0].extension" width="100%" height="100%" />
                                         </video>
                                     </figure>
-
                                 </template>
                             </div>
 
-                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 mediaDescriptions">
                                 <span id="filename">{{ selectedFiles[0].filename }}</span>
                                 <span id="filesize">{{ selectedFiles[0].filesize }} Mb</span>
                                 <span id="dimensions">{{ selectedFiles[0].dimensions }}</span>
@@ -145,11 +144,10 @@
                         </div>
                     </template>
 
-                    <div class="row clearfix multiselect" v-if="multiselect && Object.keys(this.selectedFiles).length > 1">
+                    <div class="row clearfix" v-if="Object.keys(selectedFiles).length > 1">
                         <a id="assignWatermarkBtnMulti" @click="openModal" class="watermarkBtn btn btn-info">{{trans.__watermarkBtn}}</a>
                         <a id="deleteImageMulti" @click="openModal" class="deleteImageBtn btn btn-danger">{{trans.__deleteBtn}}</a>
                     </div>
-
                 </div>
 
                 <div id="popupButtons" class="col-lg-12 col-md-12">
@@ -388,15 +386,9 @@
                 if(media.updated_at === undefined){
                     return;
                 }
-                var uploaded = media.updated_at;
-                var res = uploaded.replace(/-/g, '');
-                res = res.replace(/ /g, '');
-                res = res.replace(/:/g, '');
-                var rand = Math.floor((Math.random() * 100) + 1);
-
                 var url = "";
                 if(media.type == "image"){
-                    url = "/"+media.fileDirectory + "/200x200/" + media.filename + "?"+res+rand;
+                    url = "/"+media.fileDirectory + "/200x200/" + media.filename;
                 }else if(media.type == "document"){
                     url = this.documentIconUrl;
                 }else if(media.type == "video"){
@@ -488,11 +480,18 @@
                         this.$store.commit('setSpinner', false);
                     });
             },
-            reset(updateImgInEditPanel){
+
+            /**
+             * Rest media list when media is edited
+             * @param updateImgInEditPanel
+             */
+            reset(updateImgInEditPanel = true){
                 // Get the first 100 results
                 this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/media/json/get-list/'+ 1)
                     .then((resp) => {
                         this.$store.commit('setMediaList', resp.body.list);
+                        this.refreshImageUrls();
+
                         this.$store.state.pagination = parseInt(resp.body.pagination);
                         this.$store.state.imagesExtensions = resp.body.imagesExtensions;
                         this.$store.state.videoExtensions = resp.body.videoExtensions;
@@ -508,18 +507,38 @@
                         this.from = '';
                         this.to = '';
                     });
-                    this.noResults = false;
-
-                    // reset selected image urls
-                    for(var i=0; i<this.selectedFiles.length; i++){
-                        var rand = Math.floor((Math.random() * 100) + 1);
-                        this.selectedFiles[i].url = this.selectedFiles[i].url + "?"+rand;
-                    }
-                    if(updateImgInEditPanel){
-                        var src = $("#detailsImage").attr('src');
-                        $("#detailsImage").attr('src', src+"?"+rand);
-                    }
+                this.noResults = false;
             },
+
+            /**
+             * Refresh image urls when media is edited
+             */
+            refreshImageUrls(){
+                let mediaList = this.getMediaList;
+                let newList = [];
+                this.$store.commit('setMediaList', {});
+                for(let k in mediaList) {
+                    let media = mediaList[k];
+
+                    let rand = Math.floor((Math.random() * 100) + 1);
+                    if(media.type == "image"){
+                        let filename = media.filename.split("?");
+                        media.filename = filename[0] + "?" + rand;
+                    }
+
+                    newList[k] = media;
+                }
+                this.$store.commit('setMediaList', newList);
+
+                // reset selected image urls
+                for(var i=0; i<this.selectedFiles.length; i++){
+                    var rand = Math.floor((Math.random() * 100) + 1);
+                    this.selectedFiles[i].url = this.selectedFiles[i].url + "?"+rand;
+                }
+                let src = $("#detailsImage").attr('src');
+                $("#detailsImage").attr('src', src+"?"+rand);
+            },
+
             selectFile(event){
                 var currentClicked = '';
                 var selectedIndex = '';
@@ -616,10 +635,8 @@
                         });
 
                 }else if(this.selectedFiles.length > 1){
-                    $("#editPanel .row").hide(50);
                     this.multiselect = true;
                 }else{
-                    $("#editPanel .row").hide(50);
                     this.multiselect = false;
                 }
             },

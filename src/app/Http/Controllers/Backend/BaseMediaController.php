@@ -4,6 +4,7 @@ namespace Accio\App\Http\Controllers\Backend;
 
 use App\Models\Settings;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
@@ -29,7 +30,7 @@ class BaseMediaController extends MainController{
         if(!User::hasAccess('Media','create')){
             return $this->noPermission();
         }
-        return Media::upload($request);
+        return (new Media())->upload($request);
     }
 
     /**
@@ -42,18 +43,17 @@ class BaseMediaController extends MainController{
             return $this->noPermission();
         }
         $list = Pagination::infiniteScrollPagination('media', $pagination, Media::$infinitPaginationShow);
-
         $results = [
             'list'               => $list,
             'count'              => $list->count(),
             'pagination'         => $pagination,
-            'imagesExtensions'   => Media::$imageExtensions,
-            'videoExtensions'    => Media::$videoExtensions,
-            'videoIconUrl'       => Media::$videoIconUrl,
-            'audioExtensions'    => Media::$audioExtensions,
-            'audioIconUrl'       => Media::$audioIconUrl,
-            'documentExtensions' => Media::$documentExtensions,
-            'documentIconUrl'    => Media::$documentIconUrl,
+            'imagesExtensions'   => config('media.image_extensions'),
+            'videoExtensions'    => config('media.video_extensions'),
+            'videoIconUrl'       => config('media.video_icon_url'),
+            'audioExtensions'    => config('media.video_extensions'),
+            'audioIconUrl'       => config('media.audio_icon_url'),
+            'documentExtensions' => config('media.document_extensions'),
+            'documentIconUrl'    => config('media.document_icon_url'),
         ];
 
         $results['events'] = Event::fire('media:pre_update', [$results]);
@@ -126,16 +126,24 @@ class BaseMediaController extends MainController{
             if(!User::hasAccess('Media','delete',$file['mediaID'], true)){
                 return $this->noPermission();
             }
+
+            // delete from album relations
+            $relationDeletePass = true;
+            $albumRelations = DB::table("album_relations")->where('mediaID', $file['mediaID']);
+            if($albumRelations->count() && !$albumRelations->delete()){
+                $relationDeletePass = false;
+            }
+
             // get file info from database
             $media = \App\Models\Media::find($file['mediaID']);
-            if ($media->delete()){ // delete from database
+            if ($relationDeletePass && $media->delete()){ // delete from database
                 // delete cache
                 Cache::flush();
 
                 if(file_exists($media->url)) {
                     unlink($media->url); // delete original file
                 }
-                foreach(\App\Models\Media::$thumbSizes as $thumKey => $thumValue){ // loop throw all thumbs and delete them
+                foreach(config('media.default_thumb_size') as $thumKey => $thumValue){ // loop throw all thumbs and delete them
                     foreach ($thumValue as $thumParams){
                         $folderName = $thumParams[0] ."x".$thumParams[1];
                         $path = $media->fileDirectory."/".$folderName."/".$media->filename;
@@ -209,7 +217,7 @@ class BaseMediaController extends MainController{
                 $originalImage->save($url, 100);
                 $this->deleteThumb($file);
 
-                foreach(\App\Models\Media::$thumbSizes as $thumKey => $thumValue){
+                foreach(config('media.default_thumb_size') as $thumKey => $thumValue){
                     foreach ($thumValue as $thumParams){
                         $originalThumbWidth = (integer)$thumParams[0];
                         if($originalThumbWidth >= 300 || $originalThumbWidth == 200){
@@ -250,7 +258,7 @@ class BaseMediaController extends MainController{
     private function deleteThumb($image){
         // list default thumb sizes in a array (use to ignore them, not delete them)
         $thumbSizesToNotBeDeleted = [];
-        foreach(Media::$thumbSizes as $thumbSizesArr){
+        foreach(config('media.default_thumb_size') as $thumbSizesArr){
             foreach($thumbSizesArr as $thumbSize){
                 if(count($thumbSize) == 2){
                     $thumbSizesToNotBeDeleted[] = $thumbSize[0] . "x" . $thumbSize[1];
@@ -338,10 +346,10 @@ class BaseMediaController extends MainController{
         Cache::flush();
 
         // Create thumbs
-        foreach(\App\Models\Media::$thumbSizes as $thumKey => $thumValue){
+        foreach(config('media.default_thumb_size') as $thumKey => $thumValue){
             if ($thumKey == "default" || $thumKey == $app){ // create only the thumbs that are needed for a app
                 foreach ($thumValue as $thumParams){
-                    if (in_array($extension, \App\Models\Media::$imageExtensions)){
+                    if (in_array($extension, config('media.image_extensions'))){
                         $thumbDir = $destinationPath."/".$thumParams[0]."x".$thumParams[1];
                         if(!is_dir($thumbDir)){
                             mkdir($thumbDir, 0700);

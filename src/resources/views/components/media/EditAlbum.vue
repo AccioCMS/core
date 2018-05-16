@@ -4,58 +4,62 @@
             <h2>{{trans.__editAlbumTitle}}</h2>
         </div>
 
-        <div class="albumLangTabs">
-            <button type="button" v-for="(language, key ,index) in album" :class="'tabBtn '+isActive(index)" :id="'tab-'+index" :data-index="index">{{language.langName}}</button>
-        </div>
+        <spinner :width="'30px'" :height="'30px'" :border="'5px'" v-if="isLoading"></spinner>
 
-        <div class="formContainer">
-            <form>
+        <template v-if="!isLoading">
+            <div class="albumLangTabs">
+                <button type="button" v-for="(language, key ,index) in album" :class="'tabBtn '+isActive(index)" :id="'tab-'+index" :data-index="index">{{language.langName}}</button>
+            </div>
 
-                <div :id="'tabContent-'+index" v-for="(album, key, index) in album" :class="'tabContent '+isActive(index)">
+            <div class="formContainer">
+                <form>
 
-                    <div class="form-group clearfix" :id="'form-group-title_'+key">
-                        <label class="control-label col-md-12 col-sm-12 col-xs-12">{{trans.__title}}</label>
-                        <div class="col-md-12 col-sm-12 col-xs-12">
-                            <input type="text" class="form-control" v-model="album.title">
-                            <div class="alert" v-if="StoreResponse.errors['title_'+key]" v-for="error in StoreResponse.errors['title_'+key]">{{ error }}</div>
-                        </div>
-                    </div>
+                    <div :id="'tabContent-'+index" v-for="(album, key, index) in album" :class="'tabContent '+isActive(index)">
 
-                    <div class="form-group clearfix" :id="'form-group-description_'+key">
-                        <label class="control-label col-md-12 col-sm-12 col-xs-12">{{trans.__description}}</label>
-                        <div class="col-md-12 col-sm-12 col-xs-12">
-                            <input type="text" class="form-control" v-model="album.description">
-                            <div class="alert" v-if="StoreResponse.errors['description_'+key]" v-for="error in StoreResponse.errors['description_'+key]">{{ error }}</div>
-                        </div>
-                    </div>
-
-                    <div class="form-group clearfix" id="form-group-isVisible">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__visible}}</label>
-                        <div class="col-md-12 col-sm-12 col-xs-12">
-                            <div id="isVisible" class="btn-group" data-toggle="buttons">
-                                <label :class="{ 'active': album.isVisible, 'btn btn-default': true}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="changeVisibility(true, key)">
-                                    <input type="radio" name="isVisible" value="true"> &nbsp; {{trans.__true}} &nbsp;
-                                </label>
-                                <label :class="{ 'active': !album.isVisible, 'btn btn-primary': true}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="changeVisibility(false, key)">
-                                    <input type="radio" name="isVisible" value="false"> {{trans.__false}}
-                                </label>
-                                <div class="alert" v-if="StoreResponse.errors.isVisible" v-for="error in StoreResponse.errors.isVisible">{{ error }}</div>
+                        <div class="form-group clearfix" :id="'form-group-title_'+key">
+                            <label class="control-label col-md-12 col-sm-12 col-xs-12">{{trans.__title}}</label>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <input type="text" class="form-control" v-model="album.title">
+                                <div class="alert" v-if="StoreResponse.errors['title_'+key]" v-for="error in StoreResponse.errors['title_'+key]">{{ error }}</div>
                             </div>
                         </div>
+
+                        <div class="form-group clearfix" :id="'form-group-description_'+key">
+                            <label class="control-label col-md-12 col-sm-12 col-xs-12">{{trans.__description}}</label>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <input type="text" class="form-control" v-model="album.description">
+                                <div class="alert" v-if="StoreResponse.errors['description_'+key]" v-for="error in StoreResponse.errors['description_'+key]">{{ error }}</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group clearfix" id="form-group-isVisible">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__visible}}</label>
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div id="isVisible" class="btn-group" data-toggle="buttons">
+                                    <label :class="{ 'active': album.isVisible, 'btn btn-default': true}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="changeVisibility(true, key)">
+                                        <input type="radio" name="isVisible" value="true"> &nbsp; {{trans.__true}} &nbsp;
+                                    </label>
+                                    <label :class="{ 'active': !album.isVisible, 'btn btn-primary': true}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="changeVisibility(false, key)">
+                                        <input type="radio" name="isVisible" value="false"> {{trans.__false}}
+                                    </label>
+                                    <div class="alert" v-if="StoreResponse.errors.isVisible" v-for="error in StoreResponse.errors.isVisible">{{ error }}</div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
-                </div>
-
-                <div class="form-group clearfix">
-                    <div class="col-md-12 col-sm-12 col-xs-12">
-                        <button class="btn btn-primary" type="button" @click="store">{{trans.__saveBtn}}</button>
-                        <button class="btn btn-info" type="button" @click="$emit('closeEditPanel')">{{trans.__cancelBtn}}</button>
-                        <button class="btn btn-danger" type="button" @click="openModal" v-if="albumID">{{trans.__deleteBtn}}</button>
+                    <div class="form-group clearfix">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <button class="btn btn-primary" type="button" @click="store">{{trans.__saveBtn}}</button>
+                            <button class="btn btn-info" type="button" @click="$emit('closeEditPanel')">{{trans.__cancelBtn}}</button>
+                            <button class="btn btn-danger" type="button" @click="openModal" v-if="albumID">{{trans.__deleteBtn}}</button>
+                        </div>
                     </div>
-                </div>
 
-            </form>
-        </div>
+                </form>
+            </div>
+        </template>
 
         <!-- MODAL -->
         <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-hidden="true">
@@ -130,6 +134,7 @@
                 trans: {},
                 album: "",
                 albumID: "",
+                isLoading: true,
             }
         },
         updated: function(){
@@ -149,12 +154,15 @@
                 return this.getTranslation;
             },
             watchAlbumID: function(id){
+                this.isLoading = true;
                 // get the album info if we are updating
                 this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/album/details/'+id)
                     .then((resp) => {
                         this.album = resp.body.album;
                         this.albumID = id;
-                    });
+                    }).then((resp) => {
+                    this.isLoading = false;
+                });
             },
             // this function checks if user has permissions to a specific language
             hasPermissionForLang(langID){
@@ -233,7 +241,7 @@
                 this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/album/delete/'+this.albumID)
                     .then((resp) => {
                         $(".modal").hide();
-                        var response = resp.body;
+                        let response = resp.body;
                         this.$store.dispatch('handleErrors', {response});
                         this.$emit('closeEditPanel');
                         this.resetForm();
@@ -246,6 +254,6 @@
                 // return user permissions
                 return this.$store.getters.get_global_data.permissions;
             }
-       }
+        }
     }
 </script>

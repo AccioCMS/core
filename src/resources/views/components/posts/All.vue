@@ -4,7 +4,7 @@
         <div class="page-title">
             <div class="title_left">
                 <h3 class="pull-left">{{trans.__title}} <small>{{trans.__listTitle}}</small></h3>
-                <a class="btn btn-primary pull-left addBtnMain" @click="redirect('post-create')" v-if="hasAddPermission">{{trans.__addBtn}}</a>
+                <a class="btn btn-primary pull-left addBtnMain" @click="redirect('post-create','','',$route.query)" v-if="hasAddPermission">{{trans.__addBtn}}</a>
             </div>
 
             <div class="title_right">
@@ -45,15 +45,15 @@
 
                         <table id="datatable-checkbox" class="table table-striped table-bordered bulk_action">
                             <thead>
-                                <tr class="tableHeader">
-                                    <th>#</th>
-                                    <th id="postID" @click="orderBy('postID')">{{trans.__id}} <i :class="tableHeaderOrderIcons('postID')" aria-hidden="true"></i></th>
-                                    <th id="title" @click="orderBy('title')">{{trans.__globalTitle}} <i :class="tableHeaderOrderIcons('title')" aria-hidden="true"></i></th>
+                            <tr class="tableHeader">
+                                <th>#</th>
+                                <th id="postID" @click="orderBy('postID')">{{trans.__id}} <i :class="tableHeaderOrderIcons('postID')" aria-hidden="true"></i></th>
+                                <th id="title" @click="orderBy('title')">{{trans.__globalTitle}} <i :class="tableHeaderOrderIcons('title')" aria-hidden="true"></i></th>
 
-                                    <th :id="item.slug" @click="orderBy(item.slug)" v-for="(item, index) in columnNames">{{item.name}} <i :class="tableHeaderOrderIcons(item.slug)" aria-hidden="true"></i></th>
+                                <th :id="item.slug" @click="orderBy(item.slug)" v-for="(item, index) in columnNames">{{item.name}} <i :class="tableHeaderOrderIcons(item.slug)" aria-hidden="true"></i></th>
 
-                                    <th>{{trans.__action}}</th>
-                                </tr>
+                                <th>{{trans.__action}}</th>
+                            </tr>
                             </thead>
 
                             <tr v-if="spinner">
@@ -64,31 +64,31 @@
                             </tr>
 
                             <tbody v-if="!spinner" dusk="postListComponent">
-                                <tr v-for="(item, index) in getList.data">
-                                    <th><input type="checkbox" :value="item.postID" v-model="bulkDeleteIDs" :id="'ID'+item.postID"></th>
-                                    <th>{{ item.postID }}</th>
-                                    <th>{{ item.title }}</th>
+                            <tr v-for="(item, index) in getList.data">
+                                <th><input type="checkbox" :value="item.postID" v-model="bulkDeleteIDs" :id="'ID'+item.postID"></th>
+                                <th>{{ item.postID }}</th>
+                                <th>{{ item.title }}</th>
 
-                                    <td v-for="(value, columnKey, columnIndex) in item" v-if="isInTable(columnKey)">{{ value }}</td>
+                                <td v-for="(value, columnKey, columnIndex) in item" v-if="isInTable(columnKey)">{{ value }}</td>
 
-                                    <td>
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-primary" @click="redirect('post-update', item.postID)" v-if="isOwner(item.createdByUserID, hasUpdatePermission)">{{trans.__updateBtn}}</button>
-                                            <button type="button" class="btn disabled" v-if="!isOwner(item.createdByUserID, hasUpdatePermission)">{{trans.__updateBtn}}</button>
-                                            <button type="button" class="btn btn-primary" @click="toggleListActionBar(index)">
-                                                <span class="caret"></span>
-                                            </button>
-                                            <ul class="lists-action-bar-dropdown" v-if="index === openedItemActionBar">
-                                                <li v-if="isOwner(item.createdByUserID, hasDeletePermission)">
-                                                    <a style="cursor:pointer" @click="deleteItem(item.postID, index)">{{trans.__deleteBtn}}</a>
-                                                </li>
-                                                <li class="disabled" v-if="!isOwner(item.createdByUserID, hasDeletePermission)">
-                                                    <a>{{ trans.__deleteBtn }}</a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
+                                <td>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-primary" @click="redirect('post-update', item.postID)" v-if="isOwner(item.createdByUserID, hasUpdatePermission)">{{trans.__updateBtn}}</button>
+                                        <button type="button" class="btn disabled" v-if="!isOwner(item.createdByUserID, hasUpdatePermission)">{{trans.__updateBtn}}</button>
+                                        <button type="button" class="btn btn-primary" @click="toggleListActionBar(index)">
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul class="lists-action-bar-dropdown" v-if="index === openedItemActionBar">
+                                            <li v-if="isOwner(item.createdByUserID, hasDeletePermission)">
+                                                <a style="cursor:pointer" @click="deleteItem(item.postID, index)">{{trans.__deleteBtn}}</a>
+                                            </li>
+                                            <li class="disabled" v-if="!isOwner(item.createdByUserID, hasDeletePermission)">
+                                                <a>{{ trans.__deleteBtn }}</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
                             </tbody>
 
                         </table>
@@ -189,10 +189,10 @@
                 advancedSearchData: '', // data of advanced search if it is made
                 bulkDeleteIDs: [],  // all selected ids to be deleted from the list
                 form:{  // data of advanced search
-                   fields: [],  // search fields and parameters
-                   pagination: '', // pagination number
-                   orderBy: '', // if is ordered by a column
-                   orderType: '' // order type which is ASC or DESC
+                    fields: [],  // search fields and parameters
+                    pagination: '', // pagination number
+                    orderBy: '', // if is ordered by a column
+                    orderType: '' // order type which is ASC or DESC
                 },
             }
         },

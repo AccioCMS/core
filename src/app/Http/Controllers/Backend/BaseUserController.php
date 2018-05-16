@@ -448,7 +448,7 @@ class BaseUserController extends MainController{
         if(!User::hasAccess('user','create')){
             return $this->noPermission();
         }
-        return Media::upload($request, 'users');
+        return (new Media())->upload($request, 'users');
     }
 
 }

@@ -55,6 +55,19 @@ class  Meta
     private $metaIsPrinted = false;
 
     /**
+     * Define new lines in meta tags
+     * @var string $newLines
+     */
+    private $newLines = "\n";
+
+    public function __construct()
+    {
+        if(config('htmlmin.blade')){
+            $this->newLines = '';
+        }
+    }
+
+    /**
      * Set meta
      * @param $name
      * @param $content
@@ -315,7 +328,7 @@ class  Meta
      */
     private function printTitle(){
         if($this->getTitle()){
-            print '<title>'.$this->getTitle().'</title>'."\n";
+            print '<title>'.$this->getTitle().'</title>'.$this->newLines;
         }
         return $this;
     }
@@ -327,10 +340,10 @@ class  Meta
         foreach($this->metaList as $metaName=>$metaData){
             if(in_array($metaName, $this->allowedDuplicateMeta)){
                 foreach($metaData as $duplicateMetaData){
-                    print '<meta '.$duplicateMetaData['type'].'="'.$metaName.'" content="'.$duplicateMetaData['content'].'" />'."\n";
+                    print '<meta '.$duplicateMetaData['type'].'="'.$metaName.'" content="'.$duplicateMetaData['content'].'" />'.$this->newLines;
                 }
             }else{
-                print '<meta '.$metaData['type'].'="'.$metaName.'" content="'.$metaData['content'].'" />'."\n";
+                print '<meta '.$metaData['type'].'="'.$metaName.'" content="'.$metaData['content'].'" />'.$this->newLines;
             }
 
         }
@@ -343,7 +356,7 @@ class  Meta
      */
     private function printCanonical(){
         if($this->getCanonical()){
-            print '<link rel="canonical" href="'.$this->getCanonical().'" />'."\n";
+            print '<link rel="canonical" href="'.$this->getCanonical().'" />'.$this->newLines;
         }
         return $this;
     }
@@ -354,24 +367,26 @@ class  Meta
      * @return string in form of param="value"
      */
     public function parseAttributes($attributes){
-        $htmlMeta = '';
-        foreach($attributes as $key=>$value){
-            // false async means no async
-            if($key == 'async' && $value == false){
-                continue;
-            }
-            //convert boolean to string
-            if($value === false){
-                $value = 'false';
-            }
-            else if($value === true){
-                $value = 'true';
-            }
+        if($attributes) {
+            $htmlMeta = ' ';
+            foreach ($attributes as $key => $value) {
+                // false async means no async
+                if ($key == 'async' && $value == false) {
+                    continue;
+                }
+                //convert boolean to string
+                if ($value === false) {
+                    $value = 'false';
+                } else if ($value === true) {
+                    $value = 'true';
+                }
 
-            $htmlMeta .= $key.'="'.$value.'" ';
+                $htmlMeta .= $key . '="' . $value . '" ';
+            }
+            return $htmlMeta;
+
         }
-
-        return $htmlMeta;
+      return;
     }
 
     /**
@@ -465,7 +480,7 @@ class  Meta
     public function printHrefLang(){
         if(config('project.multilanguage') ) {
             foreach ($this->getHrefLang() as $hreflang) {
-                print '<link rel="alternate" href="' . $hreflang['url'] . '" hreflang="' . $hreflang['lang'] . '" />' . "\n";
+                print '<link rel="alternate" href="' . $hreflang['url'] . '" hreflang="' . $hreflang['lang'] . '" />' . $this->newLines;
             }
         }
     }

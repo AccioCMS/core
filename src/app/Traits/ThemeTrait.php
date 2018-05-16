@@ -430,8 +430,7 @@ trait ThemeTrait
         }else{
             $files = self::config('js');
         }
-
-         if ($files) {
+        if ($files) {
             foreach ($files as $file) {
                 // exclude merge files
                 if (isset($file['merge']) && $file['merge']) {

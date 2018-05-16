@@ -87,7 +87,7 @@ class DeployUploads extends Command
             // both directories exist
             if(file_exists($fromNoAsterix) && file_exists($toNoAsterix)){
                 $this->comment("\nCopying local uploads");
-                $command = 'rsync -avzh '.$from.' '.$to;
+                $command = 'cp -R -u -p '.$from.' '.$to; // copy only when the SOURCE file is newer than the destination file or when the destination file is missing
 
                 $this->info("Running command: '".$command."'");
 

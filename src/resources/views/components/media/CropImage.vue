@@ -146,6 +146,7 @@
                                 timeout: 3000,
                                 closeWith: ['button']
                             }).show();
+
                             // call reset method of parent to reset the list
                             this.reset();
                             this.$store.commit('setIsCropOpen', false);
@@ -207,7 +208,7 @@
                 var heightDiffRatio = globalHeight / prevHeight;
                 var prevY = (y / globalHeight) * bgSizeHeight;
                 $("#imagePrev").css("background-position-y", "-"+prevY+"px");
-            }
+            },
         },
         data(){
             return{
