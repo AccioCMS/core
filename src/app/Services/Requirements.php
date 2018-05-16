@@ -67,7 +67,7 @@ class Requirements
     {
         $this->console = $console;
 
-        $this->comment("\nChecking system requirements");
+        $this->console->comment("\nChecking system requirements");
 
         $this->process = new Process($this->console);
         $this->versionCheck();
@@ -78,9 +78,9 @@ class Requirements
         $this->nodeJsCommand();
         $this->checkPermissions();
         if ($this->errors) {
-            $console->line('');
-            $console->block('Accio cannot be installed because your system doesn\'t meet minimal requirements. Please fix the errors above before retrying to install.');
-            $console->line('');
+            $this->console->line('');
+            $this->console->block('Accio cannot be installed because your system doesn\'t meet minimal requirements. Please fix the errors above before retrying to install.');
+            $this->console->line('');
         }
         return !$this->errors;
     }
