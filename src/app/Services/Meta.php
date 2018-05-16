@@ -386,7 +386,7 @@ class  Meta
             return $htmlMeta;
 
         }
-        return ;
+      return;
     }
 
     /**
