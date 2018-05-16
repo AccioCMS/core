@@ -2,16 +2,19 @@
 /**
  * Created by PhpStorm.
  * User: sopa
- * Date: 26/04/2018
- * Time: 12:22 AM
+ * Date: 23/02/2018
+ * Time: 8:43 AM
  */
 
-namespace Accio\App\Services;
+namespace Accio\App\Commands;
 
 use Illuminate\Console\Command;
+use Accio\App\Services\Requirements;
+use Accio\App\Traits\OutputStyles;
 
-class ComposerScripts extends Command
+class CheckRequirements extends Command
 {
+    use OutputStyles;
 
     /**
      * The name and signature of the console command.
@@ -37,20 +40,19 @@ class ComposerScripts extends Command
     {
         parent::__construct();
     }
-    
-    /**
-     * Handle the post-root-package-install Composer script.
-     * After composer install is finished
-     */
-    public static function postPackageInstall(){
-    }
 
     /**
-     * Handle the post-create-project-cmd Composer script.
-     * After the project is created
+     * Execute the console command.
+     *
+     * @param Requirements $requirements
+     * @return mixed
      */
-    public static function postCreateProject(){
-        
+    public function handle(Requirements $requirements)
+    {
+        if($requirements->check($this)){
+            $this->block(' -- You are all set :) -- ', 'fg=white;bg=green;options=bold');
+            $this->line('');
+        }
     }
 
 }

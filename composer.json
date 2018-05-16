@@ -1,0 +1,39 @@
+{
+    "name": "acciocms/core",
+    "type": "library",
+    "description": "The core of Accio",
+    "homepage": "http://www.manaferra.com",
+    "keywords": ["accio","cms","core"],
+    "license": "MIT",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Faton Sopa",
+            "email": "faton.sopa@manaferra.com"
+        },
+        {
+            "name": "Jetmir Haxhisefa",
+            "email": "jetmir.haxhisefa@manaferra.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1.0"
+    },
+
+    "autoload": {
+        "files": [
+            "src/support/helpers.php"
+        ],
+        "psr-4": {
+            "Accio\\": "src/"
+        }
+    },
+
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.2-dev"
+        }
+    },
+
+    "minimum-stability": "dev"
+}
