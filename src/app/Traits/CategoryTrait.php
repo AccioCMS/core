@@ -19,7 +19,6 @@ trait CategoryTrait{
      */
     public $categoryList = [];
 
-
     /**
      * Find by ID
      *
