@@ -80,20 +80,20 @@ class PluginInstall extends Command
      * @throws \Exception
      */
     public function handle(){
-        //$repo = GitRepository::cloneRepository('git@github.com:manaferra/Posts-Position-Manager-Plugin.git', base_path("test"));
-        die();
-
         // Ensure there are no caches
         $this->callSilent('cache:clear');
-
 
         // Install plugin from a http/s source
         if(strstr($this->argument('source'),'http')){
             $this
-                ->getZip()
-                ->extractZip()
-                ->readConfigFile()
-                ->copySourceContent();
+              ->getZip()
+              ->extractZip()
+              ->readConfigFile()
+              ->copySourceContent();
+        }
+        // clone from git
+        elseif(strstr($this->argument('source'),'git')){
+            $this->cloneFromGit()->readConfigFile()->copySourceContent();
         }else{
             $this->pluginNamespace = $this->argument('source');
         }
@@ -103,6 +103,8 @@ class PluginInstall extends Command
             $this->info("Installing");
             if ($this->pluginInstance->install($this)) {
                 if ($this->addPluginInDB()) {
+                    $this->cleanTmp();
+
                     $this->line('');
                     $this->block('Plugin installed successfully', 'fg=black;bg=green');
                     $this->line('');
@@ -113,6 +115,17 @@ class PluginInstall extends Command
         }
     }
 
+    /**
+     * CLone form git.
+     *
+     * @throws \Cz\Git\GitException
+     * @return $this;
+     */
+    private function cloneFromGit(){
+        $this->tmpDirectory = tmpPath().'/'.time();
+        GitRepository::cloneRepository($this->argument('source'), $this->tmpDirectory);
+        return $this;
+    }
     /**
      * Checks if a plugin can be installed
      *
@@ -181,30 +194,34 @@ class PluginInstall extends Command
         $this->pluginNamespace = str_replace('\\','/',$this->configContent->namespace);
 
         if(file_exists(pluginsPath($this->pluginNamespace))){
-            File::deleteDirectory($this->tmpDirectory, true);
+            $this->cleanTmp();
             throw new \Exception('A plugin with the same namespace already exists in plugins directory');
         }
 
-        // Move source to plugins's directory
-        $explodeNamespace = explode('/',$this->pluginNamespace);
         // Created organisation directory if it doesn't exist
+        $explodeNamespace = explode('/',$this->pluginNamespace);
         if(!file_exists(pluginsPath($explodeNamespace[0]))) {
             File::makeDirectory(pluginsPath($explodeNamespace[0]), 0755, true);
         }
 
-        $directories = File::directories($this->tmpDirectory);
-        $pluginPathSource =  $directories[0];
-
         // Delete created directory if rename can not be executed
-        $directories = File::directories($this->tmpDirectory);
-        $pluginPathSource =  $directories[0];
-        if(!File::move($pluginPathSource, pluginsPath($this->pluginNamespace))){
-            File::deleteDirectory(pluginsPath($explodeNamespace[0]), true);
+        if(!File::move($this->tmpDirectory, pluginsPath($this->pluginNamespace))){
+            $this->cleanTmp();
             throw new \Exception('Source could not be moved to plugins directory!');
         }
 
-        // Remove tmp shits
-        File::deleteDirectory($this->tmpDirectory, true);
+        return $this;
+    }
+
+    /**
+     * Clean tmp directories
+     * @return $this
+     */
+    private function cleanTmp(){
+        $directories = File::directories(tmpPath());
+        foreach($directories as $directory){
+            File::deleteDirectory($directory);
+        }
 
         return $this;
     }
@@ -216,24 +233,29 @@ class PluginInstall extends Command
      * @throws \Exception
      */
     private function readConfigFile(){
-        // Get plugin data for config.json
-        $directories = File::directories($this->tmpDirectory);
-        if(!isset($directories[0])){
-            File::deleteDirectory($this->tmpDirectory, true);
-            throw new \Exception('No direcetory could be found in downloaded plugin!');
-        }
-
         // Check config.json exists
         $this->info("Reading config");
-        $pluginPathSource =  $directories[0];
-        if(!file_exists($pluginPathSource.'/config.json')){
-            File::deleteDirectory($this->tmpDirectory, true);
-            throw new \Exception('config.json file not found');
+
+        // look for config in main directory
+        if(file_exists($this->tmpDirectory.'/config.json')){
+            $this->configContent = json_decode(File::get($this->tmpDirectory.'/config.json'));
+            return $this;
         }
 
-        $this->configContent = json_decode(File::get($pluginPathSource.'/config.json'));
+        // look for config in the first directory
+        // useful in case the plugin is downloaded via http
+        $directories = File::directories($this->tmpDirectory);
+        if(isset($directories[0])) {
+            $pluginPathSource = $directories[0];
+            if (file_exists($pluginPathSource . '/config.json')) {
+                $this->configContent = json_decode(File::get($pluginPathSource.'/config.json'));
+                return $this;
+            }
+        }
 
-        return $this;
+        // no config.json found
+        $this->cleanTmp();
+        throw new \Exception('config.json file not found');
     }
 
     /**
@@ -267,8 +289,18 @@ class PluginInstall extends Command
     private function extractZip(){
         $this->info("Extracting");
         $this->tmpDirectory = tmpPath($this->tmpRandomName);
+
+        // extract
         Zipper::make($this->tmpZipFile)->extractTo($this->tmpDirectory);
+
+        // delete zip file
         File::delete($this->tmpZipFile);
+
+        // zip creates a parent directory on extract, pass it
+        $directories = File::directories($this->tmpDirectory);
+        if(isset($directories[0])){
+            $this->tmpDirectory = $directories[0];
+        }
 
         return $this;
     }
