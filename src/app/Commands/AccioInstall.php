@@ -529,6 +529,8 @@ class AccioInstall extends Command{
         Cache::flush();
     }
 
+     /*
+     * 
      * Rename .env file
      *
      * @return $this
