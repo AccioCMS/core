@@ -32,7 +32,7 @@ class CategoryModel extends Model{
      *
      * @var array $fillable
      */
-    protected $fillable = ['postTypeID','customFieldID','featuredImageID','title','slug','description','order','createdByUserID','isVisible', 'customFields'];
+    protected $fillable = ['postTypeID','parentID','customFieldID','featuredImageID','title','slug','description','order','createdByUserID','isVisible', 'customFields'];
 
     /**
      * The primary key of the table
@@ -139,6 +139,14 @@ class CategoryModel extends Model{
     public function featuredImage()
     {
         return $this->hasOne('App\Models\Media','mediaID','featuredImageID');
+    }
+
+    /**
+     * Parent of a category
+     * @return HasOne
+     */
+    public function parent(){
+        return $this->hasOne('App\Models\Category','categoryID','parentID');
     }
 
     /**

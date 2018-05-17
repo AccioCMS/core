@@ -32,63 +32,40 @@
 
                         <pagination :listUrl="listUrl" :dataSearchUrl="dataSearchUrl"></pagination>
 
-                        <table id="datatable-checkbox" class="table table-striped table-bordered bulk_action">
-                            <thead>
-                            <tr class="tableHeader">
-                                <th>#</th>
-                                <th id="categoryID" @click="orderBy('categoryID')">{{trans.__id}} <i :class="tableHeaderOrderIcons('categoryID')" aria-hidden="true"></i></th>
-                                <th id="title" @click="orderBy('title')">{{trans.__columnTitle}} <i :class="tableHeaderOrderIcons('title')" aria-hidden="true"></i></th>
-                                <th id="slug" @click="orderBy('slug')">{{trans.__slug}} <i :class="tableHeaderOrderIcons('slug')" aria-hidden="true"></i></th>
-                                <th>{{ trans.__action }}</th>
-                            </tr>
-                            </thead>
 
 
-                            <tr v-if="spinner">
-                                <td colspan="7">
-                                    <!-- Loading component -->
-                                    <spinner :width="'30px'" :height="'30px'" :border="'5px'"></spinner>
-                                </td>
-                            </tr>
+                        <div class="clearfix"></div>
 
-                            <tbody class="sortable" v-if="!spinner">
-                                <tr v-for="(item, index) in getList.data">
-                                    <th class="checkboxTh">
-                                        <span class="checkBoxBuldDeleteContainer">
-                                            <input type="checkbox" :value="item.categoryID" v-model="bulkDeleteIDs" :id="'ID'+item.categoryID">
-                                        </span>
-                                        <span class="handleSort">
-                                            <i class="fa fa-sort" aria-hidden="true"></i>
-                                        </span>
-                                    </th>
-                                    <th>{{ item.categoryID }}</th>
-                                    <td>{{ item.title }}</td>
-                                    <td>{{ item.slug }}</td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-primary" @click="redirect('category-update', item.categoryID)" v-if="categoriesUpdatePermission">{{trans.__updateBtn}}</button>
-                                            <button type="button" class="btn disabled" v-if="!categoriesUpdatePermission">{{trans.__updateBtn}}</button>
+                        <div class="row table table-striped table-bordered bulk_action">
+                            <div class="col-md-12 col-lg-12">
+                                <div class="row tableHeader tr">
+                                    <div class="col-xs-1 th">#</div>
+                                    <div class="col-xs-2 th">{{trans.__id}} <i :class="tableHeaderOrderIcons('categoryID')" aria-hidden="true"></i></div>
+                                    <div class="col-xs-3 th">{{trans.__columnTitle}} <i :class="tableHeaderOrderIcons('title')" aria-hidden="true"></i></div>
+                                    <div class="col-xs-3 th">{{trans.__slug}} <i :class="tableHeaderOrderIcons('slug')" aria-hidden="true"></i></div>
+                                    <div class="col-xs-2 th">{{ trans.__action }}</div>
+                                </div>
 
-                                            <button type="button" class="btn btn-primary" @click="toggleListActionBar(index)" :id="'toggleListBtn'+item.categoryID">
-                                                <span class="caret"></span>
-                                            </button>
-                                            <ul class="lists-action-bar-dropdown" v-if="index === openedItemActionBar">
-                                                <li>
-                                                    <router-link
-                                                            tag="a"
-                                                            style="cursor:pointer"
-                                                            :to="postsUrl+'?category='+item.categoryID">{{trans.__posts}}
-                                                    </router-link>
-                                                </li>
-                                                <li class="divider"></li>
-                                                <li v-if="categoriesDeletePermission"><a style="cursor:pointer" :id="'deleteItemBtn'+item.categoryID" @click="deleteItem(item.categoryID, index)">{{trans.__deleteBtn}}</a></li>
-                                                <li v-if="!categoriesDeletePermission" class="disabled"><a>{{trans.__deleteBtn}}</a></li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                <div class="row tableBody">
+                                    <category-item
+                                            v-for="(item, index) in getList.data"
+                                            :item="item"
+                                            :key="index"
+                                            :index="index"
+                                            countLayer="0"
+                                            :bulkDeleteIDs="bulkDeleteIDs"
+                                            :categoriesUpdatePermission="categoriesUpdatePermission"
+                                            :categoriesDeletePermission="categoriesDeletePermission"
+                                            :trans="trans"
+                                            :openedItemActionBar="openedItemActionBar"
+                                            :postsUrl="postsUrl"
+                                            v-on:toggleActionBar="toggleListActionBar"
+                                            v-on:redirect="redirect"
+                                            v-on:deleteItem="deleteConfirmDialog">
+                                    </category-item>
+                                </div>
+                            </div>
+                        </div>
 
                         <pagination :listUrl="listUrl" :dataSearchUrl="dataSearchUrl"></pagination>
 
@@ -99,8 +76,40 @@
             <div class="clearfix"></div>
 
         </div>
+
+        <!-- MODAL -->
+        <div class="modal" style="display: block; z-index: 9999;" tabindex="-1" role="dialog" aria-hidden="true" v-if="modalOpen">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <button type="button" class="close" @click="modalOpen = false" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                        <h4 class="modal-title" id="myModalLabel2">{{trans.__confirmBtn}}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <h4>{{trans.__sure}}</h4>
+                        <p id="confirmDialogMsg">{{ trans.__sureToDeleteMsg }}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" @click="modalOpen = false">{{trans.__closeBtn}}</button>
+                        <button type="button" class="btn btn-danger" @click="confirmDelete()">{{trans.__deleteBtn}}</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <!-- MODAL -->
+
     </div>
 </template>
+<style scoped>
+    .tableHeader{
+        border-bottom: 1px solid #DDD;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+</style>
 <script>
     import { globalComputed } from '../../mixins/globalComputed';
     import { globalMethods } from '../../mixins/globalMethods';
@@ -117,7 +126,7 @@
             'pagination': Pagination,
         },
         created(){
-            this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/category/get-all/'+this.$route.params.id;
+            this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/category/get-tree/'+this.$route.params.id;
             this.viewSearchUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/post-type/category/'+this.$route.params.id+'/search/';
             this.dataSearchUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/category/'+this.$route.params.id+'/search/';
             this.deleteUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/category/delete/';
@@ -143,6 +152,9 @@
                 __updateBtn: this.__('base.updateBtn'),
                 __addBtn: this.__('base.addBtn'),
                 __description: this.__('base.description'),
+                __closeBtn: this.__('base.closeBtn'),
+                __sure: this.__('categories.sureToDelete'),
+                __sureToDeleteMsg: this.__('categories.sureToDeleteMsg'),
             };
 
             // get the columns in from the post type table
@@ -173,6 +185,8 @@
                 deleteUrl: '', // url to delete a item
                 bulkDeleteUrl: '', // url to bulk delete items
                 postsUrl: '',
+                modalOpen: false,
+                categoryToBeDeleted: {id: 0, index: 0},
                 postType: '',
                 bulkDeleteIDs: [],  // all selected ids to be deleted from the list
                 categoriesAddPermission: false, // has create permission
@@ -188,10 +202,18 @@
         },
         methods: {
             // method responsible to sort (re-order) the list
+            // TODO (DELETE) qiky funksion nuk perdoret prejsi u bo parent child relation ne category
             orderRows( event, ui ){
-                console.log("order updated");
                 this.$store.dispatch('sort', {url: this.basePath+'/'+this.getAdminPrefix+'/json/category/sort', error: "List could not be sort"});
             },
+            deleteConfirmDialog(id, index){
+                this.categoryToBeDeleted = {id: id, index: index};
+                this.modalOpen = true;
+            },
+            confirmDelete(){
+                this.modalOpen = false;
+                this.deleteItem(this.categoryToBeDeleted.id, this.categoryToBeDeleted.index);
+            }
         },
         watch:{
             // watch for url changes and component doesn't change

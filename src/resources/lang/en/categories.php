@@ -17,6 +17,8 @@ return [
     'posts' => 'Posts',
     'createFormTitle' => 'Create category',
     'updateFormTitle' => 'Update category',
+    'sureToDelete' => 'Are you sure ?',
+    'sureToDeleteMsg' => 'This category may have posts related to it',
     'form' => array(
         'title' => 'Title',
     ),
