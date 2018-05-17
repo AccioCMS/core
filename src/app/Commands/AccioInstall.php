@@ -217,15 +217,18 @@ class AccioInstall extends Command{
     private function createDefaultTheme(){
         $this->info("Creating default theme");
 
-        (new DummyTheme([
-          'title' => 'Default Theme',
-          'namespace' => 'DefaultTheme',
-          'organisation' => 'Manaferra',
-          'authorName' => 'Faton Sopa',
-          'authorEmail' => 'fatom.sopa@manaferra.com',
-          'auth' => true,
-          'activate' => true,
-        ]))->make();
+        // create theme if it doesn't exist
+        if(!file_exists(base_path('themes/'.config('project.defaultTheme')))) {
+            (new DummyTheme([
+              'title' => 'Default Theme',
+              'namespace' => 'DefaultTheme',
+              'organisation' => 'Manaferra',
+              'authorName' => 'Faton Sopa',
+              'authorEmail' => 'fatom.sopa@manaferra.com',
+              'auth' => true,
+              'activate' => true,
+            ]))->make();
+        }
 
         $this->advanceBar();
 
