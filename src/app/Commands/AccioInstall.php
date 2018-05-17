@@ -220,7 +220,8 @@ class AccioInstall extends Command{
      */
     private function createDefaultTheme(){
         $this->info("Creating default theme");
-        $dummyTheme = new DummyTheme([
+
+        (new DummyTheme([
           'title' => 'Default Theme',
           'namespace' => 'DefaultTheme',
           'organisation' => 'Manaferra',
@@ -228,7 +229,7 @@ class AccioInstall extends Command{
           'authorEmail' => 'fatom.sopa@manaferra.com',
           'auth' => ture,
           'activate' => true,
-        ]);
+        ]))->make();
 
         return $this;
     }
@@ -539,6 +540,7 @@ class AccioInstall extends Command{
             $this->callSilent('optimize', ['--force' => true]);
             $this->callSilent('config:cache');
         }
+        return $this;
     }
 
     /**
