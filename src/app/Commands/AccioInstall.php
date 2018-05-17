@@ -208,18 +208,37 @@ class AccioInstall extends Command{
           ->deleteUploads()
           ->runMigration()
           ->createDummyContent()
+          ->createDefaultTheme()
           ->generateKey()
           ->successfullyInstalled();
         return;
     }
 
     /**
+     * Create dummy theme
+     * @return $this
+     */
+    private function createDefaultTheme(){
+        $this->info("Creating default theme");
+        $dummyTheme = new DummyTheme([
+          'title' => 'Default Theme',
+          'namespace' => 'DefaultTheme',
+          'organisation' => 'Manaferra',
+          'authorName' => 'Faton Sopa',
+          'authorEmail' => 'fatom.sopa@manaferra.com',
+          'auth' => ture,
+          'activate' => true,
+        ]);
+
+        return $this;
+    }
+    /**
      * Set progress bar
      *
      * @param int $steps
      * @return $this
      */
-    private function setBar($steps = 14){
+    private function setBar($steps = 15){
         if($this->option('deleteUploads')){
             $steps++;
         }

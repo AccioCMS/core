@@ -126,6 +126,7 @@ class PluginInstall extends Command
         GitRepository::cloneRepository($this->argument('source'), $this->tmpDirectory);
         return $this;
     }
+    
     /**
      * Checks if a plugin can be installed
      *
