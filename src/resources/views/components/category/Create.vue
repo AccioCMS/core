@@ -29,8 +29,7 @@
                                         v-if="hasPermissionForLang(lang.languageID)"
                                         v-for="(lang, count) in languages"
                                         @click="activeLang = lang.slug">
-                                        <a :href="'#tab_content'+ ++count" :id="'lang-tab'+count" role="tab" data-toggle="tab" aria-expanded="true">{{ lang.name }}</a>
-
+                                            <a :href="'#tab_content'+ ++count" :id="'lang-tab'+count" role="tab" data-toggle="tab" aria-expanded="true">{{ lang.name }}</a>
                                     </li>
                                 </ul>
 
@@ -54,6 +53,30 @@
                                                 <input type="text" class="form-control" id="slug" v-model="form.slug[lang.slug]" @dblclick="removeReadonly('slug')" readonly>
                                                 <img :src="resourcesUrl('/images/loading.svg')" class="slugLoading">
                                                 <div class="alert" v-if="StoreResponse.errors['slug_'+ lang.slug]" v-for="error in StoreResponse.errors['slug_'+ lang.slug]">{{ error }}</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group" id="form-group-parentID">
+                                            <label class="control-label col-md-2 col-sm-2 col-xs-12">{{trans.__parentID}}</label>
+                                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                                <multiselect
+                                                        v-model="form.parent"
+                                                        label="title"
+                                                        track-by="categoryID"
+                                                        placeholder="Type to search"
+                                                        open-direction="bottom"
+                                                        :options="categoryListOptions"
+                                                        :multiple="false"
+                                                        :searchable="true"
+                                                        :loading="areParentOptionsLoading"
+                                                        :internal-search="false"
+                                                        :clear-on-select="true"
+                                                        :close-on-select="true"
+                                                        :hide-selected="true"
+                                                        @search-change="searchCategories">
+
+                                                </multiselect>
+                                                <div class="alert" v-if="StoreResponse.errors['parentID']" v-for="error in StoreResponse.errors['parentID']">{{ error }}</div>
                                             </div>
                                         </div>
 
@@ -185,6 +208,7 @@
                 __createFormTitle: this.__('categories.createFormTitle'),
                 __title: this.__('categories.form.title'),
                 __slug: this.__('base.slug'),
+                __parentID: this.__('base.parentID'),
                 __addImage: this.__('media.addImage'),
                 __change: this.__('media.change'),
                 __description: this.__('base.description'),
@@ -225,9 +249,12 @@
                 pluginsPanels: [],
                 pluginsData: {},
                 selected: [],
+                areParentOptionsLoading: false,
+                categoryListOptions: [],
                 form: {
                     title: {},
                     slug: {},
+                    parent: [],
                     description: {},
                     featuredImage: {},
                     isVisible: {},
@@ -250,9 +277,9 @@
                 this.$store.dispatch('openLoading');
                 let featuredImage = this.mediaSelectedFiles['feature_image'];
                 if(featuredImage !== undefined){
-                    this.form.featuredImage = this.mediaSelectedFiles['feature_image'][0].mediaID;
+                    this.form.featuredImageID = this.mediaSelectedFiles['feature_image'][0].mediaID;
                 }else{
-                    this.form.featuredImage = null;
+                    this.form.featuredImageID = null;
                 }
 
                 // gets media files of custom fields and writes them to their v-models
@@ -266,6 +293,7 @@
                     pluginsData: this.pluginsData,
                     customFieldValues: this.customFieldValues,
                 };
+
                 this.$store.dispatch('store',{
                     data: request,
                     url: this.basePath+'/'+this.getAdminPrefix+"/json/category/store",
@@ -283,6 +311,22 @@
                         }
                     }
                 });
+            },
+
+            /**
+             * Search category for parent input
+             * @param ev text typed in input (the search term)
+             */
+            searchCategories(ev){
+                if(ev.length >= 2){
+                    this.areParentOptionsLoading = true;
+                    // List of all languages
+                    this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/category/' + this.$route.params.id + '/search/' + ev)
+                        .then((resp) => {
+                            this.categoryListOptions = resp.body.data;
+                            this.areParentOptionsLoading = false;
+                        });
+                }
             },
 
 

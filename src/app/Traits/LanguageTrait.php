@@ -268,21 +268,26 @@ trait LanguageTrait
             }
             $list = $rows['data'];
         }else{
+            if(is_a($rows, 'Illuminate\Support\Collection')){
+                $rows = $rows->toArray();
+            }
             $list = $rows;
         }
 
         // loop throw the list
-        foreach ($list as $row){
+        foreach ($list as $rowKey => $row){
+            if(gettype($row) == "object" && in_array('Illuminate\Database\Eloquent\Model', class_parents($row))){
+                $row = $row->getAttributes();
+            }
             foreach ($row as $key => $value){
                 $jsonValue = true;
                 // Casts columns
                 if(is_object($value)){
                     $jsonValue = $value;
-                }
+                }elseif(is_string($value) ){
                 // non-casts columns
-                elseif(is_string($value) ){
                     $jsonValue = json_decode($value);
-                };
+                }
 
                 if($justForInTable){
                     //fields like ID, postID, title and createdByUserID should always be shown in the list
@@ -308,7 +313,7 @@ trait LanguageTrait
                 }
             }
 
-            array_push($filteredList, $temporaryList); // construct filtered list
+            $filteredList[$rowKey] = $temporaryList;
         }
 
         if ($withPagination) {

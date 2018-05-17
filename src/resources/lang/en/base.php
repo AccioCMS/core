@@ -56,6 +56,7 @@ return [
     'failed' => 'Failed',
     'mostRecent' => 'Most recent',
     'info' => 'Info',
+    'parentID' => 'Parent ID',
     'properties' => 'Properties',
     'select' => 'Select',
     'class' => 'Class',

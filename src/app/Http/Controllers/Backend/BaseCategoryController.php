@@ -3,6 +3,7 @@
 namespace Accio\App\Http\Controllers\Backend;
 
 use App;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
@@ -75,9 +76,42 @@ class BaseCategoryController extends MainController {
     public function getAllByPostType($lang = "", $postTypeID){
         $orderBy = (isset($_GET['order'])) ? $orderBy = $_GET['order'] : 'order';
         $orderType = (isset($_GET['type'])) ? $orderType = $_GET['type'] : 'ASC';
-        $list = Category::where('postTypeID',$postTypeID)->orderBy($orderBy, $orderType)->paginate(Category::$rowsPerPage);
+        $list = Category::where('postTypeID',$postTypeID)->where('parentID', null)->orWhere('parentID', 0)->orderBy($orderBy, $orderType)->paginate(Category::$rowsPerPage);
         return Language::filterRows($list);
     }
+
+    /**
+     * Gets categories by pust type with parent child relations
+     *
+     * @param string $lang
+     * @param $postTypeID
+     * @return array
+     */
+    public function getTree($lang = "", $postTypeID){
+        $orderBy = (isset($_GET['order'])) ? $orderBy = $_GET['order'] : 'order';
+        $orderType = (isset($_GET['type'])) ? $orderType = $_GET['type'] : 'ASC';
+        $parentList = Category::where('postTypeID',$postTypeID)->where('parentID', null)->orWhere('parentID', 0)->orderBy($orderBy, $orderType)->paginate(Category::$rowsPerPage);
+
+        $category = new Category();
+        // get all categories of the selected post type
+        $category->categoryList = Category::where('postTypeID',$postTypeID)->orderBy($orderBy, $orderType)->get()->keyBy('categoryID');
+        // make the parent child format tree
+        $treeList = $category->makeChildrenTree($category->categoryList);
+
+        // get only categories selected for this page (pagination)
+        $tmp = [];
+        foreach($parentList->items() as $item){
+            if(key_exists($item->categoryID, $treeList)){
+                $tmp[$item->categoryID] = $treeList[$item->categoryID];
+            }
+        }
+
+        $collection = Collection::make($tmp);
+        $parentList->setCollection($collection);
+
+        return Language::filterRows($parentList);
+    }
+
 
     /**
      * This function returns list of all categories
@@ -119,8 +153,12 @@ class BaseCategoryController extends MainController {
     }
 
     /**
-     * Delete a Category
-     * */
+     * Delete a Category and his children
+     *
+     * @param $lang
+     * @param $id
+     * @return array response
+     */
     public function delete($lang, $id){
         if(!User::hasAccess('Categories','delete')){
             return $this->noPermission();
@@ -131,9 +169,15 @@ class BaseCategoryController extends MainController {
             $postType = PostType::findByID($category->postTypeID);
 
             // Post type should not be able to be deleted if it has posts
-            if (Category::hasPosts($postType->slug, $id) && Category::isInMenuLinks($id)) {
-                return $this->response("You can't delete this Category because there are posts associated with it or it is part of a menu.", 403);
+            if (Category::isInMenuLinks($id)) {
+                return $this->response("You can't delete this Category because it is part of a menu.", 403);
             }
+
+            // delete children
+            $category->deleteChildren($category->categoryID, $postType->postTypeID);
+
+            // delete relations
+            DB::table('categories_relations')->where("categoryID", $category->categoryID)->delete();
 
             // Delete the item
             if ($category->delete()){
@@ -141,14 +185,17 @@ class BaseCategoryController extends MainController {
             }
         }
 
-        return $this->response('Category could not be deleted. Please try again later or contact your Administrator!', 500);;
+        return $this->response('Category could not be deleted. Please try again later or contact your Administrator!', 500);
     }
 
+
     /**
-     *  Bulk Delete categories
-     *  Delete many categories
-     *  @params array of category IDs
-     * */
+     * Bulk Delete categories
+     * Delete many categories
+     *
+     * @param Request $request array of category IDs
+     * @return array
+     */
     public function bulkDelete(Request $request){
         // check if user has permissions to access this link
         if(!User::hasAccess('Categories','delete')){
@@ -165,9 +212,15 @@ class BaseCategoryController extends MainController {
             $category = Category::find($id);
 
             $postType = PostType::findByID($category->postTypeID);
-            if(Category::hasPosts($postType->slug,$category) && Category::isInMenuLinks($id)){
-                return $this->response("You can't delete this Category. There are posts associated with it is part of a menu", 403);
+            if(Category::isInMenuLinks($id)){
+                return $this->response("You can't delete this Category. It is part of a menu", 403);
             }
+
+            // delete children
+            $category->deleteChildren($category->categoryID, $postType->postTypeID);
+
+            // delete relations
+            DB::table('categories_relations')->where("categoryID", $category->categoryID)->delete();
 
             // Delete the item
             if(!$category->delete()){
@@ -196,6 +249,7 @@ class BaseCategoryController extends MainController {
         $requiredMessage = " is required";
 
         $defaultLanguage = Language::getDefault();
+        $defaultLanguageTitle = '';
         // title in default language should no be empty
         if(
             isset($form['title']) &&
@@ -212,13 +266,22 @@ class BaseCategoryController extends MainController {
             foreach($languages as $language){
                 if($formDataKey == "title" && !$language['isDefault']){
                     if($formDataValue[$language['slug']] == ""){
-                        $form[$formDataKey][$language['slug']] = $defaultLanguageTitle;
+                        if($defaultLanguageTitle){
+                            $form[$formDataKey][$language['slug']] = $defaultLanguageTitle;
+                        }
                     }
                 }
 
                 if($formDataKey == "slug"){
                     if($formDataValue[$language['slug']] == ""){
                         $title = $form['title'][$language['slug']];
+                        // if new category
+                        if(!isset($form['categoryID'])){
+                            $id = 0;
+                        }else{
+                        // if category being updated
+                            $id = $data['id'];
+                        }
                         $newSlug = parent::generateSlug($title, 'categories', 'categoryID', App::getLocale(), 0, true);
                         $form['slug'][$language['slug']] = $newSlug;
                     }
@@ -231,16 +294,33 @@ class BaseCategoryController extends MainController {
             return $this->response( "From errors", 400, null, false, false, true, $errors );
         }
 
-        // Order item
-        $catCount = Category::where("postTypeID", $request->postTypeID)->count();
+        // if category is being created
+        if(!isset($form['categoryID'])){
+            // Order item
+            $catCount = Category::where("postTypeID", $request->postTypeID)->count();
+            $order = $catCount+1;
+            $categoryModel = new Category();
+        }else{
+        // if category is being updated
+            $categoryModel = Category::find($form['categoryID']);
+            if(!$categoryModel){
+                return $this->response( "Category doesn't exist", 500);
+            }
+            $order = $categoryModel->order;
+            $oldTitle = $categoryModel->setAutoTranslate(false)->title;
+        }
 
-        $order = $catCount+1;
+        // parent ID
+        $parentID = 0;
+        if(isset($form['parent']['categoryID'])){
+            $parentID = $form['parent']['categoryID'];
+        }
 
         // Create Category
-        $categoryModel = new Category();
         $categoryModel->title = $form['title'];
         $categoryModel->postTypeID = $data['postTypeID'];
-        $categoryModel->featuredImageID = $form['featuredImage'];
+        $categoryModel->parentID = $parentID;
+        $categoryModel->featuredImageID = $form['featuredImageID'];
         $categoryModel->description = $form['description'];
         $categoryModel->slug = $form['slug'];
         $categoryModel->isVisible = $form['isVisible'];
@@ -250,6 +330,11 @@ class BaseCategoryController extends MainController {
 
         // return results
         if ($categoryModel->save()){
+            if(isset($form['categoryID'])){
+                // update label in menu link with the category title
+                $this->updateMenuLinkLabel($data['id'], $form['title'], $oldTitle);
+            }
+
             $adminPrefix = Config::get('project')['adminPrefix'];
             if($request->redirect == 'save'){
                 $redirectUrl = "/".$adminPrefix."/".App::getLocale()."/post-type/categoryupdate/".$categoryModel->categoryID;
@@ -264,97 +349,11 @@ class BaseCategoryController extends MainController {
                 $view = 'categorycreate';
                 $redirectID = $data['postTypeID'];
             }
-            $response = $this->response('Category is created', 200, $redirectID, $view, $redirectUrl);
+            $response = $this->response('Category is saved', 200, $redirectID, $view, $redirectUrl);
         }else{
-            $response = $this->response( 'Category is not created. Please try again later!', 500);
+            $response = $this->response( 'Category is not saved. Please try again later!', 500);
         }
         return $response;
-    }
-
-
-    /**
-     *  Update a existing category
-     *  @param Request $request all post type data coming from the form
-     *  @return array
-     * */
-    public function storeUpdate(Request $request){
-        // check if user has permissions to access this link
-        if(!User::hasAccess('Categories','update')){
-            return $this->response("You don't have permissions to perform this action", 500);
-        }
-        $data = $request->all();
-        $formDataResult = array();
-
-        $errors = [];
-        $requiredMessage = " is required";
-
-        // construct array with the json language data
-        foreach ($data['form'] as $form){
-            foreach($form['formdata'] as $formDataKey => $formdata){
-                if(!isset($formDataResult[$formDataKey])){
-                    $formDataResult[$formDataKey] = array();
-                }
-
-                if ($formDataKey == 'slug'){
-                    // check if slug is empty
-                    if($formdata == ""){ // validate slug
-                        $errors['slug_'.$form['slug']] = array('Title '.$requiredMessage. " in ".$form['name']);
-                        continue;
-                    }
-                    $formDataResult[$formDataKey][$form['slug']] = parent::generateSlug($formdata, 'categories', 'categoryID', App::getLocale(), $data['id'], true);
-                }else if($formDataKey == 'title'){
-                    if($formdata == ""){ // validate title
-                        $errors['title_'.$form['slug']] = array('Title '.$requiredMessage. " in ".$form['name']);
-                        continue;
-                    }
-                    $formDataResult[$formDataKey][$form['slug']] = $formdata;
-
-                }else{
-                    $formDataResult[$formDataKey][$form['slug']] = $formdata;
-                }
-            }
-        }
-
-        // return errors if there are any
-        if (count($errors)){
-            return $this->response( "From errors", 400, null, false, false, true, $errors );
-        }
-
-        $categoryModel = Category::find($data['id']);
-        $oldTitle = $categoryModel->setAutoTranslate(false)->title;
-
-        $categoryModel->title = $formDataResult['title'];
-        $categoryModel->featuredImageID = $request->featuredImage;
-        $categoryModel->description = $formDataResult['description'];
-        $categoryModel->slug = $formDataResult['slug'];
-        $categoryModel->isVisible = $formDataResult['isVisible'];
-        $categoryModel->customFields = $request->customFieldValues;
-
-        // return results
-        if($categoryModel->save()){
-            // update label in menu link with the category title
-            $this->updateMenuLinkLabel($data['id'], $formDataResult['title'], $oldTitle);
-
-            // redirecting if category is saved
-            $adminPrefix = Config::get('project')['adminPrefix'];
-            if($request->redirect == 'save'){
-                $redirectUrl = "/".$adminPrefix."/".App::getLocale()."/post-type/categoryupdate/".$categoryModel->categoryID;
-                $view = 'categoryupdate';
-                $redirectID = $categoryModel->categoryID;
-            }else if($request->redirect == 'close'){
-                $redirectUrl = "/".$adminPrefix."/".App::getLocale()."/post-type/categorylist/".$categoryModel->postTypeID;
-                $view = 'categorylist';
-                $redirectID = $categoryModel->postTypeID;
-            }else{
-                $redirectUrl = "/".$adminPrefix."/".App::getLocale()."/post-type/categorycreate/".$categoryModel->postTypeID;
-                $view = 'categorycreate';
-                $redirectID = $categoryModel->postTypeID;
-            }
-            $result = $this->response('Category updated',200,  $redirectID, $view, $redirectUrl);
-        }else{
-            $result = $this->response('Category not updated. Please try again later', 500);
-        }
-        return $result;
     }
 
     /**
@@ -401,10 +400,21 @@ class BaseCategoryController extends MainController {
                 $media['feature_image'] = [$featuredImage];
             }
 
+            // get parent title and id translated
+            if($category->parent){
+                $parentCategoryID = $category->parent->categoryID;
+                $parentTitle = $category->parent->title;
+                // get parent
+                $category->parentCategory = [
+                    'categoryID' => $parentCategoryID,
+                    'title' => $parentTitle,
+                ];
+            }
+
             // handle custom fields
             $customFieldGroups = CustomFieldGroup::findGroups('category', 'create', $id, 'none');
             $customFieldOBJ = new CustomField();
-            if($category->customFields) {
+            if($category->customFields){
                 $customFieldOBJ->constructValues($customFieldGroups, $category->customFields);
                 $media = array_merge($media, $customFieldOBJ->getMedia());
             }
@@ -436,19 +446,15 @@ class BaseCategoryController extends MainController {
             return $this->noPermission();
         }
 
-        $orderBy    = '';
-        $orderType  = '';
-        $pagination = '';
-        if(isset($_GET['pagination'])){
-            $pagination = $_GET['pagination'];
-        }
+        $orderBy    = 'categoryID';
+        $orderType  = 'ASC';
         if(isset($_GET['order'])){
             $orderBy = $_GET['order'];
         }
         if(isset($_GET['type'])){
             $orderType = $_GET['type'];
         }
-        $excludeColumns = array('customFields','featuredImageID','remember_token','created_at','updated_at','postTypeID','name','slug','fields','visible','hasCategories','hasTags');
+//        $excludeColumns = array('customFields','featuredImageID','remember_token','created_at','updated_at','postTypeID','name','slug','fields','visible','hasCategories','hasTags');
 
         $conditions = array();
         if ($postTypeID != 0){
@@ -462,7 +468,14 @@ class BaseCategoryController extends MainController {
             );
         }
 
-        $results = Search::searchByTerm('categories',$term, Category::$rowsPerPage, true, array(), $excludeColumns, $pagination, $orderBy, $orderType, '', $conditions);
+        $column = [
+            "Field" => "title",
+            "Type" => "json"
+        ];
+        $columns = [];
+        array_push($columns, (object) $column);
+
+        $results = Search::searchByTerm('categories',$term, Category::$rowsPerPage, true, $columns, [], $orderBy, $orderType, [], $conditions);
         return Language::filterRows($results);
     }
 

@@ -85,6 +85,7 @@ export const globalMethods = {
         },
         // toggle the action bar in tables (when listing items)
         toggleListActionBar(index){
+            //console.log("index", index);
             if(this.openedItemActionBar === index){
                 this.openedItemActionBar = '';
             }else{

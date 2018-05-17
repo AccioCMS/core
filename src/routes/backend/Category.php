@@ -9,6 +9,7 @@ Route::group(['middleware' => ['auth:admin'], 'as' => 'backend.category.', 'name
      * GET
      */
     Route::get('/{lang}/json/category/get-all/{postTypeID}', 'CategoryController@getAllByPostType')->name('getAllByPostType');
+    Route::get('/{lang}/json/category/get-tree/{postTypeID}', 'CategoryController@getTree')->name('getTree');
     Route::get('/{lang}/json/category/get-all', 'CategoryController@getAll')->name('getAll');
     Route::get('/{lang}/json/category/get-latest', 'CategoryController@getLatest')->name('getLatest');
     Route::get('/{lang}/json/category/delete/{id}', 'CategoryController@delete')->name('delete');

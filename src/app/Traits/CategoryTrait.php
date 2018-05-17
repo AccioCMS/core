@@ -8,6 +8,18 @@ use Illuminate\Support\Facades\DB;
 use \App\Models\Menu;
 
 trait CategoryTrait{
+
+    /**
+     * @var array
+     */
+    private $categoriesToBeDeleted = [];
+
+    /**
+     * @var array used for parent child relation
+     */
+    public $categoryList = [];
+
+
     /**
      * Find by ID
      *
@@ -134,4 +146,81 @@ trait CategoryTrait{
             }
         }
     }
+
+    /**
+     * Make parent child tree
+     * (every category has a children array that contains his children)
+     * @param $list
+     * @return array
+     */
+    public function makeChildrenTree($list){
+        $tmp = [];
+
+        foreach ($list as $key => $item){
+            if(!key_exists('children', $item)){
+                $item->children = [];
+            }
+            // get children
+            $children = $this->getChildren($key);
+            // call self to get a loop until every category has his children
+            $children = $this->makeChildrenTree($children);
+
+            $item->children = $children;
+
+            $tmp[$key] = $item;
+        }
+
+        return Language::filterRows($tmp, false);
+    }
+
+    /**
+     * Get children of a category
+     *
+     * @param $parentID
+     * @return array
+     */
+    public function getChildren($parentID){
+        $tmp = [];
+        foreach($this->categoryList as $key => $item){
+            if($item->parentID == $parentID){
+                $tmp[$key] = $item;
+            }
+        }
+        return $tmp;
+    }
+
+    /**
+     * Get all children tree of a parent
+     * @param $parentID
+     */
+    public function getAllChildren($parentID){
+        $children = $this->getChildren($parentID);
+        foreach ($children as $key => $child){
+            $this->categoriesToBeDeleted[$child->categoryID] = $child;
+            $this->getAllChildren($child->categoryID);
+        }
+    }
+
+    /**
+     * Delete List of children
+     * @param int $parentID
+     * @param int $postTypeID
+     * @return mixed
+     */
+    public function deleteChildren(int $parentID, int $postTypeID){
+        $this->categoryList = self::where("postTypeID", $postTypeID)->get();
+        $this->getAllChildren($parentID);
+        foreach($this->categoriesToBeDeleted as $cat){
+            // Post type should not be able to be deleted if it has posts
+            if(Category::isInMenuLinks($cat->categoryID)){
+                return $this->response("You can't delete this Category because it is part of a menu.", 403);
+            }
+
+            // delete relations
+            DB::table('categories_relations')->where("categoryID", $cat->categoryID)->delete();
+            // delete children
+            $cat->delete();
+        }
+    }
+
 }

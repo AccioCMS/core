@@ -14,6 +14,9 @@ Vue.component('spinner', require('../../views/components/vendor/Spinner.vue'));
 Vue.component("field", require("../../views/components/custom_fields/Field.vue"));
 Vue.component("customField", require("../../views/components/vendor/CustomField.vue"));
 
+// Categories
+Vue.component("category-item", require("../../views/components/category/CategoryItem.vue"));
+
 // noty css
 require('noty/lib/noty.css');
 

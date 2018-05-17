@@ -28,7 +28,7 @@
                                     <li role="presentation" class="langTabs" :class="{active: activeLang == lang.slug}"
                                         v-if="hasPermissionForLang(lang.languageID)"
                                         :id="'tabBtn-'+lang.slug"
-                                        v-for="(lang, count) in form"
+                                        v-for="(lang, count) in languages"
                                         :key="count"
                                         :data-lang="lang.slug"
                                         @click="activeLang = lang.slug">
@@ -41,14 +41,14 @@
                                 <div class="tabBody">
                                     <div class="tab-pane fade in"
                                          :id="'tab_content'+ count"
-                                         v-for="(lang, count) in form"
+                                         v-for="(lang, count) in languages"
                                          :key="count"
                                          v-if="hasPermissionForLang(lang.languageID) && activeLang == lang.slug">
 
                                         <div class="form-group" :id="'form-group-title_'+lang.slug">
                                             <label class="control-label col-md-2 col-sm-2 col-xs-12">{{trans.__title}}</label>
                                             <div class="col-md-10 col-sm-10 col-xs-12">
-                                                <input type="text" class="form-control" id="title" v-model="lang.formdata.title">
+                                                <input type="text" class="form-control" id="title" v-model="form.title[lang.slug]">
                                                 <div class="alert" v-if="StoreResponse.errors['title_'+ lang.slug]" v-for="error in StoreResponse.errors['title_'+ lang.slug]">{{ error }}</div>
                                             </div>
                                         </div>
@@ -56,16 +56,39 @@
                                         <div class="form-group" :id="'form-group-slug_'+lang.slug">
                                             <label class="control-label col-md-2 col-sm-2 col-xs-12">{{trans.__slug}}</label>
                                             <div class="col-md-10 col-sm-10 col-xs-12">
-                                                <input type="text" class="form-control" :id="'slug_' + count" v-model="lang.formdata.slug" @dblclick="removeReadonly('slug_' + count)" readonly>
+                                                <input type="text" class="form-control" :id="'slug_' + count" v-model="form.slug[lang.slug]" @dblclick="removeReadonly('slug_' + count)" readonly>
                                                 <img :src="resourcesUrl('/images/loading.svg')" class="slugLoading">
                                                 <div class="alert" v-if="StoreResponse.errors['slug_'+ lang.slug]" v-for="error in StoreResponse.errors['slug_'+ lang.slug]">{{ error }}</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group" id="form-group-parentID">
+                                            <label class="control-label col-md-2 col-sm-2 col-xs-12">{{trans.__parentID}}</label>
+                                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                                <multiselect
+                                                        v-model="form.parent"
+                                                        label="title"
+                                                        track-by="categoryID"
+                                                        placeholder="Type to search"
+                                                        open-direction="bottom"
+                                                        :options="categoryListOptions"
+                                                        :multiple="false"
+                                                        :searchable="true"
+                                                        :loading="areParentOptionsLoading"
+                                                        :internal-search="false"
+                                                        :clear-on-select="true"
+                                                        :close-on-select="true"
+                                                        :hide-selected="true"
+                                                        @search-change="searchCategories">
+                                                </multiselect>
+                                                <div class="alert" v-if="StoreResponse.errors['parentID']" v-for="error in StoreResponse.errors['parentID']">{{ error }}</div>
                                             </div>
                                         </div>
 
                                         <div class="form-group" :id="'form-group-description_'+lang.slug">
                                             <label class="control-label col-md-2 col-sm-2 col-xs-12">{{trans.__description}}</label>
                                             <div class="col-md-10 col-sm-10 col-xs-12 froala-container">
-                                                <froala :tag="'textarea'" id="description" :config="froalaCompactConfig" v-model="lang.formdata.description" class="froala" :id="'froala-description-'+lang.slug"></froala>
+                                                <froala :tag="'textarea'" id="description" :config="froalaCompactConfig" v-model="form.description[lang.slug]" class="froala" :id="'froala-description-'+lang.slug"></froala>
                                                 <div class="alert" v-if="StoreResponse.errors['description_'+ lang.slug]" v-for="error in StoreResponse.errors['description_'+ lang.slug]">{{ error }}</div>
                                             </div>
                                         </div>
@@ -73,12 +96,12 @@
                                         <!-- Is Visible -->
                                         <div class="form-group" id="form-group-isVisible">
                                             <label class="control-label col-md-2 col-sm-2 col-xs-12">{{trans.__visible}}</label>
-                                            <div class="col-md-10 col-sm-10 col-xs-12" >
+                                            <div class="col-md-10 col-sm-10 col-xs-12">
                                                 <div class="btn-group" data-toggle="buttons">
-                                                    <label class="btn btn-default" :class="{active: lang.formdata.isVisible}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="lang.formdata.isVisible = true">
+                                                    <label class="btn btn-default" :class="{active: form.isVisible[lang.slug]}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="form.isVisible[lang.slug] = true">
                                                         <input type="radio" value="true"> &nbsp; {{trans.__true}} &nbsp;
                                                     </label>
-                                                    <label class="btn btn-primary" :class="{active: !lang.formdata.isVisible}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="lang.formdata.isVisible = false">
+                                                    <label class="btn btn-primary" :class="{active: !form.isVisible[lang.slug]}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="form.isVisible[lang.slug] = false">
                                                         <input type="radio" value="false"> {{trans.__false}}
                                                     </label>
                                                     <div class="alert" v-if="StoreResponse.errors['isVisible_'+ lang.slug]" v-for="error in StoreResponse.errors['isVisible_'+ lang.slug]">{{ error }}</div>
@@ -190,6 +213,7 @@
                 __updateFormTitle: this.__('categories.updateFormTitle'),
                 __title: this.__('categories.form.title'),
                 __slug: this.__('base.slug'),
+                __parentID: this.__('base.parentID'),
                 __addImage: this.__('media.addImage'),
                 __change: this.__('media.change'),
                 __description: this.__('base.description'),
@@ -205,41 +229,26 @@
             this.$store.commit('setSpinner', true);
             this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/category/details/'+this.$route.params.id)
                 .then((resp) => {
-                    let languages = resp.body.languages; // language list
-                    this.languages = languages;
-                    let data = resp.body.details; // category data
-                    this.postTypeID = data.postTypeID;
+                    this.languages = resp.body.languages; // language list
+                    this.form = resp.body.details;
+                    this.form.parent = resp.body.details.parentCategory;
+                    this.postTypeID = this.form.postTypeID;
+
                     // create the form data for the default page fields for each language
-                    for(let k in languages){
-                        let imageFile = resp.body.media["feature_image__lang__"+languages[k].slug];
+                    for(let k in this.languages){
+                        let imageFile = resp.body.media["feature_image__lang__" + this.languages[k].slug];
                         if(imageFile !== undefined && imageFile[0] !== null){ // if feature image is set
                             imageFile = imageFile[0].mediaID;
                         }else{ // if feature is not set make it 0
                             imageFile = 0;
                         }
 
-                        languages[k].formdata = {
-                            title: '',
-                            slug: '',
-                            description: '',
-                            featuredImage: imageFile,
-                            isVisible: true,
-                        };
-
-                        if(languages[k].isDefault){
-                            this.defaultLangSlug = languages[k].slug;
-                            this.activeLang = languages[k].slug;
+                        if(this.languages[k].isDefault){
+                            this.defaultLangSlug = this.languages[k].slug;
+                            this.activeLang = this.languages[k].slug;
                         }
                     }
 
-                    this.form = languages; // populate form variable
-                    for(let k in this.form){ // loop throw form data to populate the values
-                        let currentLangSlug = this.form[k].slug;
-                        this.form[k].formdata.title = data.title[currentLangSlug];
-                        this.form[k].formdata.slug = data.slug[currentLangSlug];
-                        this.form[k].formdata.description = data.description[currentLangSlug];
-                        this.form[k].formdata.isVisible = data.isVisible[currentLangSlug];
-                    }
                     this.$store.commit('setMediaSelectedFiles', resp.body.media); // set the media files
                     // get plugin panels
                     this.getPluginsPanel(['category'], 'update');
@@ -261,6 +270,8 @@
                 pluginsData: {},
                 languages: [],
                 selected : [],
+                areParentOptionsLoading: false,
+                categoryListOptions: [],
                 form: '',
                 fields: '',
                 defaultLangSlug: '',
@@ -272,7 +283,7 @@
             // use to open the media popup
             openMediaForfeaturedImage(format, inputName){
                 // media popup options
-                this.$store.commit('setOpenMediaOptions', { multiple: false, has_multile_files: false, multipleInputs: false, format : 'image', inputName: inputName, langSlug: '', clear: false });
+                this.$store.commit('setOpenMediaOptions', { multiple: false, has_multile_files: false, multipleInputs: false, format : format, inputName: inputName, langSlug: '', clear: false });
                 this.$store.commit('setIsMediaOpen', true);
             },
             // remove feature image
@@ -298,9 +309,9 @@
                 this.$store.dispatch('openLoading');
                 let featuredImage = this.mediaSelectedFiles['feature_image'];
                 if(featuredImage !== undefined){
-                    featuredImage = this.mediaSelectedFiles['feature_image'][0].mediaID;
+                    this.form.featuredImageID = this.mediaSelectedFiles['feature_image'][0].mediaID;
                 }else{
-                    featuredImage = null;
+                    this.form.featuredImageID = null;
                 }
 
                 // gets media files of custom fields and writes them to their v-models
@@ -308,8 +319,9 @@
 
                 let request = {
                     id: this.$route.params.id,
+                    languages: this.languages,
+                    postTypeID: this.postTypeID,
                     form: this.form,
-                    featuredImage: featuredImage,
                     files: this.mediaSelectedFiles,
                     redirect: redirectChoice,
                     pluginsData: this.pluginsData,
@@ -318,7 +330,7 @@
 
                 this.$store.dispatch('store',{
                     data: request,
-                    url: this.basePath+'/'+this.getAdminPrefix+"/json/category/storeUpdate",
+                    url: this.basePath+'/'+this.getAdminPrefix+"/json/category/store",
                     error: "Category could not be updated. Please try again later."
                 }).then((resp) => {
                     if(resp.code == 200){
@@ -330,19 +342,24 @@
                     }
                 });
             },
-            changeVisibility(option, index){
-                this.form[index].formdata.visible = option;
-            },
-            isActive(count){
-                if(count == 0){
-                    return "active";
+
+            /**
+             * Search category for parent input
+             * @param ev text typed in input (the search term)
+             */
+            searchCategories(ev){
+                if(ev.length >= 2){
+                    this.areParentOptionsLoading = true;
+                    // List of all languages
+                    this.$http.get(this.basePath+'/'+this.getAdminPrefix+'/'+this.getCurrentLang+'/json/category/' + this.postTypeID + '/search/' + ev)
+                        .then((resp) => {
+                            console.log("resp.body.data",resp.body.data);
+                            this.categoryListOptions = resp.body.data;
+                            this.areParentOptionsLoading = false;
+                        });
                 }
-                return "inactive";
             },
-            // this function activated when languages dropdown is changed
-            languagesDropdownChanged(event){
-                this.activeLangsSlug = event.target.value;
-            },
+
             // this function is used to remove the selected images in custom fields
             deleteSelectedMediaFile(key, mediaID){
                 var mediaArr = this.mediaSelectedFiles;

@@ -101,6 +101,7 @@ export const lists = {
         },
         // delete row
         deleteItem(id, i){
+            this.openedItemActionBar = 0;
             this.$store.dispatch('openLoading');
             this.$http.get(this.deleteUrl+id)
                 .then((resp) => {
