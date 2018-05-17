@@ -291,6 +291,8 @@ class AccioInstall extends Command{
     private function runMigration(){
         $this->info("Running database migration");
         $this->call('migrate',['--force' => true]);
+
+        $this->line('');
         $this->advanceBar();
 
         $this->clearCaches();
