@@ -295,7 +295,6 @@ class AccioInstall extends Command{
         $this->advanceBar();
 
         $this->clearCaches();
-        $this->optimize();
         return $this;
     }
     /**
@@ -512,7 +511,6 @@ class AccioInstall extends Command{
         $this->advanceBar();
 
         $this->clearCaches();
-        $this->optimize();
 
         return $this;
     }
@@ -525,20 +523,9 @@ class AccioInstall extends Command{
         $this->callSilent('clear-compiled');
         $this->callSilent('cache:clear');
         $this->callSilent('route:clear');
-        $this->callSilent('config:clear');
+        $this->callSilent('config:cache');
         $this->callSilent('view:clear');
         Cache::flush();
-    }
-
-    /**
-     * Runs the artisan optimize commands.
-     */
-    protected function optimize()
-    {
-        if (!App::environment('local')) {
-            $this->callSilent('optimize', ['--force' => true]);
-            $this->callSilent('config:cache');
-        }
     }
 
     /**
