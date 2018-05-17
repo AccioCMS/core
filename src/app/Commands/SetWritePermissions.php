@@ -79,7 +79,7 @@ class SetWritePermissions extends Command
                 $this->process->run();
 
                 if (!$this->process->isSuccessful()) {
-                    $this->console->error("Could not set write permissions to " . $path);
+                    $this->error("Could not set write permissions to " . $path);
                     break;
                 }
             }
