@@ -166,10 +166,10 @@ class AccioInstall extends Command{
      * @return void
      */
     public function __construct(
-        ConfigRepository $config,
-        Requirements $requirements,
-        Environment $environment,
-        Filesystem $filesystem
+      ConfigRepository $config,
+      Requirements $requirements,
+      Environment $environment,
+      Filesystem $filesystem
     ){
         parent::__construct();
 
@@ -193,33 +193,52 @@ class AccioInstall extends Command{
         if($this->isInstalled()){
             return false;
         }
-        
+
         if(!$this->requirements->check($this)){
             return false;
         }
 
         $this
-          ->renameEnvFile()
-          ->setEnvValues()
           ->welcomeMessage()
           ->setBar()
           ->askInstallingQuestions()
+          ->renameEnvFile()
+          ->setEnvValues()
           ->saveConfiguration()
           ->deleteUploads()
           ->runMigration()
           ->createDummyContent()
+          ->createDefaultTheme()
           ->generateKey()
           ->successfullyInstalled();
         return;
     }
 
     /**
+     * Create dummy theme
+     * @return $this
+     */
+    private function createDefaultTheme(){
+        $this->info("Creating default theme");
+        $dummyTheme = new DummyTheme([
+          'title' => 'Default Theme',
+          'namespace' => 'DefaultTheme',
+          'organisation' => 'Manaferra',
+          'authorName' => 'Faton Sopa',
+          'authorEmail' => 'fatom.sopa@manaferra.com',
+          'auth' => ture,
+          'activate' => true,
+        ]);
+
+        return $this;
+    }
+    /**
      * Set progress bar
      *
      * @param int $steps
      * @return $this
      */
-    private function setBar($steps = 14){
+    private function setBar($steps = 15){
         if($this->option('deleteUploads')){
             $steps++;
         }
@@ -299,6 +318,14 @@ class AccioInstall extends Command{
      * @throws \Exception
      */
     private function createDummyContent(){
+        $this->info("Creating default roles");
+        UserGroup::createDefaultRoles();
+        $this->advanceBar();
+
+        $this->info("Creating admin user");
+        $this->createAdminUser();
+        $this->advanceBar();
+
         // Create Default Language
         $this->info("Creating default language");
         factory(\App\Models\Language::class)->create([
@@ -307,14 +334,6 @@ class AccioInstall extends Command{
           'slug' => $this->PRIMARY_LANGUAGE->slug,
           'isDefault' => true
         ]);
-        $this->advanceBar();
-
-        $this->info("Creating default roles");
-        UserGroup::createDefaultRoles();
-        $this->advanceBar();
-
-        $this->info("Creating admin user");
-        $this->createAdminUser();
         $this->advanceBar();
 
         $this->info("Creating default post types");
@@ -374,13 +393,13 @@ class AccioInstall extends Command{
 
         // Save in .env file
         $this->env->setEnv([
-            'APP_URL' => $this->APP_URL,
-            'DB_CONNECTION' => $this->DB_TYPE,
-            'DB_HOST' => $this->DB_HOST,
-            'DB_PORT' => $this->DB_PORT,
-            'DB_DATABASE' => $this->DB_DATABASE,
-            'DB_USERNAME' => $this->DB_USERNAME,
-            'DB_PASSWORD' => $this->DB_PASSWORD,
+          'APP_URL' => $this->APP_URL,
+          'DB_CONNECTION' => $this->DB_TYPE,
+          'DB_HOST' => $this->DB_HOST,
+          'DB_PORT' => $this->DB_PORT,
+          'DB_DATABASE' => $this->DB_DATABASE,
+          'DB_USERNAME' => $this->DB_USERNAME,
+          'DB_PASSWORD' => $this->DB_PASSWORD,
         ]);
 
         // save in runtime
@@ -410,8 +429,7 @@ class AccioInstall extends Command{
      * @throws \Exception
      */
     private function askInstallingQuestions(){
-        $this->APP_NAME = $this->ask('Your Site Name', config('app.name'));
-        $this->APP_URL = $this->ask('Your App URL', config('app.url'));
+        // Database information
         $this->DB_TYPE = $this->ask('Your Database type', config('database.default'));
         $this->DB_HOST = $this->ask('Your DB_HOST', config('database.connections.'.$this->DB_TYPE.'.host'));
         $this->DB_PORT = $this->ask('Your DB PORT', config('database.connections.'.$this->DB_TYPE.'.port'));
@@ -422,6 +440,10 @@ class AccioInstall extends Command{
         // Validate Database
         $this->validateDatabase();
 
+        $this->APP_NAME = $this->ask('Your Site Name', config('app.name'));
+        $this->APP_URL = $this->ask('Your App URL', config('app.url'));
+
+        // Timezone
         $regions = $this->getTimezoneRegions();
         $this->TIMEZONE = $this->choice('Timezone region', array_keys($regions), 0);
         if ($this->TIMEZONE !== 'UTC') {
@@ -430,6 +452,8 @@ class AccioInstall extends Command{
         }
 
         $this->askAboutDefaultLanguage();
+
+        // User information
         $this->ADMIN_FIRST_NAME = $this->ask('Your First Name');
         $this->ADMIN_LAST_NAME = $this->ask('Your Last Name');
         $this->ADMIN_EMAIL = $this->ask('Your Email');
@@ -465,12 +489,12 @@ class AccioInstall extends Command{
      */
     private function createAdminUser(){
         $user = factory(User::class)->create([
-            'firstName' => $this->ADMIN_FIRST_NAME,
-            'lastName' => $this->ADMIN_LAST_NAME,
-            'slug' => str_slug($this->ADMIN_FIRST_NAME.'-'.$this->ADMIN_LAST_NAME),
-            'email' => $this->ADMIN_EMAIL,
-            'password' => Hash::make($this->ADMIN_PASSWORD),
-            'isActive' => true
+          'firstName' => $this->ADMIN_FIRST_NAME,
+          'lastName' => $this->ADMIN_LAST_NAME,
+          'slug' => str_slug($this->ADMIN_FIRST_NAME.'-'.$this->ADMIN_LAST_NAME),
+          'email' => $this->ADMIN_EMAIL,
+          'password' => Hash::make($this->ADMIN_PASSWORD),
+          'isActive' => true
         ]);
 
         // assign role
@@ -478,6 +502,8 @@ class AccioInstall extends Command{
     }
     /**
      * Calls the artisan key:generate to set the APP_KEY.
+     *
+     * return $this;
      */
     private function generateKey()
     {
@@ -487,6 +513,8 @@ class AccioInstall extends Command{
 
         $this->clearCaches();
         $this->optimize();
+
+        return $this;
     }
 
     /**
@@ -680,13 +708,13 @@ class AccioInstall extends Command{
 
         if(
             // APP KEY is not a a random string
-            ($this->config->get('app.key') && $this->config->get('app.key') !== 'SomeRandomString')
+        ($this->config->get('app.key') && $this->config->get('app.key') !== 'SomeRandomString')
         )
         {
             $this->failure(
-                'You have already installed CMS!',
-                'If you were trying to update CMS, please use "php artisan app:update" or run "php artisan app:uninstall" to delete current instalation.',
-                'If you were trying to reinstall CMS, you have to first uninstall it by running php artisan app::uninstall');
+              'You have already installed CMS!',
+              'If you were trying to update CMS, please use "php artisan app:update" or run "php artisan app:uninstall" to delete current instalation.',
+              'If you were trying to reinstall CMS, you have to first uninstall it by running php artisan app::uninstall');
 
             return true;
         }
