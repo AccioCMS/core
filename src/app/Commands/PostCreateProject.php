@@ -21,7 +21,7 @@ class PostCreateProject extends Command
      *
      * @var string
      */
-    protected $signature = 'accio::postCreateProject';
+    protected $signature = 'accio:postCreateProject';
 
 
     /**

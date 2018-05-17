@@ -21,7 +21,7 @@ class PostPackageInstall extends Command
      *
      * @var string
      */
-    protected $signature = 'accio::PostPackageInstall';
+    protected $signature = 'accio:PostPackageInstall';
 
 
     /**
