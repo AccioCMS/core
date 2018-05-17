@@ -227,6 +227,8 @@ class AccioInstall extends Command{
           'activate' => true,
         ]))->make();
 
+        $this->advanceBar();
+
         return $this;
     }
     /**
