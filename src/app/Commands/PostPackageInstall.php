@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: sopa
- * Date: 23/02/2018
- * Time: 8:43 AM
- */
 
 namespace Accio\App\Commands;
 
