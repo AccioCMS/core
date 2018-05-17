@@ -380,7 +380,7 @@ trait ThemeTrait
 
                 if(self::isInline($file)) {
                     if (file_exists(self::cssPath($file['path']))) {
-                        $html .= '<style' . Meta::parseAttributes($attributes) . '>'.File::get(self::cssPath($file['path'])).'</style>' . "\n";
+                        $html .= '<style type="text/css">' . Meta::parseAttributes($attributes) . '>'.File::get(self::cssPath($file['path'])).'</style>' . "\n";
                     }
                 }else{
                     // Handle absolute url file name
@@ -430,7 +430,6 @@ trait ThemeTrait
         }else{
             $files = self::config('js');
         }
-
         if ($files) {
             foreach ($files as $file) {
                 // exclude merge files

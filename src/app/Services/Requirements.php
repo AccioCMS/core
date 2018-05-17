@@ -4,6 +4,7 @@ namespace Accio\App\Services;
 use Illuminate\Console\Command;
 use Accio\App\Traits\GetAvailableOptions;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\App;
 use Symfony\Component\Process\Process;
 
 /**
@@ -33,6 +34,21 @@ class Requirements
     private $process;
 
     /**
+     * List of writable directories
+     * @var array
+     */
+    private $writableDirectories = [
+        'storage/tmp',
+        'storage/logs',
+        'storage/framework',
+        'storage/framework/cache',
+        'storage/framework/sessions',
+        'storage/framework/views',
+        'bootstrap/cache',
+        'public/uploads',
+    ];
+
+    /**
      * Requirements constructor.
      * @param Filesystem $filesystem
      */
@@ -51,6 +67,8 @@ class Requirements
     {
         $this->console = $console;
 
+        $this->console->comment("\nChecking system requirements");
+
         $this->process = new Process($this->console);
         $this->versionCheck();
         $this->extensionCheck();
@@ -60,9 +78,9 @@ class Requirements
         $this->nodeJsCommand();
         $this->checkPermissions();
         if ($this->errors) {
-            $console->line('');
-            $console->block('Accio cannot be installed because your system doesn\'t meet minimal requirements. Please fix the errors above before retrying to install.');
-            $console->line('');
+            $this->console->line('');
+            $this->console->block('Accio cannot be installed because your system doesn\'t meet minimal requirements. Please fix the errors above before retrying to install.');
+            $this->console->line('');
         }
         return !$this->errors;
     }
@@ -175,24 +193,13 @@ class Requirements
             $this->errors =  true;
         }
     }
+    
     /**
      * Checks the expected paths are writable.
      */
     private function checkPermissions()
     {
-        // Files and directories which need to be writable
-        $writable = [
-            'storage',
-            'storage/tmp',
-            'storage/logs',
-            'storage/framework',
-            'storage/framework/cache',
-            'storage/framework/sessions',
-            'storage/framework/views',
-            'bootstrap/cache',
-            'public/uploads',
-        ];
-        foreach ($writable as $path) {
+        foreach ($this->writableDirectories as $path) {
             if (!$this->filesystem->isWritable(base_path($path))) {
                 $this->console->error($path . ' is not writable');
                 $this->errors = true;
