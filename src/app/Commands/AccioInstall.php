@@ -2,6 +2,7 @@
 
 namespace Accio\App\Commands;
 
+use Accio\App\Services\DummyTheme;
 use App\Models\Language;
 use App\Models\Settings;
 use App\Models\User;
@@ -143,11 +144,6 @@ class AccioInstall extends Command{
     private $env;
 
     /**
-     * @var ConfigRepository
-     */
-    private $config;
-
-    /**
      * @var Filesystem
      */
     private $filesystem;
@@ -158,22 +154,19 @@ class AccioInstall extends Command{
     private $process;
 
     /**
-     * MakeInstall constructor.
+     * AccioInstall constructor.
      *
      * @param Requirements $requirements
      * @param Environment $environment
-     *
-     * @return void
+     * @param Filesystem $filesystem
      */
     public function __construct(
-      ConfigRepository $config,
       Requirements $requirements,
       Environment $environment,
       Filesystem $filesystem
     ){
         parent::__construct();
 
-        $this->config = $config;
         $this->requirements = $requirements;
         $this->env = $environment;
         $this->filesystem = $filesystem;
@@ -215,8 +208,11 @@ class AccioInstall extends Command{
     }
 
     /**
-     * Create dummy theme
+     * Create dummy theme.
+     *
      * @return $this
+     * @throws \Cz\Git\GitException
+     * @throws \Exception
      */
     private function createDefaultTheme(){
         $this->info("Creating default theme");
@@ -227,7 +223,7 @@ class AccioInstall extends Command{
           'organisation' => 'Manaferra',
           'authorName' => 'Faton Sopa',
           'authorEmail' => 'fatom.sopa@manaferra.com',
-          'auth' => ture,
+          'auth' => true,
           'activate' => true,
         ]))->make();
 
@@ -403,21 +399,28 @@ class AccioInstall extends Command{
         ]);
 
         // save in runtime
-        $this->config->set('app.url', $this->APP_URL);
-        $this->config->set('app.name', str_replace(' ','_',$this->APP_NAME));
-        $this->config->set('database.connections.mysql.driver', $this->DB_TYPE);
-        $this->config->set('database.connections.mysql.host', $this->DB_HOST);
-        $this->config->set('database.connections.mysql.port', $this->DB_PORT);
-        $this->config->set('database.connections.mysql.database', $this->DB_DATABASE);
-        $this->config->set('database.connections.mysql.username', $this->DB_USERNAME);
-        $this->config->set('database.connections.mysql.password', $this->DB_PASSWORD);
+
+        config(['app.url' => $this->APP_URL]);
+        config(['app.name' => str_replace(' ','_',$this->APP_NAME)]);
+        config(['database.connections.mysql.driver' => $this->DB_TYPE]);
+        config(['database.connections.mysql.host' => $this->DB_HOST]);
+        config(['database.connections.mysql.port' => $this->DB_PORT]);
+        config(['database.connections.mysql.database' => $this->DB_DATABASE]);
+        config(['database.connections.mysql.username' => $this->DB_USERNAME]);
+        config(['database.connections.mysql.password' => $this->DB_PASSWORD]);
 
         // save in app.config
         $content = File::get(config_path('app.php'));
-        $newContent = str_replace("'name' => '".config('app.name')."'", "'name' => '".$this->APP_NAME."'", $content);
+        $newContent = str_replace(
+          "'name' => '".config('app.name')."'",
+          "'name' => '".$this->APP_NAME."'",
+          $content);
+
         FILe::put(config_path('app.php'), $newContent);
 
         $this->advanceBar();
+
+        $this->clearCaches();
 
         return $this;
     }
@@ -524,17 +527,17 @@ class AccioInstall extends Command{
         $this->callSilent('clear-compiled');
         $this->callSilent('cache:clear');
         $this->callSilent('route:clear');
-        $this->callSilent('config:cache');
+        $this->callSilent('config:clear');
         $this->callSilent('view:clear');
         Cache::flush();
     }
 
-     /*
-     * 
-     * Rename .env file
-     *
-     * @return $this
-     */
+    /*
+    *
+    * Rename .env file
+    *
+    * @return $this
+    */
     private function renameEnvFile(){
         // delete current .env file
         if(file_exists(app()->environmentFilePath())){
@@ -562,9 +565,8 @@ class AccioInstall extends Command{
      * Set env values
      */
     private function setEnvValues(){
-        $this->config->set('app.key', 'SomeRandomString');
-        $this->config->set('app.env', 'local');
-
+        config(['app.key' => 'SomeRandomString']);
+        config(['app.env' => 'local']);
         return $this;
     }
 
@@ -695,10 +697,7 @@ class AccioInstall extends Command{
      */
     private function isInstalled(){
 
-        if(
-            // APP KEY is not a a random string
-        ($this->config->get('app.key') && $this->config->get('app.key') !== 'SomeRandomString')
-        )
+        if(config('app.key') && config('app.key') !== 'SomeRandomString')
         {
             $this->failure(
               'You have already installed CMS!',

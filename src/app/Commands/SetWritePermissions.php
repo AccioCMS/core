@@ -74,7 +74,7 @@ class SetWritePermissions extends Command
         if (!App::environment('production') || $this->option('force')){
             $this->comment("Setting write permissions");
             foreach ($this->writableDirectories as $path) {
-                $this->process->setCommandLine('chmod  0777 ' . base_path($path));
+                $this->process->setCommandLine('chmod -R 0777 ' . base_path($path));
                 $this->process->setTimeout(null);
                 $this->process->run();
 
