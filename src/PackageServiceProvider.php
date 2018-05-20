@@ -4,6 +4,7 @@ namespace Accio;
 use Accio\App\Commands\PostCreateProject;
 use Accio\App\Commands\SetWritePermissions;
 use App\Models\Plugin;
+use App\Models\Theme;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\File;
 use Illuminate\Foundation\AliasLoader;
