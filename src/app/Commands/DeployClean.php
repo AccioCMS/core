@@ -34,9 +34,7 @@ class DeployClean extends Command
      *
      * @return void
      */
-    public function __construct(
-      Process $process
-    )
+    public function __construct()
     {
         parent::__construct();
         $this->process = new Process($this);

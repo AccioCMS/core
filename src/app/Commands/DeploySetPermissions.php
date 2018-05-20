@@ -3,6 +3,7 @@
 namespace Accio\App\Commands;
 
 use Illuminate\Console\Command;
+use Symfony\Component\Process\Process;
 
 class DeploySetPermissions extends Command
 {
@@ -22,6 +23,11 @@ class DeploySetPermissions extends Command
     protected $description = 'Set permissions on deploy';
 
     /**
+     * @var Process
+     */
+    protected $process;
+
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -29,6 +35,7 @@ class DeploySetPermissions extends Command
     public function __construct()
     {
         parent::__construct();
+        $this->process = new Process($this);
     }
 
     /**
@@ -100,12 +107,15 @@ class DeploySetPermissions extends Command
                         $command .= ' {} \\;';
                     }
 
-
                     $this->info("Running command: '".$command."'");
 
-                    exec($command, $shellResponse, $status);
-                    if ($status != 0) {
-                        throw new \Exception("Command '$command' could not be run!");
+                    $this->process->setCommandLine($command);
+                    $this->process->setTimeout(null);
+                    $this->process->run();
+
+                    if (!$this->process->isSuccessful()) {
+                        $this->error("Command '$command' could not be run!");
+                        return false;
                     }
                 }
             }
@@ -187,11 +197,13 @@ class DeploySetPermissions extends Command
 
                     $this->info("Running command: '".$command."'");
 
-                    $response = exec($command, $shellResponse, $status);
+                    $this->process->setCommandLine($command);
+                    $this->process->setTimeout(null);
+                    $this->process->run();
 
-                    exec($command, $shellResponse, $status);
-                    if ($status != 0) {
-                        throw new \Exception("Apache permission could not be set. Command '$command' could not be run!");
+                    if (!$this->process->isSuccessful()) {
+                        $this->error("Apache permission could not be set. Command '$command' could not be run!");
+                        return false;
                     }
                 }
             }

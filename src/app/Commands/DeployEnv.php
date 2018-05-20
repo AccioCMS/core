@@ -3,6 +3,7 @@
 namespace Accio\App\Commands;
 
 use Illuminate\Console\Command;
+use Symfony\Component\Process\Process;
 
 class DeployEnv extends Command
 {
@@ -22,6 +23,10 @@ class DeployEnv extends Command
     protected $description = 'Deploy production env file';
 
     /**
+     * @var Process
+     */
+    protected $process;
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -29,6 +34,7 @@ class DeployEnv extends Command
     public function __construct()
     {
         parent::__construct();
+        $this->process = new Process($this);
     }
 
     public function handle()

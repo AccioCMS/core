@@ -37,7 +37,7 @@ class DeployUploads extends Command
     )
     {
         parent::__construct();
-        $this->process = $process;
+        $this->process = new Process($this);
     }
 
     /**

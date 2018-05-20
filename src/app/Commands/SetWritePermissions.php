@@ -56,7 +56,7 @@ class SetWritePermissions extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->process = new Process($this);;
+        $this->process = new Process($this);
     }
 
     public function handle()
