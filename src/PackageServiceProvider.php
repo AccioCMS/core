@@ -150,6 +150,9 @@ class PackageServiceProvider extends ServiceProvider{
                 $this->loadTranslationsFrom($plugin->translationsPath(), $plugin->namespaceWithDot());
             }
 
+            // Load Theme views
+            $this->loadViewsFrom(Theme::getPath().'/'.'views', Theme::config('namespace'));
+            
             Event::fire('system:boot', [$this]);
         }
     }
