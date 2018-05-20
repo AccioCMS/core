@@ -5,6 +5,7 @@ namespace Accio\App\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Symfony\Component\Process\Process;
 
 class DeployDB extends Command
 {
@@ -31,13 +32,21 @@ class DeployDB extends Command
     protected $description = 'Deploy database to production';
 
     /**
+     * @var Process
+     */
+    protected $process;
+
+    /**
      * Create a new command instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(
+      Process $process
+    )
     {
         parent::__construct();
+        $this->process = $process;
     }
 
     /**
@@ -71,11 +80,16 @@ class DeployDB extends Command
                 $this->comment("\nImporting deployment SQL files");
                 foreach ($sqlFiles as $file) {
                     if ($file->getExtension() == "sql") {
-                        exec('mysql -h ' . env('DB_HOST') . ' -u ' . env('DB_USERNAME') . ' -p' . env('DB_PASSWORD') . ' ' . env('DB_DATABASE') . ' < ' . $file->getPathName() . '', $shellResponse, $status);
+                        $command = 'mysql -h ' . env('DB_HOST') . ' -u ' . env('DB_USERNAME') . ' -p' . env('DB_PASSWORD') . ' ' . env('DB_DATABASE') . ' < ' . $file->getPathName();
 
-                        if ($status != 0) {
-                            throw new \Exception("Database '" . $file->getPathName() . "' not deployed!");
-                        }else {
+                        $this->process->setCommandLine($command);
+                        $this->process->setTimeout(null);
+                        $this->process->run();
+
+                        if (!$this->process->isSuccessful()) {
+                            $this->error("Database '" . $file->getPathName() . "' not deployed!");
+                            break;
+                        }else{
                             // Delete file
                             File::delete($file->getPathName());
                         }

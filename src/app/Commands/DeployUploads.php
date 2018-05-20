@@ -3,6 +3,7 @@
 namespace Accio\App\Commands;
 
 use Illuminate\Console\Command;
+use Symfony\Component\Process\Process;
 
 class DeployUploads extends Command
 {
@@ -22,13 +23,21 @@ class DeployUploads extends Command
     protected $description = 'Deploy local uploads to production';
 
     /**
+     * @var Process
+     */
+    protected $process;
+
+    /**
      * Create a new command instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(
+      Process $process
+    )
     {
         parent::__construct();
+        $this->process = $process;
     }
 
     /**
@@ -57,10 +66,15 @@ class DeployUploads extends Command
 
                 $this->comment("\nCloning storage to shared directory");
 
-                exec('cp -r '.storage_path().' '.config('deploy.shared.to').'/', $shellResponse, $status);
+                $command  = 'cp -r '.storage_path().' '.config('deploy.shared.to').'/';
 
-                if ($status != 0) {
-                    throw new \Exception("Storage could not be cloned!");
+                $this->process->setCommandLine($command);
+                $this->process->setTimeout(null);
+                $this->process->run();
+
+                if (!$this->process->isSuccessful()) {
+                    $this->error("Storage could not be cloned!");
+                    return false;
                 }
 
                 $this->info("Storage cloned");
@@ -91,10 +105,13 @@ class DeployUploads extends Command
 
                 $this->info("Running command: '".$command."'");
 
-                exec($command, $shellResponse, $status);
+                $this->process->setCommandLine($command);
+                $this->process->setTimeout(null);
+                $this->process->run();
 
-                if ($status != 0) {
-                    throw new \Exception("Local upload files could not be copied to destination directory");
+                if (!$this->process->isSuccessful()) {
+                    $this->error("Local upload files could not be copied to destination directory");
+                    return false;
                 }
 
                 $this->info("Local uploads copied!");

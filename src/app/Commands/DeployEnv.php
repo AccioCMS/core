@@ -48,10 +48,13 @@ class DeployEnv extends Command
             // Rename production env
             $command = 'mv '.base_path('.env.production').' '.base_path('.env').'';
 
-            exec($command, $shellResponse, $status);
+            $this->process->setCommandLine($command);
+            $this->process->setTimeout(null);
+            $this->process->run();
 
-            if ($status != 0) {
-                throw new \Exception("Production Env file could not be renamed to .env");
+            if (!$this->process->isSuccessful()) {
+                $this->error("Production Env file could not be renamed to .env");
+                return false;
             }
 
             $this->info("Production env file renamed!");
