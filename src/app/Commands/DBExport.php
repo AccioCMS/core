@@ -40,12 +40,10 @@ class DBExport extends Command
      *
      * @return void
      */
-    public function __construct(
-      Process $process
-    )
+    public function __construct()
     {
         parent::__construct();
-        $this->process = $process;
+        $this->process = new Process($this);
     }
 
     /**
