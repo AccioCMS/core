@@ -4,6 +4,7 @@ namespace Accio;
 use Accio\App\Commands\PostCreateProject;
 use Accio\App\Commands\SetWritePermissions;
 use App\Models\Plugin;
+use App\Models\Theme;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\File;
 use Illuminate\Foundation\AliasLoader;
@@ -150,6 +151,9 @@ class PackageServiceProvider extends ServiceProvider{
                 $this->loadTranslationsFrom($plugin->translationsPath(), $plugin->namespaceWithDot());
             }
 
+            // Load Theme views
+            $this->loadViewsFrom(Theme::getPath().'/'.'views', Theme::config('namespace'));
+            
             Event::fire('system:boot', [$this]);
         }
     }

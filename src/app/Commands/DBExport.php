@@ -4,6 +4,7 @@ namespace Accio\App\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Symfony\Component\Process\Process;
 
 class DBExport extends Command
 {
@@ -30,6 +31,11 @@ class DBExport extends Command
     protected $description = 'Export db';
 
     /**
+     * @var Process
+     */
+    protected $process;
+
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -37,6 +43,7 @@ class DBExport extends Command
     public function __construct()
     {
         parent::__construct();
+        $this->process = new Process($this);
     }
 
     /**
@@ -53,15 +60,21 @@ class DBExport extends Command
 
         $filePath = $exportPath.'/'.date("Ymdhisi").'.sql';
 
-        exec('mysqldump -h '.env('DB_HOST').' -u '.env('DB_USERNAME').' -p'.env('DB_PASSWORD').' '.env('DB_DATABASE').' > '.$filePath.' ', $shellResponse, $status);
+        $command = 'mysqldump -h '.env('DB_HOST').' -u '.env('DB_USERNAME').' -p'.env('DB_PASSWORD').' '.env('DB_DATABASE').' > '.$filePath;
 
-        if ( $status != 0 ) {
+        $this->process->setCommandLine($command);
+        $this->process->setTimeout(null);
+        $this->process->run();
+
+        if (!$this->process->isSuccessful()) {
             $this->error("Database not exported!");
 
             // Felete file if craeted by sql!
             if(File::exists($filePath)){
                 File::delete($filePath);
             }
+
+            return false;
         }else{
             $this->info("Database successfully exported to ".$filePath);
         }

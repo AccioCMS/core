@@ -3,6 +3,7 @@
 namespace Accio\App\Commands;
 
 use Illuminate\Console\Command;
+use Symfony\Component\Process\Process;
 
 class DeployEnv extends Command
 {
@@ -22,6 +23,10 @@ class DeployEnv extends Command
     protected $description = 'Deploy production env file';
 
     /**
+     * @var Process
+     */
+    protected $process;
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -29,6 +34,7 @@ class DeployEnv extends Command
     public function __construct()
     {
         parent::__construct();
+        $this->process = new Process($this);
     }
 
     public function handle()
@@ -48,10 +54,13 @@ class DeployEnv extends Command
             // Rename production env
             $command = 'mv '.base_path('.env.production').' '.base_path('.env').'';
 
-            exec($command, $shellResponse, $status);
+            $this->process->setCommandLine($command);
+            $this->process->setTimeout(null);
+            $this->process->run();
 
-            if ($status != 0) {
-                throw new \Exception("Production Env file could not be renamed to .env");
+            if (!$this->process->isSuccessful()) {
+                $this->error("Production Env file could not be renamed to .env");
+                return false;
             }
 
             $this->info("Production env file renamed!");

@@ -5,6 +5,7 @@ namespace Accio\App\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\Process\Process;
 
 class DeployClean extends Command
 {
@@ -24,6 +25,10 @@ class DeployClean extends Command
     protected $description = 'Clean caches on deploy';
 
     /**
+     * @var Process
+     */
+    protected $process;
+    /**
      *
      * Create a new command instance.
      *
@@ -32,6 +37,7 @@ class DeployClean extends Command
     public function __construct()
     {
         parent::__construct();
+        $this->process = new Process($this);
     }
 
     function dirIsEmpty($dir) {
@@ -74,11 +80,14 @@ class DeployClean extends Command
 
                     $this->info("Running command: '".$command."'");
 
-                    exec($command, $shellResponse, $status);
+                    $this->process->setCommandLine($command);
+                    $this->process->setTimeout(null);
+                    $this->process->run();
 
-                    if ($status != 0) {
-                        throw new \Exception("Command '$command' could not be run!");
-                    }else {
+                    if (!$this->process->isSuccessful()) {
+                        $this->error("Command '$command' could not be run!");
+                        break;
+                    }else{
                         $this->info("Directory " . $directory . ' cleaned.');
                     }
                 }
