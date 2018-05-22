@@ -6,6 +6,8 @@ use App\Models\Language;
 use Closure;
 use App\Models\Theme;
 use App\Models\MenuLink;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Request;
 
 class Frontend
 {
@@ -17,6 +19,11 @@ class Frontend
      */
     public  function handle($request, Closure $next)
     {
+        // http to https redirect
+        if (env('REDIRECT_HTTPS') && !isHttps()) {
+            return Redirect::to(Request::fullUrl(), 301,[],true);
+        }
+
         // Set default language
         Language::setDefault();
 

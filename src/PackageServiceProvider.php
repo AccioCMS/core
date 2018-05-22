@@ -103,7 +103,7 @@ class PackageServiceProvider extends ServiceProvider{
      * Format https scheme
      * @param $url
      */
-    private function formatHTTPSScheme($url){
+    private function forceHTTPSScheme($url){
         if(env('REDIRECT_HTTPS')) {
             $url->formatScheme('https');
             $this->app['request']->server->set('HTTPS', true);
@@ -121,7 +121,7 @@ class PackageServiceProvider extends ServiceProvider{
         /*
          * redirect http to https
          */
-        $this->formatHTTPSScheme($url);
+        $this->forceHTTPSScheme($url);
 
         /**
          * Register migrations, so they will be automatically run when the php artisan migrate command is executed.
