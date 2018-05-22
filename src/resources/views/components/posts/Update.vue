@@ -4,8 +4,11 @@
         <div class="page-title">
             <div class="title_left">
                 <h3 class="pull-left">{{trans.__title}} <small>{{trans.__listTitle}}</small></h3>
+                <a class="btn btn-primary pull-left addBtnMain" @click="redirect('post-create','','',$route.query)" v-if="hasAddPermission">{{trans.__addBtn}}</a>
             </div>
+
         </div>
+
         <!-- TITLE END -->
         <div class="clearfix"></div>
 
@@ -596,9 +599,13 @@
                 __globalUpdateAndNewBtn: this.__('base.updateAndNewBtn'),
                 __globalCancelBtn: this.__('base.cancelBtn'),
                 __pluginAppName: this.__('plugin.appName'),
+                __addBtn: this.__('base.addBtn'),
             };
         },
         mounted() {
+            // permissions
+            this.hasAddPermission = this.hasPermission(this.$route.params.post_type, 'create');
+
             this.loadUpdateInputs();
             // get plugin panels
             this.getPluginsPanel(['post', this.$route.params.post_type], 'update');
@@ -642,6 +649,7 @@
                 filesToBeIgnored: [],
                 pluginsData: {},
                 mountedPlugins: [],
+                hasAddPermission: true
             }
         },
         methods: {
