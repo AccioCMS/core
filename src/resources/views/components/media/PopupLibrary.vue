@@ -827,22 +827,17 @@
                 var type = "";
                 var text = "";
 
-                var baseUrl = "";
-                if(this.$store.getters.get_base_path != ""){
-                    baseUrl = this.$store.getters.get_base_path + "/";
-                }
 
                 // if media is open from editor button
                 if(this.mediaOptions.inputName !== undefined){
                     let inputName = this.mediaOptions.inputName;
                     if(inputName.indexOf('froala') !== -1){
                         let editorObject  = $('#'+this.mediaOptions.inputName);
-                       // editorObject.froalaEditor('selection.save');
 
                         for(let k in this.selectedFiles){
                             if(this.mediaOptions.format == "image"){
                                 let html = "<figure>";
-                                    html += "<img src='"+this.basePath+'/'+this.selectedFiles[k].url+"' alt='"+this.selectedFiles[k].description+"' title='"+this.selectedFiles[k].title+"' />";
+                                    html += "<img src='"+this.baseURL+'/'+this.selectedFiles[k].url+"' alt='"+this.selectedFiles[k].description+"' title='"+this.selectedFiles[k].title+"' />";
 
                                     if(this.selectedFiles[k].description || this.selectedFiles[k].credit){
                                         html += "<figcaption>";
@@ -862,8 +857,8 @@
                             }else if(this.mediaOptions.format == "video") {
                                 let html = "<figure>";
                                     html += "<video controls>";
-                                    html += "<img src='" + this.basePath+'/'+  this.selectedFiles[k].url + "' alt='" + this.selectedFiles[k].description + "' title='" + this.selectedFiles[k].title + "' />";
-                                    html += "<source src='" + this.basePath+'/' + this.selectedFiles[k].url + "' type='video/" + this.selectedFiles[k].extension + "' />";
+                                    html += "<img src='" + this.baseURL+'/'+  this.selectedFiles[k].url + "' alt='" + this.selectedFiles[k].description + "' title='" + this.selectedFiles[k].title + "' />";
+                                    html += "<source src='" + this.baseURL+'/' + this.selectedFiles[k].url + "' type='video/" + this.selectedFiles[k].extension + "' />";
                                     html += "</video>\n";
                                     if(this.selectedFiles[k].description || this.selectedFiles[k].credit){
                                         html += "<figcaption>";
