@@ -238,7 +238,10 @@ class PostTypeModel extends Model{
     }
 
     public static function generateSlug(string $slug, array $usedSlugs){
-        $slug = str_slug($slug, '_');
+        // replace non-alphanumeric characters
+        $slug = preg_replace('/\s+/', "_", $slug);
+        $slug = preg_replace("/[^a-zA-Z0-9_]+/", "", $slug);
+
         $count = 1;
 
         if (in_array($slug, $usedSlugs)){
