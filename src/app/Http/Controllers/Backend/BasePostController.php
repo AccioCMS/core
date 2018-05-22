@@ -765,6 +765,7 @@ class BasePostController extends MainController {
             'categories' => $categories,
             'languages' => $languages,
         );
+        
         // Fire event
         $response['events'] = Event::fire('post:pre_update', [$response]);
         return $response;

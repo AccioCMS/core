@@ -98,6 +98,43 @@ class PostTypeModel extends Model{
     }
 
     /**
+     * Get a field by using it's slug
+     * @param string $fieldSlug
+     * @return mixed
+     */
+    public function field(string $fieldSlug){
+        // TODO me hek json decode me bo me cast
+        foreach (json_decode($this->fields) as $field){
+            if($field->slug == $fieldSlug){
+                return $field;
+            }
+        }
+    }
+
+    /**
+     * Get Value of a multioptions field by using it's key
+     *
+     * @param string $fieldSlug
+     * @param string $key
+     * @return mixed
+     * @throws \Exception
+     */
+    public function getMultioptionFieldValue(string $fieldSlug, string $key){
+        $field = $this->field($fieldSlug);
+        if(!$field){
+            throw new \Exception("No field with slug ".$fieldSlug);
+        }
+        $options = explode("\n", $field->multioptionValues);
+
+        foreach ($options as $option){
+            $optionArr = explode(":", $option);
+            if($optionArr[0] == $key){
+                return $optionArr[1];
+            }
+        }
+    }
+
+    /**
      * Define menu panel
      * @return array
      */
