@@ -509,3 +509,16 @@ if (! function_exists('getPostType')) {
         return \App\Models\PostType::findBySlug($postType);
     }
 }
+if (! function_exists('isSecure')) {
+    /**
+     * check whether the site is opened via https or no
+     *
+     * @param $request
+     * @return bool
+     */
+    function isHttps(){
+        return request()->headers->get('x-forwarded-proto') == 'https' ? true: false;
+    }
+}
+
+
