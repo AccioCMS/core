@@ -20,7 +20,7 @@ class Frontend
     public  function handle($request, Closure $next)
     {
         // http to https redirect
-        if (env('FORCE_HTTPS_SCHEME') && !isHttps()) {
+        if (env('HTTP_TO_HTTPS_REDIRECT') && !isHttps()) {
             return Redirect::to(Request::fullUrl(), 301,[],true);
         }
 
