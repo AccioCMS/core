@@ -517,7 +517,8 @@ trait PostTrait{
                             $c = 0;
                             foreach ($valuesByLang as $singleValue){
                                 if(isset($singleValue[$primaryKey])) {
-                                    $tmpArr[$langSlug]['k_' . $c] = $singleValue[$primaryKey];
+//                                    $tmpArr[$langSlug]['k_' . $c] = $singleValue[$primaryKey];
+                                    $tmpArr[$langSlug][] = $singleValue[$primaryKey];
                                     $c++;
                                 }
                             }
@@ -534,7 +535,8 @@ trait PostTrait{
                     $c = 0;
                     foreach ($formData['value'] as $singleValue){
                         if(isset($singleValue[$primaryKey])) {
-                            $tmpArr['k_' . $c] = $singleValue[$primaryKey];
+//                            $tmpArr['k_' . $c] = $singleValue[$primaryKey];
+                            $tmpArr[] = $singleValue[$primaryKey];
                             $c++;
                         }
                     }

@@ -4,8 +4,11 @@
         <div class="page-title">
             <div class="title_left">
                 <h3 class="pull-left">{{trans.__title}} <small>{{trans.__listTitle}}</small></h3>
+                <a class="btn btn-primary pull-left addBtnMain" @click="redirect('post-create','','',$route.query)" v-if="hasAddPermission">{{trans.__addBtn}}</a>
             </div>
+
         </div>
+
         <!-- TITLE END -->
         <div class="clearfix"></div>
 
@@ -596,9 +599,13 @@
                 __globalUpdateAndNewBtn: this.__('base.updateAndNewBtn'),
                 __globalCancelBtn: this.__('base.cancelBtn'),
                 __pluginAppName: this.__('plugin.appName'),
+                __addBtn: this.__('base.addBtn'),
             };
         },
         mounted() {
+            // permissions
+            this.hasAddPermission = this.hasPermission(this.$route.params.post_type, 'create');
+
             this.loadUpdateInputs();
             // get plugin panels
             this.getPluginsPanel(['post', this.$route.params.post_type], 'update');
@@ -642,6 +649,7 @@
                 filesToBeIgnored: [],
                 pluginsData: {},
                 mountedPlugins: [],
+                hasAddPermission: true
             }
         },
         methods: {
@@ -671,14 +679,13 @@
              * @returns {Array} custom field arrays
              */
             populateValuesFromData(formData){
-                var result = [];
+                let result = [];
                 for(let k in formData){
                     // if custom field type is "Dropdown from DB"
                     if(formData[k].type.inputType == 'db'){
 
                         if(formData[k].value === undefined){
                             formData[k].value = "";
-                            result.push(formData[k]);
                             continue;
                         }
 
@@ -691,7 +698,7 @@
 
                         // if custom field is translatable
                         if(formData[k].translatable){
-                            var value = {};
+                            let value = {};
                             // loop throw the data options of the field
                             for(let dataKey in formData[k].data){
                                 // array of objects for each language if it is a multi options custom field
@@ -702,7 +709,7 @@
                                         }
                                         for(let idKey in formData[k].value[langKey]){
                                             if(parseInt(formData[k].data[dataKey][id]) == parseInt(formData[k].value[langKey][idKey])){
-                                                value[langKey][idKey.replace("k_", "")] = formData[k].data[dataKey];
+                                                value[langKey][idKey] = formData[k].data[dataKey];
                                             }
                                         }
                                     }
@@ -720,13 +727,13 @@
                             }
                         }else{
                         // if custom field is not translatable
-                            var value = [];
+                            let value = [];
+                            let count = 0;
                             for(let dataKey in formData[k].data){
                                 // array of object if custom field is multi options
                                 if(formData[k].isMultiple){
                                     if(formData[k].value !== undefined){
                                         var formDataValue = JSON.parse(formData[k].value);
-                                        var count = 0;
                                         for(let key in formDataValue){
                                             if(parseInt(formData[k].data[dataKey][id]) == parseInt(formDataValue[key])){
                                                 value[count] = formData[k].data[dataKey];

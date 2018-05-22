@@ -922,6 +922,47 @@ class PostModel extends Model{
         return $this->hasManyThrough('App\Models\Tag', 'App\Models\TagRelation','belongsToID','tagID','postID','tagID')->where('postTypeID',$findPostType->postTypeID);
     }
 
+
+    /**
+     * Get data relation for fields (Dropdown from DB)
+     * TODO : me ndreq edhe per translatable (DMTH me testu per krejt llojet e dropdown from DB)
+     *
+     * @param string $fieldSlug
+     * @return array
+     */
+    public function getFieldRelations(string $fieldSlug){
+        $postType = PostType::getFromCache()->where("slug", $this->getTable())->first();
+        if($postType){
+            $field = $postType->field($fieldSlug);
+            if($field->type->inputType == "db"){
+                $table = $field->dbTable->name;
+                $belongsTo = $field->dbTable->belongsTo;
+
+                if($belongsTo == "PostType"){
+                    $id = "postID";
+                    $obj = new Post();
+                    $obj->setTable($table);
+                }elseif($belongsTo == "User"){
+                    $id = "userID";
+                    $obj = new User();
+                }
+
+                $relationData = [];
+
+                if($field->translatable){
+                    // TODO me ndreq per multilanguage
+                    foreach(json_decode($this->$fieldSlug) as $langKey => $ids){
+                        $relationData[$langKey] = $obj->whereIn($id, json_decode($ids))->get();
+                    }
+                }else{
+                    $relationData = $obj->whereIn($id, json_decode($this->$fieldSlug))->get();
+                }
+
+                return $relationData;
+            }
+        }
+    }
+
     /**
      * Destruct model instance
      */

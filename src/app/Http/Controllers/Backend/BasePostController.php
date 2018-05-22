@@ -494,10 +494,6 @@ class BasePostController extends MainController {
             return $this->noPermission();
         }
 
-        $pagination = '';
-        if(isset($_GET['pagination'])){
-            $pagination = $_GET['pagination'];
-        }
 
         $orderBy = (isset($_GET['order'])) ? $_GET['order'] : 'postID';
         $orderType  = (isset($_GET['type'])) ? $orderType = $_GET['type'] : 'DESC';
@@ -765,6 +761,7 @@ class BasePostController extends MainController {
             'categories' => $categories,
             'languages' => $languages,
         );
+        
         // Fire event
         $response['events'] = Event::fire('post:pre_update', [$response]);
         return $response;
