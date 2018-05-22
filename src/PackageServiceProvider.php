@@ -104,7 +104,7 @@ class PackageServiceProvider extends ServiceProvider{
      * @param $url
      */
     private function forceHTTPSScheme($url){
-        if(env('REDIRECT_HTTPS')) {
+        if(env('FORCE_HTTPS_SCHEME')) {
             $url->formatScheme('https');
             $this->app['request']->server->set('HTTPS', true);
         }
