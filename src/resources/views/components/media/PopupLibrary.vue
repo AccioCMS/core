@@ -842,7 +842,7 @@
                         for(let k in this.selectedFiles){
                             if(this.mediaOptions.format == "image"){
                                 let html = "<figure>";
-                                    html += "<img src='"+baseUrl+this.selectedFiles[k].url+"' alt='"+this.selectedFiles[k].description+"' title='"+this.selectedFiles[k].title+"' />";
+                                    html += "<img src='"+this.basePath+'/'+this.selectedFiles[k].url+"' alt='"+this.selectedFiles[k].description+"' title='"+this.selectedFiles[k].title+"' />";
 
                                     if(this.selectedFiles[k].description || this.selectedFiles[k].credit){
                                         html += "<figcaption>";
@@ -862,8 +862,8 @@
                             }else if(this.mediaOptions.format == "video") {
                                 let html = "<figure>";
                                     html += "<video controls>";
-                                    html += "<img src='" + baseUrl + this.selectedFiles[k].url + "' alt='" + this.selectedFiles[k].description + "' title='" + this.selectedFiles[k].title + "' />";
-                                    html += "<source src='" + baseUrl + this.selectedFiles[k].url + "' type='video/" + this.selectedFiles[k].extension + "' />";
+                                    html += "<img src='" + this.basePath+'/'+  this.selectedFiles[k].url + "' alt='" + this.selectedFiles[k].description + "' title='" + this.selectedFiles[k].title + "' />";
+                                    html += "<source src='" + this.basePath+'/' + this.selectedFiles[k].url + "' type='video/" + this.selectedFiles[k].extension + "' />";
                                     html += "</video>\n";
                                     if(this.selectedFiles[k].description || this.selectedFiles[k].credit){
                                         html += "<figcaption>";
