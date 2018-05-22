@@ -6,6 +6,7 @@ use Accio\App\Commands\SetWritePermissions;
 use App\Models\Plugin;
 use App\Models\Theme;
 use Illuminate\Routing\Router;
+use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\File;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\Facades\Event;
@@ -98,7 +99,18 @@ class PackageServiceProvider extends ServiceProvider{
         }
     }
 
-    public function boot(){
+    /**
+     * Format https scheme
+     * @param $url
+     */
+    private function formatHTTPSScheme($url){
+        if(env('REDIRECT_HTTPS')) {
+            $url->formatScheme('https');
+            $this->app['request']->server->set('HTTPS', true);
+        }
+    }
+    
+    public function boot(UrlGenerator $url){
         /**
          * Register commands, so you may execute them using the Artisan CLI.
          */
@@ -106,6 +118,10 @@ class PackageServiceProvider extends ServiceProvider{
             $this->commands($this->commands);
         }
 
+        /*
+         * redirect http to https
+         */
+        $this->formatHTTPSScheme($url);
 
         /**
          * Register migrations, so they will be automatically run when the php artisan migrate command is executed.
