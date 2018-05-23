@@ -24,10 +24,11 @@ if (! function_exists('css')) {
      * @param true $header where we are printing header or footer css
      * @param array $files List of css files to be printed
      * @param array $defaultAttributes Default attribute to be assigned to all js files.
+     * @param bool $noScript True if css should be appended within a <noscript> tag
      * @return string
      */
-    function css($header = true, $defaultAttributes = [], $files = []){
-        return \App\Models\Theme::css($header, $defaultAttributes, $files);
+    function css($header = true, $defaultAttributes = [], $files = [], $noScript = false){
+        return \App\Models\Theme::css($header, $defaultAttributes, $files, $noScript);
     }
 }
 
