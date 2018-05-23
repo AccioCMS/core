@@ -1,11 +1,11 @@
 <?php
 
-namespace Accio\App\Commands;
+namespace Accio\App\Commands\Deploy;
 
 use Illuminate\Console\Command;
 use Symfony\Component\Process\Process;
 
-class DeploySetPermissions extends Command
+class SetPermissions extends Command
 {
 
     /**

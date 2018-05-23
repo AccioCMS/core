@@ -1,13 +1,13 @@
 <?php
 
-namespace Accio\App\Commands;
+namespace Accio\App\Commands\Deploy;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Process;
 
-class DeployDB extends Command
+class Database extends Command
 {
 
     /**

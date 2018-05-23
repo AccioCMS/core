@@ -1,6 +1,21 @@
 <?php
 
 namespace Accio;
+use Accio\App\Commands\Deploy\ActivateNewReleaseAfter;
+use Accio\App\Commands\Deploy\ActivateNewReleaseBefore;
+use Accio\App\Commands\Deploy\ComposerAfter;
+use Accio\App\Commands\Deploy\ComposerBefore;
+use Accio\App\Commands\Deploy\CopyUploads;
+use Accio\App\Commands\Deploy\CreateNewReleaseAfter;
+use Accio\App\Commands\Deploy\CreateNewReleaseBefore;
+use Accio\App\Commands\Deploy\CreateSymlinks;
+use Accio\App\Commands\Deploy\Cronjobs;
+use Accio\App\Commands\Deploy\Database;
+use Accio\App\Commands\Deploy\EnvFile;
+use Accio\App\Commands\Deploy\PurgeOldReleaseAfter;
+use Accio\App\Commands\Deploy\PurgeOldReleaseBefore;
+use Accio\App\Commands\Deploy\SetPermissions;
+use Accio\App\Commands\DeployCron;
 use Accio\App\Commands\PostCreateProject;
 use Accio\App\Commands\SetWritePermissions;
 use App\Models\Plugin;
@@ -14,12 +29,6 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Accio\App\Commands\CheckRequirements;
 use Accio\App\Commands\DBExport;
-use Accio\App\Commands\DeployClean;
-use Accio\App\Commands\DeployDB;
-use Accio\App\Commands\DeployEnv;
-use Accio\App\Commands\DeployRelease;
-use Accio\App\Commands\DeploySetPermissions;
-use Accio\App\Commands\DeployUploads;
 use Accio\App\Commands\MakeArchive;
 use Accio\App\Commands\MakeDummy;
 use Accio\App\Commands\AccioInstall;
@@ -55,19 +64,28 @@ class PackageServiceProvider extends ServiceProvider{
         MakeUser::class,
         MakeArchive::class,
         DBExport::class,
-        DeployDB::class,
-        DeployUploads::class,
-        DeployEnv::class,
-        DeploySetPermissions::class,
-        DeployClean::class,
-        DeployRelease::class,
         MakeTheme::class,
         CheckRequirements::class,
         AccioInstall::class,
         AccioUninstall::class,
         PluginInstall::class,
         SetWritePermissions::class,
-        PostCreateProject::class
+        PostCreateProject::class,
+        CopyUploads::class,
+        CreateNewReleaseBefore::class,
+        Cronjobs::class,
+        Database::class,
+        EnvFile::class,
+        SetPermissions::class,
+        ActivateNewReleaseAfter::class,
+        ActivateNewReleaseBefore::class,
+        CreateNewReleaseBefore::class,
+        CreateNewReleaseAfter::class,
+        ComposerBefore::class,
+        ComposerAfter::class,
+        PurgeOldReleaseBefore::class,
+        PurgeOldReleaseAfter::class,
+        CreateSymlinks::class
     ];
 
     /**
@@ -145,10 +163,10 @@ class PackageServiceProvider extends ServiceProvider{
             }
 
             // Load Library translations
-            $this->loadTranslationsFrom(libraryPath('resources/lang'), 'accio');
+            $this->loadTranslationsFrom(accioPath('resources/lang'), 'accio');
 
             // Load Library views
-            $this->loadViewsFrom(libraryPath('resources/views'), 'accio');
+            $this->loadViewsFrom(accioPath('resources/views'), 'accio');
 
 
             $this->mapRoutes();
