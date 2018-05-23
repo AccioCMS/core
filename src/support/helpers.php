@@ -439,14 +439,14 @@ if (! function_exists('tmpPath')) {
     }
 }
 
-if (! function_exists('libraryPath')) {
+if (! function_exists('accioPath')) {
     /**
      * Manafarra CMS path
      *
      * @param string $path
      * @return string
      */
-    function libraryPath($path = ''){
+    function accioPath($path = ''){
         return base_path('vendor/acciocms/core/src'.($path ? '/'.$path : ""));
     }
 }

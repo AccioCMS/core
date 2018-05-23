@@ -35,8 +35,8 @@ class BaseLanguageController extends MainController{
             }
 
             if($language->delete()){
-                if(is_dir(libraryPath("resources/lang/".$language->slug)))
-                    File::deleteDirectory(libraryPath("resources/lang/".$language->slug));
+                if(is_dir(accioPath("resources/lang/".$language->slug)))
+                    File::deleteDirectory(accioPath("resources/lang/".$language->slug));
                 if(is_dir(base_path("resources/lang/".$language->slug)))
                     File::deleteDirectory(base_path("resources/lang/".$language->slug));
                 return $this->response('The Language was deleted');
@@ -146,11 +146,11 @@ class BaseLanguageController extends MainController{
      * @param string $slug
      */
     private function createNewLanguageLabels(string $slug){
-        $defaultLangPathLibrary = libraryPath("resources/lang/".Language::getDefault()->slug);
+        $defaultLangPathLibrary = accioPath("resources/lang/".Language::getDefault()->slug);
         $defaultLangPath = base_path("resources/lang/".Language::getDefault()->slug);
 
         if(is_dir($defaultLangPathLibrary)){
-            File::copyDirectory($defaultLangPathLibrary, libraryPath("resources/lang/".$slug));
+            File::copyDirectory($defaultLangPathLibrary, accioPath("resources/lang/".$slug));
         }
 
         if(is_dir($defaultLangPath)){

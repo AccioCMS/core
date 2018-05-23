@@ -196,12 +196,12 @@ trait LanguageTrait
      * @return array Returns all labels from current language
      * */
     public static function getLabels(){
-        if(!file_exists(libraryPath('resources/lang/'.App::getLocale()))){
+        if(!file_exists(accioPath('resources/lang/'.App::getLocale()))){
             return json_encode([]);
         }
 
         // Load Project translation files
-        $translationFiles = File::files(libraryPath('resources/lang/'.App::getLocale())); //@TODO check if it produces errors, Faton
+        $translationFiles = File::files(accioPath('resources/lang/'.App::getLocale())); //@TODO check if it produces errors, Faton
 
         $labels = [];
         foreach ($translationFiles as $file) {
@@ -472,7 +472,7 @@ trait LanguageTrait
      * @return object
      */
     public static function ISOlist(){
-        $path = libraryPath('resources/assets/json/languages.json');
+        $path = accioPath('resources/assets/json/languages.json');
         return json_decode(file_get_contents($path));
     }
 

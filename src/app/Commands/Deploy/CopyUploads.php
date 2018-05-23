@@ -1,11 +1,11 @@
 <?php
 
-namespace Accio\App\Commands;
+namespace Accio\App\Commands\Deploy;
 
 use Illuminate\Console\Command;
 use Symfony\Component\Process\Process;
 
-class DeployUploads extends Command
+class CopyUploads extends Command
 {
 
     /**
@@ -13,7 +13,7 @@ class DeployUploads extends Command
      *
      * @var string
      */
-    protected $signature = 'deploy:uploads';
+    protected $signature = 'deploy:copy_uploads';
 
     /**
      * The console command description.
@@ -45,41 +45,7 @@ class DeployUploads extends Command
      */
     public function handle()
     {
-
-      //$this->doCloneStorage();
-        //$this->doSymLinks();
         $this->doCopyUplaods();
-    }
-
-    /**
-     * Clone storage
-     *
-     * @return $this|void
-     */
-    private function doCloneStorage(){
-        // Clone storage path to shared storage direcetory
-        $copyUploads = true;
-        if(config('deploy.shared.from') && config('deploy.shared.to')){
-            if(!file_exists(config('deploy.shared.to'))){
-
-                $this->comment("\nCloning storage to shared directory");
-
-                $command  = 'cp -r '.storage_path().' '.config('deploy.shared.to').'/';
-
-                $this->process->setCommandLine($command);
-                $this->process->setTimeout(null);
-                $this->process->run();
-
-                if (!$this->process->isSuccessful()) {
-                    $this->error("Storage could not be cloned!");
-                    return false;
-                }
-
-                $this->info("Storage cloned");
-                $copyUploads = false;
-            }
-        }
-        return $this;
     }
 
     /**
@@ -89,7 +55,6 @@ class DeployUploads extends Command
      * @throws \Exception
      */
     private function doCopyUplaods(){
-        // Copy local uploads to shared storage directory
         if(config('deploy.uploads.from') && config('deploy.uploads.to')){
             $from = config('deploy.uploads.from');
             $fromNoAsterix = str_replace('/*', '', $from);
@@ -114,31 +79,6 @@ class DeployUploads extends Command
 
                 $this->info("Local uploads copied!");
             }
-        }
-
-        return $this;
-    }
-
-    /**
-     * Create symlinks
-     *
-     * @return $this
-     */
-    private function doSymLinks(){
-        if(config('deploy.symlinks')){
-
-            $this->comment("\n\nCreating symlinks");
-            foreach(config('deploy.symlinks') as $target => $link){
-                if (file_exists($link)) {
-                    $this->comment('The '.$link.' directory already exists.');
-                }else{
-                    $this->laravel->make('files')->link(
-                        $target, $link
-                    );
-                }
-            }
-
-            $this->info("Symlinks created");
         }
 
         return $this;
