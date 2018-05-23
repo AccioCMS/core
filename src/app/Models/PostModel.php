@@ -925,7 +925,6 @@ class PostModel extends Model{
 
     /**
      * Get data relation for fields (Dropdown from DB)
-     * TODO : me ndreq edhe per translatable (DMTH me testu per krejt llojet e dropdown from DB)
      *
      * @param string $fieldSlug
      * @return array
@@ -933,11 +932,14 @@ class PostModel extends Model{
     public function getFieldRelations(string $fieldSlug){
         $postType = PostType::getFromCache()->where("slug", $this->getTable())->first();
         if($postType){
+            // get the specific field
             $field = $postType->field($fieldSlug);
             if($field->type->inputType == "db"){
+                // get table of the field (table for relation)
                 $table = $field->dbTable->name;
                 $belongsTo = $field->dbTable->belongsTo;
 
+                // get the model and the primary key
                 if($belongsTo == "PostType"){
                     $id = "postID";
                     $obj = new Post();
@@ -949,13 +951,16 @@ class PostModel extends Model{
 
                 $relationData = [];
 
-                if($field->translatable){
-                    // TODO me ndreq per multilanguage
-                    foreach(json_decode($this->$fieldSlug) as $langKey => $ids){
-                        $relationData[$langKey] = $obj->whereIn($id, json_decode($ids))->get();
+                // if multiple use whereIn if not multiple use where
+                if($field->isMultiple){
+                    if(gettype($this->$fieldSlug) == "string"){
+                        $ids = json_decode($this->$fieldSlug);
+                    }else{
+                        $ids = $this->$fieldSlug;
                     }
+                    $relationData = $obj->whereIn($id, $ids)->get();
                 }else{
-                    $relationData = $obj->whereIn($id, json_decode($this->$fieldSlug))->get();
+                    $relationData = $obj->where($id, json_decode($this->$fieldSlug))->get();
                 }
 
                 return $relationData;
