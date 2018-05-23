@@ -344,9 +344,10 @@ trait ThemeTrait
      * @param true $header where we are printing header or footer css
      * @param array $files List of css files to be printed
      * @param array $defaultAttributes Default attribute to be assigned to all js files.
+     * @param bool $noScript True if css should be appended within a <noscript> tag
      * @return string
      */
-    public static function css($header = true, $defaultAttributes = [], $files = []){
+    public static function css($header = true, $defaultAttributes = [], $files = [], $noScript = false){
         $html = '';
         if($files){
             $files = $files;
@@ -355,6 +356,7 @@ trait ThemeTrait
         }
 
         if ($files) {
+
             foreach ($files as $file) {
                 // exclude merge files
                 if (isset($file['merge']) && $file['merge']) {
@@ -397,6 +399,11 @@ trait ThemeTrait
 
                     $html .= '<link href="' . $url . '" ' . Meta::parseAttributes($attributes) . ' rel="stylesheet" type="text/css">' . "\n";
                 }
+            }
+
+            // append <noscript>
+            if($html && $noScript){
+                $html = '<noscript id="deferred-styles">'.$html.'</noscript>';
             }
         }
         return $html;
