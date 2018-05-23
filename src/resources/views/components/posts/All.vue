@@ -201,7 +201,7 @@
             isOwner(createdByUserID, hasPermission){
                 if(this.getGlobalData.permissions.global !== undefined && this.getGlobalData.permissions.global.author !== undefined){
                     if(hasPermission){
-                        if(this.getGlobalData.user.userID == createdByUserID){
+                        if(this.Auth.userID == createdByUserID){
                             return true;
                         }
                     }
