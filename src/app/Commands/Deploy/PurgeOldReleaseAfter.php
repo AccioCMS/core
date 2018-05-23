@@ -14,7 +14,7 @@ class PurgeOldReleaseAfter extends Command
      *
      * @var string
      */
-    protected $signature = 'deploy:purge_old_releases.after';
+    protected $signature = 'deploy:purge_old_release.after';
 
     /**
      * The console command description.
