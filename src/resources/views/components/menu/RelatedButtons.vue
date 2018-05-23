@@ -1,29 +1,29 @@
 <template>
     <ul class="nav navbar-right panel_toolbox relatedUL">
-        <li class="dropdown" v-if="hasPermission('PostType','read') || hasPermission('Categories','read')">
+        <li class="dropdown" v-if="postTypePermission || categoryPermissions">
             <a href="#" class="dropdown-toggle" @click="active = !active">Related&nbsp;<i class="fa fa-bars"></i></a>
             <ul class="lists-action-bar-dropdown" v-show="active">
-                <li v-if="hasPermission('PostType','read') && count(relatedPostTypesList)"><b>Post types</b></li>
-                <li v-if="hasPermission('PostType','read')" v-for="(item, index) in relatedPostTypesList">
+                <li v-if="postTypePermission && count(relatedPostTypesList)"><b>Post types</b></li>
+                <li v-if="postTypePermission" v-for="(item, index) in relatedPostTypesList">
                     <router-link :to="item.url+'?'+linkParams">{{item.title}}</router-link>
                 </li>
-                <li v-if="hasPermission('PostType','read') && count(relatedPostTypesList)" class="divider"></li>
-                <li v-if="hasPermission('Categories','read') && count(relatedCategories)"><b>Categories</b></li>
-                <li v-if="hasPermission('Categories','read')" v-for="(item, index) in relatedCategories">
+                <li v-if="postTypePermission && count(relatedPostTypesList)" class="divider"></li>
+                <li v-if="postTypePermission && count(relatedCategories)"><b>Categories</b></li>
+                <li v-if="postTypePermission" v-for="(item, index) in relatedCategories">
                     <router-link :to="item.url+'&'+linkParams">{{item.title}}</router-link>
                 </li>
-                <li v-if="hasPermission('Categories','read') && count(relatedCategories)" class="divider"></li>
-                <li v-if="hasPermission('PostType','read') && count(relatedPosts)"><b>Posts</b></li>
-                <li v-if="hasPermission('PostType','read')" v-for="(item, index) in relatedPosts">
+                <li v-if="categoryPermissions && count(relatedCategories)" class="divider"></li>
+                <li v-if="postTypePermission && count(relatedPosts)"><b>Posts</b></li>
+                <li v-if="postTypePermission" v-for="(item, index) in relatedPosts">
                     <router-link :to="item.url+'?'+linkParams">{{item.title}}</router-link>
                 </li>
-                <li v-if="hasPermission('Albums','read') && count(relatedPosts)" class="divider"></li>
-                <li v-if="hasPermission('Albums','read')">
+                <li v-if="albumPermissions && count(relatedPosts)" class="divider"></li>
+                <li v-if="albumPermissions">
                     <router-link :to="albumURL+'?'+linkParams"><b>Albums</b></router-link>
                 </li>
             </ul>
         </li>
-        <li v-if="hasPermission('global','admin')"><router-link :to="configRelatedLink" role="button" aria-expanded="false">Config<i class="fa fa-wrench"></i></router-link></li>
+        <li v-if="globalAdmin"><router-link :to="configRelatedLink" role="button" aria-expanded="false">Config<i class="fa fa-wrench"></i></router-link></li>
     </ul>
 </template>
 <script>
@@ -34,6 +34,12 @@
 
     export default{
         mixins: [globalComputed, globalMethods, globalData, globalUpdated],
+        created(){
+            this.postTypePermission = this.hasPermission('PostType','read');
+            this.categoryPermissions = this.hasPermission('Categories','read');
+            this.albumPermissions = this.hasPermission('Albums','read');
+            this.globalAdmin = this.hasPermission('global','admin');
+        },
         mounted() {
             this.loadRelatedBtnsData();
         },
@@ -56,6 +62,8 @@
         },
         data(){
             return{
+                postTypePermission: false,
+                categoryPermissions: false,
                 configRelatedLink: '',
                 relatedPostTypesList: [],
                 relatedCategories: '',
