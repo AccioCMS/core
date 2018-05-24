@@ -3,17 +3,13 @@
 namespace Accio;
 use Accio\App\Commands\Deploy\ActivateNewReleaseAfter;
 use Accio\App\Commands\Deploy\ActivateNewReleaseBefore;
-use Accio\App\Commands\Deploy\ComposerAfter;
-use Accio\App\Commands\Deploy\ComposerBefore;
+use Accio\App\Commands\Deploy\PurgeOldReleaseAfter;
+use Accio\App\Commands\Deploy\PurgeOldReleaseBefore;
 use Accio\App\Commands\Deploy\CopyUploads;
-use Accio\App\Commands\Deploy\CreateNewReleaseAfter;
-use Accio\App\Commands\Deploy\CreateNewReleaseBefore;
 use Accio\App\Commands\Deploy\CreateSymlinks;
 use Accio\App\Commands\Deploy\Cronjobs;
 use Accio\App\Commands\Deploy\Database;
 use Accio\App\Commands\Deploy\EnvFile;
-use Accio\App\Commands\Deploy\PurgeOldReleaseAfter;
-use Accio\App\Commands\Deploy\PurgeOldReleaseBefore;
 use Accio\App\Commands\Deploy\SetPermissions;
 use Accio\App\Commands\DeployCron;
 use Accio\App\Commands\PostCreateProject;
@@ -72,20 +68,14 @@ class PackageServiceProvider extends ServiceProvider{
         SetWritePermissions::class,
         PostCreateProject::class,
         CopyUploads::class,
-        CreateNewReleaseBefore::class,
         Cronjobs::class,
         Database::class,
         EnvFile::class,
-        SetPermissions::class,
+        CreateSymlinks::class,
         ActivateNewReleaseAfter::class,
         ActivateNewReleaseBefore::class,
-        CreateNewReleaseBefore::class,
-        CreateNewReleaseAfter::class,
-        ComposerBefore::class,
-        ComposerAfter::class,
         PurgeOldReleaseBefore::class,
-        PurgeOldReleaseAfter::class,
-        CreateSymlinks::class
+        PurgeOldReleaseAfter::class
     ];
 
     /**
