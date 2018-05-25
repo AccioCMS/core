@@ -189,9 +189,8 @@ export const store = new Vuex.Store({
         store(context, object){
             return Vue.http.post(object.url, object.data)
                 .then((resp) => {
-                    console.log(resp);
                     context.commit('setStoreResponse', resp.body);
-                    if(resp.statusText == "OK"){
+                    if(resp.status == 200){
                         var response = resp.body;
                         context.dispatch('handleErrors', {response});
                         context.dispatch('closeLoading');
