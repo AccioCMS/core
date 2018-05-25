@@ -475,7 +475,7 @@
 
                         this.$store.dispatch('closeLoading');
                         this.$store.commit('setStoreResponse', resp.body);
-                        if(resp.statusText == "OK" && redirectChoice == 'save'){
+                        if(resp.statusText == 200 && redirectChoice == 'save'){
                             var response = resp.body;
                             this.$store.dispatch('handleErrors', {response});
                             if(resp.body.code == 200){

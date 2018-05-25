@@ -396,10 +396,10 @@ class BasePostController extends MainController {
             // Delete tags relations of this post
             DB::table('tags_relations')->where('belongsTo',$postType)->where('belongsToID',$id)->delete();
 
-            $result = $this->response( 'Post Type is successfully deleted');
+            $result = $this->response( 'Post is successfully deleted');
 
         }else{
-            $result = $this->response( 'Internal server error. Please try again later', 500);
+            $result = $this->response( 'Post not deleted. Please try again later or contact administrator', 500);
         }
         return $result;
     }

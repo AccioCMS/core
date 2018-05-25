@@ -105,7 +105,7 @@ export const lists = {
             this.$store.dispatch('openLoading');
             this.$http.get(this.deleteUrl+id)
                 .then((resp) => {
-                    if(resp.statusText == "OK"){
+                    if(resp.statusText === 200){
                         var response = resp.body;
                         this.$store.dispatch('handleErrors', {response});
                         this.refreshList();  // refresh the list of the table
