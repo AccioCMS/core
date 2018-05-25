@@ -189,6 +189,7 @@ export const store = new Vuex.Store({
         store(context, object){
             return Vue.http.post(object.url, object.data)
                 .then((resp) => {
+                    console.log(resp);
                     context.commit('setStoreResponse', resp.body);
                     if(resp.statusText == "OK"){
                         var response = resp.body;
