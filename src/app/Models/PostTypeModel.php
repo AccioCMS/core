@@ -68,6 +68,15 @@ class PostTypeModel extends Model{
      */
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
 
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+      'fields' => 'object',
+    ];
+
     //TODO document it and remove it from here
 //    public static $customPermissions = [
 //        'service' => [
@@ -104,7 +113,7 @@ class PostTypeModel extends Model{
      */
     public function field(string $fieldSlug){
         // TODO me hek json decode me bo me cast
-        foreach (json_decode($this->fields) as $field){
+        foreach ($this->fields as $field){
             if($field->slug == $fieldSlug){
                 return $field;
             }

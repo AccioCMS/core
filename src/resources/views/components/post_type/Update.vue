@@ -351,7 +351,7 @@
                     this.form.hasFeaturedVideo = resp.body.details.hasFeaturedVideo;
                     this.form.isFeaturedImageRequired = resp.body.details.isFeaturedImageRequired;
                     this.form.slug = resp.body.details.slug;
-                    this.form.fields = JSON.parse(resp.body.details.fields);
+                    this.form.fields = resp.body.details.fields;
                     this.dbTables = resp.body.dbTables;
 
                     const categories = resp.body.categories;
