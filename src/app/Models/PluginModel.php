@@ -2,6 +2,7 @@
 
 namespace Accio\App\Models;
 
+use App\Models\Plugin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -58,7 +59,7 @@ class PluginModel extends Model{
      */
     public static function getFromCache(){
         if(!Cache::has('plugins')){
-            $getData = self::all();
+            $getData = Plugin::all();
             Cache::forever('plugins', $getData);
 
             return $getData;

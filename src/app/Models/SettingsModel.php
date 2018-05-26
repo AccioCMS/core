@@ -3,6 +3,7 @@
 namespace Accio\App\Models;
 
 use App\Models\Media;
+use App\Models\Settings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
@@ -56,7 +57,7 @@ class SettingsModel extends Model{
      */
     public static function getFromCache(){
         if(!Cache::has('settings')){
-            $getData  = self::all()->keyBy('settingsKey');
+            $getData  = Settings::all()->keyBy('settingsKey');
             Cache::forever('settings',$getData);
             return $getData;
         }
@@ -69,12 +70,12 @@ class SettingsModel extends Model{
     protected static function boot(){
         parent::boot();
         // watch for saving queries
-        self::saved(function($settings){
-            self::_saved($settings);
+        Settings::saved(function($settings){
+            Settings::_saved($settings);
         });
         // watch for deletion queries
-        self::deleted(function($settings){
-            self::_deleted($settings);
+        Settings::deleted(function($settings){
+            Settings::_deleted($settings);
         });
     }
 
@@ -111,7 +112,7 @@ class SettingsModel extends Model{
      * @@return array
      */
     public static function getAllSettings(){
-        $settings = self::getFromCache();
+        $settings = Settings::getFromCache();
 
         $settingsList = [];
         foreach($settings as $setting){
@@ -126,8 +127,8 @@ class SettingsModel extends Model{
      * @param string $key
      */
     public static function getSetting($key){
-        if(self::getFromCache()) {
-            $setting = self::getFromCache()->where('settingsKey', $key);
+        if(Settings::getFromCache()) {
+            $setting = Settings::getFromCache()->where('settingsKey', $key);
 
             if ($setting->count()) {
                 return $setting->first()->value;
@@ -143,7 +144,7 @@ class SettingsModel extends Model{
      * @return object
      */
     public static function setSetting($key, $value){
-        $result = self::updateOrCreate(['settingsKey' => $key], ['value' => $value]);
+        $result = Settings::updateOrCreate(['settingsKey' => $key], ['value' => $value]);
         return $result;
     }
 }

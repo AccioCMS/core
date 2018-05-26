@@ -2,6 +2,7 @@
 
 namespace Accio\App\Models;
 
+use App\Models\Tag;
 use DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -75,10 +76,10 @@ class TagModel extends Model{
             //custom cache
             $functionName = 'setCache_'.$cacheName;
             if(method_exists(__CLASS__,$functionName)){
-                return self::$functionName($cacheName);
+                return Tag::$functionName($cacheName);
             }else{
                 // all tags
-                return self::setCache_All();
+                return Tag::setCache_All();
             }
         }
 
@@ -91,7 +92,7 @@ class TagModel extends Model{
      * @return object
      */
     private static function setCache_All(){
-        $items = self::all();
+        $items = Tag::all();
         Cache::forever('tags',$items);
         return $items;
     }
@@ -139,7 +140,7 @@ class TagModel extends Model{
 
         self::saved(function($tag){
             Event::fire('tag:saved', [$tag]);
-            self::_saved($tag);
+            Tag::_saved($tag);
         });
 
         self::creating(function($tag){
@@ -164,7 +165,7 @@ class TagModel extends Model{
 
         self::deleted(function($tag){
             Event::fire('tag:deleted', [$tag]);
-            self::_deleted($tag);
+            Tag::_deleted($tag);
         });
     }
 
@@ -177,7 +178,7 @@ class TagModel extends Model{
         //delete existing cache
         $deleteCacheMethods = preg_grep('/^deleteCache_/', get_class_methods(__CLASS__));
         foreach($deleteCacheMethods as $method){
-            self::$method($tag, "saved");
+            Tag::$method($tag, "saved");
         }
     }
 
@@ -190,7 +191,7 @@ class TagModel extends Model{
         //delete existing cache
         $deleteCacheMethods = preg_grep('/^deleteCache_/', get_class_methods(__CLASS__));
         foreach($deleteCacheMethods as $method){
-            self::$method($tag,"deleted");
+            Tag::$method($tag,"deleted");
         }
     }
 

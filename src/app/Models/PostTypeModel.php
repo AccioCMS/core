@@ -174,7 +174,7 @@ class PostTypeModel extends Model{
      */
     public static function getFromCache(){
         if(!Cache::has('postTypes')){
-            $getData = self::all()->keyBy('slug');
+            $getData = PostType::all()->keyBy('slug');
             Cache::forever('postTypes',$getData);
 
             return $getData;
@@ -194,7 +194,7 @@ class PostTypeModel extends Model{
 
         self::saved(function($postType){
             Event::fire('postType:saved', [$postType]);
-            self::_saved($postType);
+            PostType::_saved($postType);
         });
 
         self::creating(function($postType){
@@ -219,7 +219,7 @@ class PostTypeModel extends Model{
 
         self::deleted(function($postType){
             Event::fire('postType:deleted', [$postType]);
-            self::_deleted($postType);
+            PostType::_deleted($postType);
         });
     }
 
@@ -264,7 +264,7 @@ class PostTypeModel extends Model{
         if(!$postTypeSlug){
             $postTypeSlug = \Request::route('postTypeSlug');
         }
-        return ($postTypeSlug && !self::findBySlug($postTypeSlug));
+        return ($postTypeSlug && !PostType::findBySlug($postTypeSlug));
     }
 
     /**
@@ -317,7 +317,7 @@ class PostTypeModel extends Model{
                 $table->datetime("published_at")->nullable()->index();
                 $table->json("slug")->nullable();
 
-                $post = new self();
+                $post = new PostType();
                 $usedSlugs = [];
                 $usedSlugs = array_merge($usedSlugs, $post->fillable);
 

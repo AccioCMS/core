@@ -10,6 +10,7 @@
 
 namespace Accio\App\Models;
 
+use App\Models\Album;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
 

@@ -9,6 +9,7 @@
 
 namespace Accio\App\Models;
 
+use App\Models\CustomField;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
 use Accio\App\Traits;

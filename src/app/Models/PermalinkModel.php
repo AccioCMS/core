@@ -78,7 +78,7 @@ class PermalinkModel extends Model
 
         self::saved(function($permalink){
             Event::fire('permalink:saved', [$permalink]);
-            self::_saved($permalink);
+            Permalink::_saved($permalink);
         });
 
         self::creating(function($permalink){
@@ -103,7 +103,7 @@ class PermalinkModel extends Model
 
         self::deleted(function($permalink){
             Event::fire('permalink:deleted', [$permalink]);
-            self::_deleted($permalink);
+            Permalink::_deleted($permalink);
         });
     }
 

@@ -240,9 +240,9 @@ class PostModel extends Model{
 
             //set post type table name
             if($categoryID){
-                return self::setCacheCategory($cacheName, $categoryID, $languageSlug);
+                return Post::setCacheCategory($cacheName, $categoryID, $languageSlug);
             }else{
-                return self::setCachePostType($cacheName, $languageSlug);
+                return Post::setCachePostType($cacheName, $languageSlug);
             }
         }else{
             // Handle custom cache methods
@@ -260,7 +260,7 @@ class PostModel extends Model{
             if(!isset($cachedItems->$languageSlug)){
                 $functionName = 'setCache'.$cacheName;
                 if(method_exists(__CLASS__,$functionName)){
-                    return self::$functionName($languageSlug);
+                    return Post::$functionName($languageSlug);
                 }
 
                 return null;
@@ -368,7 +368,7 @@ class PostModel extends Model{
 
         // if posts doesn't not exist in this language, query them
         if(!isset($cachedPosts->$languageSlug)){
-            $posts = (new self())->setTable($postTypeSlug)
+            $posts = (new Post())->setTable($postTypeSlug)
               ->with('featuredImage')
               ->with('categories')
               ->with('media')
@@ -451,7 +451,7 @@ class PostModel extends Model{
 
         //if posts doesn't  exists in this language, query them
         if(!isset($cachedPosts->$languageSlug)){
-            $posts = (new self())->setTable($postTypeSlug)
+            $posts = (new Post())->setTable($postTypeSlug)
               ->join('categories_relations','categories_relations.belongsToID',$postTypeSlug.'.postID')
               ->where('categories_relations.categoryID', '=', $categoryID)
               ->with('featuredImage')
@@ -503,7 +503,7 @@ class PostModel extends Model{
         });
 
         self::saved(function($post){
-            self::_saved($post);
+            Post::_saved($post);
             Event::fire('post:saved', [$post]);
         });
 
@@ -534,7 +534,7 @@ class PostModel extends Model{
         });
 
         self::deleted(function($post){
-            self::_deleted($post, $post->getTable());
+            Post::_deleted($post, $post->getTable());
             Event::fire('post:deleted', [$post]);
 
             // create delete task

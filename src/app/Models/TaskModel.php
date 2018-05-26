@@ -2,6 +2,7 @@
 
 namespace Accio\App\Models;
 
+use App\Models\Task;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
@@ -25,7 +26,7 @@ class TaskModel extends Model {
      */
     public static function create($belongsTo, $type, $data, $attributes = []){
         $cacheData = [];
-        $obj = new self();
+        $obj = new Task();
         $obj->belongsTo = $belongsTo;
         $obj->type = $type;
         $obj->data = $data;

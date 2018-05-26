@@ -3,6 +3,7 @@
 namespace Accio\App\Models;
 
 use App\Models\Permission;
+use App\Models\UserGroup;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
 use Mockery\Exception;
@@ -26,7 +27,7 @@ class UserGroupModel extends Model{
      * @throws Exception
      */
     public static function getAdminGroup(){
-        return self::where('slug', "admin")->get()->first();
+        return UserGroup::where('slug', "admin")->get()->first();
     }
 
     /**
@@ -35,7 +36,7 @@ class UserGroupModel extends Model{
      * @throws Exception
      */
     public static function getEditorGroup(){
-        return self::where('slug', "editor")->get()->first();
+        return UserGroup::where('slug', "editor")->get()->first();
     }
 
     /**
@@ -44,7 +45,7 @@ class UserGroupModel extends Model{
      * @throws Exception
      */
     public static function getAuthorGroup(){
-        return self::where('slug', "author")->get()->first();
+        return UserGroup::where('slug', "author")->get()->first();
     }
 
     /**

@@ -104,7 +104,7 @@ class LanguageModel extends Model{
      */
     public static function getFromCache(){
         if(!Cache::has('languages')){
-            $languagesList = self::all()->keyBy('slug');
+            $languagesList = Language::all()->keyBy('slug');
             Cache::forever('languages',$languagesList);
 
             return $languagesList;
@@ -124,7 +124,7 @@ class LanguageModel extends Model{
 
         self::saved(function($language){
             Event::fire('language:saved', [$language]);
-            self::_saved($language);
+            Language::_saved($language);
         });
 
         self::creating(function($language){
@@ -149,7 +149,7 @@ class LanguageModel extends Model{
 
         self::deleted(function($language){
             Event::fire('language:deleted', [$language]);
-            self::_deleted($language);
+            Language::_deleted($language);
         });
     }
 

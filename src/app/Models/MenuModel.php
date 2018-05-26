@@ -84,7 +84,7 @@ class MenuModel extends Model{
      * */
     public static function getFromCache(){
         if(!Cache::has('menu')){
-            $getMenu = self::all()->keyBy('slug');
+            $getMenu = Menu::all()->keyBy('slug');
             Cache::forever('menu',$getMenu);
 
             return $getMenu;
@@ -97,7 +97,7 @@ class MenuModel extends Model{
      * @return bool
      */
     public static function createPrimaryMenu(){
-        $check = self::where('slug', 'primary')->get()->first();
+        $check = Menu::where('slug', 'primary')->get()->first();
         if(!$check){
 
             $create = factory(Menu::class)->create([
@@ -125,7 +125,7 @@ class MenuModel extends Model{
 
         self::saved(function($menu){
             Event::fire('menu:saved', [$menu]);
-            self::_saved($menu);
+            Menu::_saved($menu);
         });
 
         self::creating(function($menu){
@@ -150,7 +150,7 @@ class MenuModel extends Model{
 
         self::deleted(function($menu){
             Event::fire('menu:deleted', [$menu]);
-            self::_deleted($menu);
+            Menu::_deleted($menu);
         });
     }
 

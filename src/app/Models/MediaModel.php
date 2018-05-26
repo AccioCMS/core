@@ -9,6 +9,7 @@
  */
 namespace Accio\App\Models;
 
+use App\Models\Media;
 use Illuminate\Database\Eloquent\Model;
 use DB;
 use Illuminate\Database\Eloquent\Relations\HasMany;

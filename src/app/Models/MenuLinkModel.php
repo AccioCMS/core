@@ -9,6 +9,7 @@
  */
 namespace Accio\App\Models;
 
+use App\Models\MenuLink;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Language;
@@ -95,7 +96,7 @@ class MenuLinkModel extends Model{
 
         //set cache in this language
         if(!isset($cachedItems->$languageSlug)){
-            $menuLinks = self::all()->keyBy('menuLinkID');
+            $menuLinks = MenuLink::all()->keyBy('menuLinkID');
             $cachedItems->$languageSlug = Language::translateList($menuLinks, $languageSlug);
             Cache::forever('menuLinks',$cachedItems);
 
@@ -119,7 +120,7 @@ class MenuLinkModel extends Model{
         });
 
         self::saved(function($menuLink){
-            self::_saved($menuLink);
+            MenuLink::_saved($menuLink);
             Event::fire('menuLink:saved', [$menuLink]);
         });
 
@@ -144,7 +145,7 @@ class MenuLinkModel extends Model{
         });
 
         self::deleted(function($menuLink){
-            self::_deleted($menuLink);
+            MenuLink::_deleted($menuLink);
             Event::fire('menuLink:deleted', [$menuLink]);
         });
     }

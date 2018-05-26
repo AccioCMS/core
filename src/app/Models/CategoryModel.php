@@ -11,6 +11,7 @@
 
 namespace Accio\App\Models;
 
+use App\Models\Category;
 use App\Models\PostType;
 use App\Models\Language;
 use Illuminate\Database\Eloquent\Model;
@@ -263,13 +264,13 @@ class CategoryModel extends Model{
             //handle post type cache
             $postTypeData = PostType::findBySlug($cacheName);
             if($postTypeData) {
-                return self::setCacheByPostType($postTypeData, $languageSlug);
+                return Category::setCacheByPostType($postTypeData, $languageSlug);
             }
             //or a custom cache
             else{
                 $functionName = 'setCache'.$cacheName;
                 if(method_exists(__CLASS__,$functionName)){
-                    return self::$functionName($cacheName,$languageSlug);
+                    return Category::$functionName($cacheName,$languageSlug);
                 }
             }
         }
@@ -287,7 +288,7 @@ class CategoryModel extends Model{
      * @return object Categories of requested language
      */
     private  static function setCacheCategories($cacheName, $languageSlug){
-        $getCategories = self::all()->keyBy('categoryID');
+        $getCategories = Category::all()->keyBy('categoryID');
 
         //setup cache data
         $cachedItems = new \stdClass();
@@ -318,7 +319,7 @@ class CategoryModel extends Model{
      */
     private  static function setCacheByPostType($postTypeData, $languageSlug){
         $cacheName = "categories_".$postTypeData->slug;
-        $getCategories = self::where('postTypeID', $postTypeData->postTypeID)->get();
+        $getCategories = Category::where('postTypeID', $postTypeData->postTypeID)->get();
 
         //setup cache data
         $cachedItems = new \stdClass();
@@ -370,7 +371,7 @@ class CategoryModel extends Model{
 
         self::saved(function($category){
             Event::fire('category:saved', [$category]);
-            self::_saved($category);
+            Category::_saved($category);
         });
 
         self::creating(function($category){
@@ -395,7 +396,7 @@ class CategoryModel extends Model{
 
         self::deleted(function($category){
             Event::fire('category:deleted', [$category]);
-            self::_deleted($category);
+            Category::_deleted($category);
         });
     }
 
@@ -407,7 +408,7 @@ class CategoryModel extends Model{
         $deleteCacheMethods = preg_grep('/^deleteCache/', get_class_methods(__CLASS__));
         foreach($deleteCacheMethods as $method){
             if($method !== 'deleteCache') {
-                self::$method($category, "saved");
+                Category::$method($category, "saved");
             }
         }
     }

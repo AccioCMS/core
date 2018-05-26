@@ -9,6 +9,7 @@
  */
 namespace Accio\App\Models;
 
+use App\Models\Theme;
 use Illuminate\Support\Facades\Event;
 use Route;
 use Illuminate\Database\Eloquent\Model;
