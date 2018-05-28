@@ -1097,5 +1097,14 @@ trait PostTrait{
         ];
     }
 
+    /**
+     * Get option value
+     * @param $field
+     * @return mixed
+     */
+    public function getOptionValue($field){
+        $postType = PostType::getFromCache()->where("slug", $this->getTable())->first();
+        return $postType->getMultioptionFieldValue($field, $this->{$field});
+    }
 
 }

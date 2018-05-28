@@ -478,7 +478,7 @@ trait UserTrait{
     /**
      * Assign roles to a user
      *
-     * @param array $groups groups that are selected in frontend for the new or existing user
+     * @param array|int $groups groups that are selected in frontend for the new or existing user
      * @return bool
      * */
     public function assignRoles($groups){
@@ -490,7 +490,13 @@ trait UserTrait{
         RoleRelation::where('userID',$this->userID)->delete();
 
         $roles = [];
-        foreach ($groups as $groupID=>$group){
+
+        // in case int is given
+        if(is_int($groups)){
+            $groups = [$groups];
+        }
+
+        foreach ($groups as $groupID => $group){
             $roles[] = [
               'userID' => $this->userID,
               'groupID' => (isset($group['groupID']) ? $group['groupID'] : $groupID)

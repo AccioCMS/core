@@ -74,7 +74,7 @@ class PostTypeModel extends Model{
      * @var array
      */
     protected $casts = [
-      'fields' => 'object',
+        'fields' => 'object',
     ];
 
     //TODO document it and remove it from here

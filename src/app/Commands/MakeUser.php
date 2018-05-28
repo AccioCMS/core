@@ -41,19 +41,6 @@ class MakeUser extends Command
      */
     public function handle()
     {
-        // STEP 1   -   Ensure there there is a language
-        if(!Language::count()){
-            // Create default language
-            factory(Language::class)->create([
-                'name' => config('app.locale'),
-                'slug' => config('app.locale'),
-                'isDefault' => true
-            ]);
-        }
-
-        // Ensure default roles are already created
-        UserGroup::createDefaultRoles();
-
         // Fill user data
         $data = [
             'email' => $this->argument('email'),
@@ -72,7 +59,7 @@ class MakeUser extends Command
         // Create the user
         $user = factory(User::class)->create($data);
 
-        // add a role
+        // Assign the role
         if($user){
             if($this->option('role_id')){
                 $groupID = $this->option('role_id');

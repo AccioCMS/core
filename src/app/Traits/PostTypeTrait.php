@@ -118,7 +118,7 @@ trait PostTypeTrait{
     public static function getFields($post_type){
         $postType = PostType::getFromCache()->where('slug', $post_type)->first();
         if($postType){
-            return json_decode($postType->fields);
+            return $postType->fields;
         }
         return [];
     }
