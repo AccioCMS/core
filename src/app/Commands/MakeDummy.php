@@ -250,9 +250,10 @@ class MakeDummy extends Command
             $output = (new \PostDevSeeder())->run(
                 $this->getDefaultOption('posts'),
                 $this->getDefaultOption('posts_per_category'),
-                $this->option('post_type'),
+                $this->getDefaultOption('post_type'),
                 $this->getDefaultOption('media'),
-                $this->getDefaultOption('tags')
+                $this->getDefaultOption('tags'),
+                $this->getDefaultOption('category')
             );
             $this->info($output);
         }
