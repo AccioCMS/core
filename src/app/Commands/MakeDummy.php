@@ -158,7 +158,9 @@ class MakeDummy extends Command
         ) {
 
             $this->comment('Creating dummy users...');
-            $output = (new \UserDevSeeder())->run(
+            $output = (new \UserDevSeeder())
+              ->setCommand($this)
+              ->run(
               $this->getDefaultOption('users'),
               $this->getDefaultOption('users_per_role'),
               $this->getDefaultOption('role_id')
@@ -176,7 +178,9 @@ class MakeDummy extends Command
     private function createPostTypes(){
         if(!$this->option('posts') && ($this->option('post_types') || $this->option('all'))) {
             $this->comment('Creating dummy Post Types...');
-            $output = (new \PostTypeDevSeeder())->run($this->getDefaultOption('post_types'));
+            $output = (new \PostTypeDevSeeder())
+              ->setCommand($this)
+              ->run($this->getDefaultOption('post_types'));
             $this->info($output);
         }
         return $this;
@@ -190,7 +194,9 @@ class MakeDummy extends Command
     private function createMedia(){
         if($this->option('media') || $this->option('all')) {
             $this->comment('Creating dummy media...');
-            $output = (new \MediaDevSeeder())->run($this->getDefaultOption('media'));
+            $output = (new \MediaDevSeeder())
+              ->setCommand($this)
+              ->run($this->getDefaultOption('media'));
             $this->info($output);
         }
         return $this;
@@ -206,7 +212,9 @@ class MakeDummy extends Command
         if($this->option('categories') || $this->option('categories_per_post_type') || $this->option('all')) {
             $this->comment('Creating dummy categories...');
 
-            $output = (new \CategoryDevSeeder())->run(
+            $output = (new \CategoryDevSeeder())
+              ->setCommand($this)
+              ->run(
               ($this->getDefaultOption('categories_per_post_type') ? $this->getDefaultOption('categories_per_post_type') : $this->getDefaultOption('categories')),
               $this->getDefaultOption('post_type'),
               ($this->getDefaultOption('categories_per_post_type') ? true : false)
@@ -226,7 +234,9 @@ class MakeDummy extends Command
         if($this->option('tags') || $this->option('tags_per_post_type') || $this->option('all')) {
             $this->comment('Creating dummy tags...');
 
-            $output = (new \TagDevSeeder())->run(
+            $output = (new \TagDevSeeder())
+              ->setCommand($this)
+              ->run(
               ($this->getDefaultOption('tags_per_post_type') ? $this->getDefaultOption('tags_per_post_type') : $this->getDefaultOption('tags')),
               $this->getDefaultOption('post_type'),
               ($this->getDefaultOption('tags_per_post_type') ? true : false)
@@ -247,7 +257,10 @@ class MakeDummy extends Command
     private function createPosts(){
         if($this->option('posts') || $this->option('posts_per_category') || $this->option('all')) {
             $this->comment('Creating dummy posts...');
-            $output = (new \PostDevSeeder())->run(
+
+            $output = (new \PostDevSeeder())
+              ->setCommand($this)
+              ->run(
                 $this->getDefaultOption('posts'),
                 $this->getDefaultOption('posts_per_category'),
                 $this->getDefaultOption('post_type'),
