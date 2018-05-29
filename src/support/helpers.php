@@ -521,5 +521,14 @@ if (! function_exists('isSecure')) {
         return request()->headers->get('x-forwarded-proto') == 'https' ? true: false;
     }
 }
-
+if (! function_exists('adminURL')) {
+    /**
+     * Get project's admin URL
+     * @return \Illuminate\Contracts\Routing\UrlGenerator|string
+     */
+    function adminURL()
+    {
+        return url(config('project.adminPrefix'));
+    }
+}
 

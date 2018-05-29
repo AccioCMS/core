@@ -4,6 +4,7 @@ namespace Accio\App\Models;
 
 use App\Models\Language;
 use App\Models\User;
+use App\Notifications\UserAdded;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\App;
@@ -16,11 +17,12 @@ use Spatie\Activitylog\Traits\HasActivity;
 
 class UserModel extends Authenticatable
 {
-    use Traits\UserTrait, Notifiable, Traits\TranslatableTrait, HasActivity;
+    use Traits\UserTrait, Notifiable, Traits\TranslatableTrait, HasActivity, Notifiable;
 
     /** @var array $fillable fields that can be filled in CRUD*/
     protected $fillable = [
-        'firstName','lastName','email', 'password','phone','address','country','isActive','profileImageID','about','slug','gravatar'
+        'firstName','lastN
+        ame','email', 'password','phone','address','country','isActive','profileImageID','about','slug','gravatar'
     ];
     //TODO me ja shtu "slug" userave (emri-mbiemri) sepse po na duhet ne front-end
 
@@ -148,6 +150,11 @@ class UserModel extends Authenticatable
         });
 
         self::created(function($user){
+            try{
+                $user->notify(new UserAdded($user));
+            }catch (\Exception $e){
+
+            }
             Event::fire('user:created', [$user]);
         });
 

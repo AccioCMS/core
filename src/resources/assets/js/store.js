@@ -225,7 +225,7 @@ export const store = new Vuex.Store({
 
             Vue.http.post(object.url, ids)
                 .then((resp) => {
-                    if(resp.statusText == "OK"){
+                    if(resp.code == 200){
                         var response = resp.body;
                         context.dispatch('handleErrors', {response});
                     }else{

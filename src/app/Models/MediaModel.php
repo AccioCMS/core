@@ -98,10 +98,7 @@ class MediaModel extends Model{
         return $this->hasMany('App\Models\MediaRelation','mediaID','mediaID');
     }
 
-    /**
-     * @var bool
-     */
-    protected static $logFillable = true;
+
 
     /**
      * Handle callback of insert, update, delete

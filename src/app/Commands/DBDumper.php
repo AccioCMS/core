@@ -64,7 +64,7 @@ class DBDumper extends Command
 
         $filePath = $exportPath.'/'.date("Ymdhisi").'.sql';
 
-        $this->comment("Dumping the database...");
+        $this->comment("Starting database dump...");
 
         switch (config('database.default')){
             case 'mysql':
