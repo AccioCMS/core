@@ -66,7 +66,7 @@ class MakeUser extends Command
             }else{
                 $groupID = UserGroup::getEditorGroup()->groupID;
             }
-            $user->assignRoles([$groupID]);
+            $user->assignRoles($groupID);
         }
 
         $this->info("User created successfully!");

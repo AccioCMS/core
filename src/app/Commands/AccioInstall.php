@@ -344,19 +344,19 @@ class AccioInstall extends Command{
         $this->advanceBar();
 
         $this->info("Creating examples media files");
-        (new \MediaDevSeeder())->run(10);
+        (new \MediaDevSeeder())->run(20);
         $this->advanceBar();
 
         // Create tags example
         $this->info("Creating example tags");
-        (new \TagDevSeeder())->run();
+        (new \TagDevSeeder())->run(20, null, true);
         $this->advanceBar();
 
         // Create a category
         $this->info("Creating an example category");
         $categoryObj = new \CategoryDevSeeder();
         $categoryObj->exampleTitles = true;
-        $categoryObj->run();
+        $categoryObj->run(3, null);
         $this->advanceBar();
 
         // Create default permalinks
@@ -370,7 +370,7 @@ class AccioInstall extends Command{
         $this->advanceBar();
 
         $this->info("Creating example posts");
-        (new \PostDevSeeder())->run(3);
+        (new \PostDevSeeder())->run(0, 5,'', 0, 0, 0, true);
         $this->advanceBar();
 
         // Create Primary Menu
@@ -489,6 +489,7 @@ class AccioInstall extends Command{
         Settings::setSetting('trackingCode', '');
         Settings::setSetting('useTagManager', 0);
         Settings::setSetting('tagManager', '');
+        Settings::setSetting('watermark', '');
 
         $language = Language::where('isDefault', 1)->first();
         Settings::setSetting('defaultLanguage', $language->languageID);
@@ -508,7 +509,7 @@ class AccioInstall extends Command{
         ]);
 
         // assign role
-        $user->assignRoles([UserGroup::getAdminGroup()->groupID]);
+        $user->assignRoles(UserGroup::getAdminGroup()->groupID);
     }
     /**
      * Calls the artisan key:generate to set the APP_KEY.

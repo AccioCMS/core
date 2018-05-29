@@ -479,13 +479,22 @@ trait UserTrait{
      * Assign roles to a user
      *
      * @param array|int $groups groups that are selected in frontend for the new or existing user
+     * @param boolean Bypass permission check. Useful when creating users via CLI.
      * @return bool
      * */
-    public function assignRoles($groups){
-        // check if user has permissions to access this link
-        if(!self::hasAccess('user','update') && !self::hasAccess('user','create')){
-            return false;
+    public function assignRoles($groups, $bypassPermissionCheck = false){
+        // allow permission bypass only in the local environment
+        if(config('app.env') == 'production' && $bypassPermissionCheck){
+            $bypassPermissionCheck = false;
         }
+
+        // check if a user has permissions to access this link
+        if(!$bypassPermissionCheck) {
+            if (!self::hasAccess('user', 'update') && !self::hasAccess('user', 'create')) {
+                return false;
+            }
+        }
+
         // First delete all previous relations
         RoleRelation::where('userID',$this->userID)->delete();
 
@@ -496,10 +505,10 @@ trait UserTrait{
             $groups = [$groups];
         }
 
-        foreach ($groups as $groupID => $group){
+        foreach ($groups as $groupID){
             $roles[] = [
               'userID' => $this->userID,
-              'groupID' => (isset($group['groupID']) ? $group['groupID'] : $groupID)
+              'groupID' => $groupID
             ];
         }
 

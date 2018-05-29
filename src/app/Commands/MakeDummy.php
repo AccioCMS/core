@@ -174,7 +174,7 @@ class MakeDummy extends Command
      * @return $this
      */
     private function createPostTypes(){
-        if($this->option('post_types') || $this->option('all')) {
+        if(!$this->option('posts') && ($this->option('post_types') || $this->option('all'))) {
             $this->comment('Creating dummy Post Types...');
             $output = (new \PostTypeDevSeeder())->run($this->getDefaultOption('post_types'));
             $this->info($output);
@@ -253,7 +253,9 @@ class MakeDummy extends Command
                 $this->getDefaultOption('post_type'),
                 $this->getDefaultOption('media'),
                 $this->getDefaultOption('tags'),
-                $this->getDefaultOption('category')
+                $this->getDefaultOption('category'),
+                ($this->getDefaultOption('post_types') == 'all' ? true : false)
+
             );
             $this->info($output);
         }
