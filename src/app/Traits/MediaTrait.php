@@ -250,7 +250,7 @@ trait MediaTrait{
                 }
 
                 //create thumb
-                $img = Image::make($imageObj->url);
+                $img = Image::make(base_path($imageObj->url));
                 $resizedHeight = $width * 2;
 //                $img->resize($resizedHeight, null, function ($constraint) {
 //                    $constraint->aspectRatio();
