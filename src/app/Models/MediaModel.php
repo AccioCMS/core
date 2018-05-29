@@ -72,6 +72,16 @@ class MediaModel extends Model{
     public static $infinitPaginationShow = 100;
 
     /**
+     * @var bool
+     */
+    protected static $logFillable = true;
+
+    /**
+     * @var bool
+     */
+    protected static $logOnlyDirty = true;
+
+    /**
      * @inheritdoc
      * */
     public function __construct(array $attributes = []){

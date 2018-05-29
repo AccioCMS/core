@@ -30,6 +30,11 @@ class UserGroupModel extends Model{
     protected static $logFillable = true;
 
     /**
+     * @var bool
+     */
+    protected static $logOnlyDirty = true;
+
+    /**
      * Get admin group
      * @return object
      * @throws Exception

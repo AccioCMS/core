@@ -48,6 +48,11 @@ class PermalinkModel extends Model
     protected static $logFillable = true;
 
     /**
+     * @var bool
+     */
+    protected static $logOnlyDirty = true;
+
+    /**
      * @inheritdoc
      * */
     public function __construct(array $attributes = [])

@@ -57,7 +57,12 @@ class SettingsModel extends Model{
      * @var bool
      */
     protected static $logFillable = true;
-    
+
+    /**
+     * @var bool
+     */
+    protected static $logOnlyDirty = true;
+
     /**
      * Get settings from cache. Cache is generated if not found
      *
