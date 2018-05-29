@@ -13,8 +13,11 @@ namespace Accio\App\Models;
 use App\Models\Album;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class AlbumModel extends Model{
+
+    use LogsActivity;
 
     /**
      * Fields that can be filled
@@ -56,6 +59,11 @@ class AlbumModel extends Model{
      * @var array $defaultPermissions
      */
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
+
+    /**
+     * @var bool
+     */
+    protected static $logFillable = true;
 
     /**
      * @inheritdoc

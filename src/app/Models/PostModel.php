@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Accio\Support\Facades\Meta;
 use Mockery\Exception;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Validator;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\PostType;
@@ -36,7 +37,7 @@ use App\Models\Post;
 use Accio\App\Traits;
 
 class PostModel extends Model{
-    use Traits\PostTrait, Traits\TranslatableTrait, Traits\CustomFieldsValuesTrait;
+    use Traits\PostTrait, Traits\TranslatableTrait, Traits\CustomFieldsValuesTrait, LogsActivity;
 
     /**
      * The primary table associated with the model.
@@ -113,6 +114,11 @@ class PostModel extends Model{
      * @var integer $rowsPerPage
      */
     public static $rowsPerPage = 25;
+
+    /**
+     * @var bool
+     */
+    protected static $logFillable = true;
 
     /**
      * @inheritdoc

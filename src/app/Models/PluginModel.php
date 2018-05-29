@@ -9,10 +9,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Accio\App\Traits;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class PluginModel extends Model{
 
-    use Traits\PluginTrait;
+    use Traits\PluginTrait, LogsActivity;
 
     /**
      * The table associated with the model.
@@ -42,6 +43,11 @@ class PluginModel extends Model{
      * @var array $defaultPermissions
      */
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
+
+    /**
+     * @var bool
+     */
+    protected static $logFillable = true;
 
     /**
      * @inheritdoc

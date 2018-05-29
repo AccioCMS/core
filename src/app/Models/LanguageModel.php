@@ -18,10 +18,11 @@ use Input;
 use Request;
 use Illuminate\Database\Eloquent\Model;
 use Accio\App\Traits;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class LanguageModel extends Model{
 
-    use Traits\LanguageTrait;
+    use Traits\LanguageTrait, LogsActivity;
 
     /**
      * Fields that can be filled in CRUD
@@ -87,6 +88,11 @@ class LanguageModel extends Model{
             ]
         ],
     ];
+
+    /**
+     * @var bool
+     */
+    protected static $logFillable = true;
 
     /**
      * @inheritdoc

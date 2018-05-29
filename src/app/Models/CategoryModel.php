@@ -23,10 +23,11 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Accio\App\Traits;
 use Accio\Support\Facades\Meta;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class CategoryModel extends Model{
 
-    use Traits\CategoryTrait, Traits\TranslatableTrait;
+    use Traits\CategoryTrait, Traits\TranslatableTrait, LogsActivity;
 
     /**
      * Fields that can be filled in CRUD
@@ -81,6 +82,11 @@ class CategoryModel extends Model{
      * @var array $defaultPermissions
      */
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
+
+    /**
+     * @var bool
+     */
+    protected static $logFillable = true;
 
     /**
      * @inheritdoc

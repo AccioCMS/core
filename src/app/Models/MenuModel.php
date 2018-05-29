@@ -15,10 +15,11 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Accio\App\Traits;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class MenuModel extends Model{
 
-    use Traits\MenuTrait;
+    use Traits\MenuTrait, LogsActivity;
 
     /**
      * Fields that can be filled in CRUD
@@ -67,6 +68,11 @@ class MenuModel extends Model{
      * @var array $defaultPermissions
      */
     public static $defaultPermissions = ['create', 'read', 'update', 'delete'];
+
+    /**
+     * @var bool
+     */
+    protected static $logFillable = true;
 
     /**
      * @inheritdoc

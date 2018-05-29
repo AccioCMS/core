@@ -15,10 +15,11 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\Language;
 use Illuminate\Support\Facades\Event;
 use Accio\App\Traits;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class MenuLinkModel extends Model{
 
-    use Traits\MenuLinkTrait;
+    use Traits\MenuLinkTrait, LogsActivity;
 
     /**
      * Fields that can be filled in CRUD
@@ -63,6 +64,11 @@ class MenuLinkModel extends Model{
      * @var array $defaultPermissions
      */
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
+
+    /**
+     * @var bool
+     */
+    protected static $logFillable = true;
 
     /**
      * @inheritdoc

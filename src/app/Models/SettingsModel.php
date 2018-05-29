@@ -6,8 +6,11 @@ use App\Models\Media;
 use App\Models\Settings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class SettingsModel extends Model{
+
+    use LogsActivity;
 
     /**
      * Fields that can be filled
@@ -50,6 +53,11 @@ class SettingsModel extends Model{
      */
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
 
+    /**
+     * @var bool
+     */
+    protected static $logFillable = true;
+    
     /**
      * Get settings from cache. Cache is generated if not found
      *

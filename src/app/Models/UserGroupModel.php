@@ -7,8 +7,11 @@ use App\Models\UserGroup;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
 use Mockery\Exception;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class UserGroupModel extends Model{
+
+    use LogsActivity;
 
     /** @var array $fillable fields that can be filled in CRUD*/
     protected $fillable = [
@@ -20,6 +23,11 @@ class UserGroupModel extends Model{
 
     /** @var string $table The name of the table in database */
     protected $table = "users_groups";
+
+    /**
+     * @var bool
+     */
+    protected static $logFillable = true;
 
     /**
      * Get admin group

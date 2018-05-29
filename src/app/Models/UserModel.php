@@ -12,10 +12,11 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Accio\App\Traits;
 use Accio\Support\Facades\Meta;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class UserModel extends Authenticatable
 {
-    use Traits\UserTrait, Notifiable, Traits\TranslatableTrait;
+    use Traits\UserTrait, Notifiable, Traits\TranslatableTrait, LogsActivity;
 
     /** @var array $fillable fields that can be filled in CRUD*/
     protected $fillable = [
@@ -90,6 +91,11 @@ class UserModel extends Authenticatable
             'db-column' => 'isActive'
         ]
     ];
+
+    /**
+     * @var bool
+     */
+    protected static $logFillable = true;
 
     /**
      * @inheritdoc

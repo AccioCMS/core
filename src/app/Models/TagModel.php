@@ -11,10 +11,11 @@ use Illuminate\Support\Facades\Event;
 use Accio\App\Traits;
 use App\Models\PostType;
 use Accio\Support\Facades\Meta;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class TagModel extends Model{
 
-    use Traits\TagTrait;
+    use Traits\TagTrait, LogsActivity;
     /**
      * Fields that can be filled in CRUD
      *
@@ -55,6 +56,11 @@ class TagModel extends Model{
      * @var array $defaultPermissions
      */
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
+
+    /**
+     * @var bool
+     */
+    protected static $logFillable = true;
 
     /**
      * @inheritdoc

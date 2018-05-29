@@ -20,10 +20,11 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Accio\App\Traits;
 use Illuminate\Support\Facades\File;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class PostTypeModel extends Model{
 
-    use Traits\PostTypeTrait;
+    use Traits\PostTypeTrait, LogsActivity;
 
     /**
      * Fields that can be filled in CRUD
@@ -97,6 +98,11 @@ class PostTypeModel extends Model{
 
 
     private static $customFieldsArray = [];
+
+    /**
+     * @var bool
+     */
+    protected static $logFillable = true;
 
     /**
      * @inheritdoc

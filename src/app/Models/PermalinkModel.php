@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Accio\App\Traits;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class PermalinkModel extends Model
 {
 
-    use Traits\PermalinkTrait;
+    use Traits\PermalinkTrait, LogsActivity;
 
     /**
      * The table associated with the model.
@@ -40,6 +41,11 @@ class PermalinkModel extends Model
      * @var bool
      */
     public $timestamps = false;
+
+    /**
+     * @var bool
+     */
+    protected static $logFillable = true;
 
     /**
      * @inheritdoc

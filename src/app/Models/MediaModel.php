@@ -17,10 +17,11 @@ use Illuminate\Support\Facades\Event;
 use Image;
 use Auth;
 use Accio\App\Traits;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class MediaModel extends Model{
 
-    use Traits\MediaTrait;
+    use Traits\MediaTrait, LogsActivity;
 
     /**
      * Fields that can be filled in CRUD
@@ -86,6 +87,11 @@ class MediaModel extends Model{
     {
         return $this->hasMany('App\Models\MediaRelation','mediaID','mediaID');
     }
+
+    /**
+     * @var bool
+     */
+    protected static $logFillable = true;
 
     /**
      * Handle callback of insert, update, delete
