@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Accio\App\Commands\CheckRequirements;
-use Accio\App\Commands\DBExport;
+use Accio\App\Commands\DBDumper;
 use Accio\App\Commands\MakeArchive;
 use Accio\App\Commands\MakeDummy;
 use Accio\App\Commands\AccioInstall;
@@ -59,7 +59,7 @@ class PackageServiceProvider extends ServiceProvider{
         MakeDummy::class,
         MakeUser::class,
         MakeArchive::class,
-        DBExport::class,
+        DBDumper::class,
         MakeTheme::class,
         CheckRequirements::class,
         AccioInstall::class,
