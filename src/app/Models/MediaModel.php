@@ -139,12 +139,7 @@ class MediaModel extends Model{
         });
     }
 
-    /**
-     * @return array all allowed extensions
-     */
-    public static function allowedExtensions(){
-        return array_merge(config('media.image_extensions'), config('media.document_extensions'), config('media.audio_extensions'), config('media.video_extensions'));
-    }
+
 
     /**
      * Scope a query to only include images

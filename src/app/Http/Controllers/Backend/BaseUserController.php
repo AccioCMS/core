@@ -157,6 +157,7 @@ class BaseUserController extends MainController{
         $user->about = $request->user['about'];
         $user->profileImageID = $profileImageID;
         $user->gravatar = User::getGravatarFromEmail($request->user['email']);
+        $user->createdByUserID = Auth::user()->userID;
 
         if ($user->save()){
             // Add roles permissions

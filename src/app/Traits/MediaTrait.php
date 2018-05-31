@@ -70,7 +70,7 @@ trait MediaTrait{
             $destinationOriginalPath = $destinationOriginalDirectory.'/'.$fileName;
 
             // validate file type
-            if(!in_array($extension, \App\Models\Media::allowedExtensions())){
+            if(!$this->isAllowedExtension($extension)){
                 throw new FileException("File type not allowed");
             }
 
@@ -112,8 +112,9 @@ trait MediaTrait{
                 $media->filename = $fileName;
                 $media->fileDirectory = $fileDirectory;
                 $media->filesize = round(($fileSize/1000),2);
+                $media->createdByUserID = Auth::user()->userID;
 
-                if(in_array($extension, config('media.image_extensions'))){
+                if($this->hasImageExtension($extension)){
                     $media->type = "image";
                     // if the uploaded file is a image set his dimensions in the database
                     $img = Image::make($destinationOriginalPath);
@@ -121,12 +122,14 @@ trait MediaTrait{
                     $height = $img->height();
                     $media->dimensions = $width."x".$height;
 
-                }else if(in_array($extension, config('media.document_extensions'))){
+                }else if($this->hasDocumentExtension($extension)){
                     $media->type = "document";
-                }else if(in_array($extension, config('media.audio_extensions'))){
+                }elseif($this->hasAudioExtension($extension)){
                     $media->type = "audio";
-                }else if(in_array($extension, config('media.video_extensions'))){
+                }elseif($this->hasVideoExtension($extension)){
                     $media->type = "video";
+                }else{
+                    throw new FileException("Extension type not allowed");
                 }
 
                 // Fire event
@@ -148,7 +151,7 @@ trait MediaTrait{
                     }
 
                     // Create thumbs
-                    if(in_array($extension, config('media.image_extensions'))){
+                    if($this->hasImageExtension($extension)){
                         foreach(config('media.default_thumb_size') as $thumKey => $thumValue){
                             if ($thumKey == "default" || $thumKey == $belongsToApp){ // only thumbs that are default and which belongs to this current app
                                 foreach ($thumValue as $thumbDimension){
@@ -267,6 +270,81 @@ trait MediaTrait{
         return false;
     }
 
+    /**
+     * Check if an extension is image
+     *
+     * @param $extension
+     * @return bool
+     */
+    private function hasImageExtension($extension){
+        if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.image_extensions'))){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if an extension is video
+     *
+     * @param $extension
+     * @return bool
+     */
+    private function hasVideoExtension($extension){
+        if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.video_extensions'))){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if an extension is audio
+     *
+     * @param $extension
+     * @return bool
+     */
+    private function hasAudioExtension($extension){
+        if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.audio_extensions'))){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if an extension is document
+     *
+     * @param $extension
+     * @return bool
+     */
+    private function hasDocumentExtension($extension){
+        if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.document_extensions'))){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if an extension is allowed to be uploaded
+     * @param string $extension
+     * @return bool
+     */
+    private function isAllowedExtension($extension){
+        if(array_intersect([strtolower($extension),strtoupper($extension)], self::allowedExtensions())){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @return array all allowed extensions
+     */
+    public static function allowedExtensions(){
+        return array_merge(
+          config('media.image_extensions'),
+          config('media.document_extensions'),
+          config('media.audio_extensions'),
+          config('media.video_extensions')
+        );
+    }
     /**
      * Compress & optimize an image
      *
