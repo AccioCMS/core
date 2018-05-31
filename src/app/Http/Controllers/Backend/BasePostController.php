@@ -44,13 +44,13 @@ class BasePostController extends MainController {
         $columns = $this->getColumns('en', $postTypeSlug);
 
         return[
-            'postType' => $postType,
-            'languages' => $languages,
-            'categories' => $categories,
-            'customFieldsGroups' => $customFieldsGroups,
-            'column' => $columns['column'],
-            'inTableColumnsSlugs' => $columns['inTableColumnsSlugs'],
-            'allColumn' => $columns['allColumn'],
+          'postType' => $postType,
+          'languages' => $languages,
+          'categories' => $categories,
+          'customFieldsGroups' => $customFieldsGroups,
+          'column' => $columns['column'],
+          'inTableColumnsSlugs' => $columns['inTableColumnsSlugs'],
+          'allColumn' => $columns['allColumn'],
         ];
     }
 
@@ -89,8 +89,8 @@ class BasePostController extends MainController {
         // Append columns
         $results = $posts->toArray();
         $results['columns']= [
-            'postID' => trans('id'),
-            'title' => trans('base.title'),
+          'postID' => trans('id'),
+          'title' => trans('base.title'),
         ];
 
         return $results;
@@ -591,8 +591,8 @@ class BasePostController extends MainController {
         }
 
         return [
-            "data" => $data,
-            "firstFilledTitle" => $firstFilledTitle
+          "data" => $data,
+          "firstFilledTitle" => $firstFilledTitle
         ];
     }
 
@@ -635,8 +635,10 @@ class BasePostController extends MainController {
         $post = new Post();
         $post->setTable($post_type);
         $post = $post->find($id);
+        $mysqlConnection = DB::connection('mysql');
 
         if(!$post){
+            $mysqlConnection = DB::connection('mysql_archive');
             $post = new Post();
             $post->setConnection('mysql_archive');
             $post = $post->find($id);
@@ -659,14 +661,14 @@ class BasePostController extends MainController {
 
         // get the media relation joining the media table and the post
         $mediaRelationsResults = DB::table('media_relations')
-            ->where("belongsTo", $post_type)
-            ->join('media','media_relations.mediaID','media.mediaID')
-            ->join($post_type,'media_relations.belongsToID',$post_type.'.postID')
-            ->where("belongsToID", $id)
-            ->select('media.title as title', 'media.mediaID', 'media_relations.mediaRelationID', 'media_relations.belongsTo', 'media_relations.belongsToID', 'media_relations.language',
-                'media.description', 'media.credit', 'media.type', 'media.extension',
-                'media.url', 'media.filename', 'media.fileDirectory', 'media.filesize', 'media.dimensions', 'media_relations.field')
-            ->get();
+          ->where("belongsTo", $post_type)
+          ->join('media','media_relations.mediaID','media.mediaID')
+          ->join($post_type,'media_relations.belongsToID',$post_type.'.postID')
+          ->where("belongsToID", $id)
+          ->select('media.title as title', 'media.mediaID', 'media_relations.mediaRelationID', 'media_relations.belongsTo', 'media_relations.belongsToID', 'media_relations.language',
+            'media.description', 'media.credit', 'media.type', 'media.extension',
+            'media.url', 'media.filename', 'media.fileDirectory', 'media.filesize', 'media.dimensions', 'media_relations.field')
+          ->get();
 
         $media = array(); // the object media used for the media custom fields in the front end
         if ($post->featuredImageID){
@@ -701,30 +703,6 @@ class BasePostController extends MainController {
             }
         }
 
-        // get the selected categories from the DB table categories_relations
-        $selectedCategories = DB::table('categories_relations')
-            ->leftJoin('categories','categories_relations.categoryID','categories.categoryID')
-            ->where('categories_relations.belongsTo',$post_type)
-            ->where('categories_relations.belongsToID',$id)
-            ->get();
-
-        $selectedCategories = Language::filterRows($selectedCategories, false);
-
-        // get selected tags from the DB table tags_relations
-        $selectedTags = [];
-        $tagsRelations = DB::table('tags_relations')
-            ->leftJoin('tags','tags_relations.tagID','tags.tagID')
-            ->where('tags_relations.belongsTo',$post_type)
-            ->where('tags_relations.belongsToID',$id)
-            ->get();
-
-        foreach ($tagsRelations as $tagsRelation){
-            if(!isset($selectedTags[$tagsRelation->language])){
-                $selectedTags[$tagsRelation->language] = [];
-            }
-            $selectedTags[$tagsRelation->language][] = $tagsRelation;
-        }
-
         // handle custom fields
         $customFieldGroups = CustomFieldGroup::findGroups('post-type', 'update', $id, $post_type);
         $customFieldOBJ = new CustomField();
@@ -738,30 +716,54 @@ class BasePostController extends MainController {
         // Categories (options to select)
         $categories = array_values(App\Models\Category::getFromCache()->where("postTypeID", $currentPostType->postTypeID)->toArray());
 
+        // get the selected categories from the DB table categories_relations
+        $selectedCategories = $mysqlConnection->table('categories_relations')
+          ->leftJoin('categories','categories_relations.categoryID','categories.categoryID')
+          ->where('categories_relations.belongsTo',$post_type)
+          ->where('categories_relations.belongsToID',$id)
+          ->get();
+
+        $selectedCategories = Language::filterRows($selectedCategories, false);
+
+        // get selected tags from the DB table tags_relations
+        $selectedTags = [];
+        $tagsRelations = $mysqlConnection->table('tags_relations')
+          ->leftJoin('tags','tags_relations.tagID','tags.tagID')
+          ->where('tags_relations.belongsTo',$post_type)
+          ->where('tags_relations.belongsToID',$id)
+          ->get();
+
+        foreach ($tagsRelations as $tagsRelation){
+            if(!isset($selectedTags[$tagsRelation->language])){
+                $selectedTags[$tagsRelation->language] = [];
+            }
+            $selectedTags[$tagsRelation->language][] = $tagsRelation;
+        }
+
         $response = array(
-            'details' => $allColumn,
-            'title' => $post->title,
-            'content' => $post->content,
-            'status' => $post->status,
-            'customFieldsValues' => $customFieldOBJ->getCustomFieldValues(),
-            'customFieldsGroups' => $customFieldGroups,
-            'slug' => $post->slug,
-            'href' => $href,
-            'media' => $media,
-            'published_at' => $post->published_at,
-            'selectedCategories' => $selectedCategories,
-            'postTypeID' => $currentPostType->postTypeID,
-            'hasCategories' => $currentPostType->hasCategories,
-            'isCategoryRequired' => $currentPostType->isCategoryRequired,
-            'selectedTags' => $selectedTags,
-            'hasTags' => $currentPostType->hasTags,
-            'isTagRequired' => $currentPostType->isTagRequired,
-            'isFeaturedImageRequired' => $currentPostType->isFeaturedImageRequired,
-            'createdByUserID' => $post->createdByUserID,
-            'categories' => $categories,
-            'languages' => $languages,
+          'details' => $allColumn,
+          'title' => $post->title,
+          'content' => $post->content,
+          'status' => $post->status,
+          'customFieldsValues' => $customFieldOBJ->getCustomFieldValues(),
+          'customFieldsGroups' => $customFieldGroups,
+          'slug' => $post->slug,
+          'href' => $href,
+          'media' => $media,
+          'published_at' => $post->published_at,
+          'selectedCategories' => $selectedCategories,
+          'postTypeID' => $currentPostType->postTypeID,
+          'hasCategories' => $currentPostType->hasCategories,
+          'isCategoryRequired' => $currentPostType->isCategoryRequired,
+          'selectedTags' => $selectedTags,
+          'hasTags' => $currentPostType->hasTags,
+          'isTagRequired' => $currentPostType->isTagRequired,
+          'isFeaturedImageRequired' => $currentPostType->isFeaturedImageRequired,
+          'createdByUserID' => $post->createdByUserID,
+          'categories' => $categories,
+          'languages' => $languages,
         );
-        
+
         // Fire event
         $response['events'] = Event::fire('post:pre_update', [$response]);
         return $response;

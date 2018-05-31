@@ -783,6 +783,7 @@ class PostModel extends Model{
      */
     public function featuredImage()
     {
+        $this->setConnection("mysql"); //@todo temporary, se po i thirr prje arkives kur posti eshte i arkives
         return $this->hasOne('App\Models\Media','mediaID','featuredImageID');
     }
 
@@ -792,6 +793,7 @@ class PostModel extends Model{
      */
     public function featuredVideo()
     {
+        $this->setConnection("mysql"); //@todo temporary, se po i thirr prje arkives kur posti eshte i arkives
         return $this->hasOne('App\Models\Media','mediaID','featuredVideoID');
     }
 
@@ -801,6 +803,7 @@ class PostModel extends Model{
      */
     public function media()
     {
+        $this->setConnection("mysql"); //@todo temporary, se po i thirr prje arkives kur posti eshte i arkives
         $query =  $this->hasManyThrough('App\Models\Media', 'App\Models\MediaRelation','belongsToID','mediaID','postID', 'mediaID');
 
         if($this->mediaField){
