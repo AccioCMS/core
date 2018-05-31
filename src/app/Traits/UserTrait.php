@@ -510,7 +510,7 @@ trait UserTrait{
         foreach ($groups as $groupID){
             $roles[] = [
               'userID' => $this->userID,
-              'groupID' => $groupID
+              'groupID' => (isset($groupID['groupID']) ? $groupID['groupID'] : $groupID)
             ];
         }
 
