@@ -39,8 +39,10 @@ trait UserTrait{
             }else{
                 $class = 'App\\Models\\'.$app;
                 $object = new $class();
-                $checkDB = DB::table($object->table)->where($object->primaryKey,$ownershipPostID)->where('createdByUserID',Auth::user()->userID)->count();
+                $checkDB = DB::table($object->table)->where($object->getKeyName(),$ownershipPostID)->where('createdByUserID',Auth::user()->userID)->count();
             }
+
+
             return ($checkDB) ? true : false;
         }
     }
