@@ -48,7 +48,7 @@ trait MediaTrait{
 
             // uploaded file
             $file = $request->file($key);
-            $extension = $file->getClientOriginalExtension(); // getting image extension
+            $extension = strtolower($file->getClientOriginalExtension()); // getting image extension
             $fileNameWithoutExtension = str_slug(basename($file->getClientOriginalName(), '.'.$file->getClientOriginalExtension()),'-');
             $fileName = $fileNameWithoutExtension.'.'.$extension;
             $fileSizeOriginal = $file->getClientSize();
