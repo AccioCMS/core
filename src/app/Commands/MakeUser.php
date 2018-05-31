@@ -15,7 +15,7 @@ class MakeUser extends Command
      *
      * @var string
      */
-    protected $signature = 'make:user {email} {password} {--role_id} {--first_name} {--last_name}';
+    protected $signature = 'make:user';
 
     /**
      * The console command description.
@@ -41,31 +41,34 @@ class MakeUser extends Command
      */
     public function handle()
     {
+
+        if(config('app.env') == 'production'){
+            return $this->error('Opps! You can\'t create users while in production! ');
+        }
+
+        $this->comment("Please answer following questions to create a new user.");
+
+        $firstName = $this->ask('First name');
+        $lastName = $this->ask('Last name');
+        $email = $this->ask('Email');
+        $password = $this->secret('Password');
+        $groupID = $this->ask('Role', UserGroup::getEditorGroup()->groupID);
+        $activate = $this->confirm('Do you want to activate the user now?',true);
+
         // Fill user data
         $data = [
-            'email' => $this->argument('email'),
-            'password' => Hash::make($this->argument('password')),
-            'isActive' => true
+            'email' => $email,
+            'password' => Hash::make($password),
+            'isActive' => $activate,
+            'firstName' => $firstName,
+            'lastName' => $lastName,
         ];
-
-        if($this->option('first_name')){
-            $data['firstName'] = $this->option('first_name');
-        }
-
-        if($this->option('last_name')){
-            $data['lastName'] = $this->option('last_name');
-        }
 
         // Create the user
         $user = factory(User::class)->create($data);
 
         // Assign the role
         if($user){
-            if($this->option('role_id')){
-                $groupID = $this->option('role_id');
-            }else{
-                $groupID = UserGroup::getEditorGroup()->groupID;
-            }
             $user->assignRoles($groupID);
         }
 

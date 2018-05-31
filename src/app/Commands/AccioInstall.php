@@ -445,7 +445,7 @@ class AccioInstall extends Command{
         $this->DB_PORT = $this->ask('Your DB PORT', config('database.connections.'.$this->DB_TYPE.'.port'));
         $this->DB_DATABASE = $this->ask('Your Database Name', config('database.connections.'.$this->DB_TYPE.'.database'));
         $this->DB_USERNAME = $this->ask('Your DB Username', config('database.connections.'.$this->DB_TYPE.'.username'));
-        $this->DB_PASSWORD = $this->ask('Your DB Password', config('database.connections.'.$this->DB_TYPE.'.password'));
+        $this->DB_PASSWORD = $this->secret('Your DB Password');
 
         // Validate Database
         $this->validateDatabase();

@@ -83,8 +83,8 @@ class PluginInstall extends Command
         // Ensure there are no caches
         $this->callSilent('cache:clear');
 
-        // Install plugin from a http/s source
-        if(strstr($this->argument('source'),'http')){
+        // Install plugin from a zip source
+        if(substr($this->argument('source'),-3) === 'zip'){
             $this
               ->getZip()
               ->extractZip()
