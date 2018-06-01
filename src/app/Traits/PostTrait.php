@@ -53,48 +53,27 @@ trait PostTrait{
      * @param  boolean $showUnPublished check if the result should include unpublished posts or not.
      * @return object|null Returns post as array or null if not found
      **/
-    public static function findBySlug($slug, $postTypeSlug = '', $showUnPublished = false){
+    public static function findBySlug($slug, $postTypeSlug = ''){
+        $post = null;
+        $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
-        if(!$postTypeSlug){
-            $postTypeSlug = PostType::getSlug();
-        }
-
+        // search in cache
         $cachedPosts = self::getFromCache($postTypeSlug);
         if($cachedPosts){
-            if(!$showUnPublished){
-                $post = $cachedPosts->filter(function ($postData) use($slug) {
-                    return (
-                      $postData->slug == $slug &&
-                      $postData->status == 'published'
-                    );
-
-                });
-            }else{
-                $post = $cachedPosts->filter(function ($postData) use($slug) {
-                    return ($postData->slug == $slug);
-                });
-            }
+            $post = $cachedPosts->where('slug',$slug)->first();
         }
 
-        if($post->count()){
-            return $post->first();
+        if($post){
+            return $post;
         }
-        else {
-            $postObj = (new static())->setTable($postTypeSlug);
-            $getPostObj = $postObj->where('slug->'.App::getLocale(), $slug);
-            if(!$showUnPublished){
-                $getPostObj->published();
-            }
-            $post = $getPostObj->first();
+        else { // than search in database
+            $postObj = (new Post())->setTable($postTypeSlug);
+            $post = $postObj->where('slug->'.App::getLocale(), $slug)->first();
 
-            // search post in archive if not found in main database
+            // search in archive if not found in main database
             if(!$post && env('DB_ARCHIVE')){
                 $postObj->setConnection('mysql_archive');
-                $getPostObj = $postObj->where('slug->'.App::getLocale(), $slug);
-                if(!$showUnPublished){
-                    $getPostObj->published();
-                }
-                $post = $getPostObj->first();
+                $post = $postObj->where('slug->'.App::getLocale(), $slug)->first();;
             }
             return $post;
         }
@@ -110,36 +89,28 @@ trait PostTrait{
      * @return object|null Returns post as array or null if not found
      **/
     public static function findByID($postID, $postTypeSlug = '', $showUnPublished = false){
+        $post = null;
+        $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
-        if(!$postTypeSlug){
-            $postTypeSlug = PostType::getSlug();
-        }
-
-        //check post by ID in cache
+        // search in cache
         $cachedPosts = self::getFromCache($postTypeSlug);
-
-        if($cachedPosts) {
-            if(!$showUnPublished){
-                $post = $cachedPosts->where('status', 'published')->where('postID', $postID);
-            }else{
-                $post = $cachedPosts->where('postID', $postID);
-            }
+        if($cachedPosts){
+            $post = $cachedPosts->where('postID',$postID)->first();
         }
 
-        //if post found in cache, return first post
         if($post){
-            return $post->first();
+            return $post;
         }
-        //or search it in db
-        else {
-            $postObj = DB::table("post_".$postTypeSlug)->where('postID', $postID);
+        else { // than search in database
+            $postObj = (new Post())->setTable($postTypeSlug);
+            $post = $postObj->where('postID', $postID)->first();
 
-            //show only published posts
-            if(!$showUnPublished){
-                $postObj->where('status->'.App::getLocale(), 'published');
+            // search in archive if not found in main database
+            if(!$post && env('DB_ARCHIVE')){
+                $postObj->setConnection('mysql_archive');
+                $post = $postObj->where('postID', $postID)->first();;
             }
-
-            return $postObj->first();
+            return $post;
         }
     }
 

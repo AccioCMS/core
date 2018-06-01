@@ -50,6 +50,9 @@
                                 <th id="postID" @click="orderBy('postID')">{{trans.__id}} <i :class="tableHeaderOrderIcons('postID')" aria-hidden="true"></i></th>
                                 <th id="title" @click="orderBy('title')">{{trans.__globalTitle}} <i :class="tableHeaderOrderIcons('title')" aria-hidden="true"></i></th>
 
+                                <!--<th id="published_at" @click="orderBy('published_at')">{{trans.__publishedAt}} <i :class="tableHeaderOrderIcons('created_at')" aria-hidden="true"></i></th>-->
+                                <!--<th id="author" @click="orderBy('createdByUserID')">{{trans.__author}} <i :class="tableHeaderOrderIcons('createdByUserID')" aria-hidden="true"></i></th>-->
+
                                 <th :id="item.slug" @click="orderBy(item.slug)" v-for="(item, index) in columnNames">{{item.name}} <i :class="tableHeaderOrderIcons(item.slug)" aria-hidden="true"></i></th>
 
                                 <th>{{trans.__action}}</th>
@@ -155,6 +158,8 @@
                 __updateBtn: this.__('base.updateBtn'),
                 __previous: this.__('pagination.previous'),
                 __next: this.__('pagination.next'),
+                __author: this.__('user.label_single'),
+                __publishedAt: this.__('user.label_single'),
             };
 
             // get the columns in from the post type table

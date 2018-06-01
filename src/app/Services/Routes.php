@@ -43,13 +43,18 @@ class Routes{
         if(is_dir($directory)) {
             $routeFiles = File::files($directory);
 
-            \Route::group([
-                'middleware' => 'backend',
-            ], function () use ($routeFiles) {
-                foreach ($routeFiles as $file) {
-                    require_once $file;
-                }
-            });
+//            \Route::group([
+//              'middleware' => ['web','session'],
+//            ], function () use ($routeFiles) {
+
+                \Route::group([
+                    'middleware' => 'backend',
+                ], function () use ($routeFiles) {
+                    foreach ($routeFiles as $file) {
+                        require_once $file;
+                    }
+                });
+//            });
         }
     }
 

@@ -465,7 +465,7 @@
 
                     <!-- Date and time when the post should be displayed -->
                     <div class="form-group dateAndTimepicker">
-                        <label class="control-label col-md-12 col-sm-12 col-xs-12">{{trans.__schedulePost}}</label>
+                        <label class="control-label col-md-12 col-sm-12 col-xs-12">{{trans.__publishedAt}}</label>
                         <div class="col-md-12 col-sm-12 col-xs-12 datepickerContainer postsDatepicker">
                             <datepicker v-model="published_at.date" name="date" class="col-md-8 col-sm-8 removePaddingAndMargin" :format="dateFormat"></datepicker>
                             <vue-timepicker v-model="published_at.time" class="col-md-4 col-sm-4"></vue-timepicker>
@@ -564,7 +564,7 @@
                 __categoryTitle: this.__('categories.title'),
                 __tagsTitle: this.__('tag.title'),
                 __visibleIn: this.__('post.visibleIn'),
-                __schedulePost: this.__('post.schedulePost'),
+                __publishedAt: this.__('post.publishedAt'),
                 __multiselectCategoriesPlaceholder: this.__('post.multiselectCategoriesPlaceholder'),
                 __multiselectTagPlaceholder: this.__('post.multiselectTagPlaceholder'),
                 __multiselectAddTagPlaceholder: this.__('post.multiselectAddTagPlaceholder'),

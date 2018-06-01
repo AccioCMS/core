@@ -11,6 +11,7 @@
  */
 namespace Accio\App\Models;
 
+
 use App\Models\Category;
 use App\Models\CategoryRelation;
 use App\Models\Language;
@@ -20,7 +21,6 @@ use App\Models\Task;
 use App\Models\Theme;
 use App\Models\User;
 use DateTime;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\App;
@@ -35,6 +35,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\PostType;
 use App\Models\Post;
 use Accio\App\Traits;
+use Accio\Support\PostCollection;
 
 class PostModel extends Model{
     use Traits\PostTrait, Traits\TranslatableTrait, Traits\CustomFieldsValuesTrait, LogsActivity;
@@ -125,6 +126,8 @@ class PostModel extends Model{
      */
     protected static $logOnlyDirty = true;
 
+    public static $cacheLimit = 2000;
+
     /**
      * @inheritdoc
      * */
@@ -136,6 +139,16 @@ class PostModel extends Model{
         }
     }
 
+    /**
+     * Create a new Eloquent Collection instance.
+     *
+     * @param  array  $models
+     * @return PostCollection
+     */
+    public function newCollection(array $models = [])
+    {
+        return new PostCollection($models);
+    }
 
     /**
      * Set the table associated with the model.
@@ -232,7 +245,7 @@ class PostModel extends Model{
      * @param  string $languageSlug Slug of the language to get the posts from
      * @return object|null  Returns all posts found as requested
      * */
-    public  static function getFromCache($cacheName = '', $categoryID = 0, $languageSlug = ""){
+    public static function getFromCache($cacheName = '', $categoryID = 0, $languageSlug = ""){
 
         // Default Language
         if(!$languageSlug){
@@ -383,8 +396,7 @@ class PostModel extends Model{
               ->with('featuredImage')
               ->with('categories')
               ->with('media')
-              ->published($languageSlug)
-              ->limit(1000)
+              ->limit(self::$cacheLimit)
               ->orderBy('published_at','DESC')
               ->get();
 
@@ -407,7 +419,7 @@ class PostModel extends Model{
      *
      * @return array
      */
-    public function getPostsByTagCollection(int $numberOfPosts = 1000){
+    public function getPostsByTagCollection(){
         $tmpTagIDs = [];
         $postResult = [];
 
@@ -425,7 +437,7 @@ class PostModel extends Model{
                     $count++;
                 }
             }
-            if($count == $numberOfPosts){
+            if($count == self::$cacheLimit){
                 break;
             }
         }
@@ -467,8 +479,7 @@ class PostModel extends Model{
               ->where('categories_relations.categoryID', '=', $categoryID)
               ->with('featuredImage')
               ->with('media')
-              ->published($languageSlug)
-              ->limit(1000)
+              ->limit(self::$cacheLimit)
               ->orderBy($postTypeSlug.'.published_at','DESC')
               ->get()
               ->keyBy('postID');
@@ -585,6 +596,8 @@ class PostModel extends Model{
         return $this;
     }
 
+
+    
     /**
 
      * Scope a query to only include published posts.
@@ -596,7 +609,9 @@ class PostModel extends Model{
             $languageSlug = App::getLocale();
         }
 
-        return $query->where('status->'.$languageSlug, 'published')->where('published_at', '<=', new DateTime());
+        return $query
+          ->where('status->'.$languageSlug, 'published')
+          ->where('published_at', '<=', new DateTime());
     }
 
     /**

@@ -3,7 +3,7 @@
 /**
  * Posts Routes
  */
-Route::group(['middleware' => ['auth:admin'], 'as' => 'backend.post.', 'namespace' => '\App\Http\Controllers\Backend', 'prefix' => Config::get('project')['adminPrefix']], function (){
+Route::group(['middleware' => ['auth:admin'],  'as' => 'backend.post.', 'namespace' => '\App\Http\Controllers\Backend', 'prefix' => Config::get('project')['adminPrefix']], function (){
     /**
      * GET
      */

@@ -102,7 +102,7 @@ class PackageServiceProvider extends ServiceProvider{
     protected function mapRoutes(){
         if (!$this->app->routesAreCached()) {
             Route::group([
-                'middleware' => 'web',
+                'middleware' => ['web'],
             ], function ($router) {
                 require __DIR__.'/routes/web.php';
             });
