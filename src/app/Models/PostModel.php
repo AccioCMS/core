@@ -413,13 +413,13 @@ class PostModel extends Model{
         }
     }
 
-
     /**
      * Gets collection of a tag ($post->tags) and returns other posts with the same tags
      *
+     * @param int $numberOfPosts
      * @return array
      */
-    public function getPostsByTagCollection(){
+    public function getPostsByTagCollection(int $numberOfPosts){
         $tmpTagIDs = [];
         $postResult = [];
 
@@ -429,15 +429,15 @@ class PostModel extends Model{
         }
 
         $count = 0;
-        $posts = Post::getFromCache($this->getTable());
+        $posts = Post::getFromCache($this->getTable())->published();
         foreach($posts as $post){
             foreach($tags as $tag){
-                if(in_array($tag->tagID, $tmpTagIDs) && $post->postID != $this->postID && $count < self::$cacheLimit){
+                if(in_array($tag->tagID, $tmpTagIDs) && $post->postID != $this->postID && $count < $numberOfPosts){
                     $postResult[$post->postID] = $post;
                     $count++;
                 }
             }
-            if($count == self::$cacheLimit){
+            if($count == $numberOfPosts){
                 break;
             }
         }
