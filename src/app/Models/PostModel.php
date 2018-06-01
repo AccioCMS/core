@@ -900,8 +900,11 @@ class PostModel extends Model{
     public function getCachedCategoryAttribute()
     {
         // Find cached relations from this post type
-        $relations = CategoryRelation::getFromCache($this->getTable())->where('belongsToID',$this->postID );
-        $categoryID = $relations->pluck(['categoryID'])->first();
+        $relations = CategoryRelation::getFromCache($this->getTable());
+        if(!$relations){
+            return;
+        }
+        $categoryID = $relations->where('belongsToID',$this->postID )->pluck(['categoryID'])->first();
 
         // Find cached categories from relations
         if(Category::getFromCache()){
