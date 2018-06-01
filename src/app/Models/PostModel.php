@@ -432,7 +432,7 @@ class PostModel extends Model{
         $posts = Post::getFromCache($this->getTable());
         foreach($posts as $post){
             foreach($tags as $tag){
-                if(in_array($tag->tagID, $tmpTagIDs) && $post->postID != $this->postID && $count < $numberOfPosts){
+                if(in_array($tag->tagID, $tmpTagIDs) && $post->postID != $this->postID && $count < self::$cacheLimit){
                     $postResult[$post->postID] = $post;
                     $count++;
                 }
