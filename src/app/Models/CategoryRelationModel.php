@@ -40,7 +40,7 @@ class CategoryRelationModel extends Model
     public static function getFromCache($postTypeSlug){
         $findPostType = PostType::findBySlug($postTypeSlug);
         if(!$findPostType){
-            throw new Exception('No post type given');
+            throw new \Exception('No post type given');
         }
 
         $cacheName = 'categories_relations_'.$postTypeSlug;

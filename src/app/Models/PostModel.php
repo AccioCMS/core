@@ -410,7 +410,7 @@ class PostModel extends Model{
               ->orderBy('published_at','DESC')
               ->get();
 
-            if(!$posts){
+            if($posts->isEmpty()){
                 return collect();
             }
 

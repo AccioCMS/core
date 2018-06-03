@@ -36,7 +36,12 @@ trait PostTypeTrait{
     public static function findBySlug($postTypeSlug){
         if(self::getFromCache()) {
             $postTypeSlug = 'post_' . cleanPostTypeSlug($postTypeSlug);
-            $getPosType = self::getFromCache()->where('slug', $postTypeSlug);
+            $postTypes = self::getFromCache();
+
+            if(!$postTypes){
+                return;
+            }
+            $getPosType = $postTypes->where('slug', $postTypeSlug);
 
             if ($getPosType) {
                 return $getPosType->first();
