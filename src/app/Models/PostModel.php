@@ -433,29 +433,32 @@ class PostModel extends Model{
      * @param int $numberOfPosts
      * @return array
      */
-    public function getPostsByTagCollection(int $numberOfPosts){
+    public function getPostsByTags(int $numberOfPosts){
         $tmpTagIDs = [];
-        $postResult = [];
+        $postsByTags = [];
 
-        $tags = $this->tags;
-        foreach($tags as $tag){
+        foreach($this->tags as $tag){
             $tmpTagIDs[] = $tag->tagID;
         }
 
         $count = 0;
         $posts = Post::getFromCache($this->getTable())->published();
         foreach($posts as $post){
-            foreach($tags as $tag){
-                if(in_array($tag->tagID, $tmpTagIDs) && $post->postID != $this->postID && $count < $numberOfPosts){
-                    $postResult[$post->postID] = $post;
-                    $count++;
+            if($post->postID != $this->postID) {
+                foreach ($post->tags as $tag) {
+                    if (in_array($tag->tagID, $tmpTagIDs) && $count <= $numberOfPosts) {
+                        $postsByTags[] = $post;
+                        $count++;
+                    }
                 }
             }
+
             if($count == $numberOfPosts){
                 break;
             }
         }
-        return $postResult;
+
+        return $postsByTags;
     }
 
 
