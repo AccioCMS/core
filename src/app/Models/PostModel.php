@@ -618,7 +618,7 @@ class PostModel extends Model{
     }
 
 
-    
+
     /**
 
      * Scope a query to only include published posts.
@@ -796,21 +796,21 @@ class PostModel extends Model{
      */
     public function metaData(){
         Meta::setTitle($this->title)
-            ->set("description", $this->content())
-            ->set("author", $this->cachedUser()->firstName." ".$this->cachedUser()->lastName)
-            ->set("og:type", "article", "property")
-            ->set("og:title", $this->title, "property")
-            ->set("og:description", $this->content(), "property")
-            ->set("og:url",$this->href, "property")
-            ->setImageOG($this->featuredImage)
-            ->setArticleOG($this)
-            ->setHrefLangData($this)
-            ->setCanonical($this->href)
-            ->setWildcards([
-                '{categoryTitle}'=>(isset($this->cachedCategory->title) ? $this->cachedCategory->title :  null),
-                '{title}' => $this->title,
-                '{siteTitle}' => settings('siteTitle')
-            ]);
+          ->set("description", $this->content())
+          ->set("author", $this->cachedUser()->firstName." ".$this->cachedUser()->lastName)
+          ->set("og:type", "article", "property")
+          ->set("og:title", $this->title, "property")
+          ->set("og:description", $this->content(), "property")
+          ->set("og:url",$this->href, "property")
+          ->setImageOG($this->featuredImage)
+          ->setArticleOG($this)
+          ->setHrefLangData($this)
+          ->setCanonical($this->href)
+          ->setWildcards([
+            '{categoryTitle}'=>(isset($this->cachedCategory->title) ? $this->cachedCategory->title :  null),
+            '{title}' => $this->title,
+            '{siteTitle}' => settings('siteTitle')
+          ]);
     }
 
     /**
