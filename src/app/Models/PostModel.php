@@ -339,7 +339,9 @@ class PostModel extends Model{
             // make array for cache and arrange the posts with the most read
             $mosReadPosts = [];
             foreach($mostReadPostIDs as $id){
-                $mosReadPosts[$id] = $posts[$id];
+                if(isset($posts[$id])){
+                    $mosReadPosts[$id] = $posts[$id];
+                }
             }
 
             Cache::forever("most_read_articles",$mosReadPosts);
