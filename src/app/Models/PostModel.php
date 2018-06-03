@@ -306,39 +306,43 @@ class PostModel extends Model{
         if(Cache::has("most_read_articles_ids")){
             // get the cached post
             $postCount = Cache::get("most_read_articles_ids");
+
             // current date and time
             $currentDate = new DateTime();
 
             // use to refresh the cache "most_read_articles_ids", removes posts that are older then 2 days
-            $tmpIDsToRefresh = [];
+            $mostReadIDs = [];
+
             // used to make a new array with postID as key end the count (how many times is the post read) as value
-            $tmpArrayToSort = [];
+            $postByCount = [];
             foreach($postCount as $key => $post){
                 $diff = (int) $currentDate->diff($post['date'])->format("%d");
                 if($diff <= 2){
-                    $tmpIDsToRefresh[$key] = $post;
-                    $tmpArrayToSort[$key] = $post['count'];
+                    $mostReadIDs[$key] = $post;
+                    $postByCount[$key] = $post['count'];
                 }
             }
-            Cache::forever("most_read_articles_ids",$tmpIDsToRefresh);
 
-            // sort the posts by value
-            arsort($tmpArrayToSort);
+            Cache::forever("most_read_articles_ids",$mostReadIDs);
+
+            // sort posts by count DESC
+            arsort($postByCount);
+
             // get only the 10 most read posts IDs
-            $ids = array_slice(array_keys($postCount), 0, 10);
+            $mostReadPostIDs = array_slice(array_keys($postByCount), 0, 10);
 
             // get post from db
             $post = new Post();
             $post->setTable("post_articles");
-            $posts = $post->whereIn("postID", $ids)->get()->keyBy("postID");
+            $posts = $post->whereIn("postID", $mostReadPostIDs)->get()->keyBy("postID");
 
             // make array for cache and arrange the posts with the most read
-            $tmpPost = [];
-            foreach($ids as $id){
-                $tmpPost[$id] = $posts[$id];
+            $mosReadPosts = [];
+            foreach($mostReadPostIDs as $id){
+                $mosReadPosts[$id] = $posts[$id];
             }
 
-            Cache::forever("most_read_articles",$tmpPost);
+            Cache::forever("most_read_articles",$mosReadPosts);
         }
     }
 
@@ -399,6 +403,10 @@ class PostModel extends Model{
               ->limit(self::$cacheLimit)
               ->orderBy('published_at','DESC')
               ->get();
+
+            if(!$posts){
+                return collect();
+            }
 
             $cachedPosts->$languageSlug = $posts;
 
@@ -483,6 +491,10 @@ class PostModel extends Model{
               ->orderBy($postTypeSlug.'.published_at','DESC')
               ->get()
               ->keyBy('postID');
+
+            if(!$posts){
+                return collect();
+            }
 
             $cachedPosts->$languageSlug = $posts;
 
