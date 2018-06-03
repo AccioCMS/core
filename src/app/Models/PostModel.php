@@ -357,24 +357,30 @@ class PostModel extends Model{
     /**
      * @param PostModel $post
      */
-    public static function mostReadArticlesIDs(PostModel $post){
+    public function markAsReadCache($days = 2){
         if(!Cache::has("most_read_articles_ids")){
             Cache::forever("most_read_articles_ids", []);
         }
 
         // push in cache only the post that are not older than 2 days
         $currentDate = new DateTime();
-        $publishedDate = new DateTime($post->published_at);
+        $publishedDate = new DateTime($this->published_at);
         $diff = (int) $currentDate->diff($publishedDate)->format("%d");
-        if($diff <= 2){
+
+        // only save article if is newser than 2 days
+        if($diff <= $days){
             $posts = Cache::get("most_read_articles_ids");
-            if(!isset($posts[$post->postID])){
-                $posts[$post->postID] = [
+
+            // add post in list
+            if(!isset($posts[$this->postID])){
+                $posts[$this->postID] = [
                   'date' => $publishedDate,
                   'count' => 0
                 ];
             }
-            $posts[$post->postID]['count'] += 1;
+
+            $posts[$this->postID]['count'] += 1;
+
             Cache::forever("most_read_articles_ids", $posts);
         }
     }
