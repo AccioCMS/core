@@ -191,7 +191,9 @@ trait ThemeTrait
     public static function getNamespaceOf($themeDirectoryName){
         if(self::ifExists($themeDirectoryName)) {
             $themeConfig = self::getConfig($themeDirectoryName);
-            return "Themes\\" . $themeConfig['namespace'];
+            if(isset($themeConfig['namespace'])) {
+                return "Themes\\" . $themeConfig['namespace'];
+            }
         }
         return null;
     }
@@ -205,7 +207,7 @@ trait ThemeTrait
      * @return boolean
      */
     public static function ifExists($directoryName){
-        return is_dir(self::getPathOf($directoryName));
+        return ($directoryName && is_dir(self::getPathOf($directoryName)));
     }
 
     /**

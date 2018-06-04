@@ -47,13 +47,13 @@ class Routes{
 //              'middleware' => ['web','session'],
 //            ], function () use ($routeFiles) {
 
-                \Route::group([
-                    'middleware' => 'backend',
-                ], function () use ($routeFiles) {
-                    foreach ($routeFiles as $file) {
-                        require_once $file;
-                    }
-                });
+            \Route::group([
+              'middleware' => 'backend',
+            ], function () use ($routeFiles) {
+                foreach ($routeFiles as $file) {
+                    require $file;
+                }
+            });
 //            });
         }
     }
@@ -67,16 +67,17 @@ class Routes{
      */
     public function mapFrontendRoutes(){
         $directory = base_path('routes');
+
         if(is_dir($directory)) {
             $routeFiles = File::files($directory);
 
             \Route::group([
-                'middleware' => 'frontend',
+              'middleware' => 'frontend',
             ], function () use ($routeFiles) {
                 foreach ($routeFiles as $file) {
                     // Base.php is loaded from FrontendBaseRoutes method
                     if ($file->getFilename() !== 'base.php') {
-                        require_once $file;
+                        require $file;
                     }
                 }
             });
@@ -129,13 +130,13 @@ class Routes{
             $backendRoutes = $plugin->backendRoutes();
             if($backendRoutes){
                 \Route::group([
-                    'middleware' => ['auth:admin','backend'],
-                    'as' => 'Backend.'.$plugin->namespaceWithDot().".",
-                    'namespace' => $plugin->parseNamespace().'\Controllers',
-                    'prefix' => Config::get('project')['adminPrefix']."/".$plugin->backendURLPrefix()
+                  'middleware' => ['auth:admin','backend'],
+                  'as' => 'Backend.'.$plugin->namespaceWithDot().".",
+                  'namespace' => $plugin->parseNamespace().'\Controllers',
+                  'prefix' => Config::get('project')['adminPrefix']."/".$plugin->backendURLPrefix()
                 ], function () use($backendRoutes) {
                     foreach($backendRoutes as $file){
-                        require_once $file->getPathname();
+                        require $file->getPathname();
                     }
                 });
             }
@@ -156,12 +157,12 @@ class Routes{
             $frontendRoutes = $plugin->frontendRoutes();
             if($frontendRoutes){
                 \Route::group([
-                    'middleware' => ['frontend'],
-                    'as' => $plugin->namespaceWithDot().".",
-                    'namespace' => $plugin->parseNamespace().'\Controllers',
+                  'middleware' => ['frontend'],
+                  'as' => $plugin->namespaceWithDot().".",
+                  'namespace' => $plugin->parseNamespace().'\Controllers',
                 ], function () use($frontendRoutes) {
                     foreach($frontendRoutes as $file){
-                        require_once $file->getPathname();
+                        require $file->getPathname();
                     }
                 });
             }
@@ -229,10 +230,11 @@ class Routes{
         $baseFile = base_path('routes/base.php');
 
         \Route::group([
-            'middleware' => 'frontend',
+          'middleware' => 'frontend',
         ], function () use($baseFile) {
-            require_once $baseFile;
+            require $baseFile;
         });
+
 
         // Find base route
         // getByName() method is currently not working for any strange reason
