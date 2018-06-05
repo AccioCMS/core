@@ -741,24 +741,21 @@ trait MenuLinkTrait{
             $fetchMenuList = $menuLinks->where('parent',$parentID);
         }
 
-
         //order List
         $fetchMenuList = $fetchMenuList->sortBy('order');
 
-        if(count($fetchMenuList)) {
+        if($fetchMenuList->count()) {
             $menuLinksList = new \stdClass();
-            if ($fetchMenuList) {
-                foreach ($fetchMenuList as $menuLink) {
-                    $menuLinksID = $menuLink->menuLinkID;
-                    $menuLinksList->$menuLinksID = $menuLink;
-                    $menuLinksList->$menuLinksID->children = self::children($menuLinks, $menuLink->menuLinkID, ($level + 1));
+            foreach ($fetchMenuList as $menuLink) {
+                $menuLinksID = $menuLink->menuLinkID;
+                $menuLinksList->$menuLinksID = $menuLink;
+                $menuLinksList->$menuLinksID->children = self::children($menuLinks, $menuLink->menuLinkID, ($level + 1));
 
-                    //set active or no
-                    if (in_array($menuLink->menuLinkID, self::getActiveIDs())) {
-                        $menuLinksList->$menuLinksID->isActive = true;
-                    } else {
-                        $menuLinksList->$menuLinksID->isActive = false;
-                    }
+                //set active or no
+                if (in_array($menuLink->menuLinkID, self::getActiveIDs())) {
+                    $menuLinksList->$menuLinksID->isActive = true;
+                } else {
+                    $menuLinksList->$menuLinksID->isActive = false;
                 }
             }
             return $menuLinksList;

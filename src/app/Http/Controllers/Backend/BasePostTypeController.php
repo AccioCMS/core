@@ -234,7 +234,7 @@ class BasePostTypeController extends MainController{
         $postType->name             = $request->name;
         $postType->isVisible        = $request->isVisible;
         $postType->slug             = $slug;
-        $postType->fields           = json_encode($customFieldsArray);
+        $postType->fields           = $customFieldsArray;
         $postType->hasCategories    = $request->hasCategories;
         $postType->isCategoryRequired = $request->isCategoryRequired;
         $postType->hasTags          = $request->hasTags;
@@ -283,7 +283,7 @@ class BasePostTypeController extends MainController{
         $postType = App\Models\PostType::findOrFail($request->id);
         $postType->name = $request->name;
         $postType->isVisible = $request->isVisible;
-        $postType->fields = json_encode($customFieldsArray);
+        $postType->fields = $customFieldsArray;
         $postType->isCategoryRequired = $request->isCategoryRequired;
         $postType->isTagRequired = $request->isTagRequired;
         $postType->hasFeaturedVideo = $request->hasFeaturedVideo;

@@ -31,7 +31,7 @@ trait MenuTrait
         //firstly, list them by MenuID
         $menuLinksByMenu = [];
         foreach (\App\Models\MenuLink::getFromCache() as $menuLink) {
-            $menuLinksByMenu[$menuLink['menuID']][$menuLink['menuLinkID']] = $menuLink;
+            $menuLinksByMenu[$menuLink->menuID][$menuLink->menuLinkID] = $menuLink;
         }
 
         // than go through each Menu and sort their MenuLinks

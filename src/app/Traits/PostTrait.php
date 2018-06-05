@@ -68,13 +68,20 @@ trait PostTrait{
         }
         else { // than search in database
             $postObj = (new Post())->setTable($postTypeSlug);
-            $post = $postObj->where('slug->'.App::getLocale(), $slug)->first();
+            $post = $postObj
+              ->where('slug->'.App::getLocale(), $slug)
+              ->with(self::$defaultCacheWith)
+              ->first();
 
             // search in archive if not found in main database
             if(!$post && env('DB_ARCHIVE')){
                 $postObj->setConnection('mysql_archive');
-                $post = $postObj->where('slug->'.App::getLocale(), $slug)->first();;
+                $post = $postObj
+                  ->where('slug->'.App::getLocale(), $slug)
+                  ->with(self::$defaultCacheWith)
+                  ->first();;
             }
+
             return $post;
         }
     }
@@ -886,6 +893,7 @@ trait PostTrait{
         }
     }
 
+
     /**
      * Render Tags of a post
      *
@@ -909,10 +917,7 @@ trait PostTrait{
      * @return boolean Returns true if found
      */
     public function hasTags(){
-        if(isset($this->tags) || isset($this->tags)){
-            return true;
-        }
-        return false;
+        return (isset($this->tags) && !$this->tags->isEmpty());
     }
 
     /**
@@ -920,7 +925,7 @@ trait PostTrait{
      * @return bool
      */
     public function hasCategory(){
-        return (isset($this->cachedCategory) || isset($this->category));
+        return (isset($this->categories) && !$this->categories->isEmpty());
     }
 
     /**

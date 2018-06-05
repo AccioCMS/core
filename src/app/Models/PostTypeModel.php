@@ -14,6 +14,7 @@ use App\Models\Post;
 use App\Models\PostType;
 use DB;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
@@ -24,7 +25,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class PostTypeModel extends Model{
 
-    use Traits\PostTypeTrait, LogsActivity;
+    use Traits\PostTypeTrait, LogsActivity, Traits\CacheTrait;
 
     /**
      * Fields that can be filled in CRUD
@@ -190,16 +191,17 @@ class PostTypeModel extends Model{
     /**
      * Get post types from cache. Cache is generated if not found
      *
-     * @return object|null  Returns requested cache if found, null instead
+     * @return Collection  Returns requested cache if found, null instead
      */
     public static function getFromCache(){
-        if(!Cache::has('postTypes')){
-            $getData = PostType::all()->keyBy('slug');
-            Cache::forever('postTypes',$getData);
+        $data = Cache::get('postTypes');
 
-            return $getData;
+        if(!$data){
+            $data = PostType::all()->toArray();
+            Cache::forever('postTypes',$data);
         }
-        return Cache::get('postTypes');;
+
+        return self::setCacheCollection($data, self::class);
     }
 
     /**

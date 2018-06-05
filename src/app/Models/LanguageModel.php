@@ -12,6 +12,7 @@
 namespace Accio\App\Models;
 
 use App\Models\Language;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Input;
@@ -22,7 +23,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class LanguageModel extends Model{
 
-    use Traits\LanguageTrait, LogsActivity;
+    use Traits\LanguageTrait, LogsActivity, Traits\CacheTrait;
 
     /**
      * Fields that can be filled in CRUD
@@ -111,16 +112,17 @@ class LanguageModel extends Model{
     /**
      * Get language from cache. Cache is generated if not found
      *
-     * @return object|null  Returns requested cache if found, null instead
+     * @return Collection  Returns requested cache if found, null instead
      */
     public static function getFromCache(){
-        if(!Cache::has('languages')){
-            $languagesList = Language::all()->keyBy('slug');
-            Cache::forever('languages',$languagesList);
+        $data = Cache::get('languages');
 
-            return $languagesList;
+        if(!$data){
+            $data = Language::all()->toArray();
+            Cache::forever('languages',$data);
         }
-        return Cache::get('languages');
+
+        return self::setCacheCollection($data, self::class);
     }
 
     /**

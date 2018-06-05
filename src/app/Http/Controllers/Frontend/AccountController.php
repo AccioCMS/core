@@ -24,7 +24,6 @@ class AccountController extends MainController
      * @return \Illuminate\Http\Response
      */
     public function dashboard(){
-        dd("qet");
         return view('vendor/account/dashboard');
     }
 

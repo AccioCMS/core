@@ -31,19 +31,19 @@ class MakeDummy extends Command
      * @var array
      */
     public $defaultsOptions = [
-        'users' => 5,
-        'users_per_role' => 0,
-        'role_id' => 0,
-        'post_types' => 1,
-        'post_type' => '',
-        'media' => 20,
-        'categories' => 5,
-        'categories_per_post_type' => 0,
-        'category' => 0,
-        'tags' => 20,
-        'tags_per_post_type' => 0,
-        'posts' => 25,
-        'posts_per_category' => 0
+      'users' => 5,
+      'users_per_role' => 0,
+      'role_id' => 0,
+      'post_types' => 1,
+      'post_type' => '',
+      'media' => 20,
+      'categories' => 5,
+      'categories_per_post_type' => 0,
+      'category' => 0,
+      'tags' => 20,
+      'tags_per_post_type' => 0,
+      'posts' => 25,
+      'posts_per_category' => 0
     ];
 
     /**
@@ -95,6 +95,9 @@ class MakeDummy extends Command
     {
         if($this->validateRequirements()) {
             Cache::flush();
+
+            // set default langauge
+            Language::setDefault();
 
             $this->createUsers()
               ->createPostTypes()
@@ -152,19 +155,19 @@ class MakeDummy extends Command
      */
     private function createUsers(){
         if(
-            $this->option('users')
-            || $this->option('users_per_role')
-            || $this->option('all')
+          $this->option('users')
+          || $this->option('users_per_role')
+          || $this->option('all')
         ) {
 
             $this->comment('Creating dummy users...');
             $output = (new \UserDevSeeder())
               ->setCommand($this)
               ->run(
-              $this->getDefaultOption('users'),
-              $this->getDefaultOption('users_per_role'),
-              $this->getDefaultOption('role_id')
-            );
+                $this->getDefaultOption('users'),
+                $this->getDefaultOption('users_per_role'),
+                $this->getDefaultOption('role_id')
+              );
             $this->info($output);
         }
         return $this;
@@ -215,10 +218,10 @@ class MakeDummy extends Command
             $output = (new \CategoryDevSeeder())
               ->setCommand($this)
               ->run(
-              ($this->getDefaultOption('categories_per_post_type') ? $this->getDefaultOption('categories_per_post_type') : $this->getDefaultOption('categories')),
-              $this->getDefaultOption('post_type'),
-              ($this->getDefaultOption('categories_per_post_type') ? true : false)
-            );
+                ($this->getDefaultOption('categories_per_post_type') ? $this->getDefaultOption('categories_per_post_type') : $this->getDefaultOption('categories')),
+                $this->getDefaultOption('post_type'),
+                ($this->getDefaultOption('categories_per_post_type') ? true : false)
+              );
 
             $this->info($output);
         }
@@ -237,10 +240,10 @@ class MakeDummy extends Command
             $output = (new \TagDevSeeder())
               ->setCommand($this)
               ->run(
-              ($this->getDefaultOption('tags_per_post_type') ? $this->getDefaultOption('tags_per_post_type') : $this->getDefaultOption('tags')),
-              $this->getDefaultOption('post_type'),
-              ($this->getDefaultOption('tags_per_post_type') ? true : false)
-            );
+                ($this->getDefaultOption('tags_per_post_type') ? $this->getDefaultOption('tags_per_post_type') : $this->getDefaultOption('tags')),
+                $this->getDefaultOption('post_type'),
+                ($this->getDefaultOption('tags_per_post_type') ? true : false)
+              );
 
             $this->info($output);
         }
@@ -269,7 +272,7 @@ class MakeDummy extends Command
                 $this->getDefaultOption('category'),
                 ($this->getDefaultOption('post_types') == 'all' ? true : false)
 
-            );
+              );
             $this->info($output);
         }
         return $this;

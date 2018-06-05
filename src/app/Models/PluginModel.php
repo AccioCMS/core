@@ -13,7 +13,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class PluginModel extends Model{
 
-    use Traits\PluginTrait, LogsActivity;
+    use Traits\PluginTrait, LogsActivity, Traits\CacheTrait;
 
     /**
      * The table associated with the model.
@@ -69,14 +69,14 @@ class PluginModel extends Model{
      * @return object|null  Returns requested cache if found, null instead
      */
     public static function getFromCache(){
-        if(!Cache::has('plugins')){
-            $getData = Plugin::all();
-            Cache::forever('plugins', $getData);
+        $data = Cache::get('plugins');
 
-            return $getData;
+        if(!$data){
+            $data = Plugin::all()->toArray();
+            Cache::forever('plugins', $data);
         }
 
-        return Cache::get('plugins');
+        return self::setCacheCollection($data, self::class);
     }
 
     /**

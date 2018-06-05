@@ -122,11 +122,18 @@ trait PostTypeTrait{
      */
     public static function getFields($post_type){
         $postType = PostType::getFromCache()->where('slug', $post_type)->first();
+
         if($postType){
+            // decode fields if they are not decoded
+            if(!is_object($postType->fields)){
+                $postType->fields = json_decode($postType->fields);
+            }
+
             return $postType->fields;
         }
         return [];
     }
+
 
     /**
      * Check if a post type has a custom controller

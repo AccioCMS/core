@@ -4,6 +4,7 @@ namespace Accio\App\Models;
 
 use App\Models\Permalink;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Accio\App\Traits;
@@ -12,7 +13,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class PermalinkModel extends Model
 {
 
-    use Traits\PermalinkTrait, LogsActivity;
+    use Traits\PermalinkTrait, LogsActivity, Traits\CacheTrait;
 
     /**
      * The table associated with the model.
@@ -65,16 +66,17 @@ class PermalinkModel extends Model
      * Get Permalinks
      * If Permalinks  are available in cache, they are stored from cache, otherwise cache is generated
      *
-     * @return array
+     * @return Collection
      */
     public static function getFromCache(){
-        if(!Cache::has('permalinks')){
-            $getPermalinks = Permalink::all();
-            Cache::forever('permalinks',$getPermalinks);
+        $data = Cache::get('permalinks');
 
-            return $getPermalinks;
+        if(!$data){
+            $data = Permalink::all()->toArray();
+            Cache::forever('permalinks',$data);
         }
-        return Cache::get('permalinks');
+
+        return self::setCacheCollection($data, self::class);
     }
 
     /**

@@ -15,7 +15,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class TagModel extends Model{
 
-    use Traits\TagTrait, LogsActivity;
+    use Traits\TagTrait, LogsActivity, Traits\CacheTrait;
     /**
      * Fields that can be filled in CRUD
      *
@@ -83,29 +83,28 @@ class TagModel extends Model{
      * @return object|null  Returns requested cache if found, null instead
      */
     public static function getFromCache($cacheName =''){
-        if(!Cache::has("tags")){
-            //custom cache
+        $data = Cache::get("tags");
+        if(!$data){
             $functionName = 'setCache_'.$cacheName;
-            if(method_exists(__CLASS__,$functionName)){
-                return Tag::$functionName($cacheName);
+            if(method_exists(Tag::class,$functionName)){
+                $data = Tag::$functionName($cacheName);
             }else{
-                // all tags
-                return Tag::setCache_All();
+                $data = Tag::setCacheAll();
             }
         }
 
-        return Cache::get("tags");
+        return self::setCacheCollection($data, self::class);
     }
 
     /**
      * Set cache
      *
-     * @return object
+     * @return array
      */
-    private static function setCache_All(){
-        $items = Tag::all();
-        Cache::forever('tags',$items);
-        return $items;
+    private static function setCacheAll(){
+        $data = Tag::all()->toArray();
+        Cache::forever('tags',$data);
+        return $data;
     }
 
     /**

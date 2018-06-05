@@ -98,8 +98,6 @@ class MediaModel extends Model{
         return $this->hasMany('App\Models\MediaRelation','mediaID','mediaID');
     }
 
-
-
     /**
      * Handle callback of insert, update, delete
      * */
@@ -138,8 +136,6 @@ class MediaModel extends Model{
             Event::fire('media:deleted', [$media]);
         });
     }
-
-
 
     /**
      * Scope a query to only include images

@@ -131,15 +131,18 @@ export const postForm = {
 
         // generate multioptions value (the options for dropdown, checkboxes and radio buttons)
         generateMultioptionsValue(multioptionValues, inputType){
-            let splited = multioptionValues.split(','); // split multioptionValues / each option with key and value as array parameter
             let tmp = [];
-            if(typeof splited == "object"){
-                // loop throw the options
-                for(let i in splited){
-                    // split the value form the key
-                    let optionArray = splited[i].split(':');
-                    if(typeof optionArray == "object" && optionArray[0] !== undefined && optionArray[1] !== undefined){
-                        tmp.push([optionArray[0].trim(),optionArray[1].trim()]);
+            if(multioptionValues !== null) {
+                let splited = multioptionValues.split(','); // split multioptionValues / each option with key and value as array parameter
+
+                if (typeof splited == "object") {
+                    // loop throw the options
+                    for (let i in splited) {
+                        // split the value form the key
+                        let optionArray = splited[i].split(':');
+                        if (typeof optionArray == "object" && optionArray[0] !== undefined && optionArray[1] !== undefined) {
+                            tmp.push([optionArray[0].trim(), optionArray[1].trim()]);
+                        }
                     }
                 }
             }

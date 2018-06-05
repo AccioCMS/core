@@ -502,12 +502,44 @@ if (! function_exists('getPostType')) {
     /**
      * Get post type object
      *
+     * @param mixed $postTypeSlug without the post_ prefix
+     * @return mixed
+     */
+    function getPostType($postTypeSlug){
+        // find it by slug
+        $postType  = \App\Models\PostType::findBySlug($postTypeSlug);
+        if($postType){
+            return $postType;
+        }
+
+        // find it by id
+        $postType  = \App\Models\PostType::findByID($postTypeSlug);
+        if($postType){
+            return $postType;
+        }
+        return false;
+    }
+}
+if (! function_exists('isPostType')) {
+    /**
+     * Get post type object
+     *
      * @param string $postType without the post_ prefix
      * @return mixed
      */
-    function getPostType(string $postType){
-        // post type of pages
-        return \App\Models\PostType::findBySlug($postType);
+    function isPostType($postTypeSlug){
+        // find it by slug
+        $postType  = \App\Models\PostType::findBySlug($postTypeSlug);
+        if($postType){
+            return true;
+        }
+
+        // find it by id
+        $postType  = \App\Models\PostType::findByID($postTypeSlug);
+        if($postType){
+            return true;
+        }
+        return false;
     }
 }
 if (! function_exists('isSecure')) {

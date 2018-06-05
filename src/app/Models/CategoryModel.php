@@ -16,6 +16,7 @@ use App\Models\PostType;
 use App\Models\Language;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use DB;
@@ -27,7 +28,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class CategoryModel extends Model{
 
-    use Traits\CategoryTrait, Traits\TranslatableTrait, LogsActivity;
+    use Traits\CategoryTrait, Traits\TranslatableTrait, LogsActivity, Traits\CacheTrait;
 
     /**
      * Fields that can be filled in CRUD
@@ -255,40 +256,32 @@ class CategoryModel extends Model{
      *
      * @param  string $cacheName  Name of the cache ex "post_services". Prefix "categories_" is added automatically on cache name. Default: categories
      * @param  string $languageSlug Language slug
-     * @return object|null  Returns requested cache if found, null instead
+     * @return Collection  Returns requested cache if found, null instead
      * */
     public static function getFromCache(string $cacheName = 'categories', string $languageSlug = ''){
         if(!$languageSlug){
             $languageSlug = App::getLocale();
         }
 
-        //we need an empty cache to fill it later
-        if(!Cache::has($cacheName)){
-            $cachedItems = new \stdClass();
-            Cache::forever($cacheName,$cachedItems);
-        }else{
-            $cachedItems = Cache::get($cacheName);
-        }
+        $cachedItems = Cache::get($cacheName);
 
         //set cache in this language
-        if(!isset($cachedItems->$languageSlug)){
-            //handle post type cache
-            $postTypeData = PostType::findBySlug($cacheName);
-            if($postTypeData) {
-                return Category::setCacheByPostType($postTypeData, $languageSlug);
+        if(!isset($cachedItems[$languageSlug])){
+            if(isPostType($cacheName)) {
+                $data = Category::setCacheByPostType(getPostType($cacheName), $languageSlug);
             }
             //or a custom cache
             else{
                 $functionName = 'setCache'.$cacheName;
                 if(method_exists(__CLASS__,$functionName)){
-                    return Category::$functionName($cacheName,$languageSlug);
+                    $data = Category::$functionName($cacheName,$languageSlug);
                 }
             }
+        }else{
+            $data = $cachedItems[$languageSlug];
         }
 
-        if(isset($cachedItems->$languageSlug)){
-            return $cachedItems->$languageSlug;
-        }
+        return self::setCacheCollection($data, self::class);
     }
 
     /**
@@ -296,19 +289,21 @@ class CategoryModel extends Model{
      *
      * @param  array  $cacheName
      * @param  string $languageSlug
-     * @return object Categories of requested language
+     * @return array Categories of requested language
      */
-    private  static function setCacheCategories($cacheName, $languageSlug){
-        $getCategories = Category::all()->keyBy('categoryID');
+    private static function setCacheCategories($cacheName, $languageSlug){
+        $cacheName = "categories";
+        $data = Category::all()->toArray();
+        $cachedItems = Cache::get($cacheName);
 
-        //setup cache data
-        $cachedItems = new \stdClass();
-        $cachedItems->$languageSlug = Language::translateList($getCategories, $languageSlug);
+        // merge with other langauges
+        $dataToCache = [$languageSlug => $data];
+        if($cachedItems){
+            $dataToCache = array_merge($cachedItems,$dataToCache);
+        }
+        Cache::forever($cacheName,$dataToCache);
 
-        //save cache
-        Cache::forever($cacheName,$cachedItems);
-
-        return $cachedItems->$languageSlug;
+        return $data;
     }
 
     /**
@@ -330,16 +325,17 @@ class CategoryModel extends Model{
      */
     private  static function setCacheByPostType($postTypeData, $languageSlug){
         $cacheName = "categories_".$postTypeData->slug;
-        $getCategories = Category::where('postTypeID', $postTypeData->postTypeID)->get();
+        $data = Category::where('postTypeID', $postTypeData->postTypeID)->get()->toArray();
+        $cachedItems = Cache::get($cacheName);
 
-        //setup cache data
-        $cachedItems = new \stdClass();
-        $cachedItems->$languageSlug = Language::translate($getCategories, $languageSlug);
+        // merge with other langauges
+        $dataToCache = [$languageSlug => $data];
+        if($cachedItems){
+            $dataToCache = array_merge($cachedItems,$dataToCache);
+        }
+        Cache::forever($cacheName,$dataToCache);
 
-        //save cache
-        Cache::forever($cacheName,$cachedItems);
-
-        return $getCategories;
+        return $data;
     }
 
 

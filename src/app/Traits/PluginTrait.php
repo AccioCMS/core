@@ -159,9 +159,7 @@ trait PluginTrait
     public static function activePlugins(){
         // Plugin table must exist first
         if(Cache::has('plugins') || Schema::hasTable('plugins')){
-            if(self::getFromCache()) {
-                return self::getFromCache()->where('isActive', true);
-            }
+            return self::getFromCache()->where('isActive', true);
         }
         return [];
     }

@@ -2,15 +2,17 @@
 
 namespace Accio\App\Models;
 
+use Accio\App\Traits\CacheTrait;
 use App\Models\Media;
 use App\Models\Settings;
+use Facebook\GraphNodes\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class SettingsModel extends Model{
 
-    use LogsActivity;
+    use LogsActivity, CacheTrait;
 
     /**
      * Fields that can be filled
@@ -66,15 +68,17 @@ class SettingsModel extends Model{
     /**
      * Get settings from cache. Cache is generated if not found
      *
-     * @return object|null  Returns requested cache if found, null instead
+     * @return Collection Returns requested cache if found, null instead
      */
     public static function getFromCache(){
-        if(!Cache::has('settings')){
-            $getData  = Settings::all()->keyBy('settingsKey');
-            Cache::forever('settings',$getData);
-            return $getData;
+        $data = Cache::get('settings');
+
+        if(!$data){
+            $data  = Settings::all()->keyBy('settingsKey')->toArray();
+            Cache::forever('settings',$data);
         }
-        return Cache::get('settings');
+
+        return self::setCacheCollection($data, self::class);
     }
 
     /**

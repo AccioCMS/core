@@ -3,8 +3,10 @@
 namespace Accio\App\Models;
 
 use App\Models\Language;
+use App\Models\Media;
 use App\Models\User;
 use App\Notifications\UserAdded;
+use Faker\Test\Provider\Collection;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\App;
@@ -17,12 +19,11 @@ use Spatie\Activitylog\Traits\HasActivity;
 
 class UserModel extends Authenticatable
 {
-    use Traits\UserTrait, Notifiable, Traits\TranslatableTrait, HasActivity, Notifiable;
+    use Traits\UserTrait, Notifiable, Traits\TranslatableTrait, HasActivity, Notifiable, Traits\CacheTrait;
 
     /** @var array $fillable fields that can be filled in CRUD*/
     protected $fillable = [
-        'firstName','lastN
-        ame','email', 'password','phone','address','country','isActive','profileImageID','about','slug','gravatar'
+        'firstName','lastName','email', 'password','phone','address','country','isActive','profileImageID','about','slug','gravatar'
     ];
     //TODO me ja shtu "slug" userave (emri-mbiemri) sepse po na duhet ne front-end
 
@@ -42,6 +43,13 @@ class UserModel extends Authenticatable
 
     /** @var string $primaryKey the primary key */
     public $primaryKey = "userID";
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string $table
+     */
+    public $table = "users";
 
     /**
      * Lang key that points to the multi language label in translate file
@@ -117,16 +125,17 @@ class UserModel extends Authenticatable
      * Get Users
      * If User  are available in cache, they are stored from cache, otherwise a query takes place
      *
-     * @return array
+     * @return Collection
      */
     public static function getFromCache(){
-        if(!Cache::has('users')){
-            $getUsers = User::with("profileImage")->get();
-            Cache::forever('users',$getUsers);
+        $data = Cache::get('users');
 
-            return $getUsers;
+        if(!$data){
+            $data = User::with("profileimage")->get()->toArray();
+            Cache::forever('users',$data);
         }
-        return Cache::get('users');;
+
+        return self::setCacheCollection($data, self::class);
     }
 
 
@@ -302,6 +311,31 @@ class UserModel extends Authenticatable
           'groupID');
     }
 
+
+    /**
+     * Get Profile Image that belong to a user
+     * @return HasOne
+     */
+    public function getProfileImageAttribute()
+    {
+        if($this->profileImageID) {
+            $profileImage = $this->getAttributeFromArray('profileimage');
+
+            // dont recreate attribute
+            if ($profileImage instanceof Collection || $profileImage instanceof Media) {
+                return $profileImage;
+            }
+
+            // instance of collection when called from cache
+            if (is_array($profileImage) && !$profileImage instanceof Collection) {
+                return $this->fillCacheAttributes(Media::class, [$profileImage])->first();
+            }
+
+            // dont recreate attribute
+            return $this->getRelationValue('profileimage');
+        }
+        return null;
+    }
 
     /**
      * Get profile image

@@ -9,8 +9,10 @@
  */
 namespace Accio\App\Models;
 
+use App\Models\Menu;
 use App\Models\MenuLink;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Language;
 use Illuminate\Support\Facades\Event;
@@ -19,7 +21,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class MenuLinkModel extends Model{
 
-    use Traits\MenuLinkTrait, LogsActivity;
+    use Traits\MenuLinkTrait, LogsActivity, Traits\CacheTrait, Traits\TranslatableTrait;
 
     /**
      * Fields that can be filled in CRUD
@@ -88,7 +90,7 @@ class MenuLinkModel extends Model{
      * Get MenuLinks from cache. Cache is generated if not found
      *
      * @param string $languageSlug Slug of language to get the data from
-     * @return object|null  Returns requested cache if found, null instead
+     * @return Collection Returns requested cache if found, null instead
      * */
 
     public static function getFromCache($languageSlug = ""){
@@ -96,28 +98,23 @@ class MenuLinkModel extends Model{
             $languageSlug = \App::getLocale();
         }
 
-        //we need an empty cache to fill it later
-        if(!Cache::has("menuLinks")) {
-            $cachedItems = new \stdClass();
-            Cache::forever("menuLinks",$cachedItems);
+        $cachedItems = Cache::get("menuLinks");
+
+        if(!isset($cachedItems[$languageSlug])){
+            $data = MenuLink::all()->toArray();
+
+            // merge with other langauges
+            $dataToCache = [$languageSlug => $data];
+            if(Cache::has('menuLinks')){
+                $dataToCache = array_merge($cachedItems, $dataToCache);
+            }
+            Cache::forever('menuLinks',$dataToCache);
+
         }else{
-            //get requested cache
-            $cachedItems = Cache::get("menuLinks");
+            $data = $cachedItems[$languageSlug];
         }
 
-        //set cache in this language
-        if(!isset($cachedItems->$languageSlug)){
-            $menuLinks = MenuLink::all()->keyBy('menuLinkID');
-            $cachedItems->$languageSlug = Language::translateList($menuLinks, $languageSlug);
-            Cache::forever('menuLinks',$cachedItems);
-
-            return $menuLinks;
-        }
-
-        // return posts of current language
-        if(isset($cachedItems->$languageSlug)){
-            return $cachedItems->$languageSlug;
-        }
+        return self::setCacheCollection($data, self::class);
     }
 
     /**

@@ -11,6 +11,7 @@ namespace Accio\App\Models;
 
 use App\Models\Menu;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
@@ -19,7 +20,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class MenuModel extends Model{
 
-    use Traits\MenuTrait, LogsActivity;
+    use Traits\MenuTrait, LogsActivity, Traits\CacheTrait;
 
     /**
      * Fields that can be filled in CRUD
@@ -91,16 +92,17 @@ class MenuModel extends Model{
     /**
      * Get menu from cache. Cache is generated if not found
      *
-     * @return object|null
+     * @return Collection
      * */
     public static function getFromCache(){
-        if(!Cache::has('menu')){
-            $getMenu = Menu::all()->keyBy('slug');
-            Cache::forever('menu',$getMenu);
+        $data = Cache::get('menu');
 
-            return $getMenu;
+        if(!$data){
+            $data = Menu::all()->toArray();
+            Cache::forever('menu',$data);
         }
-        return Cache::get('menu');
+
+        return self::setCacheCollection($data, self::class);
     }
 
     /**

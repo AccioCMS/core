@@ -296,11 +296,11 @@ trait UserTrait{
      * @return string|null
      */
     public function avatar($width = null, $height = null,  $returnGravatarIfNotFound = false){
-        if($this->profileImage) {
+        if($this->profileimage) {
             if(!$width && !$height){
-                return url($this->profileImage->url);
+                return url($this->profileimage->url);
             }else{
-                return $this->profileImage->thumb($width,$height, $this->profileImage);
+                return $this->profileimage->thumb($width,$height, $this->profileimage);
             }
         }
 
