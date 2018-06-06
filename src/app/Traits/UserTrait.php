@@ -34,12 +34,18 @@ trait UserTrait{
      * */
     public static function hasOwnership($app,$ownershipPostID){
         if ($ownershipPostID){
-            if(isset(\App\Models\PostType::getFromCache()[$app])){
-                $checkDB = DB::table($app)->where('postID',$ownershipPostID)->where('createdByUserID',Auth::user()->userID)->count();
+            if(isPostType($app)){
+                $checkDB = DB::table($app)
+                  ->where('postID',$ownershipPostID)
+                  ->where('createdByUserID',Auth::user()->userID)
+                  ->count();
             }else{
                 $class = 'App\\Models\\'.$app;
                 $object = new $class();
-                $checkDB = DB::table($object->table)->where($object->getKeyName(),$ownershipPostID)->where('createdByUserID',Auth::user()->userID)->count();
+                $checkDB = DB::table($object->table)
+                  ->where($object->getKeyName(),$ownershipPostID)
+                  ->where('createdByUserID',Auth::user()->userID)
+                  ->count();
             }
 
 
@@ -69,7 +75,7 @@ trait UserTrait{
 
         if(self::isDefaultGroup()){
             $userSelfDataAccess = ($app == 'User' && $id == Auth::user()->userID);
-            $isPostType = isset(\App\Models\PostType::getFromCache()[$app]);
+            $isPostType = $isPostType($app);
 
             if (self::isEditor()) {
                 $allowedApps = array('Pages', 'Category', 'Tags', 'Media');
@@ -155,7 +161,6 @@ trait UserTrait{
         if(self::isAuthor()){
             // Check ownership
             //@TODO me e keqyre pse eshte e nevojshme me e ba check a eshte app-i post type perderisa ne hasOwnership e bajme query edhe ne app-a tjere
-            //if($checkOwnership && isset(PostType::getFromCache()[$app])){
             if($checkOwnership && is_numeric($id)){
                 $hasOwnership = self::hasOwnership($app,$id);
             }else{

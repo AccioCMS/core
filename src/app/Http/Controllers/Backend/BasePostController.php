@@ -155,6 +155,7 @@ class BasePostController extends MainController {
         }
         // fields of this post type
         $fields = App\Models\PostType::getFields($postType);
+        
         // languages
         $languages = Language::getFromCache();
 
@@ -714,8 +715,11 @@ class BasePostController extends MainController {
         // post type
         $currentPostType = PostType::findBySlug($post_type);
         // Categories (options to select)
+        $categories = App\Models\Category::getFromCache()->where("postTypeID", $currentPostType->postTypeID)->pluck('categoryID');
+
         $categories = array_values(App\Models\Category::getFromCache()->where("postTypeID", $currentPostType->postTypeID)->toArray());
 
+//        dd($categories);
         // get the selected categories from the DB table categories_relations
         $selectedCategories = $mysqlConnection->table('categories_relations')
           ->leftJoin('categories','categories_relations.categoryID','categories.categoryID')

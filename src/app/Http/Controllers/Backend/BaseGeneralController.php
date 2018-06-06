@@ -24,7 +24,7 @@ class BaseGeneralController extends MainController {
      * */
     public function index($lang = '', $view = ''){
         if($lang == ""){
-            return redirect(route('backend.base.index.lang',['lang' => Language::getDefault()->slug])."?mode=cms");
+            return redirect(route('backend.base.index.lang',['lang' => Language::getDefault()->slug])."?mode=menu");
         }
         return view('content', compact('lang','postTypes'));
     }

@@ -78,20 +78,20 @@ class  Meta
      */
     public function set($name, $content, $metaType="name", $overwrite = true){
         if($content) {
-            $content = strip_tags($content);
+            // strip html tags and encode html entities
+            $content = htmlspecialchars(strip_tags($content));
             if($overwrite) {
+                // limit length on description tag
+                if ($name == 'description' || $name == "og:description") {
+                    $content = str_limit($content, 300);
+                }
+                // allowed duplicates meta tags
                 if (in_array($name, $this->allowedDuplicateMeta)) {
                     $this->metaList[$name][] = [
                       'type' => $metaType,
                       'content' => $content
                     ];
                 } else {
-
-                    // limit lengs on description tag
-                    if ($name == 'description' || $name == "og:description") {
-                        $content = str_limit($content, 300);
-                    }
-
                     $this->metaList[$name] = [
                       'type' => $metaType,
                       'content' => $content

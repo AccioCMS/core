@@ -51,7 +51,7 @@
 
                     // set menu mode on refresh
                     if(this.$route.query.mode !== undefined || this.$route.query.menu_link_id !== undefined){
-                        this.$store.commit('setMenuMode', 'cms');
+                        this.$store.commit('setMenuMode', 'menu');
                     }else{
                         this.$store.commit('setMenuMode', 'application');
                     }

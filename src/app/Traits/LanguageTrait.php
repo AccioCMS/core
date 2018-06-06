@@ -71,8 +71,8 @@ trait LanguageTrait
      * @throws Exception If unable to find current language's data
      * */
     public static function current(string $column =''){
-        if(isset(self::$current[$column])){
-            return self::$current[$column];
+        if(isset(self::$current->$column)){
+            return self::$current->$column;
         }
         return self::$current;
     }
@@ -226,9 +226,9 @@ trait LanguageTrait
      * @return array|null Returns an array with language's data if found, or null if not found
      * */
     public static function findBySlug(string $slug){
-        $languages = \App\Models\Language::getFromCache();
-        if(isset($languages[$slug])){
-            return $languages[$slug];
+        $langauge = \App\Models\Language::getFromCache()->where('slug', $slug);
+        if(!$langauge->isEmpty()){
+            return $langauge->first();
         }
         return null;
     }
@@ -241,7 +241,7 @@ trait LanguageTrait
      * @return boolean Returns true if found, false instead
      * */
     public static function checkBySlug(string $slug){
-        if(isset(\App\Models\Language::getFromCache()[$slug])){
+        if(!\App\Models\Language::getFromCache()->where('slug', $slug)->isEmpty()){
             return true;
         }
         return false;

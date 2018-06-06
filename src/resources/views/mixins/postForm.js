@@ -22,9 +22,10 @@ export const postForm = {
             this.customFieldsGroups = [];
             // display spinner
             this.$store.commit('setSpinner', true);
+            this.currentLanguage = this.$route.params.lang;
 
             // get data used in the form like post type, categories, post type fields, custum fields etc
-            this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/post/json/get-data-for-create/'+this.$route.params.post_type)
+            this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.currentLanguage+'/post/json/get-data-for-create/'+this.$route.params.post_type)
                 .then((resp) => {
                     /**
                      *  Get and manipulate with languages
@@ -72,7 +73,7 @@ export const postForm = {
                     /**
                      * Categories (options for the dropwdown)
                      */
-                    this.categoriesOptions = resp.body.categories;
+                    this.categoriesOptions = this.filterTranslatedValues(resp.body.categories,this.currentLanguage)
 
                     // if url query category make that category selected
                     if(Object.keys(this.$route.query).length && this.$route.query.category !== undefined){
@@ -185,6 +186,7 @@ export const postForm = {
             this.published_at = {date: '', time: {HH: "",mm: ""}, dateFormatted: ''};
             this.createdByUserID = 0;
             this.savedDropdownMenuVisible = false;
+            this.currentLanguage = this.$route.params.lang;
 
             this.$store.commit('setSpinner', true);
 
@@ -286,7 +288,7 @@ export const postForm = {
                     /**
                      * Categories options
                      */
-                    this.categoriesOptions = resp.body.categories;
+                    this.categoriesOptions = this.filterTranslatedValues(resp.body.categories,this.currentLanguage)
 
                 }).then((resp) => {
                     // load the values of the custom fields

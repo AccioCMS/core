@@ -35,14 +35,10 @@ trait CacheTrait
                 $getType = gettype($value);
 
                 switch ($getType){
-                    case 'object';
+                    case 'object':
+                    case 'array':
                         $value = json_encode($value);
-                    break;
-
-                    case 'array';
-//                        $value = $obj = json_decode(json_encode($value));
                         break;
-
                 }
 
                 $attributes[$key] = $value;

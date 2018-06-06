@@ -364,8 +364,9 @@ class BasePostTypeController extends MainController{
      * @return array post type
      */
     public function getBySlug($lang, $slug){
-        if(isset(PostType::getFromCache()[$slug])){
-            return PostType::getFromCache()[$slug];
+        $postType = PostType::collection()->where('slug', $slug);
+        if(!$postType->isEmpty()){
+            return $postType->first();
         }
         return [];
     }

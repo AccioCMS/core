@@ -124,13 +124,9 @@ trait PostTypeTrait{
         $postType = PostType::getFromCache()->where('slug', $post_type)->first();
 
         if($postType){
-            // decode fields if they are not decoded
-            if(!is_object($postType->fields)){
-                $postType->fields = json_decode($postType->fields);
-            }
-
             return $postType->fields;
         }
+        
         return [];
     }
 
