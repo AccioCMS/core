@@ -191,13 +191,14 @@ class BasePostController extends MainController {
         }
 
         // custom events columns
-        $customListColumms = Event::fire('post:table_list_columns');
+        $customListColumms = Event::fire('post:table_list_columns', [$postType]);
         foreach($customListColumms as $customList){
-            foreach($customList as $key => $value){
-                $inTableColumnsSlugs[$key] = $value;
+            if(is_array($customList)) {
+                foreach ($customList as $key => $value) {
+                    $inTableColumnsSlugs[$key] = $value;
+                }
             }
         }
-
         return $inTableColumnsSlugs;
 
     }
@@ -370,7 +371,7 @@ class BasePostController extends MainController {
         $paginationResult = $queryObject->paginate(Post::$rowsPerPage);
 
         $response = $this
-          ->appendListColumnsFromEvents()
+          ->appendListColumnsFromEvents($postType)
           ->appendListRowsFromEvents($paginationResult, $postType)
           ->toArray();
 
@@ -430,9 +431,11 @@ class BasePostController extends MainController {
      * addDefaultListColumns
      * @return $this
      */
-    private function appendListColumnsFromEvents(){
-        Event::listen('post:table_list_rows', function ($results, $inTableColumns){
+    private function appendListColumnsFromEvents(string $postType){
+        Event::listen('post:table_list_rows', function ($results) use($postType){
             $rows = [];
+
+            $inTableColumns = $this->getInTableColumns($postType);
 
             foreach($results as $key => $item){
                 $post = (new Post())->setRawAttributes((array) $item);
@@ -441,7 +444,7 @@ class BasePostController extends MainController {
                 if(array_key_exists('title', $inTableColumns)){
                     $rows[$key]['title'] = $item->title;
                 }
-                
+
                 // created at
                 if(array_key_exists('created_at', $inTableColumns)){
                     $rows[$key]['created_at'] = $item->created_at;
@@ -472,7 +475,7 @@ class BasePostController extends MainController {
      * @return mixed
      */
     private function appendListRowsFromEvents($paginationResult, string $postType){
-        $customListRows = Event::fire('post:table_list_rows', [$paginationResult, $this->getInTableColumns($postType)]);
+        $customListRows = Event::fire('post:table_list_rows', [$paginationResult, $postType]);
 
         foreach($customListRows as $customList){
             foreach($customList as $rowID => $rows){
@@ -664,7 +667,7 @@ class BasePostController extends MainController {
         $searchResults = Search::searchByTerm($postTypeSlug, $term, App\Models\Post::$rowsPerPage, true, [], $excludeColumns, $orderBy, $orderType);
 
         $response = $this
-          ->appendListColumnsFromEvents()
+          ->appendListColumnsFromEvents($postType)
           ->appendListRowsFromEvents($paginationResult, $postType)
           ->toArray();
 
