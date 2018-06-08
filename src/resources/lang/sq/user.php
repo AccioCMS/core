@@ -46,6 +46,8 @@ return [
         ),
     ),
 
+    'author' => 'Autori',
+
     'advancedFields' => array(
         'newFieldBtn' => 'New Field',
         'searchBtn' => 'Search',

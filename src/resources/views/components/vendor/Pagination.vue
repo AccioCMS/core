@@ -101,7 +101,7 @@
                     this.$store.commit('setSpinner', true);
                     this.$http[method](url, this.formData)
                         .then((resp) => {
-                            this.$store.commit('setList', resp.body);
+                            this.$store.dispatch('setList', resp.body);
                             this.$store.commit('setSpinner', false);
                         }, response => {
                         // if a error happens

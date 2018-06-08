@@ -3,13 +3,16 @@ export const lists = {
         // get default list data
         getListData(){
             var promise = "";
+            // clean the list first
+            this.$store.dispatch('setList', []);
+
             // if not search route
             if(this.$route.params.term === undefined){
                 this.$store.commit('setSpinner', true);
                 // make ajax request
                 promise = this.$http.get(this.listUrl+this.getQueryParamsAsString)
                     .then((resp) => {
-                        this.$store.commit('setList', resp.body);
+                        this.$store.dispatch('setList', resp.body);
                         this.$store.commit('setSpinner', false);
                     }, response => {
                         // if a error happens
@@ -85,7 +88,7 @@ export const lists = {
             // make ajax request
             this.$http[method](url, formData)
                 .then((resp) => {
-                    this.$store.commit('setList', resp.body);
+                    this.$store.dispatch('setList', resp.body);
                     this.$store.commit('setSpinner', false);
                     this.$store.dispatch('closeLoading');
                 }, response => {

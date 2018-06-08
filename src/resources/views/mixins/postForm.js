@@ -2,12 +2,11 @@ export const postForm = {
     methods:{
         // load inputs when inserting a post
         loadCreateInputs(){
-            this.categoriesOptions = false;
+            this.categoriesOptions = [];
             this.selectedCategories = [];
             this.tagsOptions = [];
             this.selectedTags = {};
             this.columns = '';
-            this.columnSlugs = '';
             this.selected = [];
             this.form = [];
             this.title = {};
@@ -17,7 +16,17 @@ export const postForm = {
             this.languages = '';
             this.defaultLangSlug = '';
             this.dateFormat = 'd MMMM yyyy';
-            this.published_at = {date: '', time: {HH: "",mm: ""}, dateFormatted: ''};
+
+            let currentDate = new Date()
+            this.published_at = {
+                date: currentDate,
+                time: {
+                    HH: currentDate.getHours(),
+                    mm: (currentDate.getMinutes()<10?'0':'') + currentDate.getMinutes()
+                },
+                dateFormatted: ''
+            };
+
             this.savedDropdownMenuVisible = false;
             this.customFieldsGroups = [];
             // display spinner
@@ -57,7 +66,7 @@ export const postForm = {
                      * Columns or post type fields
                      * Prepare v-models (value placeholders for each field)
                      */
-                    this.getFieldsAndPrepareValues(resp.body.allColumn, resp.body.inTableColumnsSlugs);
+                    this.getFieldsAndPrepareValues(resp.body.postTypeFieldsValues);
 
                     /**
                      * Post type data
@@ -71,20 +80,25 @@ export const postForm = {
                     this.isFeaturedImageRequired = resp.body.postType.isFeaturedImageRequired;
 
                     /**
-                     * Categories (options for the dropwdown)
+                     * Categories options
                      */
-                    this.categoriesOptions = this.filterTranslatedValues(resp.body.categories,this.currentLanguage)
+                    let categoriesOptions = this.$store.dispatch('filterTranslatedValues',resp.body.categories,this.currentLanguage);
+                    Promise.all([categoriesOptions]).then(([values]) => {
+                        this.categoriesOptions = values
 
-                    // if url query category make that category selected
-                    if(Object.keys(this.$route.query).length && this.$route.query.category !== undefined){
-                        for(let k in this.categoriesOptions){
-                            if(this.categoriesOptions[k].categoryID == this.$route.query.category){
-                                this.selectedCategories[0] = this.categoriesOptions[k];
+                        // if url query category make that category selected
+                        if(Object.keys(this.$route.query).length && this.$route.query.category !== undefined){
+                            for(let k in this.categoriesOptions){
+                                if(this.categoriesOptions[k].categoryID == this.$route.query.category){
+                                    this.selectedCategories[0] = this.categoriesOptions[k];
+                                }
                             }
                         }
-                    }
 
-                    /**
+                        console.log(this.selectedCategories, this.$route.query.category);
+                    })
+
+                      /*
                      * get plugin panels
                      */
                     this.getPluginsPanel(['post', this.$route.params.post_type], 'create');
@@ -95,7 +109,7 @@ export const postForm = {
 
 
         // get and prepare fields of a post type
-        getFieldsAndPrepareValues(allColumn, inTableColumnsSlugs){
+        getFieldsAndPrepareValues(allColumn){
             // get the columns in from the post type table and set the form data to the column data
             this.columns = allColumn;
             // this loop handles to populate the form with the arrays
@@ -127,7 +141,6 @@ export const postForm = {
                     tempArray
                 );
             }
-            this.columnSlugs = inTableColumnsSlugs;
         },
 
         // generate multioptions value (the options for dropdown, checkboxes and radio buttons)
@@ -169,11 +182,10 @@ export const postForm = {
         // load inputs and their data when updating a post
         loadUpdateInputs(){
             this.columns = '';
-            this.categoriesOptions = false;
+            this.categoriesOptions = [];
             this.selectedCategories = [];
             this.tagsOptions = [];
             this.selectedTags = [];
-            this.columnSlugs = '';
             this.selected  = [];
             this.form =[];
             this.title = {};
@@ -183,7 +195,17 @@ export const postForm = {
             this.languages = '';
             this.defaultLangSlug = '';
             this.dateFormat = 'd MMMM yyyy';
-            this.published_at = {date: '', time: {HH: "",mm: ""}, dateFormatted: ''};
+
+            let currentDate = new Date()
+            this.published_at = {
+                date: currentDate,
+                time: {
+                    HH: currentDate.getHours(),
+                    mm: (currentDate.getMinutes()<10?'0':'') + currentDate.getMinutes()
+                },
+                dateFormatted: ''
+            }
+
             this.createdByUserID = 0;
             this.savedDropdownMenuVisible = false;
             this.currentLanguage = this.$route.params.lang;
@@ -202,14 +224,17 @@ export const postForm = {
                             this.activeLang = this.languages[k].slug;
                         }
                     }
+
                     this.$store.commit('setLanguages', this.languages);
 
-                    this.selectedCategories = resp.body.selectedCategories;
-                    this.columns = this.populateValuesFromData(resp.body.details);
-                    let published_at = resp.body.published_at;
-                    this.createdByUserID = resp.body.createdByUserID;
+                    this.selectedCategories = resp.body.post.selectedCategories;
+                    this.columns = this.populateValuesFromData(resp.body.postTypeFields);
+                    this.getFieldsAndPrepareValues(resp.body.postTypeFieldsValues);
 
-                    this.selectedTags = resp.body.selectedTags;
+                    let published_at = resp.body.post.published_at;
+                    this.createdByUserID = resp.body.post.createdByUserID;
+
+                    this.selectedTags = resp.body.post.selectedTags;
 
                     if(!Object.keys(this.selectedTags).length){
                         let selectedTags = {};
@@ -233,41 +258,24 @@ export const postForm = {
                     this.published_at['date'] = new Date(date);
                     this.published_at['time'] = {HH: H,mm: M};
 
-                    let media = resp.body.media;
+                    let media = resp.body.post.media;
                     if(!Object.keys(media).length){
                         media = {};
                     }
                     this.$store.commit('setMediaSelectedFiles', media);
-                    // this loop handles to populate the form with the arrays
-                    for(let k in this.columns){
-                        let tempArray = {};
-                        if(this.columns[k].multioptionValues != ""){
-                            // generate multioption values (options) array from the string
-                            this.columns[k].multioptionValues = this.generateMultioptionsValue(this.columns[k].multioptionValues, this.columns[k].type.inputType);
-                        }
 
-                        // get all columns and set as keys in the tempArray
-                        for(let key in this.columns[k]){
-                            tempArray[key] = this.columns[k][key];
-                        }
 
-                        this.form.push(
-                            tempArray
-                        );
-                    }
-
-                    this.columnSlugs = resp.body.inTableColumnsSlugs;
-                    this.slug = resp.body.slug;
-                    this.href = resp.body.href;
-                    this.title = resp.body.title;
-                    this.content = resp.body.content;
-                    this.status = resp.body.status;
-                    this.postTypeID = resp.body.postTypeID;
-                    this.hasCategories = resp.body.hasCategories;
-                    this.isCategoryRequired = resp.body.isCategoryRequired;
-                    this.isTagRequired = resp.body.isTagRequired;
-                    this.isFeaturedImageRequired = resp.body.isFeaturedImageRequired;
-                    this.hasTags = resp.body.hasTags;
+                    this.slug = resp.body.post.slug;
+                    this.href = resp.body.post.href;
+                    this.title = resp.body.post.title;
+                    this.content = resp.body.post.content;
+                    this.status = resp.body.post.status;
+                    this.postTypeID = resp.body.post.postTypeID;
+                    this.hasCategories = resp.body.post.hasCategories;
+                    this.isCategoryRequired = resp.body.post.isCategoryRequired;
+                    this.isTagRequired = resp.body.post.isTagRequired;
+                    this.isFeaturedImageRequired = resp.body.post.isFeaturedImageRequired;
+                    this.hasTags = resp.body.post.hasTags;
 
                     // TODO me i ndreq edhe custom fields edhe me ndrru ne nje funksion tjeter qita
                     for(let lK in this.languages){
@@ -288,7 +296,10 @@ export const postForm = {
                     /**
                      * Categories options
                      */
-                    this.categoriesOptions = this.filterTranslatedValues(resp.body.categories,this.currentLanguage)
+                    let categoriesOptions = this.$store.dispatch('filterTranslatedValues',resp.body.categories,this.currentLanguage)
+                    Promise.all([categoriesOptions]).then(([values]) => {
+                        this.categoriesOptions = values
+                    })
 
                 }).then((resp) => {
                     // load the values of the custom fields

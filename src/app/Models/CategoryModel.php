@@ -295,6 +295,9 @@ class CategoryModel extends Model{
         $cacheName = "categories";
         $data = Category::all()->toArray();
         $cachedItems = Cache::get($cacheName);
+        if(!$cachedItems){
+            $cachedItems = [];
+        }
 
         // merge with other langauges
         $dataToCache = [$languageSlug => $data];
@@ -327,6 +330,9 @@ class CategoryModel extends Model{
         $cacheName = "categories_".$postTypeData->slug;
         $data = Category::where('postTypeID', $postTypeData->postTypeID)->get()->toArray();
         $cachedItems = Cache::get($cacheName);
+        if(!$cachedItems){
+            $cachedItems = [];
+        }
 
         // merge with other langauges
         $dataToCache = [$languageSlug => $data];

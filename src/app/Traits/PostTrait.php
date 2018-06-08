@@ -749,49 +749,6 @@ trait PostTrait{
         return $advancedSearchFields;
     }
 
-
-    /**
-     * Advanced search for posts
-     *
-     * @param $data object data for the search (table name, title, userID, categoryID, from, to)
-     * @return object result
-     */
-    public static function advancedSearch($data){
-        $obj = DB::table($data->post_type);
-
-        // if title is not empty
-        if($data->title != ""){
-            $obj->where('title', 'like', '%'.trim($data->title).'%');
-        }
-
-        // if userID is not null
-        if($data->userID != 0){
-            $obj->where('createdByUserID', $data->userID);
-        }
-
-        // if categoryID is not null
-        if($data->categoryID != 0){
-            $relations = DB::table('categories_relations')->where('categoryID', $data->categoryID)->select('belongsToID')->get();
-            $postIDs = [];
-            foreach ($relations as $relation){
-                $postIDs[] = $relation->belongsToID;
-            }
-            $obj->whereIn('postID', $postIDs);
-        }
-
-        // if from is not empty
-        if($data->from != ""){
-            $obj->where('created_at', '>=', $data->from);
-        }
-        // if to is not empty
-        if($data->to != ""){
-            $obj->where('created_at', '<=', $data->to);
-        }
-
-        return $obj;
-    }
-
-
     /**
      *  Get a custom vuejs template for a particular default function
      *

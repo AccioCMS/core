@@ -46,57 +46,66 @@
                         <table id="datatable-checkbox" class="table table-striped table-bordered bulk_action">
                             <thead>
                             <tr class="tableHeader">
-                                <th>#</th>
-                                <th id="postID" @click="orderBy('postID')">{{trans.__id}} <i :class="tableHeaderOrderIcons('postID')" aria-hidden="true"></i></th>
-                                <th id="title" @click="orderBy('title')">{{trans.__globalTitle}} <i :class="tableHeaderOrderIcons('title')" aria-hidden="true"></i></th>
+                                <th>
+                                    #
+                                </th>
 
-                                <!--<th id="published_at" @click="orderBy('published_at')">{{trans.__publishedAt}} <i :class="tableHeaderOrderIcons('created_at')" aria-hidden="true"></i></th>-->
-                                <!--<th id="author" @click="orderBy('createdByUserID')">{{trans.__author}} <i :class="tableHeaderOrderIcons('createdByUserID')" aria-hidden="true"></i></th>-->
-
-                                <th :id="item.slug" @click="orderBy(item.slug)" v-for="(item, index) in columnNames">{{item.name}} <i :class="tableHeaderOrderIcons(item.slug)" aria-hidden="true"></i></th>
-
+                                <th :id="key" @click="orderBy(key)" v-for="(label, key) in getList.inTableColumns">
+                                    {{label}}
+                                    <i :class="tableHeaderOrderIcons(key)" aria-hidden="true"></i>
+                                </th>
                                 <th>{{trans.__action}}</th>
                             </tr>
                             </thead>
 
                             <tr v-if="spinner">
                                 <td colspan="7">
-                                    <!-- Loading component -->
                                     <spinner :width="'30px'" :height="'30px'" :border="'5px'"></spinner>
                                 </td>
                             </tr>
 
+
                             <tbody v-if="!spinner" dusk="postListComponent">
-                            <tr v-for="(item, index) in getList.data">
-                                <th><input type="checkbox" :value="item.postID" v-model="bulkDeleteIDs" :id="'ID'+item.postID"></th>
-                                <th>{{ item.postID }}</th>
-                                <th>{{ item.title }}</th>
+                                <tr v-for="(item, index) in getList.data">
+                                    <td>
+                                        <input type="checkbox" :value="item.postID" v-model="bulkDeleteIDs" :id="'ID'+item.postID">
+                                    </td>
 
-                                <td v-for="(value, columnKey, columnIndex) in item" v-if="isInTable(columnKey)">{{ value }}</td>
 
-                                <td>
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-primary" @click="redirect('post-update', item.postID)" v-if="isOwner(item.createdByUserID, hasUpdatePermission)">{{trans.__updateBtn}}</button>
-                                        <button type="button" class="btn disabled" v-if="!isOwner(item.createdByUserID, hasUpdatePermission)">{{trans.__updateBtn}}</button>
-                                        <button type="button" class="btn btn-primary" @click="toggleListActionBar(index)">
-                                            <span class="caret"></span>
-                                        </button>
-                                        <ul class="lists-action-bar-dropdown" v-if="index === openedItemActionBar">
-                                            <li v-if="isOwner(item.createdByUserID, hasDeletePermission)">
-                                                <a style="cursor:pointer" @click="deleteItem(item.postID, index)">{{trans.__deleteBtn}}</a>
-                                            </li>
-                                            <li class="disabled" v-if="!isOwner(item.createdByUserID, hasDeletePermission)">
-                                                <a>{{ trans.__deleteBtn }}</a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
+                                    <td v-for="(label, key) in getList.inTableColumns">
+                                        <template v-if="key !== 'title' && item[key] !== undefined">{{item[key]}}</template>
+                                        <template v-if="key === 'title'">
+                                            <strong>{{item[key]}}</strong>
+                                        </template>
+                                    </td>
+
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-primary" @click="redirect('post-update', item.postID)" v-if="isOwner(item.createdByUserID, hasUpdatePermission)">
+                                                {{trans.__updateBtn}}
+                                            </button>
+
+                                            <button type="button" class="btn disabled" v-if="!isOwner(item.createdByUserID, hasUpdatePermission)">
+                                                {{trans.__updateBtn}}
+                                            </button>
+
+                                            <button type="button" class="btn btn-primary" @click="toggleListActionBar(index)">
+                                                <span class="caret"></span>
+                                            </button>
+                                            <ul class="lists-action-bar-dropdown" v-if="index === openedItemActionBar">
+                                                <li v-if="isOwner(item.createdByUserID, hasDeletePermission)">
+                                                    <a style="cursor:pointer" @click="deleteItem(item.postID, index)">{{trans.__deleteBtn}}</a>
+                                                </li>
+                                                <li class="disabled" v-if="!isOwner(item.createdByUserID, hasDeletePermission)">
+                                                    <a>{{ trans.__deleteBtn }}</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
                             </tbody>
 
                         </table>
-
-                        <pagination :listUrl="listUrl" :dataSearchUrl="dataSearchUrl" :advancedSearchPostUrl="advancedSearchPostUrl"></pagination>
 
                     </div>
                 </div>
@@ -128,15 +137,10 @@
         created(){
             this.viewSearchUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/posts/search/'+this.$route.params.post_type+'/';
             this.dataSearchUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/search/'+this.$route.params.post_type+'/';
-            //this.advancedSearchOptionsUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/advancedSearch/'+this.$route.params.post_type+'/';
-            this.advancedSearchPostUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/json/posts/advanced-search-results';
             this.deleteUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/delete/'+this.$route.params.post_type+'/';
             this.bulkDeleteUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/json/posts/bulk-delete';
-            if(this.$route.query.category !== undefined){
-                this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all-of-category/'+this.$route.params.post_type+'/'+this.$route.query.category;
-            }else{
-                this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type;
-            }
+            this.advancedSearchPostUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type+'?advancedSearch=1';
+            this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type+(this.$route.query.category !== undefined ? '?categoryID='+this.$route.query.category : '');
         },
         mounted() {
             // permissions
@@ -159,20 +163,13 @@
                 __previous: this.__('pagination.previous'),
                 __next: this.__('pagination.next'),
                 __author: this.__('user.label_single'),
-                __publishedAt: this.__('user.label_single'),
+                __publishedAt: this.__('post.publishedAt'),
             };
-
-            // get the columns in from the post type table
-            this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/'+ this.$route.params.post_type+'/columns')
-                .then((resp) => {
-                    this.columnNames = resp.body.column;
-                    this.columnSlugs = resp.body.inTableColumnsSlugs;
-                });
 
             if(this.$route.query.advancedSearch !== undefined){
                 this.$router.push({ name: 'post-list', query: this.$route.query});
                 this.isAdvancedSearchOpen = true;
-            }else{
+            }else {
                 this.getListData();
             }
         },
@@ -186,8 +183,6 @@
                 deleteUrl: '', // url to delete a item
                 bulkDeleteUrl: '', // url to bul delete items
                 isAdvancedSearchOpen: false,
-                columnNames: '',
-                columnSlugs: '',
                 hasAddPermission: true,
                 hasDeletePermission: true,
                 hasUpdatePermission: true,
@@ -199,6 +194,7 @@
                     orderBy: '', // if is ordered by a column
                     orderType: '' // order type which is ASC or DESC
                 },
+                listData: []
             }
         },
         methods: {
@@ -216,10 +212,10 @@
             },
             // check if parameter should appear in table
             isInTable(slug){
-                if(this.columnSlugs.indexOf(slug) == -1){
-                    return false;
+                if(this.getList.inTableColumns[slug] !== undefined){
+                    return true;
                 }
-                return true;
+                return false;
             },
         },
         computed:{
@@ -232,15 +228,10 @@
         watch:{
             // watch for url changes and component doesn't change
             '$route': function(){
-                if(this.$route.query.category !== undefined){
-                    this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all-of-category/'+this.$route.params.post_type+'/'+this.$route.query.category;
-                }else{
-                    this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type;
-                }
+                this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type+(this.$route.query.category !== undefined ? '?categoryID='+this.$route.query.category : '');
                 this.viewSearchUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/posts/search/'+this.$route.params.post_type+'/';
                 this.dataSearchUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/search/'+this.$route.params.post_type+'/';
-                //this.advancedSearchOptionsUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/advancedSearch/'+this.$route.params.post_type+'/';
-                this.advancedSearchPostUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/json/posts/advanced-search-results';
+                this.advancedSearchPostUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type+'?advancedSearch=1';
                 this.deleteUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/delete/'+this.$route.params.post_type+'/';
                 this.bulkDeleteUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/json/posts/bulk-delete';
 

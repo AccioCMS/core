@@ -151,15 +151,7 @@ trait MediaTrait{
                     }
 
                     // Create thumbs
-                    if($this->hasImageExtension($extension)){
-                        foreach(config('media.default_thumb_size') as $thumKey => $thumValue){
-                            if ($thumKey == "default" || $thumKey == $belongsToApp){ // only thumbs that are default and which belongs to this current app
-                                foreach ($thumValue as $thumbDimension){
-                                    $this->createThumb($media, $thumbDimension[0], $thumbDimension[1]);
-                                }
-                            }
-                        }
-                    }
+                    $this->createDefaultThumbs($this, $belongsToApp);
 
                     // delete cache
                     Cache::flush();
@@ -182,6 +174,59 @@ trait MediaTrait{
         }
         return $results;
     }
+
+    /**
+     * Create default thumbs
+     * @param null $image
+     * @param string $app
+     * @return $this
+     */
+    public function createDefaultThumbs($image = null, $app = 'default'){
+        if(!$image){
+            $image = $this;
+        }
+
+        if($image->hasImageExtension()) {
+            foreach (config('media.default_thumb_size') as $thumKey => $thumValue) {
+                if ($thumKey == "default" || $thumKey == $app) { // create only the thumbs that are needed for an app
+                    foreach ($thumValue as $thumbDimension) {
+                        $this->createThumb($image, $thumbDimension[0], $thumbDimension[1]);
+                    }
+                }
+            }
+        }
+
+        return $this;
+    }
+    /**
+     * Deletes thumbs (not the default ones of cms) for a image
+     * @param Media $image
+     */
+    public function deleteThumbs($image = null){
+        if(!$image){
+            $image = $this;
+        }
+
+        // delete all thumbs of an image
+        $basePath = base_path($image->fileDirectory);
+        $allDirs = [];
+        if (is_dir($basePath)){
+            if ($dh = opendir($basePath)){
+                while (($thumbDir = readdir($dh)) !== false){
+                    if(!in_array($thumbDir, [".",".."]) && is_dir($basePath."/$thumbDir") && $thumbDir != "original"){
+                        if(file_exists($basePath."/$thumbDir/".$image->filename)){
+                            @unlink($basePath."/$thumbDir/".$image->filename);
+                        }
+                    }
+                    $allDirs[] = $thumbDir;
+                }
+                closedir($dh);
+            }
+        }
+
+        return $this;
+    }
+
 
     /**
      * Get thumb by image and size.
@@ -242,7 +287,7 @@ trait MediaTrait{
                 $thumbDir = base_path($imageObj->fileDirectory . "/" . $width.($height ? 'x'.$height : ""));
 
                 if (!File::exists($thumbDir)) {
-                    if (!File::makeDirectory($thumbDir, 0775, true)) {
+                    if (!File::makeDirectory($thumbDir, 0700, true)) {
                         return false;
                     }
                 }
@@ -276,7 +321,10 @@ trait MediaTrait{
      * @param $extension
      * @return bool
      */
-    private function hasImageExtension($extension){
+    public function hasImageExtension($extension = null){
+        if(!$extension && $this->extension){
+            $extension = $this->extension;
+        }
         if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.image_extensions'))){
             return true;
         }
@@ -289,7 +337,10 @@ trait MediaTrait{
      * @param $extension
      * @return bool
      */
-    private function hasVideoExtension($extension){
+    private function hasVideoExtension($extension = null){
+        if(!$extension && $this->extension){
+            $extension = $this->extension;
+        }
         if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.video_extensions'))){
             return true;
         }
@@ -302,7 +353,10 @@ trait MediaTrait{
      * @param $extension
      * @return bool
      */
-    private function hasAudioExtension($extension){
+    private function hasAudioExtension($extension = null){
+        if(!$extension && $this->extension){
+            $extension = $this->extension;
+        }
         if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.audio_extensions'))){
             return true;
         }
@@ -315,7 +369,10 @@ trait MediaTrait{
      * @param $extension
      * @return bool
      */
-    private function hasDocumentExtension($extension){
+    private function hasDocumentExtension($extension = null){
+        if(!$extension && $this->extension){
+            $extension = $this->extension;
+        }
         if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.document_extensions'))){
             return true;
         }
@@ -327,7 +384,10 @@ trait MediaTrait{
      * @param string $extension
      * @return bool
      */
-    private function isAllowedExtension($extension){
+    private function isAllowedExtension($extension = null){
+        if(!$extension && $this->extension){
+            $extension = $this->extension;
+        }
         if(array_intersect([strtolower($extension),strtoupper($extension)], self::allowedExtensions())){
             return true;
         }

@@ -99,6 +99,9 @@ class MenuLinkModel extends Model{
         }
 
         $cachedItems = Cache::get("menuLinks");
+        if(!$cachedItems){
+            $cachedItems = [];
+        }
 
         if(!isset($cachedItems[$languageSlug])){
             $data = MenuLink::all()->toArray();

@@ -90,24 +90,29 @@ class BaseCategoryController extends MainController {
     public function getTree($lang = "", $postTypeID){
         $orderBy = (isset($_GET['order'])) ? $orderBy = $_GET['order'] : 'order';
         $orderType = (isset($_GET['type'])) ? $orderType = $_GET['type'] : 'ASC';
-        $parentList = Category::where('postTypeID',$postTypeID)->where('parentID', null)->orWhere('parentID', 0)->orderBy($orderBy, $orderType)->paginate(Category::$rowsPerPage);
+        $parentList = Category::where('postTypeID',$postTypeID)->where('parentID', null)
+          ->orWhere('parentID', 0)
+          ->orderBy($orderBy, $orderType)
+          ->paginate(Category::$rowsPerPage);
 
         $category = new Category();
+
         // get all categories of the selected post type
-        $category->categoryList = Category::where('postTypeID',$postTypeID)->orderBy($orderBy, $orderType)->get()->keyBy('categoryID');
+        $category->categoryList = Category::where('postTypeID',$postTypeID)->orderBy($orderBy, $orderType)->get();
+        
         // make the parent child format tree
-        $treeList = $category->makeChildrenTree($category->categoryList);
+        $treeList = collect($category->makeChildrenTree($category->categoryList));
 
         // get only categories selected for this page (pagination)
         $tmp = [];
         foreach($parentList->items() as $item){
-            if(key_exists($item->categoryID, $treeList)){
-                $tmp[$item->categoryID] = $treeList[$item->categoryID];
+            $getCategory = $treeList->where('categoryID', $item->categoryID)->first();
+            if($getCategory){
+                $tmp[] = $getCategory;
             }
         }
 
-        $collection = Collection::make($tmp);
-        $parentList->setCollection($collection);
+        $parentList->setCollection(collect($tmp));
 
         return Language::filterRows($parentList);
     }
@@ -363,12 +368,14 @@ class BaseCategoryController extends MainController {
      */
     private function updateMenuLinkLabel($id, $newTitle, $oldTitle){
         $menuLinksList = MenuLink::where('belongsToID', $id)->where('belongsTo','category')->get();
+
+        $langSlug = App::getLocale();
         if($menuLinksList->count()){
             foreach ($menuLinksList as $menuLink){
                 $updateLabel = false;
                 foreach (Language::getFromCache() as $lang){
                     $langSlug = $lang->slug;
-                    if(isset($oldTitle->$langSlug) && $oldTitle->$langSlug == $menuLink->label->$langSlug){
+                    if(isset($oldTitle->App) && $oldTitle->$langSlug == $menuLink->label->$langSlug){
                         $updateLabel = true;
                     }
                 }

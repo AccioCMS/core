@@ -18,38 +18,7 @@ export const globalMethods = {
             }
         },
 
-        /**
-         * Get data from current langauge.
-         *
-         * @param items
-         * @param languageSlug
-         * @returns {Array}
-         */
-        filterTranslatedValues(items, languageSlug){
-            let translatedData = []
-            let li = 0
-            items.forEach((item) => {
-                li++;
 
-                // we need an empty object to fill it later
-                if(translatedData[li] === undefined){
-                    translatedData[li] = {}
-                }
-
-                // add attibutes for each item
-                for(let key in item){
-                    let value = item[key];
-
-                    if(typeof value === 'object' && value !== null && value[languageSlug] !== undefined){
-                        translatedData[li][key] = value[languageSlug]
-                    }else{
-                        translatedData[li][key] = value
-                    }
-                }
-            });
-
-            return translatedData;
-        },
 
         // used to filter where to redirect depending which store btn is clicked
         onStoreBtnClicked(routeNamePrefix, redirectChoice, id){

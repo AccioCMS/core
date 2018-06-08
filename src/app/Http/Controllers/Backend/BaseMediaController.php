@@ -143,15 +143,8 @@ class BaseMediaController extends MainController{
                 if(file_exists($media->url)) {
                     unlink($media->url); // delete original file
                 }
-                foreach(config('media.default_thumb_size') as $thumKey => $thumValue){ // loop throw all thumbs and delete them
-                    foreach ($thumValue as $thumParams){
-                        $folderName = $thumParams[0] ."x".$thumParams[1];
-                        $path = $media->fileDirectory."/".$folderName."/".$media->filename;
-                        if(file_exists($path)){
-                            unlink($path);
-                        }
-                    }
-                }
+
+                $media->deleteThumbs();
 
             }else{
                 $isOk =  "ERR";
@@ -161,53 +154,72 @@ class BaseMediaController extends MainController{
     }
 
     /**
+     * Verify if a watermak exists
+     * @return array
+     */
+    private function getWatermak(){
+        // Verify watermark
+        $watermarkMediaID = settings( "watermark");
+        if(!$watermarkMediaID){
+            return $this->response("No watermark is available. Go to settings and set a watermark", 500);
+        }
+
+        $watermarImage = Media::find($watermarkMediaID);
+        if(!$watermarImage){
+            return $this->response("Watermark Image is not selected. Please go to settings and choose a new watermark", 500);
+        }
+
+        $watermarkUrl = $watermarImage->url;
+        if(!File::exists(base_path($watermarkUrl))){
+            return $this->response("Watermark URL is not avialable. Please go to settings and choose a new watermark", 500);
+        }
+
+        return $watermarImage;
+    }
+    /**
      *  Assign watermark to media images
      * */
     public function assignWatermark(Request $request){
-        // Verify watermark
-        $watermarkMediaID = Settings::where("settingsKey", "watermark")->first();
-        if(!$watermarkMediaID){
-            return $this->response("Watermark is not selected, Go to settings select watermark", 500);
-        }
-        $watermarkUrl = Media::find($watermarkMediaID)->first();
-        if(!$watermarkUrl){
-            return $this->response("Watermark is not selected, Go to settings select watermark", 500);
-        }
-        $watermarkUrl = $watermarkUrl->url;
-        // does watermark exist
-        if(!File::exists(base_path($watermarkUrl))){
-            return $this->response("Watermark is not selected, Go to settings select watermark", 500);
+        $getWatermak = $this->getWatermak();
+
+        if(!$getWatermak){
+            return $getWatermak;
         }
 
+        // go through each select image
         foreach ($request->all() as $key => $file){
+            $image = new Media($file);
+
             // check if user has permissions to access this link
-            if(!User::hasAccess('Media','update',$file['mediaID'], true)){
+            if(!User::hasAccess('Media','update',$image->mediaID, true)){
                 return $this->noPermission();
             }
 
-            if ($file['type'] == "image"){
+            if ($image->type == "image"){
 
                 // mark original image
-                // original image
-                $url = strpos($file['url'], '?');
+                $url = strpos($image->url, '?');
                 if($url == false){
-                    $url = base_path($file['url']);
+                    $url = base_path($image->url);
                 }else{
-                    $url = base_path(explode('?',$file['url'])[0]);
+                    $url = base_path(explode('?',$image->url)[0]);
+                }
+
+                // does file exist
+                if(!File::exists($url)){
+                    throw new \Exception("Original images ".$url." doesn't exists.");
                 }
 
                 $originalImage = Image::make($url);
+
                 // get width of the original image
                 $originalWidth = (integer) $originalImage->width();
+
                 // calculate a width for the watermark
                 $width = round($originalWidth / 3);
-                // does file exist
-                if(!File::exists($url)){
-                    throw new \Exception("File: ".$url." doesn't exists.");
-                }
 
                 // get watermark
-                $watermark = Image::make($watermarkUrl);
+                $watermark = Image::make($getWatermak->url);
 
                 // resize watermark
                 $watermark->resize($width, null, function ($constraint){
@@ -215,32 +227,9 @@ class BaseMediaController extends MainController{
                 });
                 $originalImage->insert($watermark, 'center');
                 $originalImage->save($url, 100);
-                $this->deleteThumb($file);
 
-                foreach(config('media.default_thumb_size') as $thumKey => $thumValue){
-                    foreach ($thumValue as $thumParams){
-                        $originalThumbWidth = (integer)$thumParams[0];
-                        if($originalThumbWidth >= 300 || $originalThumbWidth == 200){
-                            $thumbWidth = round($originalThumbWidth / 3);
-                            $folderName = $thumParams[0] ."x".$thumParams[1];
-                            $path = base_path($file['fileDirectory']."/".$folderName."/".$file['filename']);
-                            if(!File::exists($path)){
-                                throw new \Exception("File: ".$path." doesn't exists.");
-                            }
-                            if(file_exists($path)){
-                                // mark thumb image
-                                $thumb = Image::make($path);
-                                $watermark = Image::make($watermarkUrl);
-                                // resize watermark
-                                $watermark->resize($thumbWidth, null, function ($constraint) {
-                                    $constraint->aspectRatio();
-                                });
-                                $thumb->insert($watermark, 'center');
-                                $thumb->save($path, 100);
-                            }
-                        }
-                    }
-                }
+                $image->deleteThumbs();
+                $image->createDefaultThumbs();
 
                 // delete cache
                 Cache::flush();
@@ -251,37 +240,6 @@ class BaseMediaController extends MainController{
         return "OK";
     }
 
-    /**
-     * Deletes thumbs (not the default ones of cms) for a image
-     * @param $image
-     */
-    private function deleteThumb($image){
-        // list default thumb sizes in a array (use to ignore them, not delete them)
-        $thumbSizesToNotBeDeleted = [];
-        foreach(config('media.default_thumb_size') as $thumbSizesArr){
-            foreach($thumbSizesArr as $thumbSize){
-                if(count($thumbSize) == 2){
-                    $thumbSizesToNotBeDeleted[] = $thumbSize[0] . "x" . $thumbSize[1];
-                }
-            }
-        }
-
-        // delete all thumbs of a image
-        $allDirs = [];
-        if (is_dir(base_path($image['fileDirectory']))){
-            if ($dh = opendir(base_path($image['fileDirectory']))){
-                while (($thumbDir = readdir($dh)) !== false){
-                    if(is_dir(base_path($image['fileDirectory']."/$thumbDir")) && $thumbDir != "original"){
-                        if(!in_array($thumbDir, $thumbSizesToNotBeDeleted) && file_exists(base_path($image['fileDirectory']."/$thumbDir/".$image['filename']))){
-                            unlink(base_path($image['fileDirectory']."/$thumbDir/".$image['filename']));
-                        }
-                    }
-                    $allDirs[] = $thumbDir;
-                }
-                closedir($dh);
-            }
-        }
-    }
 
     /**
      *  Crop the image with the specific dimensions
@@ -295,8 +253,10 @@ class BaseMediaController extends MainController{
         $inputs = $request->all();
         // Where is this file beeing croped
         $app = $inputs[4];
+
         // extension of the current image that is in crop process
         $mediaID = $inputs[0]['mediaID'];
+
         // check if user has permissions to access this link
         if(!User::hasAccess('Media','update',$mediaID, true)){
             return $this->noPermission();
@@ -340,36 +300,12 @@ class BaseMediaController extends MainController{
         $img->save($url, 100);
         $media->touch();
 
-        $this->deleteThumb($media);
+        $media->deleteThumbs();
+        $media->createDefaultThumbs(null, $app);
 
         // delete cache
         Cache::flush();
 
-        // Create thumbs
-        foreach(config('media.default_thumb_size') as $thumKey => $thumValue){
-            if ($thumKey == "default" || $thumKey == $app){ // create only the thumbs that are needed for a app
-                foreach ($thumValue as $thumParams){
-                    if (in_array($extension, config('media.image_extensions'))){
-                        $thumbDir = $destinationPath."/".$thumParams[0]."x".$thumParams[1];
-                        if(!is_dir($thumbDir)){
-                            mkdir($thumbDir, 0700);
-                        }
-
-                        $img = Image::make($url);
-                        $resizedHeight = $thumParams[0] * 2;
-                        $img->resize($resizedHeight, null, function ($constraint) {
-                            $constraint->aspectRatio();
-                        });
-                        //$img->resizeCanvas($thumParams[0], $thumParams[1], 'center', false);
-                        $img->fit($thumParams[0], $thumParams[1]);
-                        $thumbName = $inputs[0]['filename'];
-                        $img->save($thumbDir.'/'.$thumbName, 100);
-                    }
-                }
-            }
-        }
-
         return "OK";
     }
-
 }

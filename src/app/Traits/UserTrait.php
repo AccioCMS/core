@@ -218,24 +218,7 @@ trait UserTrait{
     }
 
 
-    /**
-     * Get user by ID
-     *
-     * @param  int $userID
-     * @param string $columnName Column name
-     *
-     * @return object|null Returns requested user if found, null instead
-     * */
-    public static function findByID($userID, $columnName = ''){
-        $userObj = \App\Models\User::getFromCache();
-        if($userObj) {
-            $userObj->where('userID', $userID)->first();
-            if (isset($user->$columnName)) {
-                return $user->$columnName;
-            }
-            return $user;
-        }
-    }
+
 
     /**
      * Get permissions of the user
@@ -357,14 +340,41 @@ trait UserTrait{
      * Get user by Slug (Name-Surname)
      *
      * @param  string $slug The slug of the User
+     * @param string $columnName Column name
      *
      * @return object
      * */
 
-    public static function findBySlug($slug){
-        $users = User::getFromCache();
-        return $users->where('slug',$slug)->first();
+    public static function findBySlug($slug, $columnName = ''){
+        $userObj = \App\Models\User::getFromCache()->where('slug', $slug)->first();
+
+        // return custom column
+        if ($columnName && isset($userObj->$columnName)) {
+            return $userObj->$columnName;
+        }
+
+        return $userObj;
     }
+
+    /**
+     * Get user by ID
+     *
+     * @param  int $userID
+     * @param string $columnName Column name
+     *
+     * @return object|null Returns requested user if found, null instead
+     * */
+    public static function findByID($userID, $columnName = ''){
+        $userObj = \App\Models\User::getFromCache()->where('userID', $userID)->first();
+
+        // return custom column
+        if ($columnName && isset($userObj->$columnName)) {
+            return $userObj->$columnName;
+        }
+
+        return $userObj;
+    }
+
 
     /**
      * @param bool $includForgotPaswordLink

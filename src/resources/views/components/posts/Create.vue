@@ -265,9 +265,9 @@
                                             <!-- Checkbox -->
                                             <div class="col-md-10 col-sm-10 col-xs-12" v-if="value.type.inputType == 'checkbox'">
                                                 <div v-for="(option, i) in value.multioptionValues" :key="i">
-                                                    <input type="checkbox" :id="value.slug" v-model="value.value[lang.slug]" :value="option[0]" v-if="value.translatable">
-                                                    <input type="checkbox" :id="value.slug" v-model="value.value" :value="option[0]" v-else>
-                                                    {{option[1]}}
+                                                    <input type="checkbox" :id="value.slug+'_'+i" v-model="value.value[lang.slug]" :value="option[0]" v-if="value.translatable">
+                                                    <input type="checkbox" :id="value.slug+'_'+i" v-model="value.value" :value="option[0]" v-else>
+                                                    <label :for="value.slug+'_'+i">{{option[1]}}</label>
                                                 </div>
                                                 <div class="alert" v-if="StoreResponse.errors[value.slug+'_'+lang.slug]" v-for="error in StoreResponse.errors[value.slug+'_'+lang.slug]">{{ error }}</div>
                                             </div>
@@ -373,6 +373,12 @@
 
                                         <hr>
 
+                                        <pre>
+                                            {{selectedCategories}}
+
+                                            {{categoriesOptions}}
+                                        </pre>
+
                                         <!-- CATEGORIES -->
                                         <div class="form-group" :id="'form-group-categories_'+ lang.slug" v-if="hasCategories">
                                             <label class="control-label col-md-2 col-sm-2 col-xs-12">{{trans.__categoryTitle}}</label>
@@ -386,7 +392,7 @@
                                                         :hide-selected="true"
                                                         :placeholder="trans.__multiselectCategoriesPlaceholder"
                                                         label="title"
-                                                        track-by="title"></multiselect>
+                                                        track-by="categoryID"></multiselect>
                                                 <div class="alert" v-if="StoreResponse.errors['categories']" v-for="error in StoreResponse.errors['categories']">{{ error }}</div>
                                             </div>
                                         </div>
@@ -591,7 +597,6 @@
                 customFieldOriginalStructure: {},
                 customFieldValues: {},
                 columns: '',
-                columnSlugs: '',
                 selected: [],
                 isSlugDisabled: true,
                 form:[],

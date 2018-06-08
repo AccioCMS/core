@@ -133,7 +133,25 @@ class PostModel extends Model{
      */
     public static $defaultCacheLimit = 1000;
 
+    /**
+     * @var array
+     */
     public static $defaultCacheWith = ['featuredimage', 'categories', 'media', 'tags'];
+
+    /**
+     * List of default table columns
+     *
+     * NOTE: translations shall be referred via __ prefix
+     *
+     * @var array
+     */
+    public static $defaultListColumns = [
+      'postID' => '#ID',
+      'title' => '__accio::base.title',
+      'category' => '__accio::categories.labelSingle',
+      'published_at' => '__accio::post.publishedAt',
+      'author' => '__accio::user.author'
+    ];
 
     /**
      * @inheritdoc
@@ -395,10 +413,13 @@ class PostModel extends Model{
      * @return Collection
      **/
     private static function setCachePostType($postTypeSlug, $languageSlug){
-        $cachedPosts = Cache::get($postTypeSlug);
+        $cachedItems = Cache::get($postTypeSlug);
+        if(!$cachedItems){
+            $cachedItems = [];
+        }
 
         // if posts doesn't not exist in this language, query them
-        if(!isset($cachedPosts[$languageSlug])){
+        if(!isset($cachedItems[$languageSlug])){
             $data = (new Post())->setTable($postTypeSlug)
               ->with(self::$defaultCacheWith)
               ->limit(self::$defaultCacheLimit)
@@ -408,13 +429,13 @@ class PostModel extends Model{
 
             // merge with other langauges
             $dataToCache = [$languageSlug => $data];
-            if($cachedPosts){
-                $dataToCache = array_merge($cachedPosts,$dataToCache);
+            if($cachedItems){
+                $dataToCache = array_merge($cachedItems,$dataToCache);
             }
 
             Cache::forever($postTypeSlug,$dataToCache);
         }else{
-            $data = $cachedPosts[$languageSlug];
+            $data = $cachedItems[$languageSlug];
         }
 
         return $data;

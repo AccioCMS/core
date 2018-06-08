@@ -480,7 +480,7 @@
 
                     <!-- Date and time when the post should be displayed -->
                     <div class="form-group dateAndTimepicker">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__publishedAt}}</label>
+                        <label class="control-label col-md-12 col-sm-12 col-xs-12">{{trans.__publishedAt}}</label>
                         <div class="col-md-12 col-sm-12 col-xs-12 datepickerContainer postsDatepicker">
                             <datepicker v-model="published_at.date" name="date" class="col-md-8 col-sm-8 removePaddingAndMargin" :format="dateFormat"></datepicker>
                             <vue-timepicker v-model="published_at.time" class="col-md-4 col-sm-4"></vue-timepicker>
@@ -623,7 +623,6 @@
                 customFieldOriginalStructure: [],
                 customFieldsGroups: [],
                 childrenFieldsGroups: [],
-                columnSlugs: '',
                 selected: [],
                 isSlugDisabled: true,
                 form:[],

@@ -250,14 +250,16 @@ class BaseMenuController extends MainController{
      */
     protected function getAllMenuLinkRoutes(){
         if(!$this->allMenuLinkRoutes) {
-            $controllers = File::files(Theme::getPath() . '/controllers');
             $menuLinkRoutes = [];
-            foreach ($controllers as $file) {
-                $controllerName = str_replace('.php', '', $file->getFileName());
-                $controllerClass = Theme::getNamespace() . '\\Controllers\\' . $controllerName;
-                $routes = $controllerClass::getMenuLinkRoutes($controllerName);
-                if ($routes) {
-                    $menuLinkRoutes[$controllerName] = $routes;
+            if(file_exists(Theme::getPath() . '/controllers')) {
+                $controllers = File::files(Theme::getPath() . '/controllers');
+                foreach ($controllers as $file) {
+                    $controllerName = str_replace('.php', '', $file->getFileName());
+                    $controllerClass = Theme::getNamespace() . '\\Controllers\\' . $controllerName;
+                    $routes = $controllerClass::getMenuLinkRoutes($controllerName);
+                    if ($routes) {
+                        $menuLinkRoutes[$controllerName] = $routes;
+                    }
                 }
             }
             $this->allMenuLinkRoutes = $menuLinkRoutes;

@@ -45,6 +45,7 @@
                     this.$store.commit('setLabels', resp.body.labels);
                     this.$store.commit('setPluginsConfigs', resp.body.pluginsConfigs);
                     this.$store.commit('setLanguages', resp.body.languages);
+                    this.$store.commit('setRoute',this.$route);
 
                     this.applicationMenuLinks = resp.body.applicationMenuLinks;
                     this.cmsMenus = resp.body.cmsMenus;
