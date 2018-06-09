@@ -318,7 +318,7 @@ class PostModel extends Model{
     /**
      * Sets up the cache for the most read articles
      */
-    public static function setMostReadCache($currentPost){
+    public static function setMostReadCache(){
         // check if a article has been read
         if(Cache::has("most_read_articles_ids")){
             // current date and time
