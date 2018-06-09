@@ -104,9 +104,6 @@ class BaseMediaController extends MainController{
                 ]);
             }
 
-            // delete cache
-            Cache::flush();
-
             return "OK";
         }
         return "ERR";
@@ -137,14 +134,15 @@ class BaseMediaController extends MainController{
             // get file info from database
             $media = \App\Models\Media::find($file['mediaID']);
             if ($relationDeletePass && $media->delete()){ // delete from database
-                // delete cache
-                Cache::flush();
 
                 if(file_exists($media->url)) {
                     unlink($media->url); // delete original file
                 }
 
                 $media->deleteThumbs();
+
+                // delete cache
+                Cache::flush();
 
             }else{
                 $isOk =  "ERR";

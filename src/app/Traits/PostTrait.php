@@ -601,11 +601,11 @@ trait PostTrait{
                         if($selectedTag['tagID'] == 0){
                             $tagSlug = str_slug($selectedTag['title'],'-');
                             $tagsID = DB::table('tags')->insertGetId([
-                                'postTypeID' => $postType['postTypeID'],
-                                'createdByUserID' => Auth::user()->userID,
-                                'title' => $selectedTag['title'],
-                                'description' => $selectedTag['description'],
-                                'slug' => $tagSlug,
+                              'postTypeID' => $postType['postTypeID'],
+                              'createdByUserID' => Auth::user()->userID,
+                              'title' => $selectedTag['title'],
+                              'description' => $selectedTag['description'],
+                              'slug' => $tagSlug,
                             ]);
                         }else{
                             $tagsID = $selectedTag['tagID'];
@@ -777,7 +777,7 @@ trait PostTrait{
      * @return boolean Returns true if found
      */
     public function hasFeaturedImage(){
-        if($this->featuredImageID && $this->featuredImage){
+        if($this->featuredImageID && $this->featured_image){
             return true;
         }
         return false;
@@ -807,9 +807,9 @@ trait PostTrait{
     public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = ''){
         if($this->hasFeaturedImage()){
             if(!$width && !$height){
-                return url($this->featuredImage->url);
+                return url($this->featured_image->url);
             }else{
-                return $this->featuredImage->thumb($width, $height, $this->featuredImage);
+                return $this->featured_image->thumb($width, $height, $this->featured_image);
             }
         }else if($defaultFeaturedImageURL){
             return $defaultFeaturedImageURL;
@@ -830,7 +830,7 @@ trait PostTrait{
         if($this->hasFeaturedImage()){
             return new HtmlString(view()->make("vendor.posts.featuredImage", [
               'imageURL' => $this->featuredImageURL($width, $height, $defaultFeaturedImageURL),
-              'featuredImage' => $this->featuredImage
+              'featuredImage' => $this->featured_image
             ])->render());
         }
     }

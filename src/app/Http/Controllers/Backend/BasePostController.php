@@ -478,10 +478,12 @@ class BasePostController extends MainController {
         $customListRows = Event::fire('post:table_list_rows', [$paginationResult, $postType]);
 
         foreach($customListRows as $customList){
-            foreach($customList as $rowID => $rows){
-                if(isset($paginationResult->items()[$rowID])){
-                    foreach($rows as $key => $value){
-                        $paginationResult->items()[$rowID]->$key = $value;
+            if(is_array($customList)) {
+                foreach ($customList as $rowID => $rows) {
+                    if (isset($paginationResult->items()[$rowID])) {
+                        foreach ($rows as $key => $value) {
+                            $paginationResult->items()[$rowID]->$key = $value;
+                        }
                     }
                 }
             }

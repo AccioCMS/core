@@ -153,9 +153,6 @@ trait MediaTrait{
                     // Create thumbs
                     $this->createDefaultThumbs($this, $belongsToApp);
 
-                    // delete cache
-                    Cache::flush();
-
                     // Fire event
                     Event::fire('media:created', [$media, $request]);
 

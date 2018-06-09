@@ -17,7 +17,7 @@ trait CacheTrait
      * @param null $table
      * @return Collection
      */
-    public static function setCacheCollection(array $data, $class, $isPostType = false, $table = null){
+    public static function setCacheCollection(array $data, $class, $table = null){
 
         // model may have its own collection method
         if(method_exists($class,'newCollection')){
@@ -26,7 +26,7 @@ trait CacheTrait
             $collection = new Collection($data);
         }
 
-        $collection->transform(function ($row) use($class,$isPostType,$table) {
+        $collection->transform(function ($row) use($class,$table) {
 
             // because cache saves json values are object, we need to encode them so
             // we laravel does not try to cast tham again
@@ -48,7 +48,7 @@ trait CacheTrait
             $modelObj = new $class();
 
             // change table
-            if($isPostType){
+            if($table){
                 $modelObj->setTable($table);
             }
 
@@ -61,20 +61,50 @@ trait CacheTrait
     }
 
     /**
+     * Check if an attribute is listed in model
+     * @param $key
+     * @return null
+     */
+    public function attributeExists($key){
+        $keyExists = array_key_exists($key, $this->attributes);
+        if ($keyExists || ($keyExists && is_null($this->attributes[$key])) ){
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Fill cache attributes
      *
      * @param $class
      * @param array $attributes
-     * @return mixed
+     * @return Collection
      */
-    public function fillCacheAttributes($class, array $items){
-        return collect($items)->transform(function ($attributes) use($class) {
-            $modelObj = new $class();
-            foreach($attributes as $key => $value){
-                $modelObj->setAttribute($key, $value);
+    public function fillCacheAttributes($class,  $items){
+        if(is_null($items) || $items == '[]' || is_array($items) && !count($items)){
+            return collect([]);
+        }else {
+            // we may receive object as string
+            if (!is_array($items)) {
+                $items = @json_decode($items, true);
+                if (!is_array($items)) {
+                    throw new \Exception("Items filled in cache attributes must be json or array");
+                }
             }
-            return $modelObj;
-        });
+
+            // items should be wrapped in an array so we can add them in collection
+            if (!isset($items[0])) {
+                $items = [$items];
+            }
+
+            return collect($items)->transform(function ($attributes) use ($class) {
+                $modelObj = new $class();
+                foreach ($attributes as $key => $value) {
+                    $modelObj->setAttribute($key, $value);
+                }
+                return $modelObj;
+            });
+        }
 
     }
 }
