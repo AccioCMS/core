@@ -206,6 +206,18 @@ class TagModel extends Model{
     }
 
     /**
+     * Check if a post has featured image
+     *
+     * @return boolean Returns true if found
+     */
+    public function hasFeaturedImage(){
+        if($this->featuredImageID && $this->featuredImage){
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Featured image of a tag
      * @return HasOne
      */
@@ -227,7 +239,7 @@ class TagModel extends Model{
             ->set("og:title", $this->title, "property")
             ->set("og:description", $this->description, "property")
             ->set("og:url",$this->href, "property")
-            ->setImageOG($this->featuredImage)
+            ->setImageOG(($this->hasFeaturedImage() ? $this->featuredImage : null))
             ->setCanonical($this->href)
             ->setWildcards([
                 '{title}' => $this->title,

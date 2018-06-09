@@ -319,22 +319,20 @@ class UserModel extends Authenticatable
     public function getProfileImageAttribute()
     {
         if($this->profileImageID) {
-            $profileImage = $this->getAttributeFromArray('profileimage');
+            // when attribute is available, weo don't ned to re-run relation
+            if ($this->attributeExists('profileimage')) {
+                $items = $this->getAttributeFromArray('profileimage');
+                // when Collection is available, we already have the data for this attribute
+                if (!$items instanceof Collection) {
+                    $items = $this->fillCacheAttributes(Media::class, $items)->first();
+                }
 
-            // dont recreate attribute
-            if ($profileImage instanceof Collection || $profileImage instanceof Media) {
-                return $profileImage;
+                return $items;
+            } // or search tags in relations
+            else {
+                return $this->getRelationValue('profileimage');
             }
-
-            // instance of collection when called from cache
-            if (is_array($profileImage) && !$profileImage instanceof Collection) {
-                return $this->fillCacheAttributes(Media::class, [$profileImage])->first();
-            }
-
-            // dont recreate attribute
-            return $this->getRelationValue('profileimage');
         }
-        return null;
     }
 
     /**

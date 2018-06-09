@@ -476,7 +476,7 @@ class PostModel extends Model{
         }
 
         // FeaturedImage
-        $relations[] = 'featured_image';
+        $relations[] = 'featuredimage';
 
         // Media
         $relations[] = 'media';
@@ -842,7 +842,7 @@ class PostModel extends Model{
           ->set("og:title", $this->title, "property")
           ->set("og:description", $this->content(), "property")
           ->set("og:url",$this->href, "property")
-          ->setImageOG($this->featured_image)
+          ->setImageOG(($this->hasFeaturedImage() ? $this->featuredImage : null))
           ->setArticleOG($this)
           ->setHrefLangData($this)
           ->setCanonical($this->href)
@@ -1038,8 +1038,8 @@ class PostModel extends Model{
     {
         if($this->featuredImageID) {
             // when attribute is available, weo don't ned to re-run relation
-            if ($this->attributeExists('featured_image')) {
-                $items = $this->getAttributeFromArray('featured_image');
+            if ($this->attributeExists('featuredimage')) {
+                $items = $this->getAttributeFromArray('featuredimage');
                 // when Collection is available, we already have the data for this attribute
                 if (!$items instanceof Collection) {
                     $items = $this->fillCacheAttributes(Media::class, $items)->first();
@@ -1048,7 +1048,7 @@ class PostModel extends Model{
                 return $items;
             } // or search tags in relations
             else {
-                return $this->getRelationValue('featured_image');
+                return $this->getRelationValue('featuredImage');
             }
         }
     }
@@ -1057,7 +1057,7 @@ class PostModel extends Model{
      * Featured image of a post
      * @return HasOne
      */
-    public function featured_image()
+    public function featuredImage()
     {
         $this->setConnection("mysql"); //@todo temporary, se po i thirr prje arkives kur posti eshte i arkives
         return $this->hasOne('App\Models\Media','mediaID','featuredImageID');

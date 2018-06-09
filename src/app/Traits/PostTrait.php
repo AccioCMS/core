@@ -777,7 +777,7 @@ trait PostTrait{
      * @return boolean Returns true if found
      */
     public function hasFeaturedImage(){
-        if($this->featuredImageID && $this->featured_image){
+        if($this->featuredImageID && $this->featuredImage){
             return true;
         }
         return false;
@@ -807,9 +807,9 @@ trait PostTrait{
     public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = ''){
         if($this->hasFeaturedImage()){
             if(!$width && !$height){
-                return url($this->featured_image->url);
+                return url($this->featuredImage->url);
             }else{
-                return $this->featured_image->thumb($width, $height, $this->featured_image);
+                return $this->featuredImage->thumb($width, $height, $this->featuredImage);
             }
         }else if($defaultFeaturedImageURL){
             return $defaultFeaturedImageURL;
@@ -830,7 +830,7 @@ trait PostTrait{
         if($this->hasFeaturedImage()){
             return new HtmlString(view()->make("vendor.posts.featuredImage", [
               'imageURL' => $this->featuredImageURL($width, $height, $defaultFeaturedImageURL),
-              'featuredImage' => $this->featured_image
+              'featuredImage' => $this->featuredImage
             ])->render());
         }
     }
