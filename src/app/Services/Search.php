@@ -49,11 +49,11 @@ class Search{
      */
     public function getKeyword(){
         Request::method();
-        if (Request::isMethod('post'))
+        if (\Request::route('keyword'))
         {
-            return Input::get('keyword');
-        }else{
             return \Request::route('keyword');
+        }else{
+            return Input::get('keyword');
         }
     }
 
