@@ -76,7 +76,7 @@ class PluginModel extends Model{
             Cache::forever('plugins', $data);
         }
 
-        return self::setCacheCollection($data, self::class);
+        return self::setCacheCollection($data, Plugin::class);
     }
 
     /**

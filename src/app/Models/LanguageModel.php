@@ -122,7 +122,7 @@ class LanguageModel extends Model{
             Cache::forever('languages',$data);
         }
 
-        return self::setCacheCollection($data, self::class);
+        return self::setCacheCollection($data, Language::class);
     }
 
     /**

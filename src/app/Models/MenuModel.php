@@ -102,7 +102,7 @@ class MenuModel extends Model{
             Cache::forever('menu',$data);
         }
 
-        return self::setCacheCollection($data, self::class);
+        return self::setCacheCollection($data, Menu::class);
     }
 
     /**

@@ -93,7 +93,7 @@ class TagModel extends Model{
             }
         }
 
-        return self::setCacheCollection($data, self::class);
+        return self::setCacheCollection($data, Tag::class);
     }
 
     /**

@@ -78,7 +78,7 @@ class SettingsModel extends Model{
             Cache::forever('settings',$data);
         }
 
-        return self::setCacheCollection($data, self::class);
+        return self::setCacheCollection($data, Settings::class);
     }
 
     /**

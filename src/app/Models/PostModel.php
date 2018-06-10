@@ -312,7 +312,7 @@ class PostModel extends Model{
         }
 
 
-        return self::setCacheCollection($data, self::class, ($getPostType ? $getPostType->slug : null));
+        return self::setCacheCollection($data, Post::class, ($getPostType ? $getPostType->slug : null));
     }
 
     /**
@@ -424,7 +424,7 @@ class PostModel extends Model{
         // if posts doesn't not exist in this language, query them
         if(!isset($cachedItems[$languageSlug])){
             $data = (new Post())->setTable($postType->slug)
-              ->with(self::getCacheRelations($postType))
+              ->with(self::getDefaultRelations($postType))
               ->limit(self::$defaultCacheLimit)
               ->orderBy('published_at','DESC')
               ->get()
@@ -457,7 +457,7 @@ class PostModel extends Model{
      * Get cache relations
      * @param object $postType
      */
-    private static function getCacheRelations($postType){
+    private static function getDefaultRelations($postType){
         $relations = [];
 
         if(count(self::$autoCacheRelations)){
@@ -500,7 +500,7 @@ class PostModel extends Model{
             $data = (new Post())->setTable($postType->slug)
               ->join('categories_relations','categories_relations.belongsToID',$postType->slug.'.postID')
               ->where('categories_relations.categoryID', '=', $categoryID)
-              ->with(self::getCacheRelations($postType))
+              ->with(self::getDefaultRelations($postType))
               ->limit(self::$defaultCacheLimit)
               ->orderBy($postType->slug.'.published_at','DESC')
               ->get()

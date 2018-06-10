@@ -117,7 +117,7 @@ class MenuLinkModel extends Model{
             $data = $cachedItems[$languageSlug];
         }
 
-        return self::setCacheCollection($data, self::class);
+        return self::setCacheCollection($data, MenuLink::class);
     }
 
     /**

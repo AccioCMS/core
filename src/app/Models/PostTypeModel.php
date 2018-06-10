@@ -201,7 +201,7 @@ class PostTypeModel extends Model{
             Cache::forever('postTypes',$data);
         }
 
-        return self::setCacheCollection($data, self::class);
+        return self::setCacheCollection($data, PostType::class);
     }
 
     /**

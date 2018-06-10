@@ -281,7 +281,7 @@ class CategoryModel extends Model{
             $data = $cachedItems[$languageSlug];
         }
 
-        return self::setCacheCollection($data, self::class);
+        return self::setCacheCollection($data, Category::class);
     }
 
     /**

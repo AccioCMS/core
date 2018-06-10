@@ -135,7 +135,7 @@ class UserModel extends Authenticatable
             Cache::forever('users',$data);
         }
 
-        return self::setCacheCollection($data, self::class);
+        return self::setCacheCollection($data, User::class);
     }
 
 

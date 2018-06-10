@@ -54,7 +54,7 @@ class CategoryRelationModel extends Model
             Cache::forever($cacheName, $data);
         }
 
-        return self::setCacheCollection($data, self::class);
+        return self::setCacheCollection($data, CategoryRelation::class);
     }
 
 

@@ -70,7 +70,7 @@ trait PostTrait{
             $postObj = (new Post())->setTable($postTypeSlug);
             $post = $postObj
               ->where('slug->'.App::getLocale(), $slug)
-              ->with(self::$defaultCacheWith)
+              ->with(self::getDefaultRelations(getPostType($postTypeSlug)))
               ->first();
 
             // search in archive if not found in main database
@@ -78,7 +78,7 @@ trait PostTrait{
                 $postObj->setConnection('mysql_archive');
                 $post = $postObj
                   ->where('slug->'.App::getLocale(), $slug)
-                  ->with(self::$defaultCacheWith)
+                  ->with(self::getDefaultRelations(getPostType($postTypeSlug)))
                   ->first();;
             }
 

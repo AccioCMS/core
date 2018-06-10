@@ -76,7 +76,7 @@ class PermalinkModel extends Model
             Cache::forever('permalinks',$data);
         }
 
-        return self::setCacheCollection($data, self::class);
+        return self::setCacheCollection($data, Permalink::class);
     }
 
     /**
