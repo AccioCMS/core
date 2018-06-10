@@ -373,12 +373,6 @@
 
                                         <hr>
 
-                                        <pre>
-                                            {{selectedCategories}}
-
-                                            {{categoriesOptions}}
-                                        </pre>
-
                                         <!-- CATEGORIES -->
                                         <div class="form-group" :id="'form-group-categories_'+ lang.slug" v-if="hasCategories">
                                             <label class="control-label col-md-2 col-sm-2 col-xs-12">{{trans.__categoryTitle}}</label>
@@ -628,7 +622,18 @@
              */
             hasCategory(categories){
                 // if it is all
-                if(categories == 0){
+                if(categories === undefined || categories.length == 0){
+                    return true;
+                }
+                let hasAll = false;
+                categories.forEach((cat) => {
+                    if(cat['slug'] == 0){
+                        hasAll = true;
+                        return;
+                    }
+                });
+
+                if(hasAll){
                     return true;
                 }
                 // loop throw the selected categories and check if it should displayed in one of them

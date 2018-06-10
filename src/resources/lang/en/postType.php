@@ -27,8 +27,10 @@ return [
         'isCategoryRequired' => 'Is category required',
         'hasTags' => 'Has tags',
         'isTagRequired' => 'Is tag required',
+        'hasFeaturedImage' => 'Has Featured image',
         'isFeaturedImageRequired' => 'Is Featured image required',
-        'hasFeaturedVideo' => 'Featured video',
+        'hasFeaturedVideo' => 'Has Featured video',
+        'isFeaturedVideoRequired' => 'Is featured video required',
     ),
 
 ];

@@ -179,10 +179,10 @@ class BaseMenuController extends MainController{
                 unset($menuLink['children']);
                 unset($menuLink['routeList']);
                 unset($menuLink['routes']);
-                $this->tmpMenuLinkInfo[$key] = $menuLink;
+                $this->tmpMenuLinkInfo[] = $menuLink;
                 $this->convertTo1Dimension($children, $menuLink['parent']);
             }else{
-                $this->tmpMenuLinkInfo[$key] = $menuLink;
+                $this->tmpMenuLinkInfo[] = $menuLink;
             }
         }
     }
@@ -200,13 +200,11 @@ class BaseMenuController extends MainController{
         foreach ($orderedLinkList as $menuLink){
             if (isset($menuLink['id'])){
                 $id = $menuLink['id'];
-            }else if(isset($menuLink['menuLinkID'])){
-                $id = $menuLink['menuLinkID'];
-            }else if(isset($menuLink['menuLinkID'])){
+            }else{
                 $id = $menuLink['menuLinkID'];
             }
             $isNew = strstr($id, 'NEW');
-            $tmp = $unOrderedLinkList[$id];
+            $tmp = $this->getMenuLinkWithIDFromTmpList($unOrderedLinkList, $id);
             $tmp['order'] = $this->order;
             $tmp['parent'] = $parent;
             $tmp['menuID'] = $menuID;
@@ -222,6 +220,15 @@ class BaseMenuController extends MainController{
                 $this->prepareArrayForStore($menuLink['children'], $unOrderedLinkList, $menuID, $id);
             }
         }
+    }
+
+    private function getMenuLinkWithIDFromTmpList($list, $id){
+        foreach ($list as $menuLink){
+            if($menuLink['menuLinkID'] == $id){
+                return $menuLink;
+            }
+        }
+        throw new \Exception("Menu link doesn't exit, something is wrong");
     }
 
     /**
@@ -394,6 +401,7 @@ class BaseMenuController extends MainController{
      * */
     private function convertLinksToParentChild($menuLinks){
         $tmp = [];
+        $count = 0;
         foreach($menuLinks as $key => $menuLink){
 
             // Append menuLink Routes to each menu link
@@ -427,11 +435,12 @@ class BaseMenuController extends MainController{
                 }
             }
 
-            $tmp[$menuLink['menuLinkID']] = $menuLink;
+            $tmp[$count] = $menuLink;
             $children = $this->getChildren($menuLink['menuLinkID']);
             if(count($children)){
-                $tmp[$menuLink['menuLinkID']]['children'] = $this->convertLinksToParentChild($children);
+                $tmp[$count]['children'] = $this->convertLinksToParentChild($children);
             }
+            $count++;
         }
         return $tmp;
     }
@@ -444,9 +453,11 @@ class BaseMenuController extends MainController{
      * */
     private function getChildren($parentID){
         $tmp = [];
+        $count = 0;
         foreach($this->existingMenuLinks as $key => $menuLink){
             if ($menuLink['parent'] == $parentID){
-                $tmp[$menuLink['menuLinkID']] = $menuLink;
+                $tmp[$count] = $menuLink;
+                $count++;
             }
         }
         return $tmp;
@@ -456,7 +467,7 @@ class BaseMenuController extends MainController{
         $tmp = [];
         foreach($menuLinks as $key => $menuLink){
             if(isset($menuLink['parent']) && !$menuLink['parent']){
-                $tmp[$menuLink['menuLinkID']] = $menuLink;
+                $tmp[$key] = $menuLink;
             }
         }
         return $tmp;
