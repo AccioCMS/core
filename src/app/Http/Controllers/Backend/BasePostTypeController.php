@@ -239,8 +239,10 @@ class BasePostTypeController extends MainController{
         $postType->isCategoryRequired = $request->isCategoryRequired;
         $postType->hasTags          = $request->hasTags;
         $postType->isTagRequired    = $request->isTagRequired;
-        $postType->hasFeaturedVideo = $request->hasFeaturedVideo;
+        $postType->hasFeaturedImage = $request->hasFeaturedImage;
         $postType->isFeaturedImageRequired = $request->isFeaturedImageRequired;
+        $postType->hasFeaturedVideo = $request->hasFeaturedVideo;
+        $postType->isFeaturedVideoRequired = $request->isFeaturedVideoRequired;
 
         // return results
         if ($postType->save()){
@@ -281,13 +283,17 @@ class BasePostTypeController extends MainController{
 
         // update post type query
         $postType = App\Models\PostType::findOrFail($request->id);
-        $postType->name = $request->name;
-        $postType->isVisible = $request->isVisible;
-        $postType->fields = $customFieldsArray;
+        $postType->name             = $request->name;
+        $postType->isVisible        = $request->isVisible;
+        $postType->fields           = $customFieldsArray;
+        $postType->hasCategories    = $request->hasCategories;
         $postType->isCategoryRequired = $request->isCategoryRequired;
-        $postType->isTagRequired = $request->isTagRequired;
-        $postType->hasFeaturedVideo = $request->hasFeaturedVideo;
+        $postType->hasTags          = $request->hasTags;
+        $postType->isTagRequired    = $request->isTagRequired;
+        $postType->hasFeaturedImage = $request->hasFeaturedImage;
         $postType->isFeaturedImageRequired = $request->isFeaturedImageRequired;
+        $postType->hasFeaturedVideo = $request->hasFeaturedVideo;
+        $postType->isFeaturedVideoRequired = $request->isFeaturedVideoRequired;
 
         if($postType->save()){
             // delete fields

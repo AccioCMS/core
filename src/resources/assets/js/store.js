@@ -226,30 +226,6 @@ export const store = new Vuex.Store({
                 type = "error";
             }
 
-            // context.commit('setInputErrorsMsg', []);
-            // var inputErrorsExist = context.getters.get_input_errors_exist;
-            // var inputErrorsMsg = [];
-            // if(inputErrorsExist){
-            //     for (var key in response.errors){
-            //         for(var i=0;i<response.errors[key].length;i++){
-            //             inputErrorsMsg.push(response.errors[key][i]);
-            //             $("#form-group-"+key).addClass("bad");
-            //             $("#form-group-"+key+" .alert").show();
-            //             $("#form-group-"+key+" .alert").append("<li>"+response.errors[key][i]+"</li>");
-            //         }
-            //     }
-            //
-            //     context.commit('setInputErrorsMsg', inputErrorsMsg);
-            //     context.commit('setInputErrorsExist', false);
-            // }
-            //
-            // $(".form-group").each(function (e) {
-            //     if(!$(this).hasClass("bad")){
-            //         var id = $(this).attr("id");
-            //         $("#"+id+" div .alert").hide(200)
-            //     }
-            // });
-
             // noty notification
             new Noty({
                 type: type,

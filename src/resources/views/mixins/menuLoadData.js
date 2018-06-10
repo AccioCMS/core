@@ -9,10 +9,11 @@ export const menuLoadData = {
                 .then((resp) => {
                     this.menuList = resp.body.data;
                     this.menuListLength = this.menuList.length;
-                    for(var k in this.menuList){
+                    for(let k in this.menuList){
                         if(this.menuList[k].menuID == this.$route.params.id){
                             this.selectedMenu = this.menuList[k];
                             this.selectedMenuID = this.menuList[k].menuID;
+                            this.selectedTmpMenuID = this.menuList[k].menuID;
                             break;
                         }
                     }
