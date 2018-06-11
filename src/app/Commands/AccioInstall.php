@@ -403,6 +403,7 @@ class AccioInstall extends Command{
           'DB_DATABASE' => $this->DB_DATABASE,
           'DB_USERNAME' => $this->DB_USERNAME,
           'DB_PASSWORD' => $this->DB_PASSWORD,
+          'SESSION_NAME' => str_slug($this->APP_NAME),
         ]);
 
         // save in runtime
