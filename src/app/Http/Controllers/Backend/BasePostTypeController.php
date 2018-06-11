@@ -114,7 +114,7 @@ class BasePostTypeController extends MainController{
         if(!User::hasAccess('PostType','delete')){
             return $this->noPermission();
         }
-        $postType = PostType::findByID($id);
+        $postType = PostType::find($id);
 
         // Check if this post type has posts
         // Post type should not be able to be deleted if it has posts
@@ -122,8 +122,7 @@ class BasePostTypeController extends MainController{
             return $this->response( "You can't delete this Post Type. There could be posts associated with it or it is part of a menu", 403);
         }
 
-        $postType->delete();
-        if ($postType){
+        if ($postType->delete()){
             Schema::drop($postType->slug);
 
             // delete route file
@@ -159,7 +158,7 @@ class BasePostTypeController extends MainController{
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
         // loop throw the item array (ids) and delete them
         foreach($data as $id){
-            $postType = PostType::findByID($id);
+            $postType = PostType::find($id);
             if(!$postType){
                 continue;
             }

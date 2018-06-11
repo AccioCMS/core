@@ -108,8 +108,8 @@ export const lists = {
             this.$store.dispatch('openLoading');
             this.$http.get(this.deleteUrl+id)
                 .then((resp) => {
-                    if(resp.code === 200){
-                        var response = resp.body;
+                    let response = resp.body;
+                    if(response.code === 200){
                         this.$store.dispatch('handleErrors', {response});
                         this.refreshList();  // refresh the list of the table
                     }else{
