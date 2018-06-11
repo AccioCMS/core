@@ -435,7 +435,7 @@ class PostTypeModel extends Model{
                         }else if ($field['type']['inputType'] == "date"){
                             $table->dateTime($slug)->nullable();
                         }else if ($field['type']['inputType'] == "boolean"){
-                            $table->tinyInteger($slug);
+                            $table->tinyInteger($slug)->nullable();
                         }else if ($field['type']['inputType'] == "db"){
                             if($field['isMultiple']){
                                 $table->json($slug)->nullable();

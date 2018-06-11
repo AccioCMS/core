@@ -1,6 +1,9 @@
 export const postForm = {
     methods:{
-        // load inputs when inserting a post
+        /**
+         * Load all needed data for the post create form
+         * Handels fields, custom fields, media plugins etc
+         */
         loadCreateInputs(){
             this.categoriesOptions = [];
             this.selectedCategories = [];
@@ -41,7 +44,7 @@ export const postForm = {
                      */
                     this.languages = resp.body.languages;
                     let selectedTags = {};
-                    for(var k in this.languages){
+                    for(let k in this.languages){
                         if(this.languages[k].isDefault){
                             this.defaultLangSlug = this.languages[k].slug;
                             this.activeLang = this.languages[k].slug;
@@ -66,7 +69,7 @@ export const postForm = {
                      * Columns or post type fields
                      * Prepare v-models (value placeholders for each field)
                      */
-                    this.getFieldsAndPrepareValues(resp.body.postTypeFieldsValues);
+                    this.getFieldsAndPrepareValues(resp.body.postTypeFieldsValues, true);
 
                     /**
                      * Post type data
@@ -95,46 +98,54 @@ export const postForm = {
                             }
                         }
 
-                        console.log(this.selectedCategories, this.$route.query.category);
                     })
 
-                      /*
-                     * get plugin panels
-                     */
+                    /*
+                   * get plugin panels
+                   */
                     this.getPluginsPanel(['post', this.$route.params.post_type], 'create');
 
                     this.$store.commit('setSpinner', false);
                 });
         },
 
-
-        // get and prepare fields of a post type
-        getFieldsAndPrepareValues(allColumn){
+        /**
+         * Get and prepare fields values of a post type (Create and Update form).
+         *
+         * @param allColumn list of all columns for the post type table
+         * @param isCreate is create form
+         */
+        getFieldsAndPrepareValues(allColumn, isCreate = false){
             // get the columns in from the post type table and set the form data to the column data
             this.columns = allColumn;
+
             // this loop handles to populate the form with the arrays
-            for(var k in this.columns){
-                var tempArray = {};
+            for(let k in this.columns){
+                let tempArray = {};
                 if(this.columns[k].multioptionValues != ""){
-                    if(this.columns[k].translatable){
-                        this.columns[k].value = this.makeMultiLanguageValue('array');
-                    }else{
-                        // add value to the object / this value will be used to store the input value
-                        this.columns[k].value = [];
+                    if(isCreate){
+                        if(this.columns[k].translatable){
+                            this.columns[k].value = this.makeMultiLanguageValue('array');
+                        }else{
+                            // add value to the object / this value will be used to store the input value
+                            this.columns[k].value = [];
+                        }
                     }
 
                     // generate multioption values (options) array from the string
                     this.columns[k].multioptionValues = this.generateMultioptionsValue(this.columns[k].multioptionValues, this.columns[k].type.inputType);
 
                 }else{ // if it is not a multioption input type
-                    if(this.columns[k].translatable == true){
-                        // add value to the object / this value will be used to store the input value
-                        this.columns[k].value = this.columns[k].value = this.makeMultiLanguageValue();
-                    }else{
-                        this.columns[k].value = ""; // add value to the object / this value will be used to store the input value
+                    if(isCreate){
+                        if(this.columns[k].translatable == true){
+                            // add value to the object / this value will be used to store the input value
+                            this.columns[k].value = this.columns[k].value = this.makeMultiLanguageValue();
+                        }else{
+                            this.columns[k].value = ""; // add value to the object / this value will be used to store the input value
+                        }
                     }
                 }
-                for(var key in this.columns[k]){
+                for(let key in this.columns[k]){
                     tempArray[key] = this.columns[k][key];
                 }
                 this.form.push(
@@ -143,7 +154,13 @@ export const postForm = {
             }
         },
 
-        // generate multioptions value (the options for dropdown, checkboxes and radio buttons)
+        /**
+         * Generate multioptions value (the options for dropdown, checkboxes and radio buttons).
+         *
+         * @param multioptionValues
+         * @param inputType
+         * @returns {Array}
+         */
         generateMultioptionsValue(multioptionValues, inputType){
             let tmp = [];
             if(multioptionValues !== null) {
@@ -179,7 +196,10 @@ export const postForm = {
             return tmp;
         },
 
-        // load inputs and their data when updating a post
+        /**
+         * Load all needed data for the post update form
+         * Handels fields, custom fields, media plugins etc
+         */
         loadUpdateInputs(){
             this.columns = '';
             this.categoriesOptions = [];
@@ -214,7 +234,7 @@ export const postForm = {
 
             let customFieldsValuesTmp = {};
             // get the columns in from the post type table and set the form data to the column data
-            let columnPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/details/'+this.$route.params.post_type+'/'+this.$route.params.id)
+            this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/details/'+this.$route.params.post_type+'/'+this.$route.params.id)
                 .then((resp) => {
                     // get all languages
                     this.languages = resp.body.languages;
@@ -228,7 +248,9 @@ export const postForm = {
                     this.$store.commit('setLanguages', this.languages);
 
                     this.selectedCategories = resp.body.post.selectedCategories;
-                    this.columns = this.populateValuesFromData(resp.body.postTypeFields);
+                    // used to change ids with the actually objects in fields Dropdown from DB
+                    this.columns = this.populateValuesFromData(resp.body.postTypeFieldsValues);
+                    // populate values of post type fields
                     this.getFieldsAndPrepareValues(resp.body.postTypeFieldsValues);
 
                     let published_at = resp.body.post.published_at;
@@ -302,10 +324,10 @@ export const postForm = {
                     })
 
                 }).then((resp) => {
-                    // load the values of the custom fields
-                    this.pupulateCustomFieldsValues(customFieldsValuesTmp);
-                    this.$store.commit('setSpinner', false);
-                });
+                // load the values of the custom fields
+                this.pupulateCustomFieldsValues(customFieldsValuesTmp);
+                this.$store.commit('setSpinner', false);
+            });
         },
 
         /**

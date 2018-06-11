@@ -622,7 +622,7 @@
              */
             hasCategory(categories){
                 // if it is all
-                if(categories === undefined || categories.length == 0){
+                if(categories === undefined || categories.length == 0 || categories == 0){
                     return true;
                 }
                 let hasAll = false;
@@ -655,16 +655,16 @@
                 // gets media files of custom fields and writes them to their v-models
                 this.constructMediaForCustomFields();
 
-                var dateFormatted = "";
+                let dateFormatted = "";
                 if(this.published_at.date != ""){
-                    var date = this.published_at.date;
-                    var month = parseInt(date.getMonth())+1;
+                    let date = this.published_at.date;
+                    let month = parseInt(date.getMonth())+1;
                     dateFormatted = date.getDate() + "-" + month + "-" + date.getFullYear();
                 }
                 this.published_at.dateFormatted = dateFormatted;
 
                 // request for the backend
-                var request = {
+                let request = {
                     title: this.title,
                     content: this.content,
                     isCategoryRequired: this.isCategoryRequired,
@@ -737,8 +737,8 @@
              * @param mediaID
              */
             deleteSelectedMediaFile(key, mediaID){
-                var mediaArr = this.mediaSelectedFiles;
-                for(var k in mediaArr[key]){
+                let mediaArr = this.mediaSelectedFiles;
+                for(let k in mediaArr[key]){
                     if(key == "featuredImage" || key == "featuredVideo"){
                         delete mediaArr[key];
                         continue;

@@ -606,6 +606,7 @@
             // permissions
             this.hasAddPermission = this.hasPermission(this.$route.params.post_type, 'create');
 
+            // generate input data
             this.loadUpdateInputs();
             // get plugin panels
             this.getPluginsPanel(['post', this.$route.params.post_type], 'update');
@@ -673,7 +674,7 @@
             },
 
             /**
-             * Used to construct custom fields values of the input type 'db'
+             * Used to construct fields values of the input type 'db'
              * @param formData
              * @returns {Array} custom field arrays
              */
@@ -688,11 +689,12 @@
                             continue;
                         }
 
+                        let id;
                         // primary key name
                         if(formData[k].dbTable.belongsTo == "User"){
-                            var id = "userID";
+                            id = "userID";
                         }else if(formData[k].dbTable.belongsTo == "PostType"){
-                            var id = "postID";
+                            id = "postID";
                         }
 
                         // if custom field is translatable
@@ -732,7 +734,7 @@
                                 // array of object if custom field is multi options
                                 if(formData[k].isMultiple){
                                     if(formData[k].value !== undefined){
-                                        var formDataValue = JSON.parse(formData[k].value);
+                                        let formDataValue = JSON.parse(formData[k].value);
                                         for(let key in formDataValue){
                                             if(parseInt(formData[k].data[dataKey][id]) == parseInt(formDataValue[key])){
                                                 value[count] = formData[k].data[dataKey];
@@ -798,14 +800,14 @@
                 // gets media files of custom fields and writes them to their v-models
                 this.constructMediaForCustomFields();
 
-                var dateFormatted = "";
+                let dateFormatted = "";
                 if(this.published_at.date != ""){
-                    var date = this.published_at.date;
-                    var month = parseInt(date.getMonth())+1;
+                    let date = this.published_at.date;
+                    let month = parseInt(date.getMonth())+1;
                     dateFormatted = date.getDate() + "-" + month + "-" + date.getFullYear();
                 }
                 this.published_at.dateFormatted = dateFormatted;
-                var request = {
+                let request = {
                     formData: this.form,
                     pluginsData: this.pluginsData,
                     customFieldValues: this.customFieldValues,
@@ -893,8 +895,8 @@
              * @param mediaID
              */
             deleteSelectedMediaFile(key, mediaID){
-                var mediaArr = this.mediaSelectedFiles;
-                for(var k in mediaArr[key]){
+                let mediaArr = this.mediaSelectedFiles;
+                for(let k in mediaArr[key]){
                     if(key == "featuredImage" || key == "featuredVideo"){
                         delete mediaArr[key];
                         continue;
