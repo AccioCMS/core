@@ -296,16 +296,21 @@ class PostTypeModel extends Model{
         Event::fire('postType:destruct', [$this]);
     }
 
+    /**
+     * Generate slug of a field. Uses camel case to create the slug from a string.
+     *
+     * @param string $slug
+     * @param array $usedSlugs
+     * @return string
+     */
     public static function generateSlug(string $slug, array $usedSlugs){
-        // replace non-alphanumeric characters
-        $slug = preg_replace('/\s+/', "_", $slug);
-        $slug = preg_replace("/[^a-zA-Z0-9_]+/", "", $slug);
-
+        $slug = camel_case($slug);
         $count = 1;
 
+        // adds a number in the slug string if the specific slug allready exists
         if (in_array($slug, $usedSlugs)){
             while(true){
-                $slug = str_slug($slug."_".$count, '_');
+                $slug = camel_case($slug."_".$count, '_');
                 if (!in_array($slug, $usedSlugs)){
                     return $slug;
                 }
