@@ -138,10 +138,10 @@ trait MediaTrait{
                 if($media->save()){
                     if ($request->fromAlbum === "true" || $request->fromAlbum === true){
                         \Illuminate\Support\Facades\DB::table('album_relations')->insert([
-                            'albumID' => $request->albumID,
-                            'mediaID' => $media->mediaID,
-                            "created_at" =>  \Carbon\Carbon::now(),
-                            "updated_at" => \Carbon\Carbon::now(),
+                          'albumID' => $request->albumID,
+                          'mediaID' => $media->mediaID,
+                          "created_at" =>  \Carbon\Carbon::now(),
+                          "updated_at" => \Carbon\Carbon::now(),
                         ]);
                     }
 
@@ -151,7 +151,7 @@ trait MediaTrait{
                     }
 
                     // Create thumbs
-                    $this->createDefaultThumbs($this, $belongsToApp);
+                    $this->createDefaultThumbs($media, $belongsToApp);
 
                     // Fire event
                     Event::fire('media:created', [$media, $request]);
@@ -278,7 +278,7 @@ trait MediaTrait{
         $extension = File::extension($imageObj->url);
         $basePath = base_path('/');
 
-        if (in_array($extension, config('media.image_extensions'))){
+        if ($this->hasImageExtension($extension)){
             //thumb can only be created if original source exist
             if(file_exists($basePath.$imageObj->url) && File::size($basePath.$imageObj->url)) {
                 $thumbDir = base_path($imageObj->fileDirectory . "/" . $width.($height ? 'x'.$height : ""));
@@ -322,6 +322,11 @@ trait MediaTrait{
         if(!$extension && $this->extension){
             $extension = $this->extension;
         }
+
+        if(!$extension){
+            throw new \Exception("No extension given");
+        }
+
         if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.image_extensions'))){
             return true;
         }
@@ -337,6 +342,9 @@ trait MediaTrait{
     private function hasVideoExtension($extension = null){
         if(!$extension && $this->extension){
             $extension = $this->extension;
+        }
+        if(!$extension){
+            throw new \Exception("No extension given");
         }
         if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.video_extensions'))){
             return true;
@@ -354,6 +362,11 @@ trait MediaTrait{
         if(!$extension && $this->extension){
             $extension = $this->extension;
         }
+
+        if(!$extension){
+            throw new \Exception("No extension given");
+        }
+
         if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.audio_extensions'))){
             return true;
         }
@@ -370,6 +383,11 @@ trait MediaTrait{
         if(!$extension && $this->extension){
             $extension = $this->extension;
         }
+
+        if(!$extension){
+            throw new \Exception("No extension given");
+        }
+
         if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.document_extensions'))){
             return true;
         }
@@ -385,6 +403,11 @@ trait MediaTrait{
         if(!$extension && $this->extension){
             $extension = $this->extension;
         }
+
+        if(!$extension){
+            throw new \Exception("No extension given");
+        }
+         
         if(array_intersect([strtolower($extension),strtoupper($extension)], self::allowedExtensions())){
             return true;
         }
