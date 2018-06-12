@@ -798,7 +798,7 @@ class PostModel extends Model{
 
                 switch ($name) {
                     case 'postTypeSlug';
-                        $params['postTypeSlug'] = cleanPostTypeSlug($item->getTable());
+                        $params['postTypeSlug'] = cleanPostTypeSlug($this->getTable());
                         break;
 
                     case 'postSlug';
@@ -827,7 +827,7 @@ class PostModel extends Model{
             }
             return route($routeName, $params);
         }else{
-            throw new Exception("Route $routeName not found");
+            throw new \Exception("Route $routeName not found");
         }
     }
 
