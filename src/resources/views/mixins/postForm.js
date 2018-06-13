@@ -253,7 +253,7 @@ export const postForm = {
                     // populate values of post type fields
                     this.getFieldsAndPrepareValues(resp.body.postTypeFieldsValues);
 
-                    let published_at = resp.body.post.published_at;
+                    let published_at = resp.body.post.published_at.date;
                     this.createdByUserID = resp.body.post.createdByUserID;
 
                     this.selectedTags = resp.body.post.selectedTags;

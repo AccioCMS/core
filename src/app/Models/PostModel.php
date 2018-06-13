@@ -91,6 +91,9 @@ class PostModel extends Model{
       'customFields' => 'object',
     ];
 
+    // Carbon instance fields
+    protected $dates = ['created_at', 'updated_at', 'published_at'];
+
     /**
      * The primary key of the table
      *
