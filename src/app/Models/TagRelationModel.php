@@ -2,6 +2,7 @@
 
 namespace Accio\App\Models;
 
+use Accio\App\Traits\CacheTrait;
 use App\Models\PostType;
 use App\Models\TagRelation;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +11,9 @@ use Mockery\Exception;
 
 class TagRelationModel extends Model
 {
+
+    use CacheTrait;
+
     /**
      * The table associated with the model.
      *
@@ -25,29 +29,29 @@ class TagRelationModel extends Model
     protected $primaryKey = "tagRelationID";
 
     /**
-     * Get tags relations by Post Type
-     * If items are found in cache they are served from it, otherwise it gets them from database
+     * Get tags from cache. Cache is generated if not found
      *
-     * @param  string $postTypeSlug  Slug of post type
-     * @return object|null
-     * */
-    public static function getFromCache($postTypeSlug){
-        $findPostType = PostType::findBySlug($postTypeSlug);
-        if(!$findPostType){
+     * @param  string $postTypeSlug Name of the cache ex "post_services". Prefix "tags_" is added automatically on cache name.
+     * @return object|null  Returns requested cache if found, null instead
+     */
+    public static function getFromCache($postTypeSlug =''){
+        if(!isPostType($postTypeSlug)){
             throw new Exception('No post type given');
         }
-
         $cacheName = 'tags_relations_'.$postTypeSlug;
 
-        //generate cache if it doesn't exist
-        if(!Cache::has($cacheName)) {
-            $relations = TagRelation::where('belongsTo',$postTypeSlug)->get();
-            Cache::forever($cacheName, $relations);
-
-            return $relations;
+        $data = Cache::get($cacheName);
+        if(!$data){
+            $functionName = 'setCache_'.$cacheName;
+            if(method_exists(TagRelation::class,$functionName)){
+                $data = TagRelation::$functionName($cacheName);
+            }else{
+                $data = TagRelation::where('belongsTo',$postTypeSlug)->get()->toArray();
+                Cache::forever($cacheName,$data);
+            }
         }
 
-        // return posts of current language
-        return Cache::get($cacheName);
+        return self::setCacheCollection($data, TagRelation::class);
     }
+
 }

@@ -407,7 +407,7 @@ trait MediaTrait{
         if(!$extension){
             throw new \Exception("No extension given");
         }
-         
+
         if(array_intersect([strtolower($extension),strtoupper($extension)], self::allowedExtensions())){
             return true;
         }
