@@ -183,8 +183,12 @@ class BaseUserController extends MainController{
     }
 
     /**
-     * Delete a user
-     * */
+     * Delete a user.
+     *
+     * @param $lang
+     * @param $id
+     * @return array
+     */
     public function delete($lang, $id){
         // check if user has permissions to access this link
         if(!User::hasAccess('user','delete')){
@@ -209,6 +213,7 @@ class BaseUserController extends MainController{
     /**
      *  Bulk Delete users
      *  Delete many users
+     *
      *  @params array of user IDs
      * */
     public function bulkDelete(Request $request){
@@ -226,7 +231,8 @@ class BaseUserController extends MainController{
     }
 
     /**
-     *  Change users data
+     * Change users data
+     *
      * @params $request all users data comming from the form
      * @return array
      * */
@@ -293,9 +299,12 @@ class BaseUserController extends MainController{
     }
 
     /**
-     *  return JSON object with details for a specific user
-     * @params user ID
-     * */
+     * JSON object with details for a specific user.
+     *
+     * @param $lang
+     * @param $id
+     * @return array
+     */
     public function detailsJSON($lang, $id){
         // check if user has permissions to access this link
         if(\Illuminate\Support\Facades\Auth::user()->userID != $id) {
@@ -319,6 +328,7 @@ class BaseUserController extends MainController{
 
     /**
      *  return success or error
+     *
      *  method to reset users password
      *  @params user ID AND new password
      * */
@@ -351,9 +361,11 @@ class BaseUserController extends MainController{
     }
 
     /**
-     *  Get the array of fields for advanced search
-     *  I kthen fildat qe i perdorim per search te detajum
-     *  @return json fildat
+     * Get the array of fields for advanced search
+     *
+     * I kthen fildat qe i perdorim per search te detajum
+     * @return json fildat
+     *
      * */
     public function getAdvancedSearchFields($lang = ""){
         // check if user has permissions to access this link
@@ -366,6 +378,7 @@ class BaseUserController extends MainController{
     /**
      *  Get the result of advanced search
      *  I kthen rezultatet e searchit te advancum
+     *
      *  @params
      *  @return json fildat
      * */
@@ -448,6 +461,10 @@ class BaseUserController extends MainController{
         return view(User::$backendPathToView.'all', compact('lang','view','hasAdvancedSearchData','advancedSearchData','pagination', 'fields', 'adminPrefix'));
     }
 
+    /**
+     * @param Request $request
+     * @return array
+     */
     public function mediaStore(Request $request){
         // check if user has permissions to access this link
         if(!User::hasAccess('user','create')){
