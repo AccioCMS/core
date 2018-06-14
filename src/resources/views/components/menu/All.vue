@@ -73,6 +73,7 @@
                                     :data-belongsToID="itemD1.belongsToID" :data-label="itemD1.label"
                                     :data-cssClass="itemD1.cssClass" :data-customLink="itemD1.customLink"
                                     :data-controller="itemD1.controller" :data-method="itemD1.method" :data-slug="itemD1.slug">
+
                                     <div class="icons">
                                         <i class="fa fa-pencil-square fa-2x" @click="openEditLinkPanel(itemD1.menuLinkID)"></i>
                                         <i class="fa fa-close fa-2x" @click="deleteLink(indexD1, itemD1.menuLinkID, keyD1)"></i>

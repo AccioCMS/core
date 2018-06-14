@@ -190,11 +190,15 @@ class BaseUserController extends MainController{
         if(!User::hasAccess('user','delete')){
             return $this->noPermission();
         }
-        $user = App\Models\User::find($id)->delete();
-        if ($user){
-            // Delete all roles relations
-            RoleRelationsModel::where('userID',$id)->delete();
 
+        // Delete all roles relations
+        $roles = RoleRelationsModel::where('userID',$id);
+        if($roles){
+            $roles->delete();
+        }
+
+        $user = App\Models\User::find($id);
+        if ($user && $user->delete()){
             $result = $this->response('User is deleted');
         }else{
             $result = $this->response( 'Internal server error. Please try again later', 500);

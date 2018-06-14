@@ -451,26 +451,28 @@ trait MenuLinkTrait{
         $links = [];
         $count = 0;
 
-        foreach($menuLinks as $menuLink){
-            if($menuLink->belongsTo == "post_type"){
-                $permission = User::hasAccess($menuLink->slug, "read");
-            }elseif($menuLink->belongsTo == "category"){
-                $permission = User::hasAccess("Category", "read");
-            }else{
-                $permission = User::hasAccess($menuLink->slug, "update");
-            }
+        if($menuLinks){
+            foreach($menuLinks as $menuLink){
+                if($menuLink->belongsTo == "post_type"){
+                    $permission = User::hasAccess($menuLink->slug, "read");
+                }elseif($menuLink->belongsTo == "category"){
+                    $permission = User::hasAccess("Category", "read");
+                }else{
+                    $permission = User::hasAccess($menuLink->slug, "update");
+                }
 
-            $routeURL = self::getActionOfLink($menuLink);
-            if($routeURL){
-                $links[$count] = [
-                  'label' => $menuLink->label,
-                  'menuLinkID' => $menuLink->menuLinkID,
-                  'link' => self::removeDomainFromLink($routeURL),
-                  'icon' => '',
-                  'access' => $permission,
-                  'children' => self::cmsMenuLinks($menuLink->children),
-                ];
-                $count++;
+                $routeURL = self::getActionOfLink($menuLink);
+                if($routeURL){
+                    $links[$count] = [
+                        'label' => $menuLink->label,
+                        'menuLinkID' => $menuLink->menuLinkID,
+                        'link' => self::removeDomainFromLink($routeURL),
+                        'icon' => '',
+                        'access' => $permission,
+                        'children' => self::cmsMenuLinks($menuLink->children),
+                    ];
+                    $count++;
+                }
             }
         }
         if(!count($links)){
