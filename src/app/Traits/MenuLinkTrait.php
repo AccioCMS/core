@@ -53,10 +53,11 @@ trait MenuLinkTrait{
      * While the same MenuLink can be linked to different Menus and they have the same params and routeName,
      * there is currently no way to identify which of them is active, therefore all of their IDs are returned
      *
+     * @param boolean $reset If active ids should be reset
      * @return array
      */
-    public static function setActiveIDs(){
-        if(!self::$activeIDs){
+    public static function setActiveIDs($reset = false){
+        if(!self::$activeIDs || $reset){
             // Get current Menu Link
             $currentRoute = \Request::route();
 
@@ -106,13 +107,13 @@ trait MenuLinkTrait{
             foreach ($menuLinkRoute->parameterNames() as $parameter) {
                 if (
                     // Current route parameter is present in MenuLink route
-                    isset($menuLinksParams[$parameter]) &&
+                  isset($menuLinksParams[$parameter]) &&
 
-                    // Route uri match
-                    $currentRoute->uri() == $menuLinkRoute->uri() &&
+                  // Route uri match
+                  $currentRoute->uri() == $menuLinkRoute->uri() &&
 
-                    // Current route Parameter match the parameter from Menu Link
-                    \Request::route()->parameter($parameter) == $menuLinksParams[$parameter]
+                  // Current route Parameter match the parameter from Menu Link
+                  \Request::route()->parameter($parameter) == $menuLinksParams[$parameter]
                 ) {
                     $paramsMatch = true;
                 } else {
@@ -149,9 +150,9 @@ trait MenuLinkTrait{
     private static function checkCategoryMatch(&$currentMenuLinkIDs, $menuLink){
         // check for category match
         if (Meta::getModelData()
-            && isset($menuLink->params->categoryID)
-            && isset(Meta::getModelData()->categories)
-            && count(Meta::getModelData()->categories)
+          && isset($menuLink->params->categoryID)
+          && isset(Meta::getModelData()->categories)
+          && count(Meta::getModelData()->categories)
         ) {
             foreach(Meta::getModelData()->categories as $category){
                 if($category->categoryID === $menuLink->params->categoryID){
@@ -234,8 +235,8 @@ trait MenuLinkTrait{
     public static function sethomepage(){
         if(Post::gethomepage('postID')) {
             $menuLinkHomePage = \App\Models\MenuLink::getFromCache()
-                ->where('belongsToID', Post::gethomepage('postID'))
-                ->where('belongsTo', 'post_pages');
+              ->where('belongsToID', Post::gethomepage('postID'))
+              ->where('belongsTo', 'post_pages');
 
             // The first MenuLink is returned if no HomePage is defined
             if (!$menuLinkHomePage) {
@@ -378,8 +379,8 @@ trait MenuLinkTrait{
         //post type
         if($menuLink->belongsTo == "post_type"){
             return route('backend.post.index', [
-                'post_type' => "post_".$menuLink->params->postTypeSlug,
-                'view' => 'list'
+              'post_type' => "post_".$menuLink->params->postTypeSlug,
+              'view' => 'list'
             ]);
         }
         // posts
@@ -388,9 +389,9 @@ trait MenuLinkTrait{
             //handle single post
             if(isset($menuLink->params->postSlug)){
                 return route('backend.post.single', [
-                    'post_type' => $menuLink->belongsTo,
-                    'view' => 'update',
-                    'id' => $menuLink->belongsToID
+                  'post_type' => $menuLink->belongsTo,
+                  'view' => 'update',
+                  'id' => $menuLink->belongsToID
                 ]);
             }
             //posts list
@@ -398,8 +399,8 @@ trait MenuLinkTrait{
                 $postType = PostType::findByID($menuLink->belongsToID);
                 if($postType) {
                     return route('backend.post.index', [
-                        'post_type' => $postType->slug,
-                        'view' => 'list'
+                      'post_type' => $postType->slug,
+                      'view' => 'list'
                     ]);
                 }
             }
@@ -413,9 +414,9 @@ trait MenuLinkTrait{
                 $postType = PostType::findByID($category->postTypeID);
                 if ($postType) {
                     return route('backend.post.index', [
-                        'post_type' => $postType->slug,
-                        'view' => 'list',
-                        'category' => $menuLink->belongsToID
+                      'post_type' => $postType->slug,
+                      'view' => 'list',
+                      'category' => $menuLink->belongsToID
                     ]);
                 }
             }
@@ -432,9 +433,9 @@ trait MenuLinkTrait{
         $result = [];
         foreach(\App\Models\Menu::getFromCache() as $menu){
             $result[$menu->slug] = [
-                'menuID' => $menu->menuID,
-                'title' => $menu->title,
-                'menuLinks' => self::cmsMenuLinks(Menu::getMenuLinks($menu->slug)),
+              'menuID' => $menu->menuID,
+              'title' => $menu->title,
+              'menuLinks' => self::cmsMenuLinks(Menu::getMenuLinks($menu->slug)),
             ];
         }
         return $result;
@@ -462,12 +463,12 @@ trait MenuLinkTrait{
             $routeURL = self::getActionOfLink($menuLink);
             if($routeURL){
                 $links[$count] = [
-                    'label' => $menuLink->label,
-                    'menuLinkID' => $menuLink->menuLinkID,
-                    'link' => self::removeDomainFromLink($routeURL),
-                    'icon' => '',
-                    'access' => $permission,
-                    'children' => self::cmsMenuLinks($menuLink->children),
+                  'label' => $menuLink->label,
+                  'menuLinkID' => $menuLink->menuLinkID,
+                  'link' => self::removeDomainFromLink($routeURL),
+                  'icon' => '',
+                  'access' => $permission,
+                  'children' => self::cmsMenuLinks($menuLink->children),
                 ];
                 $count++;
             }
@@ -536,114 +537,114 @@ trait MenuLinkTrait{
      */
     public static function applicationMenuLinks(){
         $applicationMenuLinks = [
-            [
-                'label' => 'Menu',
-                'link' => self::removeDomainFromLink(action(Routes::backend("MenuController@single"),['lang' =>  App::getLocale(), 'view' => 'list', 'menuID' => Menu::getPrimaryMenuID()])),
-                'module' =>  'menu',
-                'icon' => 'fa fa-bars',
-                'access' => User::hasAccess("Menu", "read"),
-                'children' => '',
-            ],
-            [
-                'label' => 'Users',
-                'link' =>  '',
-                'module' =>  'user',
-                'icon' => 'fa fa-users',
+          [
+            'label' => 'Menu',
+            'link' => self::removeDomainFromLink(action(Routes::backend("MenuController@single"),['lang' =>  App::getLocale(), 'view' => 'list', 'menuID' => Menu::getPrimaryMenuID()])),
+            'module' =>  'menu',
+            'icon' => 'fa fa-bars',
+            'access' => User::hasAccess("Menu", "read"),
+            'children' => '',
+          ],
+          [
+            'label' => 'Users',
+            'link' =>  '',
+            'module' =>  'user',
+            'icon' => 'fa fa-users',
+            'access' => User::hasAccess("User", "read"),
+            'children' => [
+              [
+                'label' => 'List',
+                'link' => self::removeDomainFromLink(action(Routes::backend("UserController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
+                'icon' => '',
                 'access' => User::hasAccess("User", "read"),
-                'children' => [
-                    [
-                        'label' => 'List',
-                        'link' => self::removeDomainFromLink(action(Routes::backend("UserController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
-                        'icon' => '',
-                        'access' => User::hasAccess("User", "read"),
-                        'children' => '',
-                    ],
-                    [
-                        'label' => 'Add new',
-                        'link' => self::removeDomainFromLink(action(Routes::backend("UserController@index"),['lang' =>  App::getLocale(), 'view' => 'create'])),
-                        'icon' => '',
-                        'access' => User::hasAccess("User", "create"),
-                        'children' => '',
-                    ],
-                    [
-                        'label' => 'Permissions',
-                        'link' => self::removeDomainFromLink(action(Routes::backend("PermissionController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
-                        'icon' => '',
-                        'access' => User::hasAccess('Permission', "read"),
-                        'children' => '',
-                    ]
-                ],
+                'children' => '',
+              ],
+              [
+                'label' => 'Add new',
+                'link' => self::removeDomainFromLink(action(Routes::backend("UserController@index"),['lang' =>  App::getLocale(), 'view' => 'create'])),
+                'icon' => '',
+                'access' => User::hasAccess("User", "create"),
+                'children' => '',
+              ],
+              [
+                'label' => 'Permissions',
+                'link' => self::removeDomainFromLink(action(Routes::backend("PermissionController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
+                'icon' => '',
+                'access' => User::hasAccess('Permission', "read"),
+                'children' => '',
+              ]
             ],
-            [
-                'label' => 'Post types',
-                'link' =>  '',
-                'module' =>  'post-type',
-                'icon' => 'fa fa-plus-square-o',
+          ],
+          [
+            'label' => 'Post types',
+            'link' =>  '',
+            'module' =>  'post-type',
+            'icon' => 'fa fa-plus-square-o',
+            'access' => User::hasAccess("PostType", "read"),
+            'children' => [
+              [
+                'label' => 'List',
+                'link' => self::removeDomainFromLink(action(Routes::backend("PostTypeController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
+                'icon' => '',
                 'access' => User::hasAccess("PostType", "read"),
-                'children' => [
-                    [
-                        'label' => 'List',
-                        'link' => self::removeDomainFromLink(action(Routes::backend("PostTypeController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
-                        'icon' => '',
-                        'access' => User::hasAccess("PostType", "read"),
-                        'children' => '',
-                    ],
-                    [
-                        'label' => 'Add new',
-                        'link' =>  self::removeDomainFromLink(action(Routes::backend("PostTypeController@index"),['lang' =>  App::getLocale(), 'view' => 'create'])),
-                        'icon' => '',
-                        'access' => User::hasAccess("PostType", "create"),
-                        'children' => '',
-                    ]
-                ],
+                'children' => '',
+              ],
+              [
+                'label' => 'Add new',
+                'link' =>  self::removeDomainFromLink(action(Routes::backend("PostTypeController@index"),['lang' =>  App::getLocale(), 'view' => 'create'])),
+                'icon' => '',
+                'access' => User::hasAccess("PostType", "create"),
+                'children' => '',
+              ]
             ],
-            [
-                'label' => 'Custom fields',
-                'link' =>  '',
-                'module' => 'custom-fields',
-                'icon' => 'fa fa-plus-square-o',
+          ],
+          [
+            'label' => 'Custom fields',
+            'link' =>  '',
+            'module' => 'custom-fields',
+            'icon' => 'fa fa-plus-square-o',
+            'access' => User::hasAccess("CustomField", "read"),
+            'children' => [
+              [
+                'label' => 'List',
+                'link' => self::removeDomainFromLink(action(Routes::backend("CustomFieldController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
+                'icon' => '',
                 'access' => User::hasAccess("CustomField", "read"),
-                'children' => [
-                    [
-                        'label' => 'List',
-                        'link' => self::removeDomainFromLink(action(Routes::backend("CustomFieldController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
-                        'icon' => '',
-                        'access' => User::hasAccess("CustomField", "read"),
-                        'children' => '',
-                    ],
-                    [
-                        'label' => 'Add new',
-                        'link' =>  self::removeDomainFromLink(action(Routes::backend("CustomFieldController@index"),['lang' =>  App::getLocale(), 'view' => 'create'])),
-                        'icon' => '',
-                        'access' => User::hasAccess("CustomField", "create"),
-                        'children' => '',
-                    ]
-                ],
-            ],
-            [
-                'label' => 'Media',
-                'link' => self::removeDomainFromLink(action(Routes::backend("MediaController@index"), ['lang' =>  App::getLocale(), 'view' => 'library'])),
-                'module' => 'media',
-                'icon' => 'fa fa-camera',
-                'access' => true,
                 'children' => '',
-            ],
-            [
-                'label' => 'Settings',
-                'link' => self::removeDomainFromLink(action(Routes::backend("SettingsController@index"),['lang' =>  App::getLocale(), 'view' => 'general'])),
-                'module' => 'project-settings',
-                'icon' => 'fa fa-cogs',
-                'access' => User::hasAccess('Settings', "read"),
+              ],
+              [
+                'label' => 'Add new',
+                'link' =>  self::removeDomainFromLink(action(Routes::backend("CustomFieldController@index"),['lang' =>  App::getLocale(), 'view' => 'create'])),
+                'icon' => '',
+                'access' => User::hasAccess("CustomField", "create"),
                 'children' => '',
+              ]
             ],
-            [
-                'label' => 'Language',
-                'link' => self::removeDomainFromLink(action(Routes::backend("LanguageController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
-                'icon' => 'fa fa-language',
-                'module' => 'language',
-                'access' => User::hasAccess('Language', "read"),
-                'children' => '',
-            ]
+          ],
+          [
+            'label' => 'Media',
+            'link' => self::removeDomainFromLink(action(Routes::backend("MediaController@index"), ['lang' =>  App::getLocale(), 'view' => 'library'])),
+            'module' => 'media',
+            'icon' => 'fa fa-camera',
+            'access' => true,
+            'children' => '',
+          ],
+          [
+            'label' => 'Settings',
+            'link' => self::removeDomainFromLink(action(Routes::backend("SettingsController@index"),['lang' =>  App::getLocale(), 'view' => 'general'])),
+            'module' => 'project-settings',
+            'icon' => 'fa fa-cogs',
+            'access' => User::hasAccess('Settings', "read"),
+            'children' => '',
+          ],
+          [
+            'label' => 'Language',
+            'link' => self::removeDomainFromLink(action(Routes::backend("LanguageController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
+            'icon' => 'fa fa-language',
+            'module' => 'language',
+            'access' => User::hasAccess('Language', "read"),
+            'children' => '',
+          ]
         ];
 
         foreach (PostType::getFromCache() as $postType){
@@ -652,41 +653,41 @@ trait MenuLinkTrait{
             }
 
             $tmp = [
-                'label' => $postType->name,
-                'link' =>  '',
-                'module' => $postType['slug'],
-                'icon' => 'fa fa-thumb-tack',
-                'access' => User::hasAccess($postType['slug'],"read"),
-                'children' => [
-                    [
-                        'label' => 'List',
-                        'link' =>  self::removeDomainFromLink(action(Routes::backend("PostController@postsIndex"),['lang' =>  App::getLocale(), 'post_type' => $postType['slug'], 'view' => 'list' ])),
-                        'icon' => '',
-                        'access' => User::hasAccess($postType['slug'], "read"),
-                        'children' => '',
-                    ],
-                    [
-                        'label' => 'Add new',
-                        'link' => self::removeDomainFromLink(action(Routes::backend("PostController@postsIndex"),['lang' =>  App::getLocale(), 'post_type' => $postType['slug'], 'view' => 'create' ])),
-                        'icon' => '',
-                        'access' => User::hasAccess($postType['slug'], "create"),
-                        'children' => '',
-                    ],
-                    [
-                        'label' => 'Categories',
-                        'link' => self::removeDomainFromLink(action(Routes::backend("PostTypeController@single"),['lang' =>  App::getLocale(), 'view' => 'categorylist', 'id' => $postType['postTypeID'] ])),
-                        'icon' => '',
-                        'access' => (User::hasAccess('Category', "read") && $postType['hasCategories']),
-                        'children' => '',
-                    ],
-                    [
-                        'label' => 'Tags',
-                        'link' => self::removeDomainFromLink(action(Routes::backend("PostTypeController@single"),['lang' =>  App::getLocale(), 'view' => 'taglist', 'id' => $postType['postTypeID'] ])),
-                        'icon' => '',
-                        'access' => (User::hasAccess('Tag', "read") && $postType['hasTags']),
-                        'children' => '',
-                    ],
-                ]
+              'label' => $postType->name,
+              'link' =>  '',
+              'module' => $postType['slug'],
+              'icon' => 'fa fa-thumb-tack',
+              'access' => User::hasAccess($postType['slug'],"read"),
+              'children' => [
+                [
+                  'label' => 'List',
+                  'link' =>  self::removeDomainFromLink(action(Routes::backend("PostController@postsIndex"),['lang' =>  App::getLocale(), 'post_type' => $postType['slug'], 'view' => 'list' ])),
+                  'icon' => '',
+                  'access' => User::hasAccess($postType['slug'], "read"),
+                  'children' => '',
+                ],
+                [
+                  'label' => 'Add new',
+                  'link' => self::removeDomainFromLink(action(Routes::backend("PostController@postsIndex"),['lang' =>  App::getLocale(), 'post_type' => $postType['slug'], 'view' => 'create' ])),
+                  'icon' => '',
+                  'access' => User::hasAccess($postType['slug'], "create"),
+                  'children' => '',
+                ],
+                [
+                  'label' => 'Categories',
+                  'link' => self::removeDomainFromLink(action(Routes::backend("PostTypeController@single"),['lang' =>  App::getLocale(), 'view' => 'categorylist', 'id' => $postType['postTypeID'] ])),
+                  'icon' => '',
+                  'access' => (User::hasAccess('Category', "read") && $postType['hasCategories']),
+                  'children' => '',
+                ],
+                [
+                  'label' => 'Tags',
+                  'link' => self::removeDomainFromLink(action(Routes::backend("PostTypeController@single"),['lang' =>  App::getLocale(), 'view' => 'taglist', 'id' => $postType['postTypeID'] ])),
+                  'icon' => '',
+                  'access' => (User::hasAccess('Tag', "read") && $postType['hasTags']),
+                  'children' => '',
+                ],
+              ]
             ];
             array_unshift($applicationMenuLinks, $tmp);
         }
@@ -695,12 +696,12 @@ trait MenuLinkTrait{
         if(count($plugins)) {
             // get plugins links
             $tmpPluginLinks = [
-                'label' => "Plugins",
-                'link' =>  '',
-                'module' => "plugins",
-                'icon' => 'fa fa-thumb-tack',
-                'access' => User::hasAccess("Plugin", "read"),
-                'children' => [],
+              'label' => "Plugins",
+              'link' =>  '',
+              'module' => "plugins",
+              'icon' => 'fa fa-thumb-tack',
+              'access' => User::hasAccess("Plugin", "read"),
+              'children' => [],
             ];
 
             foreach ($plugins as $plugin) {
@@ -708,12 +709,12 @@ trait MenuLinkTrait{
                 $app = str_slug($title, '_');
 
                 $tmpPluginLinks['children'][] = [
-                    'label' => $plugin->title,
-                    'link' => self::removeDomainFromLink($plugin->fullBackendUrl()),
-                    'icon' => '',
-                    'access' => User::hasAccess($app, "read"),
-                    'children' => '',
-                    'module' => "plugins",
+                  'label' => $plugin->title,
+                  'link' => self::removeDomainFromLink($plugin->fullBackendUrl()),
+                  'icon' => '',
+                  'access' => User::hasAccess($app, "read"),
+                  'children' => '',
+                  'module' => "plugins",
                 ];
 
             }
@@ -803,6 +804,8 @@ trait MenuLinkTrait{
         }else{ // frontend
             Post::sethomepage();
             self::sethomepage();
+
+            self::setActiveIDs();
 
             // Set home page MenuLink if home page is requested
             $getCurrentPath = Request::path();

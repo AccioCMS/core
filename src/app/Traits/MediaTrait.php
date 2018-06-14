@@ -232,10 +232,11 @@ trait MediaTrait{
      * @param object $imageObj A single Image object
      * @param int $width Width of the image
      * @param int $height Height of the image
+     * @param array $options
      *
      * @return string|null Returns URL of thumb, null if thumb could not found or created
      */
-    public function thumb($width, $height=null, $imageObj = null){
+    public function thumb($width, $height=null, $imageObj = null, array $options = []){
         // get current  object's image in case there is no specific image given
         if(!$imageObj){
             $imageObj = $this;
@@ -245,7 +246,7 @@ trait MediaTrait{
         if(file_exists(base_path($thumbPath))){
             return asset($thumbPath);
         }else{
-            if($this->createThumb($imageObj, $width, $height)){
+            if($this->createThumb($imageObj, $width, $height, $options)){
                 return asset($thumbPath);
             }
         }
@@ -257,11 +258,12 @@ trait MediaTrait{
      *
      * @param  int $width Width of the image
      * @param  int $height Height of the image
+     * @param  array $options
      *
      * @return object
      */
-    public function makeThumb($width, $height=null){
-        $this->createThumb($this, $width, $height);
+    public function makeThumb($width, $height=null, array $options = []){
+        $this->createThumb($this, $width, $height, $options);
         return $this;
     }
 
@@ -271,10 +273,11 @@ trait MediaTrait{
      * @param  object $imageObj A single Image object
      * @param  int $width Width of the image
      * @param  int $height Height of the image
+     * @param array $options
      *
      * @return boolean
      */
-    public function createThumb($imageObj, $width, $height=null){
+    public function createThumb($imageObj, $width, $height=null, array $options = []){
         $extension = File::extension($imageObj->url);
         $basePath = base_path('/');
 
@@ -297,10 +300,14 @@ trait MediaTrait{
                 //create thumb
                 $img = Image::make(base_path($imageObj->url));
                 $resizedHeight = $width * 2;
-//                $img->resize($resizedHeight, null, function ($constraint) {
-//                    $constraint->aspectRatio();
-//                });
-                $img->fit($width, $height);
+
+                if(isset($options['resizeCanvas']) && $options['resizeCanvas'] === true){
+                    $img->resize($width, $height, function ($constraint) {
+                        $constraint->aspectRatio();
+                    })->resizeCanvas($width, $height);
+                }else{
+                    $img->fit($width, $height);
+                }
 
                 if ($img->save($thumbDir . '/' . $imageObj->filename, 60)) {
                     // optimize image
@@ -310,6 +317,15 @@ trait MediaTrait{
             }
         }
         return false;
+    }
+
+
+    private function setOptions(){
+
+    }
+
+    private function getOption(){
+
     }
 
     /**

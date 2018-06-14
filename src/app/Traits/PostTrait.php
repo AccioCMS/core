@@ -801,15 +801,16 @@ trait PostTrait{
      * @param  int $width
      * @param  int $height
      * @param  string $defaultFeaturedImageURL The url of an image that should be returned if no featured image is found
+     * @param  array $options
      *
      * @return string|null Returns url of featured image if found, null instead
      */
-    public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = ''){
+    public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = '', array $options = []){
         if($this->hasFeaturedImage()){
             if(!$width && !$height){
                 return url($this->featuredImage->url);
             }else{
-                return $this->featuredImage->thumb($width, $height, $this->featuredImage);
+                return $this->featuredImage->thumb($width, $height, $this->featuredImage, $options);
             }
         }else if($defaultFeaturedImageURL){
             return $defaultFeaturedImageURL;

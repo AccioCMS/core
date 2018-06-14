@@ -263,12 +263,16 @@ class CategoryModel extends Model{
             $languageSlug = App::getLocale();
         }
 
+        $getPostType = getPostType($cacheName);
+        if($getPostType){
+            $cacheName = "categories_".$getPostType->slug;
+        }
         $cachedItems = Cache::get($cacheName);
 
         //set cache in this language
         if(!isset($cachedItems[$languageSlug])){
-            if(isPostType($cacheName)) {
-                $data = Category::setCacheByPostType(getPostType($cacheName), $languageSlug);
+            if($getPostType) {
+                $data = Category::setCacheByPostType($getPostType, $languageSlug);
             }
             //or a custom cache
             else{
