@@ -33,7 +33,7 @@ class PostTypeModel extends Model{
      * @var array $fillable
      */
     protected $fillable = [
-        'createdByUserID', 'name', 'slug', 'isVisible', 'fields', 'hasCategories', 'isCategoryRequired', 'hasTags', 'isTagRequired'
+      'createdByUserID', 'name', 'slug', 'isVisible', 'fields', 'hasCategories', 'isCategoryRequired', 'hasTags', 'isTagRequired'
     ];
 
     /**
@@ -76,7 +76,7 @@ class PostTypeModel extends Model{
      * @var array
      */
     protected $casts = [
-        'fields' => 'object',
+      'fields' => 'object',
     ];
 
     //TODO document it and remove it from here
@@ -150,7 +150,13 @@ class PostTypeModel extends Model{
         foreach ($options as $option){
             $optionArr = explode(":", $option);
             if($optionArr[0] == $key){
-                return $optionArr[1];
+                $value  = $optionArr[1];
+
+                // remove comma
+                if(substr($value, -1) == ','){
+                    $value = substr($value, 0, -1);
+                }
+                return $value;
             }
         }
     }
@@ -161,18 +167,18 @@ class PostTypeModel extends Model{
      */
     protected static function menuLinkPanel(){
         return [
-            'label' => 'Post Types',
-            'controller' => 'PostController',
-            'belongsTo' => 'post_type',
-            'search' => [
-                'label' => trans('base.search'),
-                'placeholder' => trans('base.searchPlaceholder'),
-                'url' => route('backend.postType.menuPanelItems', ['keyword' => ""])
-            ],
-            'items' => [
-                'label' => trans('base.latest'),
-                'url' => route('backend.postType.menuPanelItems')
-            ],
+          'label' => 'Post Types',
+          'controller' => 'PostController',
+          'belongsTo' => 'post_type',
+          'search' => [
+            'label' => trans('base.search'),
+            'placeholder' => trans('base.searchPlaceholder'),
+            'url' => route('backend.postType.menuPanelItems', ['keyword' => ""])
+          ],
+          'items' => [
+            'label' => trans('base.latest'),
+            'url' => route('backend.postType.menuPanelItems')
+          ],
         ];
     }
 
@@ -183,8 +189,8 @@ class PostTypeModel extends Model{
      */
     public  function menuLinkParameters(){
         return [
-            'postTypeID'    => $this->postTypeID,
-            'postTypeSlug'  => cleanPostTypeSlug($this->slug)
+          'postTypeID'    => $this->postTypeID,
+          'postTypeSlug'  => cleanPostTypeSlug($this->slug)
         ];
     }
 

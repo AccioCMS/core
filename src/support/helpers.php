@@ -564,3 +564,15 @@ if (! function_exists('adminURL')) {
     }
 }
 
+if (! function_exists('currentMenuLink')) {
+    /**
+     * Current MenuLink
+     *
+     * @param string $columnName
+     * @return int|null
+     */
+    function currentMenuLink($columnName = '')
+    {
+        return \App\Models\MenuLink::getCurrent($columnName);
+    }
+}

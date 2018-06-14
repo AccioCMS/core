@@ -138,7 +138,7 @@ class BaseUserController extends MainController{
 
         // if image is not set make it 0
         if (!isset($request->user['profileImageID']) || $request->user['profileImageID'] == ""){
-            $profileImageID = 0;
+            $profileImageID = null;
         }else{
             $profileImageID = $request->user['profileImageID'];
         }
@@ -256,7 +256,7 @@ class BaseUserController extends MainController{
 
         // if image is not set make it 0
         if (!isset($request->user['profileImageID']) || $request->user['profileImageID'] == ""){
-            $profileImageID = 0;
+            $profileImageID = null;
         }else{
             $profileImageID = $request->user['profileImageID'];
         }
