@@ -140,7 +140,10 @@ class PostTypeModel extends Model{
      * @return mixed
      * @throws \Exception
      */
-    public function getMultioptionFieldValue(string $fieldSlug, string $key){
+    public function getMultioptionFieldValue(string $fieldSlug, $key){
+        if(!is_null($key)){
+            return;
+        }
         $field = $this->field($fieldSlug);
         if(!$field){
             throw new \Exception("No field with slug ".$fieldSlug);
