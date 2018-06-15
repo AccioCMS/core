@@ -1037,7 +1037,10 @@ trait PostTrait{
      * @return mixed
      */
     public function getOptionValue($field){
-        $postType = PostType::getFromCache()->where("slug", $this->getTable())->first();
+        $postType = getPostType($this->getTable());
+        if(!$postType){
+            throw new \Exception("Post type ".$this->getTable()."' does not exists!");
+        }
         return $postType->getMultioptionFieldValue($field, $this->{$field});
     }
 
