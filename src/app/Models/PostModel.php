@@ -544,6 +544,10 @@ class PostModel extends Model{
      * @return array
      */
     public function getPostsByTags(int $numberOfPosts){
+        if(!$this->hasTags()){
+            return [];
+        }
+        
         $tmpTagIDs = [];
         $postsByTags = [];
 

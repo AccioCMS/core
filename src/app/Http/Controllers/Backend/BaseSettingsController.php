@@ -69,7 +69,7 @@ class BaseSettingsController extends MainController{
                 $settings = new Settings();
                 $settings->settingsKey = $key;
             }
-            $settings->value = $value;
+            $settings->value = ($value ? $value : null);
             $settings->save();
         }
 

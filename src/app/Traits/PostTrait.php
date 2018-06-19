@@ -861,12 +861,14 @@ trait PostTrait{
      * @return HtmlString
      */
     public function printTags($customView = '', $ulClass =""){
-        return new HtmlString(view()->make(($customView ? $customView : "vendor.tags.default"), [
-          'tagsList' => $this->tags,
-          'ulClass'=> $ulClass,
-          'postTypeSlug' => $this->getTable()
+        if($this->hasTags()) {
+            return new HtmlString(view()->make(($customView ? $customView : "vendor.tags.default"), [
+              'tagsList' => $this->tags,
+              'ulClass' => $ulClass,
+              'postTypeSlug' => $this->getTable()
 
-        ])->render());
+            ])->render());
+        }
     }
 
     /**

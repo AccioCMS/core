@@ -144,7 +144,7 @@ class PostTypeModel extends Model{
         if(is_null($key)){
             return;
         }
-        
+
         $field = $this->field($fieldSlug);
         if(!$field){
             throw new \Exception("No field with slug ".$fieldSlug);
