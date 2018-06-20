@@ -46,12 +46,12 @@ class BasePostController extends MainController {
         $categories = array_values(App\Models\Category::getFromCache()->where("postTypeID", $postType->postTypeID)->toArray());
 
         return[
-            'postType' => $postType,
-            'languages' => Language::getFromCache(),
-            'categories' => $categories,
-            'customFieldsGroups' => $customFieldsGroups,
-            'inTableColumns' => $this->getInTableColumns($postTypeSlug),
-            'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug),
+          'postType' => $postType,
+          'languages' => Language::getFromCache(),
+          'categories' => $categories,
+          'customFieldsGroups' => $customFieldsGroups,
+          'inTableColumns' => $this->getInTableColumns($postTypeSlug),
+          'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug),
         ];
     }
 
@@ -90,8 +90,8 @@ class BasePostController extends MainController {
         // Append columns
         $results = $posts->toArray();
         $results['columns']= [
-            'postID' => trans('id'),
-            'title' => trans('base.title'),
+          'postID' => trans('id'),
+          'title' => trans('base.title'),
         ];
 
         return $results;
@@ -389,9 +389,9 @@ class BasePostController extends MainController {
         $paginationResult = $queryObject->paginate(Post::$rowsPerPage);
 
         $response = $this
-            ->appendListColumnsFromEvents($postType)
-            ->appendListRowsFromEvents($paginationResult, $postType)
-            ->toArray();
+          ->appendListColumnsFromEvents($postType)
+          ->appendListRowsFromEvents($paginationResult, $postType)
+          ->toArray();
 
         $response['inTableColumns'] = $this->getInTableColumns($postType);
 
@@ -400,12 +400,12 @@ class BasePostController extends MainController {
 
     private function selectByCategory($queryObject, $categoryID){
         $relations = DB::table('categories_relations')
-            ->select('belongsToID')
-            ->where('categoryID', $categoryID)
-            ->select('belongsToID')
-            ->get()
-            ->pluck('belongsToID')
-            ->toArray();
+          ->select('belongsToID')
+          ->where('categoryID', $categoryID)
+          ->select('belongsToID')
+          ->get()
+          ->pluck('belongsToID')
+          ->toArray();
 
         return $queryObject->whereIn('postID', $relations);
     }
@@ -430,7 +430,7 @@ class BasePostController extends MainController {
 
         // Category
         if($data->categoryID != 0){
-            $obj->selectByCategory($obj, $data->categoryID);
+            $obj = $this->selectByCategory($obj, $data->categoryID);
         }
 
         // From date
@@ -687,9 +687,9 @@ class BasePostController extends MainController {
         $searchResults = Search::searchByTerm($postTypeSlug, $term, App\Models\Post::$rowsPerPage, true, [], $excludeColumns, $orderBy, $orderType);
 
         $response = $this
-            ->appendListColumnsFromEvents($postType)
-            ->appendListRowsFromEvents($paginationResult, $postType)
-            ->toArray();
+          ->appendListColumnsFromEvents($postType)
+          ->appendListRowsFromEvents($paginationResult, $postType)
+          ->toArray();
 
         $response['inTableColumns'] = $this->getInTableColumns($postType);
 
@@ -780,8 +780,8 @@ class BasePostController extends MainController {
         }
 
         return [
-            "data" => $data,
-            "firstFilledTitle" => $firstFilledTitle
+          "data" => $data,
+          "firstFilledTitle" => $firstFilledTitle
         ];
     }
 
@@ -850,14 +850,14 @@ class BasePostController extends MainController {
 
         // get the media relation joining the media table and the post
         $mediaRelationsResults = DB::table('media_relations')
-            ->where("belongsTo", $postTypeSlug)
-            ->join('media','media_relations.mediaID','media.mediaID')
-            ->join($postTypeSlug,'media_relations.belongsToID',$postTypeSlug.'.postID')
-            ->where("belongsToID", $id)
-            ->select('media.title as title', 'media.mediaID', 'media_relations.mediaRelationID', 'media_relations.belongsTo', 'media_relations.belongsToID', 'media_relations.language',
-                'media.description', 'media.credit', 'media.type', 'media.extension',
-                'media.url', 'media.filename', 'media.fileDirectory', 'media.filesize', 'media.dimensions', 'media_relations.field')
-            ->get();
+          ->where("belongsTo", $postTypeSlug)
+          ->join('media','media_relations.mediaID','media.mediaID')
+          ->join($postTypeSlug,'media_relations.belongsToID',$postTypeSlug.'.postID')
+          ->where("belongsToID", $id)
+          ->select('media.title as title', 'media.mediaID', 'media_relations.mediaRelationID', 'media_relations.belongsTo', 'media_relations.belongsToID', 'media_relations.language',
+            'media.description', 'media.credit', 'media.type', 'media.extension',
+            'media.url', 'media.filename', 'media.fileDirectory', 'media.filesize', 'media.dimensions', 'media_relations.field')
+          ->get();
 
         $media = array(); // the object media used for the media custom fields in the front end
         if ($post->featuredImageID){
@@ -905,20 +905,20 @@ class BasePostController extends MainController {
 
         // get the selected categories from the DB table categories_relations
         $selectedCategories = $mysqlConnection->table('categories_relations')
-            ->leftJoin('categories','categories_relations.categoryID','categories.categoryID')
-            ->where('categories_relations.belongsTo',$postTypeSlug)
-            ->where('categories_relations.belongsToID',$id)
-            ->get();
+          ->leftJoin('categories','categories_relations.categoryID','categories.categoryID')
+          ->where('categories_relations.belongsTo',$postTypeSlug)
+          ->where('categories_relations.belongsToID',$id)
+          ->get();
 
         $selectedCategories = Language::filterRows($selectedCategories, false);
 
         // get selected tags from the DB table tags_relations
         $selectedTags = [];
         $tagsRelations = $mysqlConnection->table('tags_relations')
-            ->leftJoin('tags','tags_relations.tagID','tags.tagID')
-            ->where('tags_relations.belongsTo',$postTypeSlug)
-            ->where('tags_relations.belongsToID',$id)
-            ->get();
+          ->leftJoin('tags','tags_relations.tagID','tags.tagID')
+          ->where('tags_relations.belongsTo',$postTypeSlug)
+          ->where('tags_relations.belongsToID',$id)
+          ->get();
 
         foreach ($tagsRelations as $tagsRelation){
             if(!isset($selectedTags[$tagsRelation->language])){
@@ -929,29 +929,29 @@ class BasePostController extends MainController {
 
 
         $response = array(
-            'post' => [
-                'title' => $post->title,
-                'content' => $post->content,
-                'status' => $post->status,
-                'slug' => $post->slug,
-                'href' => $href,
-                'media' => $media,
-                'published_at' => $post->published_at,
-                'selectedCategories' => $selectedCategories,
-                'postTypeID' => $currentPostType->postTypeID,
-                'hasCategories' => $currentPostType->hasCategories,
-                'isCategoryRequired' => $currentPostType->isCategoryRequired,
-                'selectedTags' => $selectedTags,
-                'hasTags' => $currentPostType->hasTags,
-                'isTagRequired' => $currentPostType->isTagRequired,
-                'isFeaturedImageRequired' => $currentPostType->isFeaturedImageRequired,
-                'createdByUserID' => $post->createdByUserID,
-            ],
-            'customFieldsValues' => $customFieldOBJ->getCustomFieldValues(),
-            'customFieldsGroups' => $customFieldGroups,
-            'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug, $post),
-            'categories' => $categories,
-            'languages' => Language::getFromCache(),
+          'post' => [
+            'title' => $post->title,
+            'content' => $post->content,
+            'status' => $post->status,
+            'slug' => $post->slug,
+            'href' => $href,
+            'media' => $media,
+            'published_at' => $post->published_at,
+            'selectedCategories' => $selectedCategories,
+            'postTypeID' => $currentPostType->postTypeID,
+            'hasCategories' => $currentPostType->hasCategories,
+            'isCategoryRequired' => $currentPostType->isCategoryRequired,
+            'selectedTags' => $selectedTags,
+            'hasTags' => $currentPostType->hasTags,
+            'isTagRequired' => $currentPostType->isTagRequired,
+            'isFeaturedImageRequired' => $currentPostType->isFeaturedImageRequired,
+            'createdByUserID' => $post->createdByUserID,
+          ],
+          'customFieldsValues' => $customFieldOBJ->getCustomFieldValues(),
+          'customFieldsGroups' => $customFieldGroups,
+          'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug, $post),
+          'categories' => $categories,
+          'languages' => Language::getFromCache(),
         );
 
         // Fire event
