@@ -432,7 +432,7 @@ class  Meta
         }
 
         if($notDefined){
-            throw new Exception('Not defined wildcards "'.implode($notDefined,', ').'". '.($errorClass ? 'Please declare them on "metaData" method of "'.$errorClass.'".' : ''));
+            throw new \Exception('Not defined wildcards "'.implode($notDefined,', ').'". '.($errorClass ? 'Please declare them on "metaData" method of "'.$errorClass.'".' : ''));
         }
 
         return true;

@@ -36,7 +36,7 @@ class TagRelationModel extends Model
      */
     public static function getFromCache($postTypeSlug =''){
         if(!isPostType($postTypeSlug)){
-            throw new Exception('No post type given');
+            throw new \Exception('No post type given');
         }
         $cacheName = 'tags_relations_'.$postTypeSlug;
 

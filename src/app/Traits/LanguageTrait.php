@@ -97,7 +97,7 @@ trait LanguageTrait
                 }
             }
 
-            throw new Exception("Default language could not be found. Please check if a default language is defined in Administration");
+            throw new \Exception("Default language could not be found. Please check if a default language is defined in Administration");
         }
         return;
     }

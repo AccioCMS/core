@@ -784,7 +784,7 @@ trait MenuLinkTrait{
             return $url;
 
         }else{
-            throw new Exception("No route found for '".$this->routeName."' MenuLink: ".$this->label);
+            throw new \Exception("No route found for '".$this->routeName."' MenuLink: ".$this->label);
         }
     }
 

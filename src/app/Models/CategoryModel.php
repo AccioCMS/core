@@ -226,7 +226,7 @@ class CategoryModel extends Model{
 
             return  route($routeName,$params);
         }else{
-            throw new Exception("Route $routeName not found");
+            throw new \Exception("Route $routeName not found");
         }
     }
 

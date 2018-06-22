@@ -50,7 +50,7 @@ trait ThemeTrait
 
         if($themeName){
             if(!self::ifExists($themeName)){
-                throw new Exception($themeName . ' Theme  could not be found in file directory.');
+                throw new \Exception($themeName . ' Theme  could not be found in file directory.');
             }
         }else{
             // return mobile theme if site is accessed from mobile or tablet
@@ -69,7 +69,7 @@ trait ThemeTrait
 
         // Ensure theme exist
         if(!self::ifExists($themeName)){
-            throw new Exception("Theme '$themeName' does not exist in Themes directory!");
+            throw new \Exception("Theme '$themeName' does not exist in Themes directory!");
         }
 
         self::$activeTheme = $themeName;
@@ -103,7 +103,7 @@ trait ThemeTrait
         if(file_exists($path)){
             $getConfigValues = json_decode(file_get_contents($path), true);
             if(!is_array($getConfigValues)){
-                throw new Exception("It seems like your theme ".$path." is not well formatted!");
+                throw new \Exception("It seems like your theme ".$path." is not well formatted!");
             }
         }
 

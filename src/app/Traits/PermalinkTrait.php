@@ -39,7 +39,7 @@ trait PermalinkTrait
 
         if(!$singlePermalink){
             if(!$defaultURL) {
-                throw new Exception("Permalink or default url not found in '$belongsTo' '$name' ");
+                throw new \Exception("Permalink or default url not found in '$belongsTo' '$name' ");
             }
             return $defaultURL;
         }

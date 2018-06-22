@@ -142,7 +142,7 @@ trait PluginTrait
         if(file_exists($configPath)){
             return json_decode(File::get($configPath));
         }
-        throw  new Exception("No config.json file found for plugin ".$configPath);
+        throw  new \Exception("No config.json file found for plugin ".$configPath);
     }
 
     public function parseNamespace(){

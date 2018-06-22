@@ -592,7 +592,7 @@ class AccioInstall extends Command{
             $DBConnection = new \PDO($dsn, $this->DB_USERNAME, $this->DB_PASSWORD, array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION));
         }
         catch (PDOException $ex) {
-            throw new Exception('Connection to database failed: ' . $ex->getMessage());
+            throw new \Exception('Connection to database failed: ' . $ex->getMessage());
         }
 
         /*
@@ -606,7 +606,7 @@ class AccioInstall extends Command{
                 break;
             }
             if ($tables > 0) {
-                throw new Exception('Database "' . $this->DB_DATABASE . '" is not empty. Please empty the database or specify another database.');
+                throw new \Exception('Database "' . $this->DB_DATABASE . '" is not empty. Please empty the database or specify another database.');
             }
         }
 
