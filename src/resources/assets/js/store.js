@@ -34,23 +34,25 @@ export const store = new Vuex.Store({
             errors: []
         },
         froalaFullConfig: {
-            toolbarButtons: ['fullscreen', 'bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', 'formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', 'insertTable', '|', 'emoticons', 'specialCharacters', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'help', 'html', '|', 'undo', 'redo','addImage','addVideo','insertLink','embedBtn'],
+            toolbarButtons: ['fullscreen', 'bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', '|','formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', 'insertTable', '|', 'emoticons', 'specialCharacters', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'help', 'html', '|', 'undo', 'redo','addImage','addVideo','insertLink','embedBtn'],
             quickInsertButtons: ['addImage', 'addVideo', 'embedBtn', 'ul', 'ol'],
             htmlRemoveTags: [],
             htmlExecuteScripts: false,
         },
+
+        froalaCompactConfig: {
+            toolbarButtons: ['undo', 'redo', '|', 'bold', 'italic', 'underline', '|', 'paragraphFormat', 'align','|', 'formatUL', 'formatOL', 'insertTable', '|', 'addImage', 'addVideo', 'embedBtn', '|', 'insertLink'],
+            quickInsertButtons: ['addImage', 'addVideo', 'embedBtn', 'ul', 'ol'],
+            htmlRemoveTags: [],
+            htmlExecuteScripts: false,
+        },
+
         froalaBasicConfig: {
             toolbarButtons: ['undo','redo','|','bold','italic','underline','insertLink'],
             quickInsertButtons: ['bold', 'underline', 'insertLink'],
             htmlRemoveTags: [],
             htmlExecuteScripts: false,
-        },
-        froalaCompactConfig: {
-            toolbarButtons: ['undo', 'redo', '|', 'bold', 'italic', 'underline', '|', 'formatUL', 'formatOL', 'quote', '|', 'insertTable', '|', 'addImage', 'addVideo', 'embedBtn', '|', 'insertLink'],
-            quickInsertButtons: ['addImage', 'addVideo', 'embedBtn', 'ul', 'ol'],
-            htmlRemoveTags: [],
-            htmlExecuteScripts: false,
-        },
+        }
     },
     getters: {
         get_id(state){

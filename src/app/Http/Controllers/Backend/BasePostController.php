@@ -198,7 +198,7 @@ class BasePostController extends MainController {
         // post type columns
         foreach ($fields as $field) {
             if ($field->inTable) {
-                $inTableColumnsSlugs[$field->slug] = $field->title;
+                $inTableColumnsSlugs[$field->slug] = $field->name;
             }
         }
 
