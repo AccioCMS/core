@@ -89,8 +89,7 @@
                                 <span id="typeDetails">{{ selectedFiles[0].type }}</span>
 
                                 <a id="editImage" v-if="selectedFiles[0].type == 'image'" @click="openCropWindow">{{trans.__editBtn}}</a>
-
-                                <a id="assignWatermarkBtn" @click="openModal" class="watermarkBtn" v-if="selectedFiles[0].type != 'video'">{{trans.__watermarkBtn}}</a>
+                                <a id="assignWatermarkBtn" @click="openModal" class="watermarkBtn" v-if="selectedFiles[0].type != 'video' && getGlobalData.settings.watermark !== undefined && parseInt(getGlobalData.settings.watermark)">{{trans.__watermarkBtn}}</a>
                                 <a id="deleteImage" @click="openModal" class="deleteImageBtn">{{trans.__deleteBtn}}</a>
                             </div>
                         </div>

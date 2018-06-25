@@ -196,8 +196,8 @@ class BasePostController extends MainController {
         }
 
         // post type columns
-        foreach ($fields as $field) {
-            if ($field->inTable) {
+        foreach($fields as $field){
+            if($field->inTable){
                 $inTableColumnsSlugs[$field->slug] = $field->name;
             }
         }
@@ -687,11 +687,11 @@ class BasePostController extends MainController {
         $searchResults = Search::searchByTerm($postTypeSlug, $term, App\Models\Post::$rowsPerPage, true, [], $excludeColumns, $orderBy, $orderType);
 
         $response = $this
-          ->appendListColumnsFromEvents($postType)
-          ->appendListRowsFromEvents($paginationResult, $postType)
+          ->appendListColumnsFromEvents($postTypeSlug)
+          ->appendListRowsFromEvents($searchResults, $postTypeSlug)
           ->toArray();
 
-        $response['inTableColumns'] = $this->getInTableColumns($postType);
+        $response['inTableColumns'] = $this->getInTableColumns($postTypeSlug);
 
         return $response;
     }

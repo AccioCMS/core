@@ -1,12 +1,17 @@
 <template>
-    <div class="main_container" v-if="!isLoading">
-        <app-navigation :applicationMenuLinks = "applicationMenuLinks" :cmsMenus="cmsMenus" :isPluginApp="isPlugin"></app-navigation>
+    <div class="main_container">
+        <template v-if="!isLoading">
+            <app-navigation :applicationMenuLinks = "applicationMenuLinks" :cmsMenus="cmsMenus" :isPluginApp="isPlugin"></app-navigation>
 
-        <app-header :logout_link="logout_link"></app-header>
+            <app-header :logout_link="logout_link"></app-header>
 
-        <router-view></router-view>
+            <router-view></router-view>
 
-        <app-footer></app-footer>
+            <app-footer></app-footer>
+        </template>
+
+        <spinner :width="'100px'" :height="'100px'" :border="'5px'" v-if="isLoading"></spinner>
+
     </div>
 </template>
 <script>
