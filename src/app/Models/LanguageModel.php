@@ -15,6 +15,7 @@ use App\Models\Language;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Lang;
 use Input;
 use Request;
 use Illuminate\Database\Eloquent\Model;
@@ -107,22 +108,6 @@ class LanguageModel extends Model{
     {
         parent::__construct($attributes);
         Event::fire('language:construct', [$this]);
-    }
-
-    /**
-     * Get language from cache. Cache is generated if not found
-     *
-     * @return Collection  Returns requested cache if found, null instead
-     */
-    public static function getFromCache(){
-        $data = Cache::get('languages');
-
-        if(!$data){
-            $data = Language::all()->toArray();
-            Cache::forever('languages',$data);
-        }
-
-        return self::setCacheCollection($data, Language::class);
     }
 
     /**

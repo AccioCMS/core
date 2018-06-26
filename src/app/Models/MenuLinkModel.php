@@ -86,39 +86,6 @@ class MenuLinkModel extends Model{
         Event::fire('menuLink:construct', [$this]);
     }
 
-    /**
-     * Get MenuLinks from cache. Cache is generated if not found
-     *
-     * @param string $languageSlug Slug of language to get the data from
-     * @return Collection Returns requested cache if found, null instead
-     * */
-
-    public static function getFromCache($languageSlug = ""){
-        if(!$languageSlug){
-            $languageSlug = \App::getLocale();
-        }
-
-        $cachedItems = Cache::get("menuLinks");
-        if(!$cachedItems){
-            $cachedItems = [];
-        }
-
-        if(!isset($cachedItems[$languageSlug])){
-            $data = MenuLink::all()->toArray();
-
-            // merge with other langauges
-            $dataToCache = [$languageSlug => $data];
-            if(Cache::has('menuLinks')){
-                $dataToCache = array_merge($cachedItems, $dataToCache);
-            }
-            Cache::forever('menuLinks',$dataToCache);
-
-        }else{
-            $data = $cachedItems[$languageSlug];
-        }
-
-        return self::setCacheCollection($data, MenuLink::class);
-    }
 
     /**
      * Handle callback of insert, update, delete

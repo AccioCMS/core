@@ -198,21 +198,6 @@ class PostTypeModel extends Model{
         ];
     }
 
-    /**
-     * Get post types from cache. Cache is generated if not found
-     *
-     * @return Collection  Returns requested cache if found, null instead
-     */
-    public static function getFromCache(){
-        $data = Cache::get('postTypes');
-
-        if(!$data){
-            $data = PostType::all()->toArray();
-            Cache::forever('postTypes',$data);
-        }
-
-        return self::setCacheCollection($data, PostType::class);
-    }
 
     /**
      * Handle callback of insert, update, delete

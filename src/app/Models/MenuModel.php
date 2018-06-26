@@ -90,22 +90,6 @@ class MenuModel extends Model{
     }
 
     /**
-     * Get menu from cache. Cache is generated if not found
-     *
-     * @return Collection
-     * */
-    public static function getFromCache(){
-        $data = Cache::get('menu');
-
-        if(!$data){
-            $data = Menu::all()->toArray();
-            Cache::forever('menu',$data);
-        }
-
-        return self::setCacheCollection($data, Menu::class);
-    }
-
-    /**
      * Create primary menu (if it doesn't exist
      * @return bool
      */

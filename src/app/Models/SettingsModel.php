@@ -66,19 +66,31 @@ class SettingsModel extends Model{
     protected static $logOnlyDirty = true;
 
     /**
-     * Get settings from cache. Cache is generated if not found
+     * Get items from cache.
+     * Cache is generated if not found.
      *
-     * @return Collection Returns requested cache if found, null instead
+     * @return Collection
      */
-    public static function getFromCache(){
-        $data = Cache::get('settings');
+    public static function getFromCache($attributes = []){
+        $cacheInstance = self::initializeCache(Settings::class, 'settings', $attributes);
+        $data = Cache::get($cacheInstance->cacheName);
 
         if(!$data){
-            $data  = Settings::all()->keyBy('settingsKey')->toArray();
-            Cache::forever('settings',$data);
+            $data  = $cacheInstance->cache();
         }
 
-        return self::setCacheCollection($data, Settings::class);
+        return $cacheInstance->setCacheCollection($data);
+    }
+
+    /**
+     * Default method to handle cache query.
+     *
+     * @return array
+     */
+    private function cache(){
+        $data  = Settings::all()->keyBy($this->cacheAttribute('keyBy', 'settingsKey'))->toArray();
+        Cache::forever($this->cacheName,$data);
+        return $data;
     }
 
     /**

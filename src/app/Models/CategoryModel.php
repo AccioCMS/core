@@ -252,65 +252,34 @@ class CategoryModel extends Model{
     }
 
     /**
-     * Get categories from cache. Cache is generated if not found
+     * Get categories by Post Type,
      *
-     * @param  string $cacheName  Name of the cache ex "post_services". Prefix "categories_" is added automatically on cache name. Default: categories
-     * @param  string $languageSlug Language slug
-     * @return Collection  Returns requested cache if found, null instead
-     * */
-    public static function getFromCache(string $cacheName = 'categories', string $languageSlug = ''){
-        if(!$languageSlug){
-            $languageSlug = App::getLocale();
-        }
-
-        $getPostType = getPostType($cacheName);
-        if($getPostType){
-            $cacheName = "categories_".$getPostType->slug;
-        }
-        $cachedItems = Cache::get($cacheName);
-
-        //set cache in this language
-        if(!isset($cachedItems[$languageSlug])){
-            if($getPostType) {
-                $data = Category::setCacheByPostType($getPostType, $languageSlug);
-            }
-            //or a custom cache
-            else{
-                $functionName = 'setCache'.$cacheName;
-                if(method_exists(__CLASS__,$functionName)){
-                    $data = Category::$functionName($cacheName,$languageSlug);
-                }
-            }
-        }else{
-            $data = $cachedItems[$languageSlug];
-        }
-
-        return self::setCacheCollection($data, Category::class);
-    }
-
-    /**
-     * Get categories cache
+     * @param  string $cacheName  The name of the cache to request
+     * @param  int    $categoryID ID of the category to get the posts from
+     * @param  string $languageSlug Slug of the language to get the posts from
+     * @return object|null  Returns all posts found as requested
      *
-     * @param  array  $cacheName
-     * @param  string $languageSlug
-     * @return array Categories of requested language
      */
-    private static function setCacheCategories($cacheName, $languageSlug){
-        $cacheName = "categories";
-        $data = Category::all()->toArray();
-        $cachedItems = Cache::get($cacheName);
-        if(!$cachedItems){
-            $cachedItems = [];
+    public static function getFromCache($cacheName = 'categories', $attributes = []){
+        // Default cache name
+        if(!$cacheName){
+            $cacheName = PostType::getSlug();
         }
 
-        // merge with other langauges
-        $dataToCache = [$languageSlug => $data];
-        if($cachedItems){
-            $dataToCache = array_merge($cachedItems,$dataToCache);
-        }
-        Cache::forever($cacheName,$dataToCache);
+        $cacheInstance = self::initializeCache(Category::class, $cacheName, $attributes);
+        $data = Cache::get($cacheInstance->cacheName);
 
-        return $data;
+        if(!$data){
+            // handle default cache methods
+            if($cacheName == 'categories'){
+                $data = $cacheInstance->cache();
+
+            }else{ // Handle custom cache methods
+                $data = $cacheInstance->handleCustomCache();
+            }
+        }
+
+        return $cacheInstance->setCacheCollection($data);
     }
 
     /**
@@ -319,7 +288,7 @@ class CategoryModel extends Model{
      * @param  object $category
      * @param  string $mode
      */
-    private  static function deleteCacheCategories($category, $mode){
+    private  static function deleteCache($category, $mode){
         Cache::forget('categories');
     }
 

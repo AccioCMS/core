@@ -63,20 +63,31 @@ class PermalinkModel extends Model
     }
 
     /**
-     * Get Permalinks
-     * If Permalinks  are available in cache, they are stored from cache, otherwise cache is generated
+     * Get items from cache.
+     * Cache is generated if not found.
      *
      * @return Collection
      */
-    public static function getFromCache(){
-        $data = Cache::get('permalinks');
+    public static function getFromCache($attributes = []){
+        $cacheInstance = self::initializeCache(Permalink::class, 'permalinks', $attributes);
+        $data = Cache::get($cacheInstance->cacheName);
 
         if(!$data){
-            $data = Permalink::all()->toArray();
-            Cache::forever('permalinks',$data);
+            $data  = $cacheInstance->cache();
         }
 
-        return self::setCacheCollection($data, Permalink::class);
+        return $cacheInstance->setCacheCollection($data);
+    }
+
+    /**
+     * Default method to handle cache query.
+     *
+     * @return array
+     */
+    private function cache(){
+        $data  = Permalink::all()->toArray();
+        Cache::forever($this->cacheName,$data);
+        return $data;
     }
 
     /**
