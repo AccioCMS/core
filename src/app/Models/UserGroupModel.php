@@ -2,6 +2,7 @@
 
 namespace Accio\App\Models;
 
+use Accio\App\Traits\BootEventsTrait;
 use App\Models\Permission;
 use App\Models\UserGroup;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class UserGroupModel extends Model{
 
-    use LogsActivity;
+    use
+      LogsActivity,
+      BootEventsTrait;
 
     /** @var array $fillable fields that can be filled in CRUD*/
     protected $fillable = [
@@ -165,45 +168,6 @@ class UserGroupModel extends Model{
     {
         parent::__construct($attributes);
         Event::fire('userGroup:construct', [$this]);
-    }
-
-    /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($userGroup){
-            Event::fire('userGroup:saving', [$userGroup]);
-        });
-
-        self::saved(function($userGroup){
-            Event::fire('userGroup:saved', [$userGroup]);
-        });
-
-        self::creating(function($userGroup){
-            Event::fire('userGroup:creating', [$userGroup]);
-        });
-
-        self::created(function($userGroup){
-            Event::fire('userGroup:created', [$userGroup]);
-        });
-
-        self::updating(function($userGroup){
-            Event::fire('userGroup:updating', [$userGroup]);
-        });
-
-        self::updated(function($userGroup){
-            Event::fire('userGroup:updated', [$userGroup]);
-        });
-
-        self::deleting(function($userGroup){
-            Event::fire('userGroup:deleting', [$userGroup]);
-        });
-
-        self::deleted(function($userGroup){
-            Event::fire('userGroup:deleted', [$userGroup]);
-        });
     }
 
     /**

@@ -34,43 +34,20 @@ class CategoryRelationModel extends Model
      */
     public static $label = "categories.relations.label";
 
+
     /**
-     * Get categories relations by Post Type
-     * If items are found in cache they are served from it, otherwise it gets them from database
+     * Default method to handle cache query.
      *
-     * @param  string $postTypeSlug  Slug of post type
-     * @return Collection
-     * */
-    public static function getFromCache($postTypeSlug){
-        if(!isPostType($postTypeSlug)){
-            throw new \Exception('No post type found');
+     * @return array
+     */
+    public function cache(){
+        if(!isPostType($this->cacheName)){
+            throw new \Exception('Post type not found in Cetegory relation\'s cache method!');
         }
 
-        $cacheName = 'categories_relations_'.$postTypeSlug;
-
-        $data = Cache::get($cacheName);
-        if(!$data) {
-            $data = CategoryRelation::where('belongsTo',$postTypeSlug)->get()->toArray();
-            Cache::forever($cacheName, $data);
-        }
-
-        return self::setCacheCollection($data, CategoryRelation::class);
-    }
-
-
-    /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saved(function($categoryRelation){
-            self::deleteCache($categoryRelation->belongsTo);
-        });
-
-        self::deleted(function($categoryRelation){
-            self::deleteCache($categoryRelation->belongsTo);
-        });
+        $data = CategoryRelation::where('belongsTo',$this->cacheName)->get()->toArray();
+        Cache::forever('categories_relations_'.$this->cacheName,$data);
+        return $data;
     }
 
     /**
@@ -78,7 +55,7 @@ class CategoryRelationModel extends Model
      *
      * @param string $postTypeSlug
      */
-    public static function deleteCache($postTypeSlug){
-        Cache::forget('categories_relations_'.$postTypeSlug);
+    public static function updateCache($item, $mode){
+        self::manageCacheState('categories_relations_'.$item->belongsTo, [], $item, $mode);
     }
 }

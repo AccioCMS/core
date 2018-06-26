@@ -21,7 +21,10 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class MediaModel extends Model{
 
-    use Traits\MediaTrait, LogsActivity;
+    use
+      Traits\MediaTrait,
+      LogsActivity,
+      Traits\BootEventsTrait;
 
     /**
      * Fields that can be filled in CRUD
@@ -96,45 +99,6 @@ class MediaModel extends Model{
     public function relations()
     {
         return $this->hasMany('App\Models\MediaRelation','mediaID','mediaID');
-    }
-
-    /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($media){
-            Event::fire('media:saving', [$media]);
-        });
-
-        self::saved(function($media){
-            Event::fire('media:saved', [$media]);
-        });
-
-        self::creating(function($media){
-            Event::fire('media:creating', [$media]);
-        });
-
-        self::created(function($media){
-            Event::fire('media:created', [$media]);
-        });
-
-        self::updating(function($media){
-            Event::fire('media:updating', [$media]);
-        });
-
-        self::updated(function($media){
-            Event::fire('media:updated', [$media]);
-        });
-
-        self::deleting(function($media){
-            Event::fire('media:deleting', [$media]);
-        });
-
-        self::deleted(function($media){
-            Event::fire('media:deleted', [$media]);
-        });
     }
 
     /**

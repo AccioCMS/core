@@ -63,7 +63,6 @@ class PluginModel extends Model{
         Event::fire('plugin:construct', [$this]);
     }
 
-
     /**
      * Handle callback of insert, update, delete
      * */
@@ -76,7 +75,6 @@ class PluginModel extends Model{
 
         self::saved(function($plugin){
             Event::fire('plugin:saved', [$plugin]);
-            Cache::forget('plugins');
         });
 
         self::creating(function($plugin){
@@ -101,7 +99,6 @@ class PluginModel extends Model{
 
         self::deleted(function($plugin){
             Event::fire('plugin:deleted', [$plugin]);
-            Cache::forget('plugins');
         });
     }
 

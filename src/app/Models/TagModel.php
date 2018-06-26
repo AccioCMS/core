@@ -15,7 +15,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class TagModel extends Model{
 
-    use Traits\TagTrait, LogsActivity, Traits\CacheTrait;
+    use
+      Traits\TagTrait,
+      LogsActivity,
+      Traits\CacheTrait,
+      Traits\BootEventsTrait;
+
     /**
      * Fields that can be filled in CRUD
      *
@@ -77,47 +82,6 @@ class TagModel extends Model{
     }
 
     /**
-     * Get tags from cache. Cache is generated if not found
-     *
-     * @param  string $cacheName Name of the cache ex "post_services". Prefix "tags_" is added automatically on cache name.
-     * @return object|null  Returns requested cache if found, null instead
-     */
-    public static function getFromCache($cacheName =''){
-        $data = Cache::get("tags");
-        if(!$data){
-            $functionName = 'setCache_'.$cacheName;
-            if(method_exists(Tag::class,$functionName)){
-                $data = Tag::$functionName($cacheName);
-            }else{
-                $data = Tag::setCacheAll();
-            }
-        }
-
-        return self::setCacheCollection($data, Tag::class);
-    }
-
-    /**
-     * Set cache
-     *
-     * @return array
-     */
-    private static function setCacheAll(){
-        $data = Tag::all()->toArray();
-        Cache::forever('tags',$data);
-        return $data;
-    }
-
-    /**
-     * Delete all tags cache
-     *
-     * @param object $tag A single tag object
-     * @param string $mode Set "saved" or 'deleted" mode
-     */
-    private static function deleteCache_All($tag, $mode){
-        Cache::forget('tags');
-    }
-
-    /**
      * Declare columns that should be saved in MenuLinks table as 'attributes', to enable navigation in front-end
      *
      * @return array
@@ -136,73 +100,6 @@ class TagModel extends Model{
 
         $this->setAutoTranslate($previousAutoTranslate);
         return $data;
-    }
-
-    /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($postType){
-            Event::fire('tag:saving', [$postType]);
-        });
-
-        self::saved(function($tag){
-            Event::fire('tag:saved', [$tag]);
-            Tag::_saved($tag);
-        });
-
-        self::creating(function($tag){
-            Event::fire('tag:creating', [$tag]);
-        });
-
-        self::created(function($tag){
-            Event::fire('tag:created', [$tag]);
-        });
-
-        self::updating(function($tag){
-            Event::fire('tag:updating', [$tag]);
-        });
-
-        self::updated(function($tag){
-            Event::fire('tag:updated', [$tag]);
-        });
-
-        self::deleting(function($tag){
-            Event::fire('tag:deleting', [$tag]);
-        });
-
-        self::deleted(function($tag){
-            Event::fire('tag:deleted', [$tag]);
-            Tag::_deleted($tag);
-        });
-    }
-
-    /**
-     * Perform certain actions after a tag is saved
-     *
-     * @param object $tag Saved tag
-     * */
-    private static function _saved($tag){
-        //delete existing cache
-        $deleteCacheMethods = preg_grep('/^deleteCache_/', get_class_methods(__CLASS__));
-        foreach($deleteCacheMethods as $method){
-            Tag::$method($tag, "saved");
-        }
-    }
-
-    /**
-     * Perform certain actions after a tag is deleted
-     *
-     * @param object $tag Deleted tag
-     * */
-    private static function _deleted($tag){
-        //delete existing cache
-        $deleteCacheMethods = preg_grep('/^deleteCache_/', get_class_methods(__CLASS__));
-        foreach($deleteCacheMethods as $method){
-            Tag::$method($tag,"deleted");
-        }
     }
 
     /**
@@ -225,7 +122,6 @@ class TagModel extends Model{
     {
         return $this->hasOne('App\Models\Media','mediaID','featuredImageID');
     }
-
 
     /**
      * Define single user's SEO Meta data

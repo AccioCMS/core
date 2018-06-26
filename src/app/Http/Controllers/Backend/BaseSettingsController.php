@@ -75,8 +75,10 @@ class BaseSettingsController extends MainController{
 
         // if request is being made from general settings
         if($request->settingsType == 'general'){
+
             // remove the current default language ( set it to non-default ) if this new one is the default
             Language::where('isDefault',1)->update(['isDefault' => 0]);
+
             // set the new default language
             $defaultLanguage = $request->form['defaultLanguage'];
             Language::find($defaultLanguage)->update(['isDefault' => 1]);

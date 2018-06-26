@@ -20,7 +20,11 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class MenuModel extends Model{
 
-    use Traits\MenuTrait, LogsActivity, Traits\CacheTrait;
+    use
+      Traits\MenuTrait,
+      LogsActivity,
+      Traits\CacheTrait,
+      Traits\BootEventsTrait;
 
     /**
      * Fields that can be filled in CRUD
@@ -109,68 +113,7 @@ class MenuModel extends Model{
         }
         return false;
     }
-
-    /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($menu){
-            Event::fire('menu:saving', [$menu]);
-        });
-
-        self::saved(function($menu){
-            Event::fire('menu:saved', [$menu]);
-            Menu::_saved($menu);
-        });
-
-        self::creating(function($menu){
-            Event::fire('menu:creating', [$menu]);
-        });
-
-        self::created(function($menu){
-            Event::fire('menu:created', [$menu]);
-        });
-
-        self::updating(function($menu){
-            Event::fire('menu:updating', [$menu]);
-        });
-
-        self::updated(function($menu){
-            Event::fire('menu:updated', [$menu]);
-        });
-
-        self::deleting(function($menu){
-            Event::fire('menu:deleting', [$menu]);
-        });
-
-        self::deleted(function($menu){
-            Event::fire('menu:deleted', [$menu]);
-            Menu::_deleted($menu);
-        });
-    }
-
-    /**
-     * Perform certain actions after the menu is saved
-     *
-     * @param object $menu Saved menu
-     * */
-    private static function _saved($menu){
-        //delete existing cache
-        Cache::forget('menu');
-    }
-
-    /**
-     * Perform certain actions after the menu is deleted
-     *
-     * @param object $menu Deleted menu
-     **/
-    private static function _deleted($menu){
-        //delete existing cache
-        Cache::forget('menu');
-    }
-
+    
     /**
      * Destruct model instance
      */

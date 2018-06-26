@@ -2,6 +2,7 @@
 
 namespace Accio\App\Models;
 
+use Accio\App\Traits\BootEventsTrait;
 use Accio\App\Traits\CacheTrait;
 use App\Models\Media;
 use App\Models\Settings;
@@ -12,7 +13,10 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class SettingsModel extends Model{
 
-    use LogsActivity, CacheTrait;
+    use
+      LogsActivity,
+      CacheTrait,
+      BootEventsTrait;
 
     /**
      * Fields that can be filled
@@ -66,67 +70,6 @@ class SettingsModel extends Model{
     protected static $logOnlyDirty = true;
 
     /**
-     * Get items from cache.
-     * Cache is generated if not found.
-     *
-     * @return Collection
-     */
-    public static function getFromCache($attributes = []){
-        $cacheInstance = self::initializeCache(Settings::class, 'settings', $attributes);
-        $data = Cache::get($cacheInstance->cacheName);
-
-        if(!$data){
-            $data  = $cacheInstance->cache();
-        }
-
-        return $cacheInstance->setCacheCollection($data);
-    }
-
-    /**
-     * Default method to handle cache query.
-     *
-     * @return array
-     */
-    private function cache(){
-        $data  = Settings::all()->keyBy($this->cacheAttribute('keyBy', 'settingsKey'))->toArray();
-        Cache::forever($this->cacheName,$data);
-        return $data;
-    }
-
-    /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-        // watch for saving queries
-        Settings::saved(function($settings){
-            Settings::_saved($settings);
-        });
-        // watch for deletion queries
-        Settings::deleted(function($settings){
-            Settings::_deleted($settings);
-        });
-    }
-
-    /**
-     * Perform certain actions after a setting is saved
-     *
-     * @param object $setting Saved setting
-     * */
-    private static function _saved($setting){
-        Cache::forget('settings');
-    }
-
-    /**
-     * Perform certain actions after a setting is deleted
-     *
-     * @param object $setting Deleted setting
-     * */
-    private static function _deleted($setting){
-        Cache::forget('settings');
-    }
-
-    /**
      * Get Project Logo
      * @return HasOne
      */
@@ -134,7 +77,6 @@ class SettingsModel extends Model{
     {
         return Media::find(settings('logo'));
     }
-
 
     /**
      * Get all settings as a list
@@ -156,11 +98,12 @@ class SettingsModel extends Model{
      * @param string $key
      */
     public static function getSetting($key){
-        if(Settings::getFromCache()) {
-            $setting = Settings::getFromCache()->where('settingsKey', $key);
+        $settings = Settings::getFromCache();
+        if($settings) {
+            $setting = $settings->where('settingsKey', $key)->first();
 
-            if ($setting->count()) {
-                return $setting->first()->value;
+            if ($setting) {
+                return $setting->value;
             }
         }
         return;

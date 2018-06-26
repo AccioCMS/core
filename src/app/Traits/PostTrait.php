@@ -70,7 +70,7 @@ trait PostTrait{
             $postObj = (new Post())->setTable($postTypeSlug);
             $post = $postObj
               ->where('slug->'.App::getLocale(), $slug)
-              ->with(self::getDefaultRelations(getPostType($postTypeSlug)))
+              ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
               ->first();
 
             // search in archive if not found in main database
@@ -78,7 +78,7 @@ trait PostTrait{
                 $postObj->setConnection('mysql_archive');
                 $post = $postObj
                   ->where('slug->'.App::getLocale(), $slug)
-                  ->with(self::getDefaultRelations(getPostType($postTypeSlug)))
+                  ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
                   ->first();;
             }
 
@@ -157,7 +157,6 @@ trait PostTrait{
             $postID = $postObj->postID;
         }else{ // on update
             $postObj = $postObj->where('postID',$data['postID'])->first();
-
             // if posts exists in the primary database
             if($postObj){
                 $populatedFields = self::populateStoreColumns($postObj, $data);
@@ -169,6 +168,7 @@ trait PostTrait{
                     DB::table('tags_relations')->where("belongsToID", $data['postID'])->delete();
                     DB::table('media_relations')->where("belongsToID", $data['postID'])->delete();
                 }
+
                 $postID = $postObj->postID;
             }else{
                 // if post exists only in the archive database
@@ -905,23 +905,6 @@ trait PostTrait{
 
         return $content;
     }
-
-    /**
-     * Delete all caches of posts
-     * @param  object $postData Post object needed to delete caches related to it
-     * @return void
-     */
-
-    public static function deleteCache($postData){
-        // It finds all setCache functions in current class end executes them
-        $deleteCacheMethods = preg_grep('/^deleteCache/', get_class_methods(__CLASS__));
-        foreach($deleteCacheMethods as $method){
-            if($method !== 'deleteCache') {
-                self::$method($postData);
-            }
-        }
-    }
-
 
     /**
      * @param integer $postID ID of the post

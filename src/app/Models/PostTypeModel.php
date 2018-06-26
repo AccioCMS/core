@@ -25,7 +25,11 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class PostTypeModel extends Model{
 
-    use Traits\PostTypeTrait, LogsActivity, Traits\CacheTrait;
+    use
+      Traits\PostTypeTrait,
+      LogsActivity,
+      Traits\CacheTrait,
+      Traits\BootEventsTrait;
 
     /**
      * Fields that can be filled in CRUD
@@ -198,78 +202,11 @@ class PostTypeModel extends Model{
         ];
     }
 
-
-    /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($postType){
-            Event::fire('postType:saving', [$postType]);
-        });
-
-        self::saved(function($postType){
-            Event::fire('postType:saved', [$postType]);
-            PostType::_saved($postType);
-        });
-
-        self::creating(function($postType){
-            Event::fire('postType:creating', [$postType]);
-        });
-
-        self::created(function($postType){
-            Event::fire('postType:created', [$postType]);
-        });
-
-        self::updating(function($postType){
-            Event::fire('postType:updating', [$postType]);
-        });
-
-        self::updated(function($postType){
-            Event::fire('postType:updated', [$postType]);
-        });
-
-        self::deleting(function($postType){
-            Event::fire('postType:deleting', [$postType]);
-        });
-
-        self::deleted(function($postType){
-            Event::fire('postType:deleted', [$postType]);
-            PostType::_deleted($postType);
-        });
-    }
-
-
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function categories(){
         return $this->hasMany('App\Models\Category', 'postTypeID');
-    }
-
-    /**
-     * Delete Post Types caches
-     */
-    public static function deleteCache(){
-        Cache::forget('postTypes');
-    }
-
-    /**
-     * Perform certain actions after a post type is saved
-     * @param $postType PostType
-     * */
-    private static function _saved($postType){
-        self::deleteCache();
-    }
-
-    /**
-     * Perform certain actions after a category is deleted
-     *
-     * @param $postType PostType
-     * */
-    private static function _deleted($postType){
-        self::deleteCache();
     }
 
     /** Validate a post type from url

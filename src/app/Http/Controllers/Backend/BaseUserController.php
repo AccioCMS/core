@@ -133,7 +133,7 @@ class BaseUserController extends MainController{
 
         // if validation fails return json response
         if($validator->fails()){
-            return $this->response("Bad request", 400, null, false, false, true, $validator->errors());
+            return $this->response("Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
         // if image is not set make it 0
@@ -261,7 +261,7 @@ class BaseUserController extends MainController{
 
         // if validation fails return json response
         if ($validator->fails()) {
-            return $this->response("Bad request", 400, null, false, false, true, $validator->errors());
+            return $this->response("Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
         // if image is not set make it 0
@@ -290,7 +290,7 @@ class BaseUserController extends MainController{
             $user->assignRoles($request->user['groups']);
 
             $redirectParams = parent::redirectParams($request->redirect, 'user', $request->user['id']);
-            $result = $this->response( 'User is update', 200, $request->user['id'], $redirectParams['view'], $redirectParams['redirectUrl'] );
+            $result = $this->response( 'User updated!', 200, $request->user['id'], $redirectParams['view'], $redirectParams['redirectUrl'] );
             $result['data'] = $user;
         }else{
             $result = $this->response( 'Internal server error. Please try again later', 500);
@@ -345,7 +345,7 @@ class BaseUserController extends MainController{
 
         // if validation fails return json response
         if ($validator->fails()) {
-            return $this->response( "Bad request", 400,null, false, false, true, $validator->errors());
+            return $this->response( "Please check all required fields!", 400,null, false, false, true, $validator->errors());
         }
 
         $user = User::where('userID', $request->id)->update([

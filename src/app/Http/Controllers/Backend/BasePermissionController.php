@@ -85,7 +85,7 @@ class BasePermissionController extends MainController{
         ], $messages);
         // if validation fails return json response
         if($validator->fails()){
-            return $this->response( "Bad request", 400,null, false, false, true, $validator->errors());
+            return $this->response( "Please check all required fields!", 400,null, false, false, true, $validator->errors());
         }
 
         $id = $request->id;

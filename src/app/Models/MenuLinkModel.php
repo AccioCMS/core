@@ -21,7 +21,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class MenuLinkModel extends Model{
 
-    use Traits\MenuLinkTrait, LogsActivity, Traits\CacheTrait, Traits\TranslatableTrait;
+    use
+      Traits\MenuLinkTrait,
+      LogsActivity,
+      Traits\CacheTrait,
+      Traits\TranslatableTrait,
+      Traits\BootEventsTrait;
 
     /**
      * Fields that can be filled in CRUD
@@ -86,71 +91,11 @@ class MenuLinkModel extends Model{
         Event::fire('menuLink:construct', [$this]);
     }
 
-
-    /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($menuLink){
-            Event::fire('menuLink:saving', [$menuLink]);
-        });
-
-        self::saved(function($menuLink){
-            MenuLink::_saved($menuLink);
-            Event::fire('menuLink:saved', [$menuLink]);
-        });
-
-        self::creating(function($menuLink){
-            Event::fire('menuLink:creating', [$menuLink]);
-        });
-
-        self::created(function($menuLink){
-            Event::fire('menuLink:created', [$menuLink]);
-        });
-
-        self::updating(function($menuLink){
-            Event::fire('menuLink:updating', [$menuLink]);
-        });
-
-        self::updated(function($menuLink){
-            Event::fire('menuLink:updated', [$menuLink]);
-        });
-
-        self::deleting(function($menuLink){
-            Event::fire('menuLink:deleting', [$menuLink]);
-        });
-
-        self::deleted(function($menuLink){
-            MenuLink::_deleted($menuLink);
-            Event::fire('menuLink:deleted', [$menuLink]);
-        });
-    }
-
     /**
      * Delete Menulink caches
      */
     public static function deleteCache(){
         Cache::forget('menuLinks');
-    }
-
-    /**
-     * Perform certain actions after a menulink is saved
-     *
-     * @param object $menulink Saved menulink
-     * */
-    private static function _saved($menulink){
-        self::deleteCache();
-    }
-
-    /**
-     * Perform certain actions after a menulink is deleted
-     *
-     * @param object $menulink Deleted menulink
-     * */
-    private static function _deleted($menulink){
-        self::deleteCache();
     }
 
     /**

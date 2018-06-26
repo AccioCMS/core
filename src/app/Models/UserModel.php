@@ -19,7 +19,14 @@ use Spatie\Activitylog\Traits\HasActivity;
 
 class UserModel extends Authenticatable
 {
-    use Traits\UserTrait, Notifiable, Traits\TranslatableTrait, HasActivity, Notifiable, Traits\CacheTrait;
+    use
+      Traits\UserTrait,
+      Notifiable,
+      Traits\TranslatableTrait,
+      HasActivity,
+      Notifiable,
+      Traits\CacheTrait,
+      Traits\BootEventsTrait;
 
     /** @var array $fillable fields that can be filled in CRUD*/
     protected $fillable = [
@@ -122,20 +129,14 @@ class UserModel extends Authenticatable
     }
 
     /**
-     * Get Users
-     * If User  are available in cache, they are stored from cache, otherwise a query takes place
+     * Default method to handle cache query.
      *
-     * @return Collection
+     * @return array
      */
-    public static function getFromCache(){
-        $data = Cache::get('users');
-
-        if(!$data){
-            $data = User::with("profileimage")->get()->toArray();
-            Cache::forever('users',$data);
-        }
-
-        return self::setCacheCollection($data, User::class);
+    public function cache(){
+        $data  = User::with("profileimage")->get()->toArray();
+        Cache::forever($this->cacheName,$data);
+        return $data;
     }
 
 
@@ -145,19 +146,6 @@ class UserModel extends Authenticatable
     protected static function boot(){
         parent::boot();
 
-        self::saving(function($user){
-            Event::fire('user:saving', [$user]);
-        });
-
-        self::saved(function($user){
-            Event::fire('user:saved', [$user]);
-            self::_saved($user);
-        });
-
-        self::creating(function($user){
-            Event::fire('user:creating', [$user]);
-        });
-
         self::created(function($user){
             try{
                 $user->notify(new UserAdded($user));
@@ -166,28 +154,10 @@ class UserModel extends Authenticatable
             }
             Event::fire('user:created', [$user]);
         });
-
-        self::updating(function($user){
-            Event::fire('user:updating', [$user]);
-        });
-
-        self::updated(function($user){
-            Event::fire('user:updated', [$user]);
-        });
-
-        self::deleting(function($user){
-            Event::fire('user:deleting', [$user]);
-        });
-
-        self::deleted(function($user){
-            Event::fire('user:deleted', [$user]);
-            self::_deleted($user);
-        });
     }
-
-
+    
     /**
-     * Generate the URL to a user
+     * Generate the URL to a user.
      *
      *
      * @return string
@@ -195,7 +165,6 @@ class UserModel extends Authenticatable
     public function getHrefAttribute(){
         return $this->href();
     }
-
 
     /**
      * Generate a custom URL to a user
@@ -249,27 +218,6 @@ class UserModel extends Authenticatable
     }
 
     /**
-     * Perform certain actions after a user is saved
-     *
-     * @param object $user Saved menulink
-     * */
-    private static function _saved($user){
-        //delete existing cache
-        Cache::forget('users');
-    }
-
-    /**
-     * Perform certain actions after a user is deleted
-     *
-     * @param object $user Deleted user
-     * */
-    private static function _deleted($user){
-        //delete existing cache
-        Cache::forget('users');
-    }
-
-
-    /**
      * Full name of the user
      *
      * @return string
@@ -286,7 +234,6 @@ class UserModel extends Authenticatable
     {
         Event::fire('user:destruct', [$this]);
     }
-
 
     /**
      * Get posts of users

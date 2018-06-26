@@ -5,6 +5,7 @@ namespace Accio\App\Traits;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
 
 trait CacheTrait
 {
@@ -40,16 +41,17 @@ trait CacheTrait
      * @return void
      */
     protected static function bootCacheTrait(){
-        self::created(function($post){
-            self::manageCacheState();
+        self::saved(function($item){
+            $item->handleUpdateCache($item, "saved");
         });
 
-        self::updated(function($post){
-
+        self::created(function($item){
+            $item->handleUpdateCache($item, "created");
         });
 
-        self::deleted(function($post){
 
+        self::deleted(function($item){
+            $item->handleUpdateCache($item, "deleted");
         });
     }
 
@@ -98,14 +100,6 @@ trait CacheTrait
         $this->cacheName = $cacheName;
     }
 
-    /**
-     * Get cache name.
-     *
-     * @return mixed
-     */
-    private function cacheName(){
-        return $this->cacheName;
-    }
 
     /**
      * Set cache attributes.
@@ -150,6 +144,16 @@ trait CacheTrait
         return $default;
     }
 
+    private function cacheWhere($key, $default = null){
+        $whereList = $this->cacheAttribute('where');
+        if($whereList){
+            if(isset($whereList[$key])){
+                return $whereList[$key];
+            }
+        }
+
+        return $default;
+    }
 
     /**
      * @param string $cacheName
@@ -158,11 +162,15 @@ trait CacheTrait
      *
      * @throws \Exception
      */
-    private function handleCustomCache(string $class){
-        $methodName = 'cache'.ucfirst($this->cacheName());
+    private function handleCustomCache(){
+        if($this->cacheAttribute('method')){
+            $methodName = $this->cacheAttribute('method');
+        }else{
+            $methodName = 'cache'.ucfirst($this->cacheName);
+        }
 
-        if(method_exists($class,$methodName)){
-            return $class->$methodName($this);
+        if(method_exists($this,$methodName)){
+            return $this->$methodName();
         }else{
             throw new \Exception("Cache method $methodName does not exists!");
         }
@@ -172,41 +180,100 @@ trait CacheTrait
      *
      * @param string $cacheName
      * @param object $item
+     * @param string $mode
      * @param integer $limit
-     * @param bool $delete
      *
      * @return Collection
      */
-    private static function manageCacheState($cacheName, $item, $limit, $delete = false){
-        $cachedItems = Cache::get($cacheName);
+    private static function manageCacheState($cacheName, array $attributes = [], $item, $mode = false, $limit = null){
+        $classPath = '\\App\\Models\\'.self::getModelFromParent();
+        $cachedItems = $classPath::getFromCache($cacheName, $attributes, false);
+
+        $currentItem = $item->hasCacheItem($cachedItems,  $item->getKeyName(), $item->getKey());
 
         if(!$cachedItems){
-            $cachedItems = collect();
+            $cachedItems = [];
         }
 
         // DELETE
-        if($delete){
-            if($cachedItems->has($post->postID)){
-                $cachedItems->forget($post->postID);
+        if($mode == 'delete'){
+            if ($currentItem) {
+                $cachedItems = array_pull($cachedItems, key($currentItem));
             }
         }else {
             // UPDATE
-            if ($cachedItems->has($post->postID)) {
-                $cachedItems[$post->postID] = $post;
+            if ($currentItem) {
+                $cachedItems[key($currentItem)] = $item->toArray();
             } else { // ADD
-                $cachedItems->put($post->postID, $post);
+                $cachedItems = array_add($cachedItems, $item->getKey(), $item->toArray());
 
                 // Limit results
-                $countItems = $cachedItems->count();
-                if ($countItems > $limit) {
-                    $cachedItems = $cachedItems->slice(($countItems - $limit));
+                if($limit) {
+                    $countItems = $cachedItems->count();
+                    if ($countItems > $limit) {
+                        $cachedItems = array_slice($cachedItems, ($countItems - $limit));
+                    }
                 }
             }
         }
 
+        // Save cache
         Cache::forever($cacheName,$cachedItems);
 
         return $cachedItems;
+    }
+
+    private function hasCacheItem($array, $keyName, $keyValue){
+        return array_where($array, function ($item) use($keyName, $keyValue) {
+            return ($keyValue == $item[$keyName]);
+        });
+
+    }
+
+    public function cacheLimit(){
+        $classPath = '\\App\\Models\\'.self::getModelFromParent();
+
+        // Set cache limit
+        $limit = null;
+        if(property_exists($classPath, 'defaultCacheLimit')){
+            $limit = $classPath::$defaultCacheLimit;
+        }
+
+        return  $this->cacheAttribute('limit', $limit);
+    }
+
+    /**
+     * Default method to update cache.
+     * 
+     * @param $item
+     * @param bool $delete
+     */
+    public function updateCache($item, string $mode){
+        $model = $cacheName = self::getModelFromParent();
+
+        // Fire cache updated event
+        Event::fire(lcfirst($model).':cacheUpdated', [$item, $mode]);
+
+        // Manage cache state
+        self::manageCacheState($cacheName, [], $item, $mode, $this->cacheLimit());
+    }
+
+    /**
+     * Handle custom cache update in models.
+     *
+     * @param $item
+     * @param $mode
+     */
+    private function handleUpdateCache($item, $mode){
+        $classPath = '\\App\\Models\\'.self::getModelFromParent();
+        $modelClass = new $classPath();
+
+        //delete existing cache
+        $updateCacheMethods = preg_grep('/^updateCache/', get_class_methods($classPath));
+
+        foreach($updateCacheMethods as $method){
+            $modelClass->$method($item, $mode);
+        }
     }
 
     /**
@@ -215,9 +282,10 @@ trait CacheTrait
      * @param array $data
      * @return Collection
      */
-    public function setCacheCollection(array $data){
+    public function setCacheCollection(array $data, string $table = ''){
         $model = $this->getModel();
-        $table = $this->cacheAttribute('table');
+        $table = $this->cacheAttribute('table', $table);
+
 
         // model may have its own collection method
         if(method_exists($model,'newCollection')){
@@ -263,7 +331,7 @@ trait CacheTrait
     /**
      * Automatically find model which is calling this method
      *
-     * @return string
+     * @return Collection|array
      */
     private static function getModelFromParent(){
         $explode = explode('\\',get_class());
@@ -277,18 +345,24 @@ trait CacheTrait
      *
      * @return Collection
      */
-    public static function getFromCache($attributes = []){
-        $modelName = self::getModelFromParent();
-        $classPath = '\\App\\Models\\'.$modelName;
+    public static function getFromCache(string $cacheName = '', $attributes = [], $returnCollection = true){
+        if(!$cacheName){
+            $cacheName = self::getModelFromParent();
+        }
+        $classPath = '\\App\\Models\\'.self::getModelFromParent();
 
-        $cacheInstance = self::initializeCache($classPath, $modelName, $attributes);
+        $cacheInstance = self::initializeCache($classPath, $cacheName, $attributes);
         $data = Cache::get($cacheInstance->cacheName);
 
         if(!$data){
             $data  = $cacheInstance->cache();
         }
 
-        return $cacheInstance->setCacheCollection($data);
+        if($returnCollection){
+            return $cacheInstance->setCacheCollection($data);
+        }
+
+        return $data;
     }
 
     /**
@@ -299,17 +373,9 @@ trait CacheTrait
     public function cache(){
         $classPath = '\\App\\Models\\'.self::getModelFromParent();
         $data  = $classPath::all()->toArray();
+
         Cache::forever($this->cacheName,$data);
         return $data;
-    }
-
-    /**
-     * Delete default cache
-     *
-     * @return array
-     */
-    public function deleteCache(){
-        Cache::forget(self::getModelFromParent());
     }
 
     /**
