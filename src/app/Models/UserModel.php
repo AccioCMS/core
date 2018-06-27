@@ -2,8 +2,11 @@
 
 namespace Accio\App\Models;
 
+use App\Models\CustomField;
+use App\Models\CustomFieldGroup;
 use App\Models\Language;
 use App\Models\Media;
+use App\Models\PostType;
 use App\Models\User;
 use App\Notifications\UserAdded;
 use Faker\Test\Provider\Collection;
@@ -11,6 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Accio\App\Traits;
@@ -365,4 +369,5 @@ class UserModel extends Authenticatable
                 '{siteTitle}' => settings('siteTitle')
             ]);
     }
+
 }
