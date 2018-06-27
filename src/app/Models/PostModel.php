@@ -294,7 +294,7 @@ class PostModel extends Model{
         if(!$data){
             // handle default cache methods
             if($isPostType){
-                if($cacheInstance->cacheWhere('categoryID')){
+                if($cacheInstance->cacheAttribute('categoryID')){
                     $data = $cacheInstance->cacheByCategory();
                 }else{
                     $data = $cacheInstance->cache();
@@ -348,16 +348,16 @@ class PostModel extends Model{
      * @return Collection
      **/
     private function cacheByCategory(){
-        $postType = getPostType($this->cacheInstance->cacheWhere('belongsTo'));
+        $postType = getPostType($this->cacheInstance->cacheAttribute('belongsTo'));
         if(!$postType){
             throw new \Exception($this->cacheInstance->cacheName.' doest\'t seem like a post type slug.');
         }
 
-        $cacheName = 'category_posts_'.$this->cacheInstance->cacheWhere('categoryID');
+        $cacheName = 'category_posts_'.$this->cacheInstance->cacheAttribute('categoryID');
 
         $data = (new Post())->setTable($postType->slug)
           ->join('categories_relations','categories_relations.belongsToID',$postType->slug.'.postID')
-          ->where('categories_relations.categoryID', '=', $this->cacheInstance->cacheWhere('categoryID'))
+          ->where('categories_relations.categoryID', '=', $this->cacheInstance->cacheAttribute('categoryID'))
           ->with($this->cacheInstance->cacheAttribute('with',$this->getDefaultRelations($postType)))
           ->limit($this->cacheInstance->cacheLimit())
           ->orderBy(
@@ -395,12 +395,9 @@ class PostModel extends Model{
             foreach($post->categories as $category){
                 Cache::forget('category_posts_'.$category->categoryID);
                 self::manageCacheState(
-                  'category_posts_'.$category->categoryID,
-                  [
-                    'where' => [
-                      'categoryID' => [$category->categoryID],
-                      'belongsTo' => [$post->getTable()]
-                    ]
+                  'category_posts_'.$category->categoryID,[
+                    'categoryID' => $category->categoryID,
+                    'belongsTo' => $post->getTable()
                   ], 
                   $post, 
                   $mode,

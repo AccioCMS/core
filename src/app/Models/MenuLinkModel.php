@@ -22,8 +22,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class MenuLinkModel extends Model{
 
     use
-      Traits\MenuLinkTrait,
       LogsActivity,
+      Traits\MenuLinkTrait,
       Traits\CacheTrait,
       Traits\TranslatableTrait,
       Traits\BootEventsTrait;
