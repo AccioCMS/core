@@ -15,6 +15,7 @@ use App\Models\Language;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Lang;
 use Input;
 use Request;
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +24,11 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class LanguageModel extends Model{
 
-    use Traits\LanguageTrait, LogsActivity, Traits\CacheTrait;
+    use
+      Traits\LanguageTrait,
+      LogsActivity,
+      Traits\CacheTrait,
+      Traits\BootEventsTrait;
 
     /**
      * Fields that can be filled in CRUD
@@ -107,81 +112,6 @@ class LanguageModel extends Model{
     {
         parent::__construct($attributes);
         Event::fire('language:construct', [$this]);
-    }
-
-    /**
-     * Get language from cache. Cache is generated if not found
-     *
-     * @return Collection  Returns requested cache if found, null instead
-     */
-    public static function getFromCache(){
-        $data = Cache::get('languages');
-
-        if(!$data){
-            $data = Language::all()->toArray();
-            Cache::forever('languages',$data);
-        }
-
-        return self::setCacheCollection($data, Language::class);
-    }
-
-    /**
-     * Listen to crud events
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($language){
-            Event::fire('language:saving', [$language]);
-        });
-
-        self::saved(function($language){
-            Event::fire('language:saved', [$language]);
-            Language::_saved($language);
-        });
-
-        self::creating(function($language){
-            Event::fire('language:creating', [$language]);
-        });
-
-        self::created(function($language){
-            Event::fire('language:created', [$language]);
-        });
-
-        self::updating(function($language){
-            Event::fire('language:updating', [$language]);
-        });
-
-        self::updated(function($language){
-            Event::fire('language:updated', [$language]);
-        });
-
-        self::deleting(function($language){
-            Event::fire('language:deleting', [$language]);
-        });
-
-        self::deleted(function($language){
-            Event::fire('language:deleted', [$language]);
-            Language::_deleted($language);
-        });
-    }
-
-    /**
-     * Perform certain actions after a language is saved
-     *
-     * @param object $language Saved language
-     * */
-    private static function _saved($language){
-        Cache::forget('languages');
-    }
-
-    /**
-     * Perform certain actions after a category is deleted
-     *
-     * @param object $language Deleted language
-     * */
-    private static function _deleted($language){
-        Cache::forget('languages');
     }
 
     /**

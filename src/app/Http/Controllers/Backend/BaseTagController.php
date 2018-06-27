@@ -115,7 +115,7 @@ class BaseTagController extends MainController{
         ], $messages);
 
         if ($validator->fails()) {
-            return $this->response("Bad request", 400, null, false, false, true, $validator->errors());
+            return $this->response("Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
         $tags = new Tag();

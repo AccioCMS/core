@@ -65,7 +65,7 @@ class BaseCustomFieldController extends MainController{
 
         // if validation fails return json response
         if($validator->fails()){
-            return $this->response( "Bad request", 400,null, false, false, true, $validator->errors());
+            return $this->response( "Please check all required fields!", 400,null, false, false, true, $validator->errors());
         }
 
         // update

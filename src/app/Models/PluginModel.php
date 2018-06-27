@@ -64,22 +64,6 @@ class PluginModel extends Model{
     }
 
     /**
-     * Get settings from cache. Cache is generated if not found
-     *
-     * @return object|null  Returns requested cache if found, null instead
-     */
-    public static function getFromCache(){
-        $data = Cache::get('plugins');
-
-        if(!$data){
-            $data = Plugin::all()->toArray();
-            Cache::forever('plugins', $data);
-        }
-
-        return self::setCacheCollection($data, Plugin::class);
-    }
-
-    /**
      * Handle callback of insert, update, delete
      * */
     protected static function boot(){
@@ -91,7 +75,6 @@ class PluginModel extends Model{
 
         self::saved(function($plugin){
             Event::fire('plugin:saved', [$plugin]);
-            Cache::forget('plugins');
         });
 
         self::creating(function($plugin){
@@ -116,7 +99,6 @@ class PluginModel extends Model{
 
         self::deleted(function($plugin){
             Event::fire('plugin:deleted', [$plugin]);
-            Cache::forget('plugins');
         });
     }
 

@@ -40,7 +40,13 @@ use Accio\App\Traits;
 use Accio\Support\PostCollection;
 
 class PostModel extends Model{
-    use Traits\PostTrait, Traits\TranslatableTrait, Traits\CustomFieldsValuesTrait, LogsActivity, Traits\CacheTrait;
+    use
+      Traits\PostTrait,
+      Traits\TranslatableTrait,
+      Traits\CustomFieldsValuesTrait,
+      LogsActivity,
+      Traits\CacheTrait,
+      Traits\BootEventsTrait;
 
     /**
      * The primary table associated with the model.
@@ -62,7 +68,6 @@ class PostModel extends Model{
      * @var string $mediaField
      */
     protected $mediaField;
-
 
     /**
      * Should we always use tmp table?
@@ -139,7 +144,7 @@ class PostModel extends Model{
     /**
      * @var array
      */
-    public static $autoCacheRelations = [];
+    public $autoCacheRelations = [];
 
     /**
      * List of default table columns
@@ -218,6 +223,7 @@ class PostModel extends Model{
         return $model;
     }
 
+
     /**
      * Define menu panel
      * @return array
@@ -268,54 +274,140 @@ class PostModel extends Model{
      * Get posts by Post Type, by a Category or by a custom function
      * If posts are found in cache they are served from it, otherwise it gets them from database
      *
-     * @param  string $cacheName  The name of the cache to request
-     * @param  int    $categoryID ID of the category to get the posts from
-     * @param  string $languageSlug Slug of the language to get the posts from
+     * @param  string $cacheName
+     * @param  array $attributes
+     * @param  bool $returnCollection if false, array is return
      * @return object|null  Returns all posts found as requested
-     * */
+     *
+     */
 
-    public static function getFromCache($cacheName = '', $categoryID = 0, $languageSlug = ""){
-        // Default Language
-        if(!$languageSlug){
-            $languageSlug = \App::getLocale();
-        }
-
+    public static function getFromCache($cacheName = '', $attributes = [], $returnCollection = true){
         // Default cache name
         if(!$cacheName){
             $cacheName = PostType::getSlug();
         }
 
-        // Handle cache by post type and category
-        $getPostType = getPostType($cacheName);
-        if($getPostType){
-            // ensure post type name is right
-            $cacheName = $getPostType->slug;
+        $cacheInstance = self::initializeCache(Post::class, $cacheName, $attributes);
+        $isPostType = isPostType($cacheInstance->cacheAttribute('belongsTo', $cacheInstance->cacheName));
+        $data = Cache::get($cacheInstance->cacheName);
 
-            if($categoryID){
-                $data = Post::setCacheCategory($getPostType, $categoryID, $languageSlug);
-            }else{
-                $data = Post::setCachePostType($getPostType, $languageSlug);
-            }
-
-        }else{ // Handle custom cache methods
-            $data = Cache::get($cacheName);
-
-            // Execute cache' method if cache doesn't exist
-            if(!isset($data[$languageSlug])){
-                $functionName = 'setCache'.$cacheName;
-
-                if(method_exists(__CLASS__,$functionName)){
-                    $data = Post::$functionName($languageSlug);
+        if(!$data){
+            // handle default cache methods
+            if($isPostType){
+                if($cacheInstance->cacheWhere('categoryID')){
+                    $data = $cacheInstance->cacheByCategory();
                 }else{
-                    throw new \Exception("Cache method $functionName does not exists!");
+                    $data = $cacheInstance->cache();
                 }
-            }else{
-                $data = $data[$languageSlug];
+
+            }else{ // Handle custom cache methods
+                $data = $cacheInstance->handleCustomCache(Post::class);
             }
         }
 
+        if($returnCollection){
+            return $cacheInstance->setCacheCollection($data,  ($isPostType ? $cacheName : null));
+        }
 
-        return self::setCacheCollection($data, Post::class, ($getPostType ? $getPostType->slug : null));
+        return $data;
+    }
+
+    /**
+     * Cache posts by post type.
+     *
+     * @return Collection
+     *
+     * @throws \Exception
+     **/
+    private function cache(){
+        $postType = getPostType($this->cacheInstance->cacheName);
+        if(!$postType){
+            throw new \Exception($this->cacheInstance->cacheName.' doest\'t seem like a post type slug.');
+        }
+
+        // if posts doesn't not exist in this language, query them
+        $data = (new Post())->setTable($postType->slug)
+          ->with($this->cacheInstance->cacheAttribute('with',$this->getDefaultRelations($postType)))
+          ->limit($this->cacheInstance->cacheLimit())
+          ->orderBy(
+            $this->cacheInstance->cacheAttribute('orderBy','published_at'),
+            $this->cacheInstance->cacheAttribute('orderByType','DESC')
+          )
+          ->get()
+          ->toArray();
+
+        // Save in cache
+        Cache::forever($this->cacheName,$data);
+
+        return $data;
+    }
+
+    /**
+     * Delete caches of posts by its categories.
+     *
+     * @return Collection
+     **/
+    private function cacheByCategory(){
+        $postType = getPostType($this->cacheInstance->cacheWhere('belongsTo'));
+        if(!$postType){
+            throw new \Exception($this->cacheInstance->cacheName.' doest\'t seem like a post type slug.');
+        }
+
+        $cacheName = 'category_posts_'.$this->cacheInstance->cacheWhere('categoryID');
+
+        $data = (new Post())->setTable($postType->slug)
+          ->join('categories_relations','categories_relations.belongsToID',$postType->slug.'.postID')
+          ->where('categories_relations.categoryID', '=', $this->cacheInstance->cacheWhere('categoryID'))
+          ->with($this->cacheInstance->cacheAttribute('with',$this->getDefaultRelations($postType)))
+          ->limit($this->cacheInstance->cacheLimit())
+          ->orderBy(
+            $this->cacheInstance->cacheAttribute('orderBy','published_at'),
+            $this->cacheInstance->cacheAttribute('orderByType','DESC')
+          )
+          ->get()
+          ->toArray();
+
+        // Save in cache
+        Cache::forever($this->cacheName,$data);
+
+        return $data;
+    }
+
+    /**
+     * Default method to update cache.
+     *
+     * @param $item
+     * @param bool $delete
+     */
+    public function updateCache($post, string $mode){
+        $post = Post::where('postID',$post->postID)->with($post->getDefaultRelations(getPostType($post->getTable())))->first();
+        self::manageCacheState($post->getTable(), [], $post, $mode, self::$defaultCacheLimit);
+    }
+
+    /**
+     * Update cache in all categories
+     *
+     * @param object $post Post by language
+     */
+    private function updateCacheByCategory($post, $mode){
+        $post = Post::where('postID',$post->postID)->with($post->getDefaultRelations(getPostType($post->getTable())))->first();
+        if(isset($post->categories)){
+            foreach($post->categories as $category){
+                Cache::forget('category_posts_'.$category->categoryID);
+                self::manageCacheState(
+                  'category_posts_'.$category->categoryID,
+                  [
+                    'where' => [
+                      'categoryID' => [$category->categoryID],
+                      'belongsTo' => [$post->getTable()]
+                    ]
+                  ], 
+                  $post, 
+                  $mode,
+                  self::$defaultCacheLimit
+                );
+            }
+        }
     }
 
     /**
@@ -411,60 +503,16 @@ class PostModel extends Model{
         }
     }
 
-    /**
-     * Cache posts by post type
-     *
-     * @param object $postTypeSlug
-     * @param string $languageSlug
-     * @return Collection
-     **/
-    private static function setCachePostType($postType, $languageSlug){
-        $cachedItems = Cache::get($postType->slug);
-        if(!$cachedItems){
-            $cachedItems = [];
-        }
-
-        // if posts doesn't not exist in this language, query them
-        if(!isset($cachedItems[$languageSlug])){
-            $data = (new Post())->setTable($postType->slug)
-              ->with(self::getDefaultRelations($postType))
-              ->limit(self::$defaultCacheLimit)
-              ->orderBy('published_at','DESC')
-              ->get()
-              ->toArray();
-
-            // merge with other langauges
-            $dataToCache = [$languageSlug => $data];
-            if($cachedItems){
-                $dataToCache = array_merge($cachedItems,$dataToCache);
-            }
-
-            Cache::forever($postType->slug,$dataToCache);
-        }else{
-            $data = $cachedItems[$languageSlug];
-        }
-
-        return $data;
-    }
-
-    /**
-     * Delete caches of posts by post type
-     *
-     * @param object $postData Post data
-     */
-    private static function deleteCachePostType($postData){
-        Cache::forget($postData->getTable());
-    }
 
     /**
      * Get cache relations
      * @param object $postType
      */
-    private static function getDefaultRelations($postType){
+    private function getDefaultRelations($postType){
         $relations = [];
 
-        if(count(self::$autoCacheRelations)){
-            return self::$autoCacheRelations;
+        if(count($this->autoCacheRelations)){
+            return $this->autoCacheRelations;
         }
 
 
@@ -485,55 +533,6 @@ class PostModel extends Model{
         $relations[] = 'media';
 
         return $relations;
-    }
-
-    /**
-     * Delete caches of posts by its categories
-     *
-     * @param  object $postType
-     * @param  int $categoryID
-     * @param  string $languageSlug
-     * @return Collection
-     **/
-    private  static function setCacheCategory($postType, $categoryID, $languageSlug){
-        $cacheName = 'category_posts_'.$categoryID;
-        $cachedItems = Cache::get($cacheName);
-
-        if(!isset($cachedItems[$languageSlug])){
-            $data = (new Post())->setTable($postType->slug)
-              ->join('categories_relations','categories_relations.belongsToID',$postType->slug.'.postID')
-              ->where('categories_relations.categoryID', '=', $categoryID)
-              ->with(self::getDefaultRelations($postType))
-              ->limit(self::$defaultCacheLimit)
-              ->orderBy($postType->slug.'.published_at','DESC')
-              ->get()
-              ->toArray();
-
-            // merge with other langauges
-            $dataToCache = [$languageSlug => $data];
-            if($cachedItems){
-                $dataToCache = array_merge($cachedItems,$dataToCache);
-            }
-            Cache::forever($cacheName,$dataToCache);
-
-        }else{
-            $data = $cachedItems[$languageSlug];
-        }
-
-        return $data;
-    }
-
-    /**
-     * Delete post cache by categories
-     *
-     * @param object $postData Post by language
-     */
-    private static function deleteCacheCategories($postData){
-        if(isset($postData->categories)){
-            foreach($postData->categories as $category){
-                Cache::forget('category_posts_'.$category->categoryID);
-            }
-        }
     }
 
 
@@ -577,58 +576,14 @@ class PostModel extends Model{
         return $postsByTags;
     }
 
-
     /**
      * Handle callback of insert, update, delete
      * */
     protected static function boot(){
         parent::boot();
 
-        self::retrieved(function($post){
-            Event::fire('post:retrieved', [$post]);
-        });
-
-        self::saving(function($post){
-            Event::fire('post:saving', [$post]);
-        });
-
         self::saved(function($post){
             Post::_saved($post);
-            Event::fire('post:saved', [$post]);
-        });
-
-        self::creating(function($post){
-            Event::fire('post:creating', [$post]);
-        });
-
-        self::created(function($post){
-            // create task
-            Task::create('post','create', $post, ['postType' => $post->getTable()]);
-
-            Event::fire('post:created', [$post]);
-        });
-
-        self::updating(function($post){
-            Event::fire('post:updating', [$post]);
-        });
-
-        self::updated(function($post){
-            // create task
-            Task::create('post', 'update', $post, ['postType' =>  $post->getTable()]);
-
-            Event::fire('post:updated', [$post]);
-        });
-
-        self::deleting(function($post){
-            Event::fire('post:deleting', [$post]);
-        });
-
-        self::deleted(function($post){
-            Post::_deleted($post, $post->getTable());
-            Event::fire('post:deleted', [$post]);
-
-            // create delete task
-            Task::create('post','delete', $post, ['postType' => $post->getTable()]);
         });
     }
 
@@ -639,16 +594,6 @@ class PostModel extends Model{
      * */
     public static function _saved($post){
         self::updateMenulink($post);
-        self::deleteCache($post);
-    }
-
-    /**
-     * Perform certain actions after a post is deleted
-     *
-     * @param array $post deleted post
-     * */
-    public static function _deleted($post){
-        self::deleteCache($post);
     }
 
     /**
@@ -664,10 +609,7 @@ class PostModel extends Model{
         return $this;
     }
 
-
-
     /**
-
      * Scope a query to only include published posts.
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
@@ -844,7 +786,7 @@ class PostModel extends Model{
     public function metaData(){
         Meta::setTitle($this->title)
           ->set("description", $this->content())
-          ->set("author", $this->user->firstName." ".$this->user->lastName)
+          ->set("author", ($this->user ? $this->user->firstName." ".$this->user->lastName : null) )
           ->set("og:type", "article", "property")
           ->set("og:title", $this->title, "property")
           ->set("og:description", $this->content(), "property")

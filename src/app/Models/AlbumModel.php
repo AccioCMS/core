@@ -10,6 +10,7 @@
 
 namespace Accio\App\Models;
 
+use Accio\App\Traits\BootEventsTrait;
 use App\Models\Album;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
@@ -17,7 +18,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class AlbumModel extends Model{
 
-    use LogsActivity;
+    use
+      LogsActivity,
+      BootEventsTrait;
 
     /**
      * Fields that can be filled
@@ -91,45 +94,6 @@ class AlbumModel extends Model{
             'albumSlug' => $this->slug,
             'date'      => date('Y-m-d',strtotime($this->created_at)),
         ];
-    }
-
-    /**
-     * Listen to crud events
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($album){
-            Event::fire('album:saving', [$album]);
-        });
-
-        self::saved(function($album){
-            Event::fire('album:saved', [$album]);
-        });
-
-        self::creating(function($album){
-            Event::fire('album:creating', [$album]);
-        });
-
-        self::created(function($album){
-            Event::fire('album:created', [$album]);
-        });
-
-        self::updating(function($album){
-            Event::fire('album:updating', [$album]);
-        });
-
-        self::updated(function($album){
-            Event::fire('album:updated', [$album]);
-        });
-
-        self::deleting(function($album){
-            Event::fire('album:deleting', [$album]);
-        });
-
-        self::deleted(function($album){
-            Event::fire('album:deleted', [$album]);
-        });
     }
 
     /**

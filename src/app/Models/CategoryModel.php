@@ -28,7 +28,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class CategoryModel extends Model{
 
-    use Traits\CategoryTrait, Traits\TranslatableTrait, LogsActivity, Traits\CacheTrait;
+    use
+      Traits\CategoryTrait,
+      Traits\TranslatableTrait,
+      LogsActivity,
+      Traits\CacheTrait,
+      Traits\BootEventsTrait;
 
     /**
      * Fields that can be filled in CRUD
@@ -252,116 +257,6 @@ class CategoryModel extends Model{
     }
 
     /**
-     * Get categories from cache. Cache is generated if not found
-     *
-     * @param  string $cacheName  Name of the cache ex "post_services". Prefix "categories_" is added automatically on cache name. Default: categories
-     * @param  string $languageSlug Language slug
-     * @return Collection  Returns requested cache if found, null instead
-     * */
-    public static function getFromCache(string $cacheName = 'categories', string $languageSlug = ''){
-        if(!$languageSlug){
-            $languageSlug = App::getLocale();
-        }
-
-        $getPostType = getPostType($cacheName);
-        if($getPostType){
-            $cacheName = "categories_".$getPostType->slug;
-        }
-        $cachedItems = Cache::get($cacheName);
-
-        //set cache in this language
-        if(!isset($cachedItems[$languageSlug])){
-            if($getPostType) {
-                $data = Category::setCacheByPostType($getPostType, $languageSlug);
-            }
-            //or a custom cache
-            else{
-                $functionName = 'setCache'.$cacheName;
-                if(method_exists(__CLASS__,$functionName)){
-                    $data = Category::$functionName($cacheName,$languageSlug);
-                }
-            }
-        }else{
-            $data = $cachedItems[$languageSlug];
-        }
-
-        return self::setCacheCollection($data, Category::class);
-    }
-
-    /**
-     * Get categories cache
-     *
-     * @param  array  $cacheName
-     * @param  string $languageSlug
-     * @return array Categories of requested language
-     */
-    private static function setCacheCategories($cacheName, $languageSlug){
-        $cacheName = "categories";
-        $data = Category::all()->toArray();
-        $cachedItems = Cache::get($cacheName);
-        if(!$cachedItems){
-            $cachedItems = [];
-        }
-
-        // merge with other langauges
-        $dataToCache = [$languageSlug => $data];
-        if($cachedItems){
-            $dataToCache = array_merge($cachedItems,$dataToCache);
-        }
-        Cache::forever($cacheName,$dataToCache);
-
-        return $data;
-    }
-
-    /**
-     * Delete categories cache
-     *
-     * @param  object $category
-     * @param  string $mode
-     */
-    private  static function deleteCacheCategories($category, $mode){
-        Cache::forget('categories');
-    }
-
-    /**
-     * Get categories by post type
-     *
-     * @param  array  $postTypeData Data of post type
-     * @param  string $languageSlug Language slug
-     * @return object Categories of requested language
-     */
-    private  static function setCacheByPostType($postTypeData, $languageSlug){
-        $cacheName = "categories_".$postTypeData->slug;
-        $data = Category::where('postTypeID', $postTypeData->postTypeID)->get()->toArray();
-        $cachedItems = Cache::get($cacheName);
-        if(!$cachedItems){
-            $cachedItems = [];
-        }
-
-        // merge with other langauges
-        $dataToCache = [$languageSlug => $data];
-        if($cachedItems){
-            $dataToCache = array_merge($cachedItems,$dataToCache);
-        }
-        Cache::forever($cacheName,$dataToCache);
-
-        return $data;
-    }
-
-
-    /**
-     * Delete cached categories by post type
-     *
-     * @param object $category A single category object
-     * @param string $mode Set "saved" or 'deleted" mode
-     */
-    private static function deleteCacheByPostType($category, $mode){
-        $getPostType = PostType::findByID($category->postTypeID);
-        Cache::forget('categories_'.$getPostType->slug);
-    }
-
-
-    /**
      * Scope a query to only include visible categories.
      *
      * @param string $languageSlug
@@ -375,59 +270,15 @@ class CategoryModel extends Model{
         return $query->where('isVisible->'.$languageSlug, true);
     }
 
-
     /**
      * Handle callback of insert, update, delete
      * */
     protected static function boot(){
         parent::boot();
-
-        self::saving(function($category){
-            Event::fire('category:saving', [$category]);
-        });
-
+        
         self::saved(function($category){
-            Event::fire('category:saved', [$category]);
             Category::_saved($category);
         });
-
-        self::creating(function($category){
-            Event::fire('category:creating', [$category]);
-        });
-
-        self::created(function($category){
-            Event::fire('category:created', [$category]);
-        });
-
-        self::updating(function($category){
-            Event::fire('category:updating', [$category]);
-        });
-
-        self::updated(function($category){
-            Event::fire('category:updated', [$category]);
-        });
-
-        self::deleting(function($category){
-            Event::fire('category:deleting', [$category]);
-        });
-
-        self::deleted(function($category){
-            Event::fire('category:deleted', [$category]);
-            Category::_deleted($category);
-        });
-    }
-
-    /**
-     * Delete Category caches
-     * @param object $category
-     */
-    public static function deleteCache($category){
-        $deleteCacheMethods = preg_grep('/^deleteCache/', get_class_methods(__CLASS__));
-        foreach($deleteCacheMethods as $method){
-            if($method !== 'deleteCache') {
-                Category::$method($category, "saved");
-            }
-        }
     }
 
     /**
@@ -437,16 +288,6 @@ class CategoryModel extends Model{
      * */
     private static function _saved($category){
         self::updateMenulink($category);
-        self::deleteCache($category);
-    }
-
-    /**
-     * Perform certain actions after a category is deleted
-     *
-     * @param object $category Deleted category
-     * */
-    private static function _deleted($category){
-        self::deleteCache($category);
     }
 
     /**
