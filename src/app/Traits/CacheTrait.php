@@ -111,7 +111,7 @@ trait CacheTrait
      * @return $this
      * @return void
      */
-    private static function initializeCache($model, string $cacheName, array $attributes){
+    public static function initializeCache($model, string $cacheName, array $attributes){
         $instance = (new self());
         $instance->setModel($model);
         $instance->setCacheName($cacheName);

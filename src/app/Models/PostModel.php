@@ -507,7 +507,7 @@ class PostModel extends Model{
      * Get cache relations
      * @param object $postType
      */
-    private function getDefaultRelations($postType){
+    public function getDefaultRelations($postType){
         $relations = [];
 
         if(count($this->autoCacheRelations)){
