@@ -288,7 +288,8 @@ class PostModel extends Model{
         }
 
         $cacheInstance = self::initializeCache(Post::class, $cacheName, $attributes);
-        $isPostType = isPostType($cacheInstance->cacheAttribute('belongsTo', $cacheInstance->cacheName));
+
+        $isPostType = isPostType($cacheInstance->cacheAttribute('belongsTo', PostType::getSlug()));
         $data = Cache::get($cacheInstance->cacheName);
 
         if(!$data){
@@ -320,9 +321,9 @@ class PostModel extends Model{
      * @throws \Exception
      **/
     private function cache(){
-        $postType = getPostType($this->cacheInstance->cacheName);
+        $postType = getPostType($cacheInstance->cacheAttribute('belongsTo'));
         if(!$postType){
-            throw new \Exception($this->cacheInstance->cacheName.' doest\'t seem like a post type slug.');
+            throw new \Exception($cacheInstance->cacheAttribute('belongsTo').' doest\'t seem like a post type slug.');
         }
 
         // if posts doesn't not exist in this language, query them
