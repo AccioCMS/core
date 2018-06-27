@@ -535,4 +535,91 @@ trait UserTrait{
 
         return false;
     }
+
+    /**
+     * Return if users ID is beeing used somewhere in the database
+     *
+     * @return bool
+     */
+    public function hasRelatedData(){
+        if(!$this->hasDataInDefaultApps() && !$this->hasDataInPostsType()){
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Check if user has a data created by him in default apps
+     * If of the default apps "post_type", "categories", "tags", "languages", "media" has the createdByUsID associated with this user
+     *
+     * @return bool
+     */
+    private function hasDataInDefaultApps(){
+        $tables = ["post_type", "categories", "tags", "languages", "media"];
+
+        foreach($tables as $table){
+            $hasData = DB::table($table)->where("createdByUserID", $this->userID)->count();
+            if($hasData){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the current user has any post or is related to any post (in post fields "dropdown from db")
+     *
+     * @return bool
+     */
+    private function hasDataInPostsType(){
+        $postTypes = PostType::getFromCache();
+        foreach($postTypes as $postType){
+            $hasData = DB::table($postType->slug)->where("createdByUserID", $this->userID)->count();
+            if($hasData){
+                return true;
+            }
+
+            foreach($postType->fields as $field){
+                if($field->type->inputType == "db" && $field->dbTable->name == "users"){
+                    if($field->translatable){
+                        if($field->isMultiple){
+                            foreach(Language::getFromCache() as $language){
+                                $hasData = DB::table("post_articles")->whereRaw("JSON_CONTAINS($field->slug->\"$.$language->slug\", '[$this->userID]')")->count();
+                                if($hasData) return true;
+                            }
+                        }else{
+                            foreach(Language::getFromCache() as $language){
+                                $hasData = DB::table($postType->slug)->where($field->slug."->".$language->slug, $this->userID)->count();
+                                if($hasData) return true;
+                            }
+                        }
+                    }else{
+                        if($field->isMultiple){
+                            $hasData = DB::table($postType->slug)->whereRaw("JSON_CONTAINS($field->slug, '[$this->userID]')")->count();
+                            if($hasData) return true;
+                        }else{
+                            $hasData = DB::table($postType->slug)->where($field->slug, $this->userID)->count();
+                            if($hasData) return true;
+                        }
+                    }
+                }
+
+            }
+
+        }
+        return false;
+    }
+
+    /**
+     * TODO : Me kry qekun neper custom field values neper tabela
+     */
+    private function hasDataInCustomFields(){
+        $customFields = CustomField::with("group")->where("type", "db")->get();
+        $customFieldsSlugs = [];
+        foreach ($customFields as $customField){
+            $customFieldsSlugs[] = $customField->group->slug . "__" . $customField->slug;
+        }
+        dd($customFieldsSlugs);
+    }
 }

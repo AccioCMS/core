@@ -102,6 +102,16 @@ class CustomFieldModel extends Model{
     }
 
     /**
+     * Relation
+     * Custom Field has a parent Custom Field Group
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function group(){
+        return $this->belongsTo('App\Models\CustomFieldGroup', 'customFieldGroupID');
+    }
+
+    /**
      * @return array
      */
     public function getMedia(): array{
@@ -129,6 +139,7 @@ class CustomFieldModel extends Model{
         }
         return $result;
     }
+
 
     /**
      * Destruct model instance
