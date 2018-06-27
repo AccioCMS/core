@@ -620,6 +620,6 @@ trait UserTrait{
         foreach ($customFields as $customField){
             $customFieldsSlugs[] = $customField->group->slug . "__" . $customField->slug;
         }
-        dd($customFieldsSlugs);
+        return $customFieldsSlugs;
     }
 }

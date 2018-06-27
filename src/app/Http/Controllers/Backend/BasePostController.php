@@ -957,8 +957,6 @@ class BasePostController extends MainController {
         // Fire event
         $response['events'] = Event::fire('post:pre_update', [$response]);
 
-//        dd($response);
-
         return $response;
     }
 

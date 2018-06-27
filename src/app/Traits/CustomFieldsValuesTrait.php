@@ -85,7 +85,6 @@ trait CustomFieldsValuesTrait
                 $l++;
                 foreach ($fields as $field => $value) {
                     if (in_array($field, $slugs)) {
-                        dd($media);
                         if (isset($media[$value])) {
                             $tmp = [];
                             if (!is_array($value)) {

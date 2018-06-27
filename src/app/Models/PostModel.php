@@ -289,12 +289,12 @@ class PostModel extends Model{
 
         $cacheInstance = self::initializeCache(Post::class, $cacheName, $attributes);
 
-        $isPostType = isPostType($cacheInstance->cacheAttribute('belongsTo', PostType::getSlug()));
+        $postTypeData = getPostType($cacheInstance->cacheAttribute('belongsTo', PostType::getSlug()));
         $data = Cache::get($cacheInstance->cacheName);
 
         if(!$data){
             // handle default cache methods
-            if($isPostType){
+            if($postTypeData){
                 if($cacheInstance->cacheAttribute('categoryID')){
                     $data = $cacheInstance->cacheByCategory();
                 }else{
@@ -307,7 +307,7 @@ class PostModel extends Model{
         }
 
         if($returnCollection){
-            return $cacheInstance->setCacheCollection($data,  ($isPostType ? $cacheName : null));
+            return $cacheInstance->setCacheCollection($data,  ($postTypeData ? $postTypeData->slug : null));
         }
 
         return $data;
@@ -321,9 +321,9 @@ class PostModel extends Model{
      * @throws \Exception
      **/
     private function cache(){
-        $postType = getPostType($cacheInstance->cacheAttribute('belongsTo'));
+        $postType = getPostType($this->cacheInstance->cacheAttribute('belongsTo'));
         if(!$postType){
-            throw new \Exception($cacheInstance->cacheAttribute('belongsTo').' doest\'t seem like a post type slug.');
+            throw new \Exception($this->cacheInstance->cacheAttribute('belongsTo').' doest\'t seem like a post type slug.');
         }
 
         // if posts doesn't not exist in this language, query them
@@ -398,10 +398,10 @@ class PostModel extends Model{
                 Cache::forget('category_posts_'.$category->categoryID);
                 self::manageCacheState(
                   'category_posts_'.$category->categoryID,[
-                    'categoryID' => $category->categoryID,
-                    'belongsTo' => $post->getTable()
-                  ], 
-                  $post, 
+                  'categoryID' => $category->categoryID,
+                  'belongsTo' => $post->getTable()
+                ],
+                  $post,
                   $mode,
                   self::$defaultCacheLimit
                 );
@@ -545,7 +545,7 @@ class PostModel extends Model{
         if(!$this->hasTags()){
             return [];
         }
-        
+
         $tmpTagIDs = [];
         $postsByTags = [];
 
