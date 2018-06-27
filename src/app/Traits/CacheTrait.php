@@ -141,7 +141,10 @@ trait CacheTrait
         if(isset($this->cacheAttributes[$key])){
             return $this->cacheAttributes[$key];
         }
-        return $default;
+
+        $this->cacheAttributes[$key] = $default;
+
+        return $this->cacheAttributes[$key];
     }
 
     private function cacheWhere($key, $default = null){

@@ -32,5 +32,3 @@ $routes::mapPluginsFrontendRoutes();
 // Add Language {lang} prefix
 $routes::addLanguagePrefix();
 $routes::sortRoutes();
-
-//dd(Route::getRoutes());

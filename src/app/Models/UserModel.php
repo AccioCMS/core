@@ -24,11 +24,11 @@ use Spatie\Activitylog\Traits\HasActivity;
 class UserModel extends Authenticatable
 {
     use
-      Traits\UserTrait,
       Notifiable,
-      Traits\TranslatableTrait,
       HasActivity,
       Notifiable,
+      Traits\UserTrait,
+      Traits\TranslatableTrait,
       Traits\CacheTrait,
       Traits\BootEventsTrait;
 
@@ -159,7 +159,7 @@ class UserModel extends Authenticatable
             Event::fire('user:created', [$user]);
         });
     }
-    
+
     /**
      * Generate the URL to a user.
      *
