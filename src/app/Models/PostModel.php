@@ -348,7 +348,8 @@ class PostModel extends Model{
      * @return Collection
      **/
     private function cacheByCategory(){
-        $postType = getPostType($this->cacheInstance->cacheAttribute('belongsTo'));
+        $postTypeSlug = $this->cacheInstance->cacheAttribute('belongsTo', PostType::getSlug());
+        $postType = getPostType($postTypeSlug);
         if(!$postType){
             throw new \Exception($this->cacheInstance->cacheName.' doest\'t seem like a post type slug.');
         }
