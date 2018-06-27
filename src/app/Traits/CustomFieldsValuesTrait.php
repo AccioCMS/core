@@ -80,13 +80,10 @@ trait CustomFieldsValuesTrait
 
         $object = [];
         if(count($media)) {
-            $l = 0;
             foreach ($customFields as $fields) {
-                $l++;
-                foreach ($fields as $field => $value) {
-                    if (in_array($field, $slugs)) {
-                        dd($media);
-                        if (isset($media[$value])) {
+                foreach($fields as $field => $value){
+                    if(in_array($field, $slugs)){
+                        if($value && isset($media[$value])){
                             $tmp = [];
                             if (!is_array($value)) {
                                 $fields->$field = new Media($media[$value]);
@@ -96,14 +93,15 @@ trait CustomFieldsValuesTrait
                                 }
                                 $fields->$field = $tmp;
                             }
-                        } else {
+                        }else{
                             $fields->$field = null;
                         }
                     }
                 }
-
                 $object[] = $fields;
             }
+        }else{
+            $object = $customFields;
         }
 
         return collect($object);
