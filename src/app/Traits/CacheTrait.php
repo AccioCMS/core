@@ -50,7 +50,7 @@ trait CacheTrait
         });
 
 
-        self::deleted(function($item){
+        self::deleting(function($item){
             $item->handleUpdateCache($item, "deleted");
         });
     }
@@ -212,7 +212,7 @@ trait CacheTrait
 
                 // Limit results
                 if($limit) {
-                    $countItems = $cachedItems->count();
+                    $countItems = count($cachedItems);
                     if ($countItems > $limit) {
                         $cachedItems = array_slice($cachedItems, ($countItems - $limit));
                     }
@@ -247,7 +247,7 @@ trait CacheTrait
 
     /**
      * Default method to update cache.
-     * 
+     *
      * @param $item
      * @param bool $delete
      */

@@ -289,7 +289,8 @@ class PostModel extends Model{
 
         $cacheInstance = self::initializeCache(Post::class, $cacheName, $attributes);
 
-        $postTypeData = getPostType($cacheInstance->cacheAttribute('belongsTo', PostType::getSlug()));
+        $postTypeSlug = (isPostType($cacheName) ? $cacheName : PostType::getSlug());
+        $postTypeData = getPostType($cacheInstance->cacheAttribute('belongsTo', $postTypeSlug));
         $data = Cache::get($cacheInstance->cacheName);
 
         if(!$data){
@@ -381,9 +382,10 @@ class PostModel extends Model{
      * @param $item
      * @param bool $delete
      */
-    public function updateCache($post, string $mode){
-        $post = Post::where('postID',$post->postID)->with($post->getDefaultRelations(getPostType($post->getTable())))->first();
-        self::manageCacheState($post->getTable(), [], $post, $mode, self::$defaultCacheLimit);
+    public function updateCache($item, string $mode){
+        // We can't select a post that is deleted :)
+        $post = $item->where('postID', $item->postID)->with($item->getDefaultRelations(getPostType($item->getTable())))->first();
+        self::manageCacheState($item->getTable(), [], ($post ? $post : $item), $mode, self::$defaultCacheLimit);
     }
 
     /**
@@ -391,8 +393,10 @@ class PostModel extends Model{
      *
      * @param object $post Post by language
      */
-    private function updateCacheByCategory($post, $mode){
-        $post = Post::where('postID',$post->postID)->with($post->getDefaultRelations(getPostType($post->getTable())))->first();
+    private function updateCacheByCategory($item, $mode){
+        // We can't select a post that is deleted :)
+        $post = $item->where('postID', $item->postID)->with($item->getDefaultRelations(getPostType($item->getTable())))->first();
+
         if(isset($post->categories)){
             foreach($post->categories as $category){
                 Cache::forget('category_posts_'.$category->categoryID);

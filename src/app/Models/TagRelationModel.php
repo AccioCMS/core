@@ -29,29 +29,29 @@ class TagRelationModel extends Model
     protected $primaryKey = "tagRelationID";
 
     /**
-     * Get tags from cache. Cache is generated if not found
+     * Default method to handle cache query.
      *
-     * @param  string $postTypeSlug Name of the cache ex "post_services". Prefix "tags_" is added automatically on cache name.
-     * @return object|null  Returns requested cache if found, null instead
+     * @return array
      */
-    public static function getFromCache($postTypeSlug =''){
+    public function cache(){
+        $postTypeSlug = $this->cacheAttribute('belongsTo', $this->cacheName);
         if(!isPostType($postTypeSlug)){
-            throw new \Exception('No post type given');
-        }
-        $cacheName = 'tags_relations_'.$postTypeSlug;
-
-        $data = Cache::get($cacheName);
-        if(!$data){
-            $functionName = 'setCache_'.$cacheName;
-            if(method_exists(TagRelation::class,$functionName)){
-                $data = TagRelation::$functionName($cacheName);
-            }else{
-                $data = TagRelation::where('belongsTo',$postTypeSlug)->get()->toArray();
-                Cache::forever($cacheName,$data);
-            }
+            throw new \Exception('Post type \''.$postTypeSlug.'\' not found in Cetegory relation\'s cache method!');
         }
 
-        return self::setCacheCollection($data, TagRelation::class);
+        $data = TagRelation::where('belongsTo',$postTypeSlug)->get()->toArray();
+        Cache::forever('tags_relations_'.$postTypeSlug,$data);
+        return $data;
+    }
+
+
+    /**
+     * Delete post cache by categories
+     *
+     * @param string $postTypeSlug
+     */
+    public static function updateCache($item, $mode){
+        self::manageCacheState('tags_relations_'.$item->belongsTo, ['belongsTo' => $item->belongsTo], $item, $mode);
     }
 
 }

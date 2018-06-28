@@ -29,7 +29,7 @@
 
                     <div class="navBarTabs">
                         <button id="cmsTabBtn" :class="{active: getMenuMode == 'menu'}" @click="changeMenuMode('menu')">Menu</button>
-                        <button id="applicationTabBtn" :class="{active: getMenuMode == 'application'}" @click="changeMenuMode('application')">Application</button>
+                        <button id="applicationTabBtn" :class="{active: getMenuMode == 'application'}" @click="changeMenuMode('application')">Apps</button>
                     </div>
 
                     <div class="cmsMenuNav" v-if="getMenuMode == 'menu'">

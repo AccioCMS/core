@@ -41,12 +41,13 @@ class CategoryRelationModel extends Model
      * @return array
      */
     public function cache(){
-        if(!isPostType($this->cacheName)){
-            throw new \Exception('Post type not found in Cetegory relation\'s cache method!');
+        $postTypeSlug = $this->cacheAttribute('belongsTo', $this->cacheName);
+        if(!isPostType($postTypeSlug)){
+            throw new \Exception('Post type \''.$postTypeSlug.'\' not found in Cetegory relation\'s cache method!');
         }
 
-        $data = CategoryRelation::where('belongsTo',$this->cacheName)->get()->toArray();
-        Cache::forever('categories_relations_'.$this->cacheName,$data);
+        $data = CategoryRelation::where('belongsTo',$postTypeSlug)->get()->toArray();
+        Cache::forever('categories_relations_'.$postTypeSlug,$data);
         return $data;
     }
 
@@ -56,6 +57,6 @@ class CategoryRelationModel extends Model
      * @param string $postTypeSlug
      */
     public static function updateCache($item, $mode){
-        self::manageCacheState('categories_relations_'.$item->belongsTo, [], $item, $mode);
+        self::manageCacheState('categories_relations_'.$item->belongsTo, ['belongsTo' => $item->belongsTo], $item, $mode);
     }
 }

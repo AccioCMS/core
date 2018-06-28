@@ -4,6 +4,7 @@ return [
     'label' => 'Media',
     'library' => 'Library',
     'upload' => 'Upload',
+    'uploaded' => 'Media sucessfully uploaded!',
     'albums' => 'Albums',
     'drop' => 'Drop file here',
     'select' => 'Select file',
