@@ -25,6 +25,7 @@ class DBDumper extends Command
      *
      * @var string $exportPath
      */
+
     protected $exportPath = 'Dump database';
 
     /**
@@ -58,6 +59,7 @@ class DBDumper extends Command
     public function handle()
     {
         $exportPath = $this->option('path');
+
         if($exportPath){
             if(!file_exists($exportPath)){
                 throw new \Exception('Path '.$exportPath. ' does not exists!');
@@ -72,7 +74,7 @@ class DBDumper extends Command
         }
 
         $filePath = $exportPath.'/'.date("Ymdhisi").'.sql';
-
+      
         $this->comment("Starting database dump...");
 
         switch (config('database.default')){
