@@ -9,13 +9,16 @@
 
 namespace Accio\App\Models;
 
+use App\Models\CustomField;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
 use Accio\App\Traits;
 
 class CustomFieldModel extends Model{
 
-    use Traits\CustomFieldTrait;
+    use
+      Traits\CustomFieldTrait,
+      Traits\BootEventsTrait;
 
     public static $snakeAttributes = false;
 
@@ -99,6 +102,16 @@ class CustomFieldModel extends Model{
     }
 
     /**
+     * Relation
+     * Custom Field has a parent Custom Field Group
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function group(){
+        return $this->belongsTo('App\Models\CustomFieldGroup', 'customFieldGroupID');
+    }
+
+    /**
      * @return array
      */
     public function getMedia(): array{
@@ -127,44 +140,6 @@ class CustomFieldModel extends Model{
         return $result;
     }
 
-    /**
-     * Listen to crud events
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($customField){
-            Event::fire('customField:saving', [$customField]);
-        });
-
-        self::saved(function($customField){
-            Event::fire('customField:saved', [$customField]);
-        });
-
-        self::creating(function($customField){
-            Event::fire('customField:creating', [$customField]);
-        });
-
-        self::created(function($customField){
-            Event::fire('customField:created', [$customField]);
-        });
-
-        self::updating(function($customField){
-            Event::fire('customField:updating', [$customField]);
-        });
-
-        self::updated(function($customField){
-            Event::fire('customField:updated', [$customField]);
-        });
-
-        self::deleting(function($customField){
-            Event::fire('customField:deleting', [$customField]);
-        });
-
-        self::deleted(function($customField){
-            Event::fire('customField:deleted', [$customField]);
-        });
-    }
 
     /**
      * Destruct model instance

@@ -96,6 +96,7 @@ trait TranslatableTrait
                     $value = $this->getTranslation($value);
                 }
             }else{
+
                 // If the given $attribute has a mutator, we push it to $attributes and then call getAttributeValue
                 // on it. This way, we can use Eloquent's checking for Mutation, type casting, and
                 // Date fields.
@@ -189,7 +190,6 @@ trait TranslatableTrait
                 $translatedValue = $value[$this->getTranslateLanguage()];
             }
         }
-
         return $translatedValue;
     }
 

@@ -32,8 +32,6 @@
 
                         <pagination :listUrl="listUrl" :dataSearchUrl="dataSearchUrl"></pagination>
 
-
-
                         <div class="clearfix"></div>
 
                         <div class="row table table-striped table-bordered bulk_action">
@@ -44,6 +42,12 @@
                                     <div class="col-xs-3 th">{{trans.__columnTitle}} <i :class="tableHeaderOrderIcons('title')" aria-hidden="true"></i></div>
                                     <div class="col-xs-3 th">{{trans.__slug}} <i :class="tableHeaderOrderIcons('slug')" aria-hidden="true"></i></div>
                                     <div class="col-xs-2 th">{{ trans.__action }}</div>
+                                </div>
+
+                                <div class="row tableBody"  v-if="spinner">
+                                    <td colspan="7">
+                                        <spinner :width="'30px'" :height="'30px'" :border="'5px'"></spinner>
+                                    </td>
                                 </div>
 
                                 <div class="row tableBody">

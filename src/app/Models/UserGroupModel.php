@@ -2,12 +2,19 @@
 
 namespace Accio\App\Models;
 
+use Accio\App\Traits\BootEventsTrait;
 use App\Models\Permission;
+use App\Models\UserGroup;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
 use Mockery\Exception;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class UserGroupModel extends Model{
+
+    use
+      LogsActivity,
+      BootEventsTrait;
 
     /** @var array $fillable fields that can be filled in CRUD*/
     protected $fillable = [
@@ -21,12 +28,22 @@ class UserGroupModel extends Model{
     protected $table = "users_groups";
 
     /**
+     * @var bool
+     */
+    protected static $logFillable = true;
+
+    /**
+     * @var bool
+     */
+    protected static $logOnlyDirty = true;
+
+    /**
      * Get admin group
      * @return object
      * @throws Exception
      */
     public static function getAdminGroup(){
-        return self::where('slug', "admin")->get()->first();
+        return UserGroup::where('slug', "admin")->get()->first();
     }
 
     /**
@@ -35,7 +52,7 @@ class UserGroupModel extends Model{
      * @throws Exception
      */
     public static function getEditorGroup(){
-        return self::where('slug', "editor")->get()->first();
+        return UserGroup::where('slug', "editor")->get()->first();
     }
 
     /**
@@ -44,7 +61,7 @@ class UserGroupModel extends Model{
      * @throws Exception
      */
     public static function getAuthorGroup(){
-        return self::where('slug', "author")->get()->first();
+        return UserGroup::where('slug', "author")->get()->first();
     }
 
     /**
@@ -151,45 +168,6 @@ class UserGroupModel extends Model{
     {
         parent::__construct($attributes);
         Event::fire('userGroup:construct', [$this]);
-    }
-
-    /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($userGroup){
-            Event::fire('userGroup:saving', [$userGroup]);
-        });
-
-        self::saved(function($userGroup){
-            Event::fire('userGroup:saved', [$userGroup]);
-        });
-
-        self::creating(function($userGroup){
-            Event::fire('userGroup:creating', [$userGroup]);
-        });
-
-        self::created(function($userGroup){
-            Event::fire('userGroup:created', [$userGroup]);
-        });
-
-        self::updating(function($userGroup){
-            Event::fire('userGroup:updating', [$userGroup]);
-        });
-
-        self::updated(function($userGroup){
-            Event::fire('userGroup:updated', [$userGroup]);
-        });
-
-        self::deleting(function($userGroup){
-            Event::fire('userGroup:deleting', [$userGroup]);
-        });
-
-        self::deleted(function($userGroup){
-            Event::fire('userGroup:deleted', [$userGroup]);
-        });
     }
 
     /**

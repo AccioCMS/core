@@ -2,11 +2,21 @@
 
 namespace Accio\App\Models;
 
+use Accio\App\Traits\BootEventsTrait;
+use Accio\App\Traits\CacheTrait;
 use App\Models\Media;
+use App\Models\Settings;
+use Facebook\GraphNodes\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class SettingsModel extends Model{
+
+    use
+      LogsActivity,
+      CacheTrait,
+      BootEventsTrait;
 
     /**
      * Fields that can be filled
@@ -50,51 +60,14 @@ class SettingsModel extends Model{
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
 
     /**
-     * Get settings from cache. Cache is generated if not found
-     *
-     * @return object|null  Returns requested cache if found, null instead
+     * @var bool
      */
-    public static function getFromCache(){
-        if(!Cache::has('settings')){
-            $getData  = self::all()->keyBy('settingsKey');
-            Cache::forever('settings',$getData);
-            return $getData;
-        }
-        return Cache::get('settings');
-    }
+    protected static $logFillable = true;
 
     /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-        // watch for saving queries
-        self::saved(function($settings){
-            self::_saved($settings);
-        });
-        // watch for deletion queries
-        self::deleted(function($settings){
-            self::_deleted($settings);
-        });
-    }
-
-    /**
-     * Perform certain actions after a setting is saved
-     *
-     * @param object $setting Saved setting
-     * */
-    private static function _saved($setting){
-        Cache::forget('settings');
-    }
-
-    /**
-     * Perform certain actions after a setting is deleted
-     *
-     * @param object $setting Deleted setting
-     * */
-    private static function _deleted($setting){
-        Cache::forget('settings');
-    }
+     * @var bool
+     */
+    protected static $logOnlyDirty = true;
 
     /**
      * Get Project Logo
@@ -105,13 +78,12 @@ class SettingsModel extends Model{
         return Media::find(settings('logo'));
     }
 
-
     /**
      * Get all settings as a list
      * @@return array
      */
     public static function getAllSettings(){
-        $settings = self::getFromCache();
+        $settings = Settings::getFromCache();
 
         $settingsList = [];
         foreach($settings as $setting){
@@ -126,11 +98,12 @@ class SettingsModel extends Model{
      * @param string $key
      */
     public static function getSetting($key){
-        if(self::getFromCache()) {
-            $setting = self::getFromCache()->where('settingsKey', $key);
+        $settings = Settings::getFromCache();
+        if($settings) {
+            $setting = $settings->where('settingsKey', $key)->first();
 
-            if ($setting->count()) {
-                return $setting->first()->value;
+            if ($setting) {
+                return $setting->value;
             }
         }
         return;
@@ -143,7 +116,7 @@ class SettingsModel extends Model{
      * @return object
      */
     public static function setSetting($key, $value){
-        $result = self::updateOrCreate(['settingsKey' => $key], ['value' => $value]);
+        $result = Settings::updateOrCreate(['settingsKey' => $key], ['value' => $value]);
         return $result;
     }
 }

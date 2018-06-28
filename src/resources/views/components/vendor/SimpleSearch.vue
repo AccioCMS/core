@@ -50,7 +50,7 @@
                     this.$store.commit('setSpinner', true);
                     this.$http.get(finalUrl)
                         .then((resp) => {
-                            this.$store.commit('setList', resp.body);
+                            this.$store.dispatch('setList', resp.body);
                             this.$store.commit('setSpinner', false);
                         }, response => {
                             // if a error happens

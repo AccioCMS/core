@@ -28,11 +28,11 @@
                 <div class="menu_section">
 
                     <div class="navBarTabs">
-                        <button id="cmsTabBtn" :class="{active: getMenuMode == 'cms'}" @click="changeMenuMode('cms')">CMS</button>
-                        <button id="applicationTabBtn" :class="{active: getMenuMode == 'application'}" @click="changeMenuMode('application')">Application</button>
+                        <button id="cmsTabBtn" :class="{active: getMenuMode == 'menu'}" @click="changeMenuMode('menu')">Menu</button>
+                        <button id="applicationTabBtn" :class="{active: getMenuMode == 'application'}" @click="changeMenuMode('application')">Apps</button>
                     </div>
 
-                    <div class="cmsMenuNav" v-if="getMenuMode == 'cms'">
+                    <div class="cmsMenuNav" v-if="getMenuMode == 'menu'">
                         <div class="navMenuSection" v-for="(menu, key, index) in cmsMenus" :key="key">
                             <div :data-id="'menuSection'+menu.menuID" class="navMenuSection-header" @click="activeMenu = index">
                                 <h3>{{ menu.title }}</h3>

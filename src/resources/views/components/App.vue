@@ -1,12 +1,17 @@
 <template>
-    <div class="main_container" v-if="!isLoading">
-        <app-navigation :applicationMenuLinks = "applicationMenuLinks" :cmsMenus="cmsMenus" :isPluginApp="isPlugin"></app-navigation>
+    <div class="main_container">
+        <template v-if="!isLoading">
+            <app-navigation :applicationMenuLinks = "applicationMenuLinks" :cmsMenus="cmsMenus" :isPluginApp="isPlugin"></app-navigation>
 
-        <app-header :logout_link="logout_link"></app-header>
+            <app-header :logout_link="logout_link"></app-header>
 
-        <router-view></router-view>
+            <router-view></router-view>
 
-        <app-footer></app-footer>
+            <app-footer></app-footer>
+        </template>
+
+        <spinner :width="'100px'" :height="'100px'" :border="'5px'" v-if="isLoading"></spinner>
+
     </div>
 </template>
 <script>
@@ -45,13 +50,14 @@
                     this.$store.commit('setLabels', resp.body.labels);
                     this.$store.commit('setPluginsConfigs', resp.body.pluginsConfigs);
                     this.$store.commit('setLanguages', resp.body.languages);
+                    this.$store.commit('setRoute',this.$route);
 
                     this.applicationMenuLinks = resp.body.applicationMenuLinks;
                     this.cmsMenus = resp.body.cmsMenus;
 
                     // set menu mode on refresh
                     if(this.$route.query.mode !== undefined || this.$route.query.menu_link_id !== undefined){
-                        this.$store.commit('setMenuMode', 'cms');
+                        this.$store.commit('setMenuMode', 'menu');
                     }else{
                         this.$store.commit('setMenuMode', 'application');
                     }

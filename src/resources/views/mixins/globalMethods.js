@@ -17,6 +17,9 @@ export const globalMethods = {
                 this.$router.push({ name: name, params: {id: id}});
             }
         },
+
+
+
         // used to filter where to redirect depending which store btn is clicked
         onStoreBtnClicked(routeNamePrefix, redirectChoice, id){
             if(redirectChoice == 'save'){

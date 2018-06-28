@@ -115,7 +115,7 @@ class BaseTagController extends MainController{
         ], $messages);
 
         if ($validator->fails()) {
-            return $this->response("Bad request", 400, null, false, false, true, $validator->errors());
+            return $this->response("Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
         $tags = new Tag();
@@ -123,7 +123,7 @@ class BaseTagController extends MainController{
         $tags->postTypeID    = $request->formData['postTypeID'];
         $tags->description   = $request->formData['description'];
         $tags->slug          = $request->formData['slug'];
-        $tags->featuredImageID = $request->formData['featuredImage'];
+        $tags->featuredImageID = ($request->formData['featuredImage']  !== 0 ? $request->formData['featuredImage'] : null);
         $tags->createdByUserID = Auth::user()->userID;
 
         // return results
@@ -186,7 +186,7 @@ class BaseTagController extends MainController{
         $tags->title         = $request->formData['title'];
         $tags->description   = $request->formData['description'];
         $tags->slug          = $request->formData['slug'];
-        $tags->featuredImageID = $request->formData['featuredImage'];
+        $tags->featuredImageID = ($request->formData['featuredImage']  !== 0 ? $request->formData['featuredImage'] : null);
 
         // return results
         if ($tags->save()){

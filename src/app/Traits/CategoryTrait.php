@@ -152,21 +152,20 @@ trait CategoryTrait{
      * @param $list
      * @return array
      */
-    public function makeChildrenTree($list){
+    public function makeChildrenTree($categories){
         $tmp = [];
-
-        foreach ($list as $key => $item){
-            if(!key_exists('children', $item)){
-                $item->children = [];
+        foreach ($categories as $key => $category){
+            if(!key_exists('children', $category)){
+                $category->children = [];
             }
+
             // get children
-            $children = $this->getChildren($key);
+            $children = $this->getChildren($category->categoryID);
+
             // call self to get a loop until every category has his children
-            $children = $this->makeChildrenTree($children);
+            $category->children = $this->makeChildrenTree($children);
 
-            $item->children = $children;
-
-            $tmp[$key] = $item;
+            $tmp[] = $category;
         }
 
         return Language::filterRows($tmp, false);
@@ -182,9 +181,10 @@ trait CategoryTrait{
         $tmp = [];
         foreach($this->categoryList as $key => $item){
             if($item->parentID == $parentID){
-                $tmp[$key] = $item;
+                $tmp[] = $item;
             }
         }
+
         return $tmp;
     }
 

@@ -57,17 +57,47 @@
                                     </div>
                                 </div>
 
+                                <div class="form-group" id="form-group-hasCategories">
+                                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__hasCategories}}</label>
+                                    <div class="col-md-6 col-sm-6 col-xs-12">
+                                        <div id="hasCategories" class="btn-group" data-toggle="buttons">
+                                            <label class="btn btn-default yes" :class="{ active: form.hasCategories }" @click="form.hasCategories = true">
+                                                <input type="radio" name="hasCategories" value="true"> &nbsp; {{trans.__true}} &nbsp;
+                                            </label>
+                                            <label class="btn btn-primary no" :class="{ active: !form.hasCategories }" @click="form.hasCategories = false">
+                                                <input type="radio" name="hasCategories" value="false"> {{trans.__false}}
+                                            </label>
+                                            <div class="alert" v-if="StoreResponse.errors.hasCategories" v-for="error in StoreResponse.errors.hasCategories">{{ error }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="form-group" id="form-group-isCategoryRequired">
                                     <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__isCategoryRequired}}</label>
                                     <div class="col-md-6 col-sm-6 col-xs-12">
                                         <div id="isCategoryRequired" class="btn-group" data-toggle="buttons">
-                                            <label class="btn btn-default yes" :class="{ active: form.isCategoryRequired }" @click="form.isCategoryRequired = true">
+                                            <label class="btn btn-default" :class="{ active: form.isCategoryRequired }" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="form.isCategoryRequired = true; form.hasCategories = true">
                                                 <input type="radio" name="hasCategories" value="true"> &nbsp; {{trans.__true}} &nbsp;
                                             </label>
-                                            <label class="btn btn-primary no" :class="{ active: !form.isCategoryRequired }" @click="form.isCategoryRequired = false">
+                                            <label class="btn btn-primary" :class="{ active: !form.isCategoryRequired }" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="form.isCategoryRequired = false">
                                                 <input type="radio" name="hasCategories" value="false"> {{trans.__false}}
                                             </label>
                                             <div class="alert" v-if="StoreResponse.errors.isCategoryRequired" v-for="error in StoreResponse.errors.isCategoryRequired">{{ error }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" id="form-group-hasTags">
+                                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__hasTags}}</label>
+                                    <div class="col-md-6 col-sm-6 col-xs-12">
+                                        <div id="hasTags" class="btn-group" data-toggle="buttons">
+                                            <label class="btn btn-default yes" :class="{ active: form.hasTags }" @click="form.hasTags = true">
+                                                <input type="radio" name="hasTags" value="true"> &nbsp; {{trans.__true}} &nbsp;
+                                            </label>
+                                            <label class="btn btn-primary no" :class="{ active: !form.hasTags }" @click="form.hasTags = false">
+                                                <input type="radio" name="hasTags" value="false"> {{trans.__false}}
+                                            </label>
+                                            <div class="alert" v-if="StoreResponse.errors.hasTags" v-for="error in StoreResponse.errors.hasTags">{{ error }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -76,13 +106,28 @@
                                     <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__isTagRequired}}</label>
                                     <div class="col-md-6 col-sm-6 col-xs-12">
                                         <div id="isTagRequired" class="btn-group" data-toggle="buttons">
-                                            <label class="btn btn-default yes" :class="{ active: form.isTagRequired }" @click="form.isTagRequired = true">
+                                            <label class="btn btn-default yes" :class="{active: form.isTagRequired}" @click="form.isTagRequired = true; form.hasTags = true">
                                                 <input type="radio" name="hasCategories" value="true"> &nbsp; {{trans.__true}} &nbsp;
                                             </label>
-                                            <label class="btn btn-primary no" :class="{ active: !form.isTagRequired }" @click="form.isTagRequired = false">
+                                            <label class="btn btn-primary active no" :class="{active: !form.isTagRequired}" @click="form.isTagRequired = false">
                                                 <input type="radio" name="hasCategories" value="false"> {{trans.__false}}
                                             </label>
                                             <div class="alert" v-if="StoreResponse.errors.isTagRequired" v-for="error in StoreResponse.errors.isTagRequired">{{ error }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" id="form-group-hasFeaturedImage">
+                                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__hasFeaturedImage}}</label>
+                                    <div class="col-md-6 col-sm-6 col-xs-12">
+                                        <div id="hasFeaturedImage" class="btn-group" data-toggle="buttons">
+                                            <label class="btn btn-default yes" :class="{active: form.hasFeaturedImage}" @click="form.hasFeaturedImage = true">
+                                                <input type="radio" name="hasFeaturedImage" value="true"> &nbsp; {{trans.__true}} &nbsp;
+                                            </label>
+                                            <label class="btn btn-primary active no" :class="{active: !form.hasFeaturedImage}" @click="form.hasFeaturedImage = false">
+                                                <input type="radio" name="hasFeaturedImage" value="false"> {{trans.__false}}
+                                            </label>
+                                            <div class="alert" v-if="StoreResponse.errors.hasFeaturedImage" v-for="error in StoreResponse.errors.hasFeaturedImage">{{ error }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -106,13 +151,28 @@
                                     <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__hasFeaturedVideo}}</label>
                                     <div class="col-md-6 col-sm-6 col-xs-12">
                                         <div id="hasFeaturedVideo" class="btn-group" data-toggle="buttons">
-                                            <label class="btn btn-default yes" :class="{'active':form.hasFeaturedVideo}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="form.hasFeaturedVideo = true">
-                                                <input type="radio" name="hasTags" value="true"> &nbsp; {{trans.__true}} &nbsp;
+                                            <label class="btn btn-default yes" :class="{active: form.hasFeaturedVideo}" @click="form.hasFeaturedVideo = true">
+                                                <input type="radio" name="hasFeaturedVideo" value="true"> &nbsp; {{trans.__true}} &nbsp;
                                             </label>
-                                            <label class="btn btn-primary no" :class="{'active':!form.hasFeaturedVideo}" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" @click="form.hasFeaturedVideo = false">
-                                                <input type="radio" name="hasTags" value="false"> {{trans.__false}}
+                                            <label class="btn btn-primary active no" :class="{active: !form.hasFeaturedVideo}" @click="form.hasFeaturedVideo = false">
+                                                <input type="radio" name="hasFeaturedVideo" value="false"> {{trans.__false}}
                                             </label>
                                             <div class="alert" v-if="StoreResponse.errors.hasFeaturedVideo" v-for="error in StoreResponse.errors.hasFeaturedVideo">{{ error }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" id="form-group-isFeaturedVideoRequired">
+                                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__isFeaturedVideoRequired}}</label>
+                                    <div class="col-md-6 col-sm-6 col-xs-12">
+                                        <div id="isFeaturedVideoRequired" class="btn-group" data-toggle="buttons">
+                                            <label class="btn btn-default yes" :class="{active: form.isFeaturedVideoRequired}" @click="form.isFeaturedVideoRequired = true">
+                                                <input type="radio" name="isFeaturedVideoRequired" value="true"> &nbsp; {{trans.__true}} &nbsp;
+                                            </label>
+                                            <label class="btn btn-primary active no" :class="{active: !form.isFeaturedVideoRequired}" @click="form.isFeaturedVideoRequired = false">
+                                                <input type="radio" name="isFeaturedVideoRequired" value="false"> {{trans.__false}}
+                                            </label>
+                                            <div class="alert" v-if="StoreResponse.errors.isFeaturedVideoRequired" v-for="error in StoreResponse.errors.isFeaturedVideoRequired">{{ error }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -346,12 +406,16 @@
                     this.form.id = resp.body.details.postTypeID;
                     this.form.name = resp.body.details.name;
                     this.form.isVisible = resp.body.details.isVisible;
+                    this.form.hasCategories = resp.body.details.hasCategories;
                     this.form.isCategoryRequired = resp.body.details.isCategoryRequired;
+                    this.form.hasTags = resp.body.details.hasTags;
                     this.form.isTagRequired = resp.body.details.isTagRequired;
-                    this.form.hasFeaturedVideo = resp.body.details.hasFeaturedVideo;
+                    this.form.hasFeaturedImage = resp.body.details.hasFeaturedImage;
                     this.form.isFeaturedImageRequired = resp.body.details.isFeaturedImageRequired;
+                    this.form.hasFeaturedVideo = resp.body.details.hasFeaturedVideo;
+                    this.form.isFeaturedVideoRequired = resp.body.details.isFeaturedVideoRequired;
                     this.form.slug = resp.body.details.slug;
-                    this.form.fields = JSON.parse(resp.body.details.fields);
+                    this.form.fields = resp.body.details.fields;
                     this.dbTables = resp.body.dbTables;
 
                     const categories = resp.body.categories;
@@ -372,9 +436,13 @@
                 __slug: this.__('base.slug'),
                 __visible: this.__('base.visible'),
                 __closeBtn: this.__('base.closeBtn'),
+                __hasCategories: this.__('postType.form.hasCategories'),
                 __isCategoryRequired: this.__('postType.form.isCategoryRequired'),
+                __hasTags: this.__('postType.form.hasTags'),
                 __isTagRequired: this.__('postType.form.isTagRequired'),
                 __hasFeaturedVideo: this.__('postType.form.hasFeaturedVideo'),
+                __isFeaturedVideoRequired: this.__('postType.form.isFeaturedVideoRequired'),
+                __hasFeaturedImage: this.__('postType.form.hasFeaturedImage'),
                 __isFeaturedImageRequired: this.__('postType.form.isFeaturedImageRequired'),
                 __true: this.__('base.booleans.true'),
                 __false: this.__('base.booleans.false'),
@@ -412,10 +480,14 @@
                 form:{
                     name: '',
                     isVisible: true,
+                    hasCategories: false,
                     isCategoryRequired: false,
+                    hasTags: false,
                     isTagRequired: false,
-                    hasFeaturedVideo: false,
+                    hasFeaturedImage: true,
                     isFeaturedImageRequired: false,
+                    hasFeaturedVideo: false,
+                    isFeaturedVideoRequired: false,
                     slug: '',
                     dbTable: '',
                     isMultiple: false,
@@ -475,7 +547,7 @@
 
                         this.$store.dispatch('closeLoading');
                         this.$store.commit('setStoreResponse', resp.body);
-                        if(resp.statusText == "OK" && redirectChoice == 'save'){
+                        if(resp.code == 200 && redirectChoice == 'save'){
                             var response = resp.body;
                             this.$store.dispatch('handleErrors', {response});
                             if(resp.body.code == 200){

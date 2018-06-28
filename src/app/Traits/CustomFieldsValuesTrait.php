@@ -79,31 +79,31 @@ trait CustomFieldsValuesTrait
         $media = Media::whereIn("mediaID", $mediaIDs)->get()->keyBy("mediaID")->toArray();
 
         $object = [];
-        $l = 0;
-        foreach($customFields as $fields){
-            $l++;
-            foreach($fields as $field => $value){
-                if(in_array($field, $slugs)){
-                    if(isset($media[$value])) {
-                        $tmp = [];
-                        if (!is_array($value)) {
-                            $fields->$field = new Media($media[$value]);
-                        } else {
-                            foreach ($value as $subValue) {
-                                $tmp[] = new Media($media[$value]);
+        if(count($media)) {
+            foreach ($customFields as $fields) {
+                foreach($fields as $field => $value){
+                    if(in_array($field, $slugs)){
+                        if($value && isset($media[$value])){
+                            $tmp = [];
+                            if (!is_array($value)) {
+                                $fields->$field = new Media($media[$value]);
+                            } else {
+                                foreach ($value as $subValue) {
+                                    $tmp[] = new Media($media[$value]);
+                                }
+                                $fields->$field = $tmp;
                             }
-                            $fields->$field = $tmp;
+                        }else{
+                            $fields->$field = null;
                         }
-                    }else{
-                        $fields->$field = null;
                     }
                 }
+                $object[] = $fields;
             }
-
-            $object[] = $fields;
+        }else{
+            $object = $customFields;
         }
 
-        $object = (object) $object;
-        return $object;
+        return collect($object);
     }
 }

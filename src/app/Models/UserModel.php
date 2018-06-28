@@ -2,20 +2,35 @@
 
 namespace Accio\App\Models;
 
+use App\Models\CustomField;
+use App\Models\CustomFieldGroup;
 use App\Models\Language;
+use App\Models\Media;
+use App\Models\PostType;
 use App\Models\User;
+use App\Notifications\UserAdded;
+use Faker\Test\Provider\Collection;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Accio\App\Traits;
 use Accio\Support\Facades\Meta;
+use Spatie\Activitylog\Traits\HasActivity;
 
 class UserModel extends Authenticatable
 {
-    use Traits\UserTrait, Notifiable, Traits\TranslatableTrait;
+    use
+      Notifiable,
+      HasActivity,
+      Notifiable,
+      Traits\UserTrait,
+      Traits\TranslatableTrait,
+      Traits\CacheTrait,
+      Traits\BootEventsTrait;
 
     /** @var array $fillable fields that can be filled in CRUD*/
     protected $fillable = [
@@ -39,6 +54,13 @@ class UserModel extends Authenticatable
 
     /** @var string $primaryKey the primary key */
     public $primaryKey = "userID";
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string $table
+     */
+    public $table = "users";
 
     /**
      * Lang key that points to the multi language label in translate file
@@ -92,6 +114,16 @@ class UserModel extends Authenticatable
     ];
 
     /**
+     * @var bool
+     */
+    protected static $logFillable = true;
+
+    /**
+     * @var bool
+     */
+    protected static $logOnlyDirty = true;
+
+    /**
      * @inheritdoc
      * */
     public function __construct(array $attributes = [])
@@ -101,19 +133,14 @@ class UserModel extends Authenticatable
     }
 
     /**
-     * Get Users
-     * If User  are available in cache, they are stored from cache, otherwise a query takes place
+     * Default method to handle cache query.
      *
      * @return array
      */
-    public static function getFromCache(){
-        if(!Cache::has('users')){
-            $getUsers = User::with("profileImage")->get();
-            Cache::forever('users',$getUsers);
-
-            return $getUsers;
-        }
-        return Cache::get('users');;
+    public function cache(){
+        $data  = User::with("profileimage")->get()->toArray();
+        Cache::forever($this->cacheName,$data);
+        return $data;
     }
 
 
@@ -123,44 +150,18 @@ class UserModel extends Authenticatable
     protected static function boot(){
         parent::boot();
 
-        self::saving(function($user){
-            Event::fire('user:saving', [$user]);
-        });
-
-        self::saved(function($user){
-            Event::fire('user:saved', [$user]);
-            self::_saved($user);
-        });
-
-        self::creating(function($user){
-            Event::fire('user:creating', [$user]);
-        });
-
         self::created(function($user){
+            try{
+                $user->notify(new UserAdded($user));
+            }catch (\Exception $e){
+
+            }
             Event::fire('user:created', [$user]);
-        });
-
-        self::updating(function($user){
-            Event::fire('user:updating', [$user]);
-        });
-
-        self::updated(function($user){
-            Event::fire('user:updated', [$user]);
-        });
-
-        self::deleting(function($user){
-            Event::fire('user:deleting', [$user]);
-        });
-
-        self::deleted(function($user){
-            Event::fire('user:deleted', [$user]);
-            self::_deleted($user);
         });
     }
 
-
     /**
-     * Generate the URL to a user
+     * Generate the URL to a user.
      *
      *
      * @return string
@@ -168,7 +169,6 @@ class UserModel extends Authenticatable
     public function getHrefAttribute(){
         return $this->href();
     }
-
 
     /**
      * Generate a custom URL to a user
@@ -222,27 +222,6 @@ class UserModel extends Authenticatable
     }
 
     /**
-     * Perform certain actions after a user is saved
-     *
-     * @param object $user Saved menulink
-     * */
-    private static function _saved($user){
-        //delete existing cache
-        Cache::forget('users');
-    }
-
-    /**
-     * Perform certain actions after a user is deleted
-     *
-     * @param object $user Deleted user
-     * */
-    private static function _deleted($user){
-        //delete existing cache
-        Cache::forget('users');
-    }
-
-
-    /**
      * Full name of the user
      *
      * @return string
@@ -259,7 +238,6 @@ class UserModel extends Authenticatable
     {
         Event::fire('user:destruct', [$this]);
     }
-
 
     /**
      * Get posts of users
@@ -284,6 +262,29 @@ class UserModel extends Authenticatable
           'groupID');
     }
 
+
+    /**
+     * Get Profile Image that belong to a user
+     * @return HasOne
+     */
+    public function getProfileImageAttribute()
+    {
+        if($this->profileImageID) {
+            // when attribute is available, weo don't ned to re-run relation
+            if ($this->attributeExists('profileimage')) {
+                $items = $this->getAttributeFromArray('profileimage');
+                // when Collection is available, we already have the data for this attribute
+                if (!$items instanceof Collection) {
+                    $items = $this->fillCacheAttributes(Media::class, $items)->first();
+                }
+
+                return $items;
+            } // or search tags in relations
+            else {
+                return $this->getRelationValue('profileimage');
+            }
+        }
+    }
 
     /**
      * Get profile image
@@ -315,4 +316,5 @@ class UserModel extends Authenticatable
                 '{siteTitle}' => settings('siteTitle')
             ]);
     }
+
 }

@@ -2,14 +2,18 @@
 
 namespace Accio\App\Models;
 
+use Accio\App\Traits\CacheTrait;
 use App\Models\CategoryRelation;
 use App\Models\PostType;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Mockery\Exception;
 
 class CategoryRelationModel extends Model
 {
+    use CacheTrait;
+
     /**
      * The table associated with the model.
      *
@@ -30,47 +34,21 @@ class CategoryRelationModel extends Model
      */
     public static $label = "categories.relations.label";
 
+
     /**
-     * Get categories relations by Post Type
-     * If items are found in cache they are served from it, otherwise it gets them from database
+     * Default method to handle cache query.
      *
-     * @param  string $postTypeSlug  Slug of post type
-     * @return object|null
-     * */
-    public static function getFromCache($postTypeSlug){
-        $findPostType = PostType::findBySlug($postTypeSlug);
-        if(!$findPostType){
-            throw new Exception('No post type given');
+     * @return array
+     */
+    public function cache(){
+        $postTypeSlug = $this->cacheAttribute('belongsTo', $this->cacheName);
+        if(!isPostType($postTypeSlug)){
+            throw new \Exception('Post type \''.$postTypeSlug.'\' not found in Cetegory relation\'s cache method!');
         }
 
-        $cacheName = 'categories_relations_'.$postTypeSlug;
-
-        //generate cache if it doesn't exist
-        if(!Cache::has($cacheName)) {
-            $relations = CategoryRelation::where('belongsTo',$postTypeSlug)->get();
-            Cache::forever($cacheName, $relations);
-
-            return $relations;
-        }
-
-        // return posts of current language
-        return Cache::get($cacheName);
-    }
-
-
-    /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saved(function($categoryRelation){
-            self::deleteCache($categoryRelation->belongsTo);
-        });
-
-        self::deleted(function($categoryRelation){
-            self::deleteCache($categoryRelation->belongsTo);
-        });
+        $data = CategoryRelation::where('belongsTo',$postTypeSlug)->get()->toArray();
+        Cache::forever('categories_relations_'.$postTypeSlug,$data);
+        return $data;
     }
 
     /**
@@ -78,7 +56,7 @@ class CategoryRelationModel extends Model
      *
      * @param string $postTypeSlug
      */
-    public static function deleteCache($postTypeSlug){
-        Cache::forget('categories_relations_'.$postTypeSlug);
+    public static function updateCache($item, $mode){
+        self::manageCacheState('categories_relations_'.$item->belongsTo, ['belongsTo' => $item->belongsTo], $item, $mode);
     }
 }

@@ -29,27 +29,30 @@ export const store = new Vuex.Store({
         actionReturnedData: {},
         hasPermission: false,
         translation: '',
+        route: {},
         storeResponse:{
             errors: []
         },
         froalaFullConfig: {
-            toolbarButtons: ['fullscreen', 'bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', 'formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', 'insertTable', '|', 'emoticons', 'specialCharacters', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'help', 'html', '|', 'undo', 'redo','addImage','addVideo','insertLink','embedBtn'],
+            toolbarButtons: ['fullscreen', 'bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', '|','formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', 'insertTable', '|', 'emoticons', 'specialCharacters', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'help', 'html', '|', 'undo', 'redo','addImage','addVideo','insertLink','embedBtn'],
             quickInsertButtons: ['addImage', 'addVideo', 'embedBtn', 'ul', 'ol'],
             htmlRemoveTags: [],
             htmlExecuteScripts: false,
         },
+
+        froalaCompactConfig: {
+            toolbarButtons: ['undo', 'redo', '|', 'bold', 'italic', 'underline', '|', 'paragraphFormat', 'align','|', 'formatUL', 'formatOL', 'insertTable', '|', 'addImage', 'addVideo', 'embedBtn', '|', 'insertLink'],
+            quickInsertButtons: ['addImage', 'addVideo', 'embedBtn', 'ul', 'ol'],
+            htmlRemoveTags: [],
+            htmlExecuteScripts: false,
+        },
+
         froalaBasicConfig: {
             toolbarButtons: ['undo','redo','|','bold','italic','underline','insertLink'],
             quickInsertButtons: ['bold', 'underline', 'insertLink'],
             htmlRemoveTags: [],
             htmlExecuteScripts: false,
-        },
-        froalaCompactConfig: {
-            toolbarButtons: ['undo', 'redo', '|', 'bold', 'italic', 'underline', '|', 'formatUL', 'formatOL', 'quote', '|', 'insertTable', '|', 'addImage', 'addVideo', 'embedBtn', '|', 'insertLink'],
-            quickInsertButtons: ['addImage', 'addVideo', 'embedBtn', 'ul', 'ol'],
-            htmlRemoveTags: [],
-            htmlExecuteScripts: false,
-        },
+        }
     },
     getters: {
         get_id(state){
@@ -84,9 +87,15 @@ export const store = new Vuex.Store({
         },
         get_store_response(state){
             return state.storeResponse;
+        },
+        get_route(state){
+            return state.route
         }
     },
     mutations: {
+        setRoute(state, route){
+          state.route = route
+        },
         setID(state, id){
             state.id = id;
         },
@@ -119,6 +128,75 @@ export const store = new Vuex.Store({
         }
     },
     actions: {
+        /**
+         * Set list.
+         * @param context
+         * @param object
+         */
+        setList(context, responseBody){
+            context.dispatch('filterTranslatedValues', responseBody)
+        },
+
+        /**
+         * Get data from current langauge.
+         *
+         * @param items
+         * @param languageSlug
+         * @returns {Array}
+         */
+        filterTranslatedValues(context, input, languageSlug){
+            let translatedData = []
+            let response = []
+            let li = 0
+            let items = {}
+
+            if(languageSlug == null){
+                languageSlug = context.getters.get_route.params.lang
+            }
+
+            // list response comes with a data key
+            if(input.data !== undefined){
+                items = input.data;
+            }else{
+                items = input;
+            }
+
+            items.map((item) => {
+                // we need an empty object to fill it later
+                if(translatedData[li] === undefined){
+                    translatedData[li] = {}
+                }
+
+                // add attibutes for each item
+                for(let key in item){
+                    let value = item[key];
+
+                    try{
+                        value = JSON.parse(value);
+                    }catch(e){}
+
+                    if(typeof value === 'object' && value !== null && value[languageSlug] !== undefined){
+                        translatedData[li][key] = value[languageSlug]
+                    }else{
+                        translatedData[li][key] = value
+                    }
+                }
+
+                li++;
+            });
+
+            if(input.data !== undefined){
+                response = input
+                response.data = translatedData
+            }else{
+                response = translatedData;
+            }
+
+            context.commit('setList', response);
+
+            return response;
+        },
+
         openLoading() {
             $("#loading").css("display","flex");
             $("#loading").addClass("loadingOpened");
@@ -150,30 +228,6 @@ export const store = new Vuex.Store({
                 type = "error";
             }
 
-            // context.commit('setInputErrorsMsg', []);
-            // var inputErrorsExist = context.getters.get_input_errors_exist;
-            // var inputErrorsMsg = [];
-            // if(inputErrorsExist){
-            //     for (var key in response.errors){
-            //         for(var i=0;i<response.errors[key].length;i++){
-            //             inputErrorsMsg.push(response.errors[key][i]);
-            //             $("#form-group-"+key).addClass("bad");
-            //             $("#form-group-"+key+" .alert").show();
-            //             $("#form-group-"+key+" .alert").append("<li>"+response.errors[key][i]+"</li>");
-            //         }
-            //     }
-            //
-            //     context.commit('setInputErrorsMsg', inputErrorsMsg);
-            //     context.commit('setInputErrorsExist', false);
-            // }
-            //
-            // $(".form-group").each(function (e) {
-            //     if(!$(this).hasClass("bad")){
-            //         var id = $(this).attr("id");
-            //         $("#"+id+" div .alert").hide(200)
-            //     }
-            // });
-
             // noty notification
             new Noty({
                 type: type,
@@ -190,7 +244,7 @@ export const store = new Vuex.Store({
             return Vue.http.post(object.url, object.data)
                 .then((resp) => {
                     context.commit('setStoreResponse', resp.body);
-                    if(resp.statusText == "OK"){
+                    if(resp.status == 200){
                         var response = resp.body;
                         context.dispatch('handleErrors', {response});
                         context.dispatch('closeLoading');
@@ -225,7 +279,7 @@ export const store = new Vuex.Store({
 
             Vue.http.post(object.url, ids)
                 .then((resp) => {
-                    if(resp.statusText == "OK"){
+                    if(resp.code == 200){
                         var response = resp.body;
                         context.dispatch('handleErrors', {response});
                     }else{
@@ -255,7 +309,6 @@ export const store = new Vuex.Store({
         checkPermission(context, object){
             let app = object.app;
             let key = object.key;
-            let list = context.getters.get_list;
             let permissions = context.getters.get_global_data.permissions;
             let postTypes = context.getters.get_global_data.post_type_slugs;
             let appPermission = false;

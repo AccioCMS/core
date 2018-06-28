@@ -34,13 +34,21 @@ trait UserTrait{
      * */
     public static function hasOwnership($app,$ownershipPostID){
         if ($ownershipPostID){
-            if(isset(\App\Models\PostType::getFromCache()[$app])){
-                $checkDB = DB::table($app)->where('postID',$ownershipPostID)->where('createdByUserID',Auth::user()->userID)->count();
+            if(isPostType($app)){
+                $checkDB = DB::table($app)
+                  ->where('postID',$ownershipPostID)
+                  ->where('createdByUserID',Auth::user()->userID)
+                  ->count();
             }else{
                 $class = 'App\\Models\\'.$app;
                 $object = new $class();
-                $checkDB = DB::table($object->table)->where($object->primaryKey,$ownershipPostID)->where('createdByUserID',Auth::user()->userID)->count();
+                $checkDB = DB::table($object->table)
+                  ->where($object->getKeyName(),$ownershipPostID)
+                  ->where('createdByUserID',Auth::user()->userID)
+                  ->count();
             }
+
+
             return ($checkDB) ? true : false;
         }
     }
@@ -67,7 +75,7 @@ trait UserTrait{
 
         if(self::isDefaultGroup()){
             $userSelfDataAccess = ($app == 'User' && $id == Auth::user()->userID);
-            $isPostType = isset(\App\Models\PostType::getFromCache()[$app]);
+            $isPostType = $isPostType($app);
 
             if (self::isEditor()) {
                 $allowedApps = array('Pages', 'Category', 'Tags', 'Media');
@@ -153,7 +161,6 @@ trait UserTrait{
         if(self::isAuthor()){
             // Check ownership
             //@TODO me e keqyre pse eshte e nevojshme me e ba check a eshte app-i post type perderisa ne hasOwnership e bajme query edhe ne app-a tjere
-            //if($checkOwnership && isset(PostType::getFromCache()[$app])){
             if($checkOwnership && is_numeric($id)){
                 $hasOwnership = self::hasOwnership($app,$id);
             }else{
@@ -211,24 +218,7 @@ trait UserTrait{
     }
 
 
-    /**
-     * Get user by ID
-     *
-     * @param  int $userID
-     * @param string $columnName Column name
-     *
-     * @return object|null Returns requested user if found, null instead
-     * */
-    public static function findByID($userID, $columnName = ''){
-        $userObj = \App\Models\User::getFromCache();
-        if($userObj) {
-            $userObj->where('userID', $userID)->first();
-            if (isset($user->$columnName)) {
-                return $user->$columnName;
-            }
-            return $user;
-        }
-    }
+
 
     /**
      * Get permissions of the user
@@ -294,11 +284,11 @@ trait UserTrait{
      * @return string|null
      */
     public function avatar($width = null, $height = null,  $returnGravatarIfNotFound = false){
-        if($this->profileImage) {
+        if($this->profileimage) {
             if(!$width && !$height){
-                return url($this->profileImage->url);
+                return url($this->profileimage->url);
             }else{
-                return $this->profileImage->thumb($width,$height, $this->profileImage);
+                return $this->profileimage->thumb($width,$height, $this->profileimage);
             }
         }
 
@@ -350,14 +340,41 @@ trait UserTrait{
      * Get user by Slug (Name-Surname)
      *
      * @param  string $slug The slug of the User
+     * @param string $columnName Column name
      *
      * @return object
      * */
 
-    public static function findBySlug($slug){
-        $users = User::getFromCache();
-        return $users->where('slug',$slug)->first();
+    public static function findBySlug($slug, $columnName = ''){
+        $userObj = \App\Models\User::getFromCache()->where('slug', $slug)->first();
+
+        // return custom column
+        if ($columnName && isset($userObj->$columnName)) {
+            return $userObj->$columnName;
+        }
+
+        return $userObj;
     }
+
+    /**
+     * Get user by ID
+     *
+     * @param  int $userID
+     * @param string $columnName Column name
+     *
+     * @return object|null Returns requested user if found, null instead
+     * */
+    public static function findByID($userID, $columnName = ''){
+        $userObj = \App\Models\User::getFromCache()->where('userID', $userID)->first();
+
+        // return custom column
+        if ($columnName && isset($userObj->$columnName)) {
+            return $userObj->$columnName;
+        }
+
+        return $userObj;
+    }
+
 
     /**
      * @param bool $includForgotPaswordLink
@@ -478,22 +495,37 @@ trait UserTrait{
     /**
      * Assign roles to a user
      *
-     * @param array $groups groups that are selected in frontend for the new or existing user
+     * @param array|int $groups groups that are selected in frontend for the new or existing user
+     * @param boolean Bypass permission check. Useful when creating users via CLI.
      * @return bool
      * */
-    public function assignRoles($groups){
-        // check if user has permissions to access this link
-        if(!self::hasAccess('user','update') && !self::hasAccess('user','create')){
-            return false;
+    public function assignRoles($groups, $bypassPermissionCheck = false){
+        // allow permission bypass only in the local environment
+        if(config('app.env') == 'production' && $bypassPermissionCheck){
+            $bypassPermissionCheck = false;
         }
+
+        // check if a user has permissions to access this link
+        if(!$bypassPermissionCheck) {
+            if (!self::hasAccess('user', 'update') && !self::hasAccess('user', 'create')) {
+                return false;
+            }
+        }
+
         // First delete all previous relations
         RoleRelation::where('userID',$this->userID)->delete();
 
         $roles = [];
-        foreach ($groups as $groupID=>$group){
+
+        // in case int is given
+        if(is_numeric($groups)){
+            $groups = [$groups];
+        }
+
+        foreach ($groups as $groupID){
             $roles[] = [
               'userID' => $this->userID,
-              'groupID' => (isset($group['groupID']) ? $group['groupID'] : $groupID)
+              'groupID' => (isset($groupID['groupID']) ? $groupID['groupID'] : $groupID)
             ];
         }
 
@@ -502,5 +534,92 @@ trait UserTrait{
         }
 
         return false;
+    }
+
+    /**
+     * Return if users ID is beeing used somewhere in the database
+     *
+     * @return bool
+     */
+    public function hasRelatedData(){
+        if(!$this->hasDataInDefaultApps() && !$this->hasDataInPostsType()){
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Check if user has a data created by him in default apps
+     * If of the default apps "post_type", "categories", "tags", "languages", "media" has the createdByUsID associated with this user
+     *
+     * @return bool
+     */
+    private function hasDataInDefaultApps(){
+        $tables = ["post_type", "categories", "tags", "languages", "media"];
+
+        foreach($tables as $table){
+            $hasData = DB::table($table)->where("createdByUserID", $this->userID)->count();
+            if($hasData){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the current user has any post or is related to any post (in post fields "dropdown from db")
+     *
+     * @return bool
+     */
+    private function hasDataInPostsType(){
+        $postTypes = PostType::getFromCache();
+        foreach($postTypes as $postType){
+            $hasData = DB::table($postType->slug)->where("createdByUserID", $this->userID)->count();
+            if($hasData){
+                return true;
+            }
+
+            foreach($postType->fields as $field){
+                if($field->type->inputType == "db" && $field->dbTable->name == "users"){
+                    if($field->translatable){
+                        if($field->isMultiple){
+                            foreach(Language::getFromCache() as $language){
+                                $hasData = DB::table("post_articles")->whereRaw("JSON_CONTAINS($field->slug->\"$.$language->slug\", '[$this->userID]')")->count();
+                                if($hasData) return true;
+                            }
+                        }else{
+                            foreach(Language::getFromCache() as $language){
+                                $hasData = DB::table($postType->slug)->where($field->slug."->".$language->slug, $this->userID)->count();
+                                if($hasData) return true;
+                            }
+                        }
+                    }else{
+                        if($field->isMultiple){
+                            $hasData = DB::table($postType->slug)->whereRaw("JSON_CONTAINS($field->slug, '[$this->userID]')")->count();
+                            if($hasData) return true;
+                        }else{
+                            $hasData = DB::table($postType->slug)->where($field->slug, $this->userID)->count();
+                            if($hasData) return true;
+                        }
+                    }
+                }
+
+            }
+
+        }
+        return false;
+    }
+
+    /**
+     * TODO : Me kry qekun neper custom field values neper tabela
+     */
+    private function hasDataInCustomFields(){
+        $customFields = CustomField::with("group")->where("type", "db")->get();
+        $customFieldsSlugs = [];
+        foreach ($customFields as $customField){
+            $customFieldsSlugs[] = $customField->group->slug . "__" . $customField->slug;
+        }
+        return $customFieldsSlugs;
     }
 }

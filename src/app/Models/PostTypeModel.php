@@ -14,16 +14,22 @@ use App\Models\Post;
 use App\Models\PostType;
 use DB;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Accio\App\Traits;
 use Illuminate\Support\Facades\File;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class PostTypeModel extends Model{
 
-    use Traits\PostTypeTrait;
+    use
+      Traits\PostTypeTrait,
+      LogsActivity,
+      Traits\CacheTrait,
+      Traits\BootEventsTrait;
 
     /**
      * Fields that can be filled in CRUD
@@ -31,7 +37,7 @@ class PostTypeModel extends Model{
      * @var array $fillable
      */
     protected $fillable = [
-        'createdByUserID', 'name', 'slug', 'isVisible', 'fields', 'hasCategories', 'isCategoryRequired', 'hasTags', 'isTagRequired'
+      'createdByUserID', 'name', 'slug', 'isVisible', 'fields', 'hasCategories', 'isCategoryRequired', 'hasTags', 'isTagRequired'
     ];
 
     /**
@@ -68,6 +74,15 @@ class PostTypeModel extends Model{
      */
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
 
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+      'fields' => 'object',
+    ];
+
     //TODO document it and remove it from here
 //    public static $customPermissions = [
 //        'service' => [
@@ -90,6 +105,16 @@ class PostTypeModel extends Model{
     private static $customFieldsArray = [];
 
     /**
+     * @var bool
+     */
+    protected static $logFillable = true;
+
+    /**
+     * @var bool
+     */
+    protected static $logOnlyDirty = true;
+
+    /**
      * @inheritdoc
      * */
     public function __construct(array $attributes = []){
@@ -104,7 +129,7 @@ class PostTypeModel extends Model{
      */
     public function field(string $fieldSlug){
         // TODO me hek json decode me bo me cast
-        foreach (json_decode($this->fields) as $field){
+        foreach ($this->fields as $field){
             if($field->slug == $fieldSlug){
                 return $field;
             }
@@ -119,7 +144,11 @@ class PostTypeModel extends Model{
      * @return mixed
      * @throws \Exception
      */
-    public function getMultioptionFieldValue(string $fieldSlug, string $key){
+    public function getMultioptionFieldValue(string $fieldSlug, $key){
+        if(is_null($key)){
+            return;
+        }
+
         $field = $this->field($fieldSlug);
         if(!$field){
             throw new \Exception("No field with slug ".$fieldSlug);
@@ -129,7 +158,13 @@ class PostTypeModel extends Model{
         foreach ($options as $option){
             $optionArr = explode(":", $option);
             if($optionArr[0] == $key){
-                return $optionArr[1];
+                $value  = $optionArr[1];
+
+                // remove comma
+                if(substr($value, -1) == ','){
+                    $value = substr($value, 0, -1);
+                }
+                return $value;
             }
         }
     }
@@ -140,18 +175,18 @@ class PostTypeModel extends Model{
      */
     protected static function menuLinkPanel(){
         return [
-            'label' => 'Post Types',
-            'controller' => 'PostController',
-            'belongsTo' => 'post_type',
-            'search' => [
-                'label' => trans('base.search'),
-                'placeholder' => trans('base.searchPlaceholder'),
-                'url' => route('backend.postType.menuPanelItems', ['keyword' => ""])
-            ],
-            'items' => [
-                'label' => trans('base.latest'),
-                'url' => route('backend.postType.menuPanelItems')
-            ],
+          'label' => 'Post Types',
+          'controller' => 'PostController',
+          'belongsTo' => 'post_type',
+          'search' => [
+            'label' => trans('base.search'),
+            'placeholder' => trans('base.searchPlaceholder'),
+            'url' => route('backend.postType.menuPanelItems', ['keyword' => ""])
+          ],
+          'items' => [
+            'label' => trans('base.latest'),
+            'url' => route('backend.postType.menuPanelItems')
+          ],
         ];
     }
 
@@ -162,97 +197,16 @@ class PostTypeModel extends Model{
      */
     public  function menuLinkParameters(){
         return [
-            'postTypeID'    => $this->postTypeID,
-            'postTypeSlug'  => cleanPostTypeSlug($this->slug)
+          'postTypeID'    => $this->postTypeID,
+          'postTypeSlug'  => cleanPostTypeSlug($this->slug)
         ];
     }
-
-    /**
-     * Get post types from cache. Cache is generated if not found
-     *
-     * @return object|null  Returns requested cache if found, null instead
-     */
-    public static function getFromCache(){
-        if(!Cache::has('postTypes')){
-            $getData = self::all()->keyBy('slug');
-            Cache::forever('postTypes',$getData);
-
-            return $getData;
-        }
-        return Cache::get('postTypes');;
-    }
-
-    /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($postType){
-            Event::fire('postType:saving', [$postType]);
-        });
-
-        self::saved(function($postType){
-            Event::fire('postType:saved', [$postType]);
-            self::_saved($postType);
-        });
-
-        self::creating(function($postType){
-            Event::fire('postType:creating', [$postType]);
-        });
-
-        self::created(function($postType){
-            Event::fire('postType:created', [$postType]);
-        });
-
-        self::updating(function($postType){
-            Event::fire('postType:updating', [$postType]);
-        });
-
-        self::updated(function($postType){
-            Event::fire('postType:updated', [$postType]);
-        });
-
-        self::deleting(function($postType){
-            Event::fire('postType:deleting', [$postType]);
-        });
-
-        self::deleted(function($postType){
-            Event::fire('postType:deleted', [$postType]);
-            self::_deleted($postType);
-        });
-    }
-
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function categories(){
         return $this->hasMany('App\Models\Category', 'postTypeID');
-    }
-
-    /**
-     * Delete Post Types caches
-     */
-    public static function deleteCache(){
-        Cache::forget('postTypes');
-    }
-
-    /**
-     * Perform certain actions after a post type is saved
-     * @param $postType PostType
-     * */
-    private static function _saved($postType){
-        self::deleteCache();
-    }
-
-    /**
-     * Perform certain actions after a category is deleted
-     *
-     * @param $postType PostType
-     * */
-    private static function _deleted($postType){
-        self::deleteCache();
     }
 
     /** Validate a post type from url
@@ -264,7 +218,7 @@ class PostTypeModel extends Model{
         if(!$postTypeSlug){
             $postTypeSlug = \Request::route('postTypeSlug');
         }
-        return ($postTypeSlug && !self::findBySlug($postTypeSlug));
+        return ($postTypeSlug && !PostType::findBySlug($postTypeSlug));
     }
 
     /**
@@ -274,16 +228,21 @@ class PostTypeModel extends Model{
         Event::fire('postType:destruct', [$this]);
     }
 
+    /**
+     * Generate slug of a field. Uses camel case to create the slug from a string.
+     *
+     * @param string $slug
+     * @param array $usedSlugs
+     * @return string
+     */
     public static function generateSlug(string $slug, array $usedSlugs){
-        // replace non-alphanumeric characters
-        $slug = preg_replace('/\s+/', "_", $slug);
-        $slug = preg_replace("/[^a-zA-Z0-9_]+/", "", $slug);
-
+        $slug = camel_case($slug);
         $count = 1;
 
+        // adds a number in the slug string if the specific slug allready exists
         if (in_array($slug, $usedSlugs)){
             while(true){
-                $slug = str_slug($slug."_".$count, '_');
+                $slug = camel_case($slug."_".$count, '_');
                 if (!in_array($slug, $usedSlugs)){
                     return $slug;
                 }
@@ -317,7 +276,7 @@ class PostTypeModel extends Model{
                 $table->datetime("published_at")->nullable()->index();
                 $table->json("slug")->nullable();
 
-                $post = new self();
+                $post = new PostType();
                 $usedSlugs = [];
                 $usedSlugs = array_merge($usedSlugs, $post->fillable);
 
@@ -408,7 +367,7 @@ class PostTypeModel extends Model{
                         }else if ($field['type']['inputType'] == "date"){
                             $table->dateTime($slug)->nullable();
                         }else if ($field['type']['inputType'] == "boolean"){
-                            $table->tinyInteger($slug);
+                            $table->tinyInteger($slug)->nullable();
                         }else if ($field['type']['inputType'] == "db"){
                             if($field['isMultiple']){
                                 $table->json($slug)->nullable();

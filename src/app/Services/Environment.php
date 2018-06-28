@@ -31,7 +31,7 @@ class Environment
 
         $contents = File::get($envPath);
         if(!$contents){
-            throw new Exception('Could not read env file');
+            throw new \Exception('Could not read env file');
         }
 
         foreach($properties as $key => $value){
@@ -44,7 +44,7 @@ class Environment
 
         if (File::put($envPath, $contents) === false)
         {
-            throw new Exception('Could not write env file');
+            throw new \Exception('Could not write env file');
         }
 
         return true;

@@ -69,7 +69,7 @@
             let global = this;
             // get all albums with the related images
             this.$http.get(url).then((resp) => {
-                this.$store.commit('setList', resp.body.data);
+                this.$store.dispatch('setList', resp.body);
             }).then((resp) => {
                 this.isLoading = false;
             });
@@ -120,7 +120,7 @@
                 }
                 // load more albums
                 this.$http.get(url).then((resp) => {
-                    let count = this.getList.length;
+                    let count = this.getList.data.length;
                     let newList = resp.body.data;
                     for(let k in newList){
                         this.$store.commit('pushToList', newList[k]);

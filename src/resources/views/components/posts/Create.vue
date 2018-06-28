@@ -265,9 +265,9 @@
                                             <!-- Checkbox -->
                                             <div class="col-md-10 col-sm-10 col-xs-12" v-if="value.type.inputType == 'checkbox'">
                                                 <div v-for="(option, i) in value.multioptionValues" :key="i">
-                                                    <input type="checkbox" :id="value.slug" v-model="value.value[lang.slug]" :value="option[0]" v-if="value.translatable">
-                                                    <input type="checkbox" :id="value.slug" v-model="value.value" :value="option[0]" v-else>
-                                                    {{option[1]}}
+                                                    <input type="checkbox" :id="value.slug+'_'+i" v-model="value.value[lang.slug]" :value="option[0]" v-if="value.translatable">
+                                                    <input type="checkbox" :id="value.slug+'_'+i" v-model="value.value" :value="option[0]" v-else>
+                                                    <label :for="value.slug+'_'+i">{{option[1]}}</label>
                                                 </div>
                                                 <div class="alert" v-if="StoreResponse.errors[value.slug+'_'+lang.slug]" v-for="error in StoreResponse.errors[value.slug+'_'+lang.slug]">{{ error }}</div>
                                             </div>
@@ -386,7 +386,7 @@
                                                         :hide-selected="true"
                                                         :placeholder="trans.__multiselectCategoriesPlaceholder"
                                                         label="title"
-                                                        track-by="title"></multiselect>
+                                                        track-by="categoryID"></multiselect>
                                                 <div class="alert" v-if="StoreResponse.errors['categories']" v-for="error in StoreResponse.errors['categories']">{{ error }}</div>
                                             </div>
                                         </div>
@@ -465,7 +465,7 @@
 
                     <!-- Date and time when the post should be displayed -->
                     <div class="form-group dateAndTimepicker">
-                        <label class="control-label col-md-12 col-sm-12 col-xs-12">{{trans.__schedulePost}}</label>
+                        <label class="control-label col-md-12 col-sm-12 col-xs-12">{{trans.__publishedAt}}</label>
                         <div class="col-md-12 col-sm-12 col-xs-12 datepickerContainer postsDatepicker">
                             <datepicker v-model="published_at.date" name="date" class="col-md-8 col-sm-8 removePaddingAndMargin" :format="dateFormat"></datepicker>
                             <vue-timepicker v-model="published_at.time" class="col-md-4 col-sm-4"></vue-timepicker>
@@ -564,7 +564,7 @@
                 __categoryTitle: this.__('categories.title'),
                 __tagsTitle: this.__('tag.title'),
                 __visibleIn: this.__('post.visibleIn'),
-                __schedulePost: this.__('post.schedulePost'),
+                __publishedAt: this.__('post.publishedAt'),
                 __multiselectCategoriesPlaceholder: this.__('post.multiselectCategoriesPlaceholder'),
                 __multiselectTagPlaceholder: this.__('post.multiselectTagPlaceholder'),
                 __multiselectAddTagPlaceholder: this.__('post.multiselectAddTagPlaceholder'),
@@ -591,7 +591,6 @@
                 customFieldOriginalStructure: {},
                 customFieldValues: {},
                 columns: '',
-                columnSlugs: '',
                 selected: [],
                 isSlugDisabled: true,
                 form:[],
@@ -623,7 +622,18 @@
              */
             hasCategory(categories){
                 // if it is all
-                if(categories == 0){
+                if(categories === undefined || categories.length == 0 || categories == 0){
+                    return true;
+                }
+                let hasAll = false;
+                categories.forEach((cat) => {
+                    if(cat['slug'] == 0){
+                        hasAll = true;
+                        return;
+                    }
+                });
+
+                if(hasAll){
                     return true;
                 }
                 // loop throw the selected categories and check if it should displayed in one of them
@@ -645,16 +655,16 @@
                 // gets media files of custom fields and writes them to their v-models
                 this.constructMediaForCustomFields();
 
-                var dateFormatted = "";
+                let dateFormatted = "";
                 if(this.published_at.date != ""){
-                    var date = this.published_at.date;
-                    var month = parseInt(date.getMonth())+1;
+                    let date = this.published_at.date;
+                    let month = parseInt(date.getMonth())+1;
                     dateFormatted = date.getDate() + "-" + month + "-" + date.getFullYear();
                 }
                 this.published_at.dateFormatted = dateFormatted;
 
                 // request for the backend
-                var request = {
+                let request = {
                     title: this.title,
                     content: this.content,
                     isCategoryRequired: this.isCategoryRequired,
@@ -727,8 +737,8 @@
              * @param mediaID
              */
             deleteSelectedMediaFile(key, mediaID){
-                var mediaArr = this.mediaSelectedFiles;
-                for(var k in mediaArr[key]){
+                let mediaArr = this.mediaSelectedFiles;
+                for(let k in mediaArr[key]){
                     if(key == "featuredImage" || key == "featuredVideo"){
                         delete mediaArr[key];
                         continue;

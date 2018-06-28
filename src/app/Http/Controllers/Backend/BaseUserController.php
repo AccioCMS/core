@@ -133,12 +133,12 @@ class BaseUserController extends MainController{
 
         // if validation fails return json response
         if($validator->fails()){
-            return $this->response("Bad request", 400, null, false, false, true, $validator->errors());
+            return $this->response("Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
         // if image is not set make it 0
         if (!isset($request->user['profileImageID']) || $request->user['profileImageID'] == ""){
-            $profileImageID = 0;
+            $profileImageID = null;
         }else{
             $profileImageID = $request->user['profileImageID'];
         }
@@ -157,6 +157,7 @@ class BaseUserController extends MainController{
         $user->about = $request->user['about'];
         $user->profileImageID = $profileImageID;
         $user->gravatar = User::getGravatarFromEmail($request->user['email']);
+        $user->createdByUserID = Auth::user()->userID;
 
         if ($user->save()){
             // Add roles permissions
@@ -182,18 +183,34 @@ class BaseUserController extends MainController{
     }
 
     /**
-     * Delete a user
-     * */
+     * Delete a user.
+     *
+     * @param $lang
+     * @param $id
+     * @return array
+     */
     public function delete($lang, $id){
         // check if user has permissions to access this link
         if(!User::hasAccess('user','delete')){
             return $this->noPermission();
         }
-        $user = App\Models\User::find($id)->delete();
-        if ($user){
-            // Delete all roles relations
-            RoleRelationsModel::where('userID',$id)->delete();
 
+        $user = User::find($id);
+        if($user->hasRelatedData()){
+            $user->isActive = false;
+            if($user->save()){
+                return $this->response('User is deleted');;
+            }
+            return $this->response( 'Internal server error. Please try again later', 500);
+        }
+
+        // Delete all roles relations
+        $roles = RoleRelationsModel::where('userID',$id);
+        if($roles){
+            $roles->delete();
+        }
+
+        if ($user && $user->delete()){
             $result = $this->response('User is deleted');
         }else{
             $result = $this->response( 'Internal server error. Please try again later', 500);
@@ -204,6 +221,7 @@ class BaseUserController extends MainController{
     /**
      *  Bulk Delete users
      *  Delete many users
+     *
      *  @params array of user IDs
      * */
     public function bulkDelete(Request $request){
@@ -221,7 +239,8 @@ class BaseUserController extends MainController{
     }
 
     /**
-     *  Change users data
+     * Change users data
+     *
      * @params $request all users data comming from the form
      * @return array
      * */
@@ -250,12 +269,12 @@ class BaseUserController extends MainController{
 
         // if validation fails return json response
         if ($validator->fails()) {
-            return $this->response("Bad request", 400, null, false, false, true, $validator->errors());
+            return $this->response("Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
         // if image is not set make it 0
         if (!isset($request->user['profileImageID']) || $request->user['profileImageID'] == ""){
-            $profileImageID = 0;
+            $profileImageID = null;
         }else{
             $profileImageID = $request->user['profileImageID'];
         }
@@ -279,7 +298,7 @@ class BaseUserController extends MainController{
             $user->assignRoles($request->user['groups']);
 
             $redirectParams = parent::redirectParams($request->redirect, 'user', $request->user['id']);
-            $result = $this->response( 'User is update', 200, $request->user['id'], $redirectParams['view'], $redirectParams['redirectUrl'] );
+            $result = $this->response( 'User updated!', 200, $request->user['id'], $redirectParams['view'], $redirectParams['redirectUrl'] );
             $result['data'] = $user;
         }else{
             $result = $this->response( 'Internal server error. Please try again later', 500);
@@ -288,9 +307,12 @@ class BaseUserController extends MainController{
     }
 
     /**
-     *  return JSON object with details for a specific user
-     * @params user ID
-     * */
+     * JSON object with details for a specific user.
+     *
+     * @param $lang
+     * @param $id
+     * @return array
+     */
     public function detailsJSON($lang, $id){
         // check if user has permissions to access this link
         if(\Illuminate\Support\Facades\Auth::user()->userID != $id) {
@@ -314,6 +336,7 @@ class BaseUserController extends MainController{
 
     /**
      *  return success or error
+     *
      *  method to reset users password
      *  @params user ID AND new password
      * */
@@ -330,7 +353,7 @@ class BaseUserController extends MainController{
 
         // if validation fails return json response
         if ($validator->fails()) {
-            return $this->response( "Bad request", 400,null, false, false, true, $validator->errors());
+            return $this->response( "Please check all required fields!", 400,null, false, false, true, $validator->errors());
         }
 
         $user = User::where('userID', $request->id)->update([
@@ -346,9 +369,11 @@ class BaseUserController extends MainController{
     }
 
     /**
-     *  Get the array of fields for advanced search
-     *  I kthen fildat qe i perdorim per search te detajum
-     *  @return json fildat
+     * Get the array of fields for advanced search
+     *
+     * I kthen fildat qe i perdorim per search te detajum
+     * @return json fildat
+     *
      * */
     public function getAdvancedSearchFields($lang = ""){
         // check if user has permissions to access this link
@@ -361,6 +386,7 @@ class BaseUserController extends MainController{
     /**
      *  Get the result of advanced search
      *  I kthen rezultatet e searchit te advancum
+     *
      *  @params
      *  @return json fildat
      * */
@@ -443,6 +469,10 @@ class BaseUserController extends MainController{
         return view(User::$backendPathToView.'all', compact('lang','view','hasAdvancedSearchData','advancedSearchData','pagination', 'fields', 'adminPrefix'));
     }
 
+    /**
+     * @param Request $request
+     * @return array
+     */
     public function mediaStore(Request $request){
         // check if user has permissions to access this link
         if(!User::hasAccess('user','create')){

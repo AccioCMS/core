@@ -14,7 +14,7 @@
                 <div class="x_panel">
                     <label class="control-label selectMenuLabel col-md-2 col-sm-2 col-xs-2">{{trans.__selectMenuLabel}}:</label>
                     <div class="col-md-2 col-sm-2 col-xs-2">
-                        <select class="form-control" v-model="selectedMenuID">
+                        <select class="form-control" v-model="selectedTmpMenuID">
                             <option v-for="(option, i) in menuList" :value="option.menuID">{{ option.title }}</option>
                         </select>
                     </div>
@@ -69,10 +69,11 @@
                         <div class="dd col-md-6 col-sm-6 col-xs-12" id="nestable" v-show="!spinner">
 
                             <ol class="dd-list" id="menuLinks"><!-- FIRST DIMENSION -->
-                                <li v-for="(itemD1, keyD1, indexD1) in menuLinkList" :id="'link'+keyD1" class="dd-item" :data-id="keyD1" :data-belongsTo="itemD1.belongsTo"
+                                <li v-for="(itemD1, keyD1, indexD1) in menuLinkList" :id="'link'+keyD1" class="dd-item" :data-id="itemD1.menuLinkID" :data-belongsTo="itemD1.belongsTo"
                                     :data-belongsToID="itemD1.belongsToID" :data-label="itemD1.label"
                                     :data-cssClass="itemD1.cssClass" :data-customLink="itemD1.customLink"
                                     :data-controller="itemD1.controller" :data-method="itemD1.method" :data-slug="itemD1.slug">
+
                                     <div class="icons">
                                         <i class="fa fa-pencil-square fa-2x" @click="openEditLinkPanel(itemD1.menuLinkID)"></i>
                                         <i class="fa fa-close fa-2x" @click="deleteLink(indexD1, itemD1.menuLinkID, keyD1)"></i>
@@ -80,7 +81,7 @@
                                     <div class="dd-handle">{{ itemD1.label[getCurrentLang] }}</div>
 
                                     <ol class="dd-list" v-if="itemD1.children"> <!-- SECOND DIMENSION -->
-                                        <li v-for="(itemD2, keyD2, indexD2) in itemD1.children" :id="'link'+keyD2" class="dd-item" :data-id="keyD2" :data-belongsTo="itemD2.belongsTo"
+                                        <li v-for="(itemD2, keyD2, indexD2) in itemD1.children" :id="'link'+keyD2" class="dd-item" :data-id="itemD2.menuLinkID" :data-belongsTo="itemD2.belongsTo"
                                             :data-belongsToID="itemD2.belongsToID" :data-label="itemD2.label"
                                             :data-cssClass="itemD2.cssClass" :data-customLink="itemD2.customLink"
                                             :data-controller="itemD2.controller" :data-method="itemD2.method" :data-slug="itemD2.slug">
@@ -91,7 +92,7 @@
                                             <div class="dd-handle">{{ itemD2.label[getCurrentLang] }}</div>
 
                                             <ol class="dd-list" v-if="itemD2.children"> <!-- THIRD DIMENSION -->
-                                                <li v-for="(itemD3, keyD3, indexD3) in itemD2.children" :id="'link'+keyD3" class="dd-item" :data-id="keyD3" :data-belongsTo="itemD3.belongsTo"
+                                                <li v-for="(itemD3, keyD3, indexD3) in itemD2.children" :id="'link'+keyD3" class="dd-item" :data-id="itemD3.menuLinkID" :data-belongsTo="itemD3.belongsTo"
                                                     :data-belongsToID="itemD3.belongsToID" :data-label="itemD3.label"
                                                     :data-cssClass="itemD3.cssClass" :data-customLink="itemD3.customLink"
                                                     :data-controller="itemD3.controller" :data-method="itemD3.method" :data-slug="itemD3.slug">
@@ -102,7 +103,7 @@
                                                     <div class="dd-handle">{{ itemD3.label[getCurrentLang] }}</div>
 
                                                     <ol class="dd-list" v-if="itemD3.children"> <!-- FOURTH DIMENSION -->
-                                                        <li v-for="(itemD4, keyD4, indexD4) in itemD3.children" :id="'link'+keyD4" class="dd-item" :data-id="keyD4" :data-belongsTo="itemD4.belongsTo"
+                                                        <li v-for="(itemD4, keyD4, indexD4) in itemD3.children" :id="'link'+keyD4" class="dd-item" :data-id="itemD4.menuLinkID" :data-belongsTo="itemD4.belongsTo"
                                                             :data-belongsToID="itemD4.belongsToID" :data-label="itemD4.label"
                                                             :data-cssClass="itemD4.cssClass" :data-customLink="itemD4.customLink"
                                                             :data-controller="itemD4.controller" :data-method="itemD4.method" :data-slug="itemD4.slug">
@@ -113,7 +114,7 @@
                                                             <div class="dd-handle">{{ itemD4.label[getCurrentLang] }}</div>
 
                                                             <ol class="dd-list" v-if="itemD4.children"> <!-- FIFTH DIMENSION -->
-                                                                <li v-for="(itemD5, keyD5, indexD5) in itemD4.children" :id="'link'+keyD5" class="dd-item" :data-id="keyD5" :data-belongsTo="itemD5.belongsTo"
+                                                                <li v-for="(itemD5, keyD5, indexD5) in itemD4.children" :id="'link'+keyD5" class="dd-item" :data-id="itemD5.menuLinkID" :data-belongsTo="itemD5.belongsTo"
                                                                     :data-belongsToID="itemD5.belongsToID" :data-label="itemD5.label"
                                                                     :data-cssClass="itemD5.cssClass" :data-customLink="itemD5.customLink"
                                                                     :data-controller="itemD5.controller" :data-method="itemD5.method" :data-slug="itemD5.slug">
@@ -272,7 +273,7 @@
             // get all details of the selected menu (Menu links of the selected menu)
             this.loadMenuData();
 
-            var globalThis = this;
+            let globalThis = this;
             // load order plugin
             $(document).ready(function(){
                 // activate Nestable for list 1
@@ -304,6 +305,7 @@
                 menuLinkListAfterOrder:'',
                 selectedMenu: '',
                 selectedMenuID: '',
+                selectedTmpMenuID: '',
                 editPanelActiveLanguage: '',
                 selectedMenuInfoToChange: { label:{}, cssClass:'', slug:{}, linkType:'', routeName:'', routeList: {}, href: '' },
                 newMenuLinksCount: 1,
@@ -318,7 +320,7 @@
              * Change the selected menu
              */
             changeSelectedMenu(){
-                this.redirect('menu-list',this.selectedMenuID);
+                this.redirect('menu-list',this.selectedTmpMenuID);
                 location.reload();
             },
 
@@ -483,7 +485,7 @@
                 this.menuLinkListAfterOrder = '';
                 var list = e.length ? e : $(e.target),
                 output = list.data('output');
-                var changedMenuLinkList = JSON.parse(window.JSON.stringify(list.nestable('serialize')));
+                let changedMenuLinkList = JSON.parse(window.JSON.stringify(list.nestable('serialize')));
                 this.menuLinkListAfterOrder = changedMenuLinkList;
             },
 

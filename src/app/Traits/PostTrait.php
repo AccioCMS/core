@@ -53,49 +53,35 @@ trait PostTrait{
      * @param  boolean $showUnPublished check if the result should include unpublished posts or not.
      * @return object|null Returns post as array or null if not found
      **/
-    public static function findBySlug($slug, $postTypeSlug = '', $showUnPublished = false){
+    public static function findBySlug($slug, $postTypeSlug = ''){
+        $post = null;
+        $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
-        if(!$postTypeSlug){
-            $postTypeSlug = PostType::getSlug();
-        }
-
+        // search in cache
         $cachedPosts = self::getFromCache($postTypeSlug);
         if($cachedPosts){
-            if(!$showUnPublished){
-                $post = $cachedPosts->filter(function ($postData) use($slug) {
-                    return (
-                      $postData->slug == $slug &&
-                      $postData->status == 'published'
-                    );
-
-                });
-            }else{
-                $post = $cachedPosts->filter(function ($postData) use($slug) {
-                    return ($postData->slug == $slug);
-                });
-            }
+            $post = $cachedPosts->where('slug',$slug)->first();
         }
 
-        if($post->count()){
-            return $post->first();
+        if($post){
+            return $post;
         }
-        else {
-            $postObj = (new static())->setTable($postTypeSlug);
-            $getPostObj = $postObj->where('slug->'.App::getLocale(), $slug);
-            if(!$showUnPublished){
-                $getPostObj->published();
-            }
-            $post = $getPostObj->first();
+        else { // than search in database
+            $postObj = (new Post())->setTable($postTypeSlug);
+            $post = $postObj
+              ->where('slug->'.App::getLocale(), $slug)
+              ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
+              ->first();
 
-            // search post in archive if not found in main database
+            // search in archive if not found in main database
             if(!$post && env('DB_ARCHIVE')){
                 $postObj->setConnection('mysql_archive');
-                $getPostObj = $postObj->where('slug->'.App::getLocale(), $slug);
-                if(!$showUnPublished){
-                    $getPostObj->published();
-                }
-                $post = $getPostObj->first();
+                $post = $postObj
+                  ->where('slug->'.App::getLocale(), $slug)
+                  ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
+                  ->first();;
             }
+
             return $post;
         }
     }
@@ -110,36 +96,28 @@ trait PostTrait{
      * @return object|null Returns post as array or null if not found
      **/
     public static function findByID($postID, $postTypeSlug = '', $showUnPublished = false){
+        $post = null;
+        $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
-        if(!$postTypeSlug){
-            $postTypeSlug = PostType::getSlug();
-        }
-
-        //check post by ID in cache
+        // search in cache
         $cachedPosts = self::getFromCache($postTypeSlug);
-
-        if($cachedPosts) {
-            if(!$showUnPublished){
-                $post = $cachedPosts->where('status', 'published')->where('postID', $postID);
-            }else{
-                $post = $cachedPosts->where('postID', $postID);
-            }
+        if($cachedPosts){
+            $post = $cachedPosts->where('postID',$postID)->first();
         }
 
-        //if post found in cache, return first post
         if($post){
-            return $post->first();
+            return $post;
         }
-        //or search it in db
-        else {
-            $postObj = DB::table("post_".$postTypeSlug)->where('postID', $postID);
+        else { // than search in database
+            $postObj = (new Post())->setTable($postTypeSlug);
+            $post = $postObj->where('postID', $postID)->first();
 
-            //show only published posts
-            if(!$showUnPublished){
-                $postObj->where('status->'.App::getLocale(), 'published');
+            // search in archive if not found in main database
+            if(!$post && env('DB_ARCHIVE')){
+                $postObj->setConnection('mysql_archive');
+                $post = $postObj->where('postID', $postID)->first();;
             }
-
-            return $postObj->first();
+            return $post;
         }
     }
 
@@ -179,7 +157,6 @@ trait PostTrait{
             $postID = $postObj->postID;
         }else{ // on update
             $postObj = $postObj->where('postID',$data['postID'])->first();
-
             // if posts exists in the primary database
             if($postObj){
                 $populatedFields = self::populateStoreColumns($postObj, $data);
@@ -191,6 +168,7 @@ trait PostTrait{
                     DB::table('tags_relations')->where("belongsToID", $data['postID'])->delete();
                     DB::table('media_relations')->where("belongsToID", $data['postID'])->delete();
                 }
+
                 $postID = $postObj->postID;
             }else{
                 // if post exists only in the archive database
@@ -623,11 +601,11 @@ trait PostTrait{
                         if($selectedTag['tagID'] == 0){
                             $tagSlug = str_slug($selectedTag['title'],'-');
                             $tagsID = DB::table('tags')->insertGetId([
-                                'postTypeID' => $postType['postTypeID'],
-                                'createdByUserID' => Auth::user()->userID,
-                                'title' => $selectedTag['title'],
-                                'description' => $selectedTag['description'],
-                                'slug' => $tagSlug,
+                              'postTypeID' => $postType['postTypeID'],
+                              'createdByUserID' => Auth::user()->userID,
+                              'title' => $selectedTag['title'],
+                              'description' => $selectedTag['description'],
+                              'slug' => $tagSlug,
                             ]);
                         }else{
                             $tagsID = $selectedTag['tagID'];
@@ -771,49 +749,6 @@ trait PostTrait{
         return $advancedSearchFields;
     }
 
-
-    /**
-     * Advanced search for posts
-     *
-     * @param $data object data for the search (table name, title, userID, categoryID, from, to)
-     * @return object result
-     */
-    public static function advancedSearch($data){
-        $obj = DB::table($data->post_type);
-
-        // if title is not empty
-        if($data->title != ""){
-            $obj->where('title', 'like', '%'.trim($data->title).'%');
-        }
-
-        // if userID is not null
-        if($data->userID != 0){
-            $obj->where('createdByUserID', $data->userID);
-        }
-
-        // if categoryID is not null
-        if($data->categoryID != 0){
-            $relations = DB::table('categories_relations')->where('categoryID', $data->categoryID)->select('belongsToID')->get();
-            $postIDs = [];
-            foreach ($relations as $relation){
-                $postIDs[] = $relation->belongsToID;
-            }
-            $obj->whereIn('postID', $postIDs);
-        }
-
-        // if from is not empty
-        if($data->from != ""){
-            $obj->where('created_at', '>=', $data->from);
-        }
-        // if to is not empty
-        if($data->to != ""){
-            $obj->where('created_at', '<=', $data->to);
-        }
-
-        return $obj;
-    }
-
-
     /**
      *  Get a custom vuejs template for a particular default function
      *
@@ -866,15 +801,16 @@ trait PostTrait{
      * @param  int $width
      * @param  int $height
      * @param  string $defaultFeaturedImageURL The url of an image that should be returned if no featured image is found
+     * @param  array $options
      *
      * @return string|null Returns url of featured image if found, null instead
      */
-    public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = ''){
+    public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = '', array $options = []){
         if($this->hasFeaturedImage()){
             if(!$width && !$height){
                 return url($this->featuredImage->url);
             }else{
-                return $this->featuredImage->thumb($width, $height, $this->featuredImage);
+                return $this->featuredImage->thumb($width, $height, $this->featuredImage, $options);
             }
         }else if($defaultFeaturedImageURL){
             return $defaultFeaturedImageURL;
@@ -915,6 +851,7 @@ trait PostTrait{
         }
     }
 
+
     /**
      * Render Tags of a post
      *
@@ -924,12 +861,14 @@ trait PostTrait{
      * @return HtmlString
      */
     public function printTags($customView = '', $ulClass =""){
-        return new HtmlString(view()->make(($customView ? $customView : "vendor.tags.default"), [
-          'tagsList' => $this->tags,
-          'ulClass'=> $ulClass,
-          'postTypeSlug' => $this->getTable()
+        if($this->hasTags()) {
+            return new HtmlString(view()->make(($customView ? $customView : "vendor.tags.default"), [
+              'tagsList' => $this->tags,
+              'ulClass' => $ulClass,
+              'postTypeSlug' => $this->getTable()
 
-        ])->render());
+            ])->render());
+        }
     }
 
     /**
@@ -938,10 +877,7 @@ trait PostTrait{
      * @return boolean Returns true if found
      */
     public function hasTags(){
-        if(isset($this->tags) || isset($this->tags)){
-            return true;
-        }
-        return false;
+        return (isset($this->tags) && !$this->tags->isEmpty());
     }
 
     /**
@@ -949,7 +885,7 @@ trait PostTrait{
      * @return bool
      */
     public function hasCategory(){
-        return (isset($this->cachedCategory) || isset($this->category));
+        return (isset($this->categories) && !$this->categories->isEmpty());
     }
 
     /**
@@ -969,23 +905,6 @@ trait PostTrait{
 
         return $content;
     }
-
-    /**
-     * Delete all caches of posts
-     * @param  object $postData Post object needed to delete caches related to it
-     * @return void
-     */
-
-    public static function deleteCache($postData){
-        // It finds all setCache functions in current class end executes them
-        $deleteCacheMethods = preg_grep('/^deleteCache/', get_class_methods(__CLASS__));
-        foreach($deleteCacheMethods as $method){
-            if($method !== 'deleteCache') {
-                self::$method($postData);
-            }
-        }
-    }
-
 
     /**
      * @param integer $postID ID of the post
@@ -1097,5 +1016,17 @@ trait PostTrait{
         ];
     }
 
+    /**
+     * Get option value
+     * @param $field
+     * @return mixed
+     */
+    public function getOptionValue($field){
+        $postType = getPostType($this->getTable());
+        if(!$postType){
+            throw new \Exception("Post type ".$this->getTable()."' does not exists!");
+        }
+        return $postType->getMultioptionFieldValue($field, $this->{$field});
+    }
 
 }

@@ -48,7 +48,7 @@ trait MediaTrait{
 
             // uploaded file
             $file = $request->file($key);
-            $extension = $file->getClientOriginalExtension(); // getting image extension
+            $extension = strtolower($file->getClientOriginalExtension()); // getting image extension
             $fileNameWithoutExtension = str_slug(basename($file->getClientOriginalName(), '.'.$file->getClientOriginalExtension()),'-');
             $fileName = $fileNameWithoutExtension.'.'.$extension;
             $fileSizeOriginal = $file->getClientSize();
@@ -70,7 +70,7 @@ trait MediaTrait{
             $destinationOriginalPath = $destinationOriginalDirectory.'/'.$fileName;
 
             // validate file type
-            if(!in_array($extension, \App\Models\Media::allowedExtensions())){
+            if(!$this->isAllowedExtension($extension)){
                 throw new FileException("File type not allowed");
             }
 
@@ -112,8 +112,9 @@ trait MediaTrait{
                 $media->filename = $fileName;
                 $media->fileDirectory = $fileDirectory;
                 $media->filesize = round(($fileSize/1000),2);
+                $media->createdByUserID = Auth::user()->userID;
 
-                if(in_array($extension, config('media.image_extensions'))){
+                if($this->hasImageExtension($extension)){
                     $media->type = "image";
                     // if the uploaded file is a image set his dimensions in the database
                     $img = Image::make($destinationOriginalPath);
@@ -121,12 +122,14 @@ trait MediaTrait{
                     $height = $img->height();
                     $media->dimensions = $width."x".$height;
 
-                }else if(in_array($extension, config('media.document_extensions'))){
+                }else if($this->hasDocumentExtension($extension)){
                     $media->type = "document";
-                }else if(in_array($extension, config('media.audio_extensions'))){
+                }elseif($this->hasAudioExtension($extension)){
                     $media->type = "audio";
-                }else if(in_array($extension, config('media.video_extensions'))){
+                }elseif($this->hasVideoExtension($extension)){
                     $media->type = "video";
+                }else{
+                    throw new FileException("Extension type not allowed");
                 }
 
                 // Fire event
@@ -135,10 +138,10 @@ trait MediaTrait{
                 if($media->save()){
                     if ($request->fromAlbum === "true" || $request->fromAlbum === true){
                         \Illuminate\Support\Facades\DB::table('album_relations')->insert([
-                            'albumID' => $request->albumID,
-                            'mediaID' => $media->mediaID,
-                            "created_at" =>  \Carbon\Carbon::now(),
-                            "updated_at" => \Carbon\Carbon::now(),
+                          'albumID' => $request->albumID,
+                          'mediaID' => $media->mediaID,
+                          "created_at" =>  \Carbon\Carbon::now(),
+                          "updated_at" => \Carbon\Carbon::now(),
                         ]);
                     }
 
@@ -148,18 +151,7 @@ trait MediaTrait{
                     }
 
                     // Create thumbs
-                    if(in_array($extension, config('media.image_extensions'))){
-                        foreach(config('media.default_thumb_size') as $thumKey => $thumValue){
-                            if ($thumKey == "default" || $thumKey == $belongsToApp){ // only thumbs that are default and which belongs to this current app
-                                foreach ($thumValue as $thumbDimension){
-                                    $this->createThumb($media, $thumbDimension[0], $thumbDimension[1]);
-                                }
-                            }
-                        }
-                    }
-
-                    // delete cache
-                    Cache::flush();
+                    $this->createDefaultThumbs($media, $belongsToApp);
 
                     // Fire event
                     Event::fire('media:created', [$media, $request]);
@@ -181,16 +173,70 @@ trait MediaTrait{
     }
 
     /**
+     * Create default thumbs
+     * @param null $image
+     * @param string $app
+     * @return $this
+     */
+    public function createDefaultThumbs($image = null, $app = 'default'){
+        if(!$image){
+            $image = $this;
+        }
+
+        if($image->hasImageExtension()) {
+            foreach (config('media.default_thumb_size') as $thumKey => $thumValue) {
+                if ($thumKey == "default" || $thumKey == $app) { // create only the thumbs that are needed for an app
+                    foreach ($thumValue as $thumbDimension) {
+                        $this->createThumb($image, $thumbDimension[0], $thumbDimension[1]);
+                    }
+                }
+            }
+        }
+
+        return $this;
+    }
+    /**
+     * Deletes thumbs (not the default ones of cms) for a image
+     * @param Media $image
+     */
+    public function deleteThumbs($image = null){
+        if(!$image){
+            $image = $this;
+        }
+
+        // delete all thumbs of an image
+        $basePath = base_path($image->fileDirectory);
+        $allDirs = [];
+        if (is_dir($basePath)){
+            if ($dh = opendir($basePath)){
+                while (($thumbDir = readdir($dh)) !== false){
+                    if(!in_array($thumbDir, [".",".."]) && is_dir($basePath."/$thumbDir") && $thumbDir != "original"){
+                        if(file_exists($basePath."/$thumbDir/".$image->filename)){
+                            @unlink($basePath."/$thumbDir/".$image->filename);
+                        }
+                    }
+                    $allDirs[] = $thumbDir;
+                }
+                closedir($dh);
+            }
+        }
+
+        return $this;
+    }
+
+
+    /**
      * Get thumb by image and size.
      * If requested thumb does not exist, it automatically creates it.
      *
      * @param object $imageObj A single Image object
      * @param int $width Width of the image
      * @param int $height Height of the image
+     * @param array $options
      *
      * @return string|null Returns URL of thumb, null if thumb could not found or created
      */
-    public function thumb($width, $height=null, $imageObj = null){
+    public function thumb($width, $height=null, $imageObj = null, array $options = []){
         // get current  object's image in case there is no specific image given
         if(!$imageObj){
             $imageObj = $this;
@@ -200,7 +246,7 @@ trait MediaTrait{
         if(file_exists(base_path($thumbPath))){
             return asset($thumbPath);
         }else{
-            if($this->createThumb($imageObj, $width, $height)){
+            if($this->createThumb($imageObj, $width, $height, $options)){
                 return asset($thumbPath);
             }
         }
@@ -212,11 +258,12 @@ trait MediaTrait{
      *
      * @param  int $width Width of the image
      * @param  int $height Height of the image
+     * @param  array $options
      *
      * @return object
      */
-    public function makeThumb($width, $height=null){
-        $this->createThumb($this, $width, $height);
+    public function makeThumb($width, $height=null, array $options = []){
+        $this->createThumb($this, $width, $height, $options);
         return $this;
     }
 
@@ -226,20 +273,21 @@ trait MediaTrait{
      * @param  object $imageObj A single Image object
      * @param  int $width Width of the image
      * @param  int $height Height of the image
+     * @param array $options
      *
      * @return boolean
      */
-    public function createThumb($imageObj, $width, $height=null){
+    public function createThumb($imageObj, $width, $height=null, array $options = []){
         $extension = File::extension($imageObj->url);
         $basePath = base_path('/');
 
-        if (in_array($extension, config('media.image_extensions'))){
+        if ($this->hasImageExtension($extension)){
             //thumb can only be created if original source exist
             if(file_exists($basePath.$imageObj->url) && File::size($basePath.$imageObj->url)) {
                 $thumbDir = base_path($imageObj->fileDirectory . "/" . $width.($height ? 'x'.$height : ""));
 
                 if (!File::exists($thumbDir)) {
-                    if (!File::makeDirectory($thumbDir, 0775, true)) {
+                    if (!File::makeDirectory($thumbDir, 0700, true)) {
                         return false;
                     }
                 }
@@ -250,12 +298,16 @@ trait MediaTrait{
                 }
 
                 //create thumb
-                $img = Image::make($imageObj->url);
+                $img = Image::make(base_path($imageObj->url));
                 $resizedHeight = $width * 2;
-//                $img->resize($resizedHeight, null, function ($constraint) {
-//                    $constraint->aspectRatio();
-//                });
-                $img->fit($width, $height);
+
+                if(isset($options['resizeCanvas']) && $options['resizeCanvas'] === true){
+                    $img->resize($width, $height, function ($constraint) {
+                        $constraint->aspectRatio();
+                    })->resizeCanvas($width, $height);
+                }else{
+                    $img->fit($width, $height);
+                }
 
                 if ($img->save($thumbDir . '/' . $imageObj->filename, 60)) {
                     // optimize image
@@ -267,6 +319,128 @@ trait MediaTrait{
         return false;
     }
 
+
+    private function setOptions(){
+
+    }
+
+    private function getOption(){
+
+    }
+
+    /**
+     * Check if an extension is image
+     *
+     * @param $extension
+     * @return bool
+     */
+    public function hasImageExtension($extension = null){
+        if(!$extension && $this->extension){
+            $extension = $this->extension;
+        }
+
+        if(!$extension){
+            throw new \Exception("No extension given");
+        }
+
+        if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.image_extensions'))){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if an extension is video
+     *
+     * @param $extension
+     * @return bool
+     */
+    private function hasVideoExtension($extension = null){
+        if(!$extension && $this->extension){
+            $extension = $this->extension;
+        }
+        if(!$extension){
+            throw new \Exception("No extension given");
+        }
+        if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.video_extensions'))){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if an extension is audio
+     *
+     * @param $extension
+     * @return bool
+     */
+    private function hasAudioExtension($extension = null){
+        if(!$extension && $this->extension){
+            $extension = $this->extension;
+        }
+
+        if(!$extension){
+            throw new \Exception("No extension given");
+        }
+
+        if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.audio_extensions'))){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if an extension is document
+     *
+     * @param $extension
+     * @return bool
+     */
+    private function hasDocumentExtension($extension = null){
+        if(!$extension && $this->extension){
+            $extension = $this->extension;
+        }
+
+        if(!$extension){
+            throw new \Exception("No extension given");
+        }
+
+        if(array_intersect([strtolower($extension),strtoupper($extension)], config('media.document_extensions'))){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if an extension is allowed to be uploaded
+     * @param string $extension
+     * @return bool
+     */
+    private function isAllowedExtension($extension = null){
+        if(!$extension && $this->extension){
+            $extension = $this->extension;
+        }
+
+        if(!$extension){
+            throw new \Exception("No extension given");
+        }
+
+        if(array_intersect([strtolower($extension),strtoupper($extension)], self::allowedExtensions())){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @return array all allowed extensions
+     */
+    public static function allowedExtensions(){
+        return array_merge(
+          config('media.image_extensions'),
+          config('media.document_extensions'),
+          config('media.audio_extensions'),
+          config('media.video_extensions')
+        );
+    }
     /**
      * Compress & optimize an image
      *

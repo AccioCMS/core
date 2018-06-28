@@ -9,6 +9,7 @@
  */
 namespace Accio\App\Models;
 
+use App\Models\Media;
 use Illuminate\Database\Eloquent\Model;
 use DB;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,10 +17,14 @@ use Illuminate\Support\Facades\Event;
 use Image;
 use Auth;
 use Accio\App\Traits;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class MediaModel extends Model{
 
-    use Traits\MediaTrait;
+    use
+      Traits\MediaTrait,
+      LogsActivity,
+      Traits\BootEventsTrait;
 
     /**
      * Fields that can be filled in CRUD
@@ -70,6 +75,16 @@ class MediaModel extends Model{
     public static $infinitPaginationShow = 100;
 
     /**
+     * @var bool
+     */
+    protected static $logFillable = true;
+
+    /**
+     * @var bool
+     */
+    protected static $logOnlyDirty = true;
+
+    /**
      * @inheritdoc
      * */
     public function __construct(array $attributes = []){
@@ -84,52 +99,6 @@ class MediaModel extends Model{
     public function relations()
     {
         return $this->hasMany('App\Models\MediaRelation','mediaID','mediaID');
-    }
-
-    /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($media){
-            Event::fire('media:saving', [$media]);
-        });
-
-        self::saved(function($media){
-            Event::fire('media:saved', [$media]);
-        });
-
-        self::creating(function($media){
-            Event::fire('media:creating', [$media]);
-        });
-
-        self::created(function($media){
-            Event::fire('media:created', [$media]);
-        });
-
-        self::updating(function($media){
-            Event::fire('media:updating', [$media]);
-        });
-
-        self::updated(function($media){
-            Event::fire('media:updated', [$media]);
-        });
-
-        self::deleting(function($media){
-            Event::fire('media:deleting', [$media]);
-        });
-
-        self::deleted(function($media){
-            Event::fire('media:deleted', [$media]);
-        });
-    }
-
-    /**
-     * @return array all allowed extensions
-     */
-    public static function allowedExtensions(){
-        return array_merge(config('media.image_extensions'), config('media.document_extensions'), config('media.audio_extensions'), config('media.video_extensions'));
     }
 
     /**

@@ -49,11 +49,11 @@ class Search{
      */
     public function getKeyword(){
         Request::method();
-        if (Request::isMethod('post'))
+        if (\Request::route('keyword'))
         {
-            return Input::get('keyword');
-        }else{
             return \Request::route('keyword');
+        }else{
+            return Input::get('keyword');
         }
     }
 
@@ -89,7 +89,7 @@ class Search{
         if($searchInAllColumns && !$columns){
             $columns = DB::connection($this->DATABASE_CONNECTION)->select( DB::connection($this->DATABASE_CONNECTION)->raw("SHOW COLUMNS FROM $table FROM ".DB::getDatabaseName()));
             if(!$columns){
-                throw new Exception("No columns could be found for table:".$table );
+                throw new \Exception("No columns could be found for table:".$table );
             }
         }
         // get table

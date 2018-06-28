@@ -159,7 +159,6 @@ export const customFields = {
                     if(this.childrenFieldsGroups[field.customFieldID] !== undefined){
                         let fields = this.childrenFieldsGroups[field.customFieldID];
                         if(field.isTranslatable){
-
                             for(let langKey in this.languages){
                                 if(Object.keys(this.customFieldValues[groupSlug+'__'+field.slug][langKey]).length > 0){
                                     this.$store.commit("addSubCustomField", {key: groupSlug+'__'+field.slug, value: fields, lang: langKey});

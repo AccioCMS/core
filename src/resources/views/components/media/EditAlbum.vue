@@ -217,7 +217,7 @@
 
                 // get all albums with the related images
                 this.$http.get(url).then((resp) => {
-                    this.$store.commit('setList', resp.body.data);
+                    this.$store.dispatch('setList', resp.body);
                 });
             },
             // reset form

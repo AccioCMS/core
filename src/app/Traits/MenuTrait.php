@@ -31,7 +31,7 @@ trait MenuTrait
         //firstly, list them by MenuID
         $menuLinksByMenu = [];
         foreach (\App\Models\MenuLink::getFromCache() as $menuLink) {
-            $menuLinksByMenu[$menuLink['menuID']][$menuLink['menuLinkID']] = $menuLink;
+            $menuLinksByMenu[$menuLink->menuID][$menuLink->menuLinkID] = $menuLink;
         }
 
         // than go through each Menu and sort their MenuLinks
@@ -51,7 +51,7 @@ trait MenuTrait
      * */
     public static function getMenuLinks($menuSlug){
         // Set active MenuLinks
-        MenuLink::setActiveIDs();
+        MenuLink::setActiveIDs(true);
 
         $menuData = self::findBySlug($menuSlug);
         if($menuData && isset(self::$menuLinksByMenu[$menuData['menuID']])){
@@ -105,9 +105,9 @@ trait MenuTrait
         $menuLinks = self::getMenuLinks($menuSlug);
         if($menuLinks) {
             return new HtmlString(view()->make(($customView ? $customView : "vendor.menulinks.bootstrap-4"), [
-                'menuLinks' => $menuLinks,
-                'ulClass' => $ulClass,
-                'menuSlug'=> $menuSlug
+              'menuLinks' => $menuLinks,
+              'ulClass' => $ulClass,
+              'menuSlug'=> $menuSlug
 
             ])->render());
         }

@@ -3,7 +3,7 @@
 /**
  * Posts Routes
  */
-Route::group(['middleware' => ['auth:admin'], 'as' => 'backend.post.', 'namespace' => '\App\Http\Controllers\Backend', 'prefix' => Config::get('project')['adminPrefix']], function (){
+Route::group(['middleware' => ['auth:admin'],  'as' => 'backend.post.', 'namespace' => '\App\Http\Controllers\Backend', 'prefix' => Config::get('project')['adminPrefix']], function (){
     /**
      * GET
      */
@@ -12,7 +12,6 @@ Route::group(['middleware' => ['auth:admin'], 'as' => 'backend.post.', 'namespac
     Route::get('/{lang}/json/posts/details/{post_type}/{id}', 'PostController@detailsJSON')->name('detailsJSON');
     Route::get('/{lang}/json/posts/{post_type}/columns', 'PostController@getColumns')->name('getColumns');
     Route::get('/{lang}/json/posts/get-all/{post_type}', 'PostController@getAllPosts')->name('getAllPosts');
-    Route::get('/{lang}/json/posts/get-all-of-category/{post_type}/{categoryID}', 'PostController@getAllPostsOfCategory')->name('getAllPostsOfCategory');
     Route::get('/{lang}/json/posts/delete/{post_type}/{id}', 'PostController@delete')->name('delete');
     Route::get('/{lang}/json/posts/advancedSearch/{post_type}', 'PostController@getAdvancedSearchFields')->name('getAdvancedSearchFields');
     Route::get('/{lang}/json/posts/get-all-posts-without-pagination/{post_type}', 'PostController@getAllPostsWithoutPagination')->name('getAllPostsWithoutPagination');
@@ -29,6 +28,7 @@ Route::group(['middleware' => ['auth:admin'], 'as' => 'backend.post.', 'namespac
     Route::post('/json/posts/store', 'PostController@store')->name('store');
     Route::post('/json/posts/storeUpdate', 'PostController@storeUpdate')->name('storeUpdate');
     Route::post('/json/posts/advanced-search-results', 'PostController@advancedSearch')->name('advancedSearch');
+    Route::post('/{lang}/json/posts/get-all/{post_type}', 'PostController@getAllPosts')->name('getAllPosts');
 });
 
 

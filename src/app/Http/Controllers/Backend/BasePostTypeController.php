@@ -17,6 +17,8 @@ use Validator;
 use Accio\Support\Facades\Pagination;
 use App\Models\PostType;
 use App\Models\Post;
+use App\Models\Category;
+use App\Models\Tag;
 
 use Illuminate\Http\Request;
 
@@ -107,23 +109,26 @@ class BasePostTypeController extends MainController{
     }
 
     /**
-     * Delete a Post Type
-     * */
+     * Delete a Post Type by using it's ID
+     *
+     * @param $lang
+     * @param $id
+     * @return array
+     */
     public function delete($lang, $id){
         // check if user has permissions to access this link
         if(!User::hasAccess('PostType','delete')){
             return $this->noPermission();
         }
-        $postType = PostType::findByID($id);
+        $postType = PostType::find($id);
 
         // Check if this post type has posts
         // Post type should not be able to be deleted if it has posts
-        if(PostType::hasPosts($postType->slug) && PostType::isInMenuLinks($id)){
+        if(PostType::hasPosts($postType->slug) || PostType::isInMenuLinks($id)){
             return $this->response( "You can't delete this Post Type. There could be posts associated with it or it is part of a menu", 403);
         }
 
-        $postType->delete();
-        if ($postType){
+        if($this->deleteRelatedTagsAndCategory($id) && $postType->delete()){
             Schema::drop($postType->slug);
 
             // delete route file
@@ -138,11 +143,15 @@ class BasePostTypeController extends MainController{
         return $result;
     }
 
+
     /**
-     *  Bulk Delete post type
-     *  Delete many post type
-     *  @params array of post type IDs
-     * */
+     *
+     * Bulk Delete post type
+     * Delete many post type in the same time
+     *
+     * @param Request $request array of post type IDs
+     * @return array
+     */
     public function bulkDelete(Request $request){
         // check if user has permissions to access this link
         if(!User::hasAccess('PostType','delete')){
@@ -156,20 +165,19 @@ class BasePostTypeController extends MainController{
         if(isset($data['postTypes'])){
             unset($data['postTypes']);
         }
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+
         // loop throw the item array (ids) and delete them
         foreach($data as $id){
-            $postType = PostType::findByID($id);
+            $postType = PostType::find($id);
             if(!$postType){
                 continue;
             }
-            App\Models\Category::where('postTypeID', $id)->delete();
 
             if(PostType::hasPosts($postType->slug) && PostType::isInMenuLinks($id)){
                 return $this->response( "You can't delete this Post Type because there are posts associated with it.", 403);
             }
-            $postType->delete();
-            if(!$postType) {
+
+            if(!$this->deleteRelatedTagsAndCategory($id) || !$postType->delete()){
                 return $this->response( 'Post types could not be deleted. Please try again later or contact your Administrator!', 500);
             }
 
@@ -183,7 +191,39 @@ class BasePostTypeController extends MainController{
         return $this->response('Selected post types are successfully deleted', 200);
     }
 
+    /**
+     * Delete categories and tags with the relations for a post type
+     *
+     * @param int $postTypeID
+     * @return bool
+     */
+    public function deleteRelatedTagsAndCategory(int $postTypeID){
+        $categories = Category::where("postTypeID", $postTypeID);
+        $categoryIDs = $categories->pluck('categoryID')->toArray();
+        $categoriesRelations = App\Models\CategoryRelation::whereIn("categoryID", $categoryIDs);
 
+        $tags = Tag::where("postTypeID", $postTypeID);
+        $tagIDs = $tags->pluck('tagID')->toArray();
+        $tagsRelations = App\Models\TagRelation::whereIn("tagID", $tagIDs);
+
+        // return false if any delete failed
+        if(($tagsRelations->count() && !$tagsRelations->delete()) ||
+            ($categoriesRelations->count() && !$categoriesRelations->delete()) ||
+            ($tags->count() && !$tags->delete()) ||
+            ($categories->count() && !$categories->delete())
+        ){
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Delete column from DB
+     *
+     * @param string $postTypeSlug
+     * @param string $fieldSlug
+     * @return bool
+     */
     public function deleteField(string $postTypeSlug, string $fieldSlug){
         if (Schema::hasColumn($postTypeSlug, $fieldSlug)){
             Schema::table($postTypeSlug, function($table) use ($fieldSlug){
@@ -215,7 +255,7 @@ class BasePostTypeController extends MainController{
 
         // if validation fails return json response
         if ($validator->fails()) {
-            return $this->response( "Bad request", 400, null, false, false, true, $validator->errors());
+            return $this->response( "Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
         $slug = $request->slug;
@@ -234,13 +274,15 @@ class BasePostTypeController extends MainController{
         $postType->name             = $request->name;
         $postType->isVisible        = $request->isVisible;
         $postType->slug             = $slug;
-        $postType->fields           = json_encode($customFieldsArray);
+        $postType->fields           = $customFieldsArray;
         $postType->hasCategories    = $request->hasCategories;
         $postType->isCategoryRequired = $request->isCategoryRequired;
         $postType->hasTags          = $request->hasTags;
         $postType->isTagRequired    = $request->isTagRequired;
-        $postType->hasFeaturedVideo = $request->hasFeaturedVideo;
+        $postType->hasFeaturedImage = $request->hasFeaturedImage;
         $postType->isFeaturedImageRequired = $request->isFeaturedImageRequired;
+        $postType->hasFeaturedVideo = $request->hasFeaturedVideo;
+        $postType->isFeaturedVideoRequired = $request->isFeaturedVideoRequired;
 
         // return results
         if ($postType->save()){
@@ -281,13 +323,17 @@ class BasePostTypeController extends MainController{
 
         // update post type query
         $postType = App\Models\PostType::findOrFail($request->id);
-        $postType->name = $request->name;
-        $postType->isVisible = $request->isVisible;
-        $postType->fields = json_encode($customFieldsArray);
+        $postType->name             = $request->name;
+        $postType->isVisible        = $request->isVisible;
+        $postType->fields           = $customFieldsArray;
+        $postType->hasCategories    = $request->hasCategories;
         $postType->isCategoryRequired = $request->isCategoryRequired;
-        $postType->isTagRequired = $request->isTagRequired;
-        $postType->hasFeaturedVideo = $request->hasFeaturedVideo;
+        $postType->hasTags          = $request->hasTags;
+        $postType->isTagRequired    = $request->isTagRequired;
+        $postType->hasFeaturedImage = $request->hasFeaturedImage;
         $postType->isFeaturedImageRequired = $request->isFeaturedImageRequired;
+        $postType->hasFeaturedVideo = $request->hasFeaturedVideo;
+        $postType->isFeaturedVideoRequired = $request->isFeaturedVideoRequired;
 
         if($postType->save()){
             // delete fields
@@ -364,8 +410,9 @@ class BasePostTypeController extends MainController{
      * @return array post type
      */
     public function getBySlug($lang, $slug){
-        if(isset(PostType::getFromCache()[$slug])){
-            return PostType::getFromCache()[$slug];
+        $postType = PostType::collection()->where('slug', $slug);
+        if(!$postType->isEmpty()){
+            return $postType->first();
         }
         return [];
     }

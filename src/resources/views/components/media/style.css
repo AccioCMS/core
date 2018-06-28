@@ -192,6 +192,7 @@
     padding: 15px;
     overflow: auto;
     padding-bottom:50px;
+    max-height: 668px;
 }
 #filterSidebarMediaPopup{
     height: 50px;
@@ -199,15 +200,12 @@
     padding: 5px;
 }
 .imageWrapper{
-    width: 150px;
+    width: 149px;
     height: auto;
     border: 3px solid transparent;
     display: inline-block;
     padding: 5px;
-    margin-left: 7px;
-    margin-right: 7px;
-    margin-bottom: 7px;
-    margin-top: 7px;
+    margin: 0px;
     text-align: center;
     vertical-align: top;
 }
@@ -222,7 +220,7 @@
 }
 .singleImgContainer{
     width: 100%;
-    height: 138px;
+    height: 133px;
 }
 .singleImgContainer.selected{
     border: 2px solid #1aafea;

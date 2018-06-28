@@ -3,6 +3,7 @@
 namespace Accio\App\Services;
 
 use App\Models\Language;
+use App\Models\Tag;
 use Mockery\Exception;
 
 class  Meta
@@ -77,20 +78,20 @@ class  Meta
      */
     public function set($name, $content, $metaType="name", $overwrite = true){
         if($content) {
-            $content = strip_tags($content);
+            // strip html tags and encode html entities
+            $content = htmlspecialchars(strip_tags($content));
             if($overwrite) {
+                // limit length on description tag
+                if ($name == 'description' || $name == "og:description") {
+                    $content = str_limit($content, 300);
+                }
+                // allowed duplicates meta tags
                 if (in_array($name, $this->allowedDuplicateMeta)) {
                     $this->metaList[$name][] = [
                       'type' => $metaType,
                       'content' => $content
                     ];
                 } else {
-
-                    // limit lengs on description tag
-                    if ($name == 'description' || $name == "og:description") {
-                        $content = str_limit($content, 300);
-                    }
-
                     $this->metaList[$name] = [
                       'type' => $metaType,
                       'content' => $content
@@ -251,17 +252,17 @@ class  Meta
         Meta::set("article:modified_time", $postObj->updated_at->format('c'), "propery");// When the article was last changed.
 
         // Author
-        if($postObj->cachedUser()) {
-            Meta::set("article:author", $postObj->cachedUser()->firstName . " " . $postObj->cachedUser()->lastName, "propery");// Writers of the article.
+        if($postObj->user) {
+            Meta::set("article:author", $postObj->user->firstName . " " . $postObj->user->lastName, "propery");// Writers of the article.
         }
 
         // Category
-        if($postObj->cachedCategory) {
-            Meta::set("article:section", $postObj->cachedCategory->title, "propery");// - A high-level section name. E.g. Technology
+        if($postObj->hasCategory()) {
+            Meta::set("article:section", $postObj->category->title, "propery");// - A high-level section name. E.g. Technology
         }
 
         // Tags
-        if($postObj->tags){
+        if($postObj->hasTags()){
             foreach($postObj->tags as $tag){
                 Meta::set("article:tag", $tag->title, "propery");// Tag words associated with this article.
             }
@@ -431,7 +432,7 @@ class  Meta
         }
 
         if($notDefined){
-            throw new Exception('Not defined wildcards "'.implode($notDefined,', ').'". '.($errorClass ? 'Please declare them on "metaData" method of "'.$errorClass.'".' : ''));
+            throw new \Exception('Not defined wildcards "'.implode($notDefined,', ').'". '.($errorClass ? 'Please declare them on "metaData" method of "'.$errorClass.'".' : ''));
         }
 
         return true;

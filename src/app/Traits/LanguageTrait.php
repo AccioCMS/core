@@ -48,29 +48,6 @@ trait LanguageTrait
      */
     private  static $default;
 
-    /**
-     * Set default language.
-     * It fills out the $route property of MenuLinks
-     *
-     * @return void
-     * */
-    public static function setDefault(){
-        if(!self::$default){
-            if(\App\Models\Language::getFromCache()) {
-                $getDefault = \App\Models\Language::getFromCache()->where('isDefault',true);
-                if ($getDefault) {
-                    self::$default = $getDefault->first();
-                    self::$current = self::$default; //current language is the same as default one in this phase
-
-                    App::setLocale(self::$default->slug);
-                    return;
-                }
-            }
-
-            throw new Exception("Default language could not be found. Please check if a default language is defined in Administration");
-        }
-        return;
-    }
 
     /**
      * Get data of the default language
@@ -94,11 +71,37 @@ trait LanguageTrait
      * @throws Exception If unable to find current language's data
      * */
     public static function current(string $column =''){
-        if(isset(self::$current[$column])){
-            return self::$current[$column];
+        if(isset(self::$current->$column)){
+            return self::$current->$column;
         }
         return self::$current;
     }
+
+    /**
+     * Set default language.
+     * It fills out the $route property of MenuLinks
+     *
+     * @return void
+     * */
+    public static function setDefault(){
+        if(!self::$default){
+            if(\App\Models\Language::getFromCache()) {
+                $getDefault = \App\Models\Language::getFromCache()->where('isDefault',true);
+                if ($getDefault) {
+                    self::$default = $getDefault->first();
+                    self::$current = self::$default; //current language is the same as default one in this phase
+
+                    App::setLocale(self::$default->slug);
+                    Carbon::setLocale(self::$default->slug);
+                    return;
+                }
+            }
+
+            throw new \Exception("Default language could not be found. Please check if a default language is defined in Administration");
+        }
+        return;
+    }
+
 
     /**
      * Set current language across all the environment
@@ -109,7 +112,7 @@ trait LanguageTrait
     public static function setCurrent(string $languageSlug){
         $languageData  = self::findBySlug($languageSlug);
         if ($languageData) {
-            AppFacade::setLocale($languageSlug);
+            App::setLocale($languageSlug);
             Carbon::setLocale($languageSlug);
             self::$current = $languageData;
         } else {
@@ -146,8 +149,8 @@ trait LanguageTrait
      */
     public static function printLanguages($customView = '', $ulClass=''){
         return new HtmlString(view()->make(($customView ? $customView : "vendor.languages.default"), [
-            'languages' => Language::getFromCache(),
-            'ulClass' => $ulClass,
+          'languages' => Language::getFromCache(),
+          'ulClass' => $ulClass,
 
         ])->render());
     }
@@ -223,9 +226,9 @@ trait LanguageTrait
      * @return array|null Returns an array with language's data if found, or null if not found
      * */
     public static function findBySlug(string $slug){
-        $languages = \App\Models\Language::getFromCache();
-        if(isset($languages[$slug])){
-            return $languages[$slug];
+        $langauge = \App\Models\Language::getFromCache()->where('slug', $slug);
+        if(!$langauge->isEmpty()){
+            return $langauge->first();
         }
         return null;
     }
@@ -238,7 +241,7 @@ trait LanguageTrait
      * @return boolean Returns true if found, false instead
      * */
     public static function checkBySlug(string $slug){
-        if(isset(\App\Models\Language::getFromCache()[$slug])){
+        if(!\App\Models\Language::getFromCache()->where('slug', $slug)->isEmpty()){
             return true;
         }
         return false;
@@ -285,7 +288,7 @@ trait LanguageTrait
                 if(is_object($value)){
                     $jsonValue = $value;
                 }elseif(is_string($value) ){
-                // non-casts columns
+                    // non-casts columns
                     $jsonValue = json_decode($value);
                 }
 

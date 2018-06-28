@@ -11,32 +11,42 @@
  */
 namespace Accio\App\Models;
 
+
 use App\Models\Category;
 use App\Models\CategoryRelation;
 use App\Models\Language;
+use App\Models\Media;
 use App\Models\Tag;
 use App\Models\TagRelation;
 use App\Models\Task;
 use App\Models\Theme;
 use App\Models\User;
 use DateTime;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Accio\Support\Facades\Meta;
 use Mockery\Exception;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Validator;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\PostType;
 use App\Models\Post;
 use Accio\App\Traits;
+use Accio\Support\PostCollection;
 
 class PostModel extends Model{
-    use Traits\PostTrait, Traits\TranslatableTrait, Traits\CustomFieldsValuesTrait;
+    use
+      Traits\PostTrait,
+      Traits\TranslatableTrait,
+      Traits\CustomFieldsValuesTrait,
+      LogsActivity,
+      Traits\CacheTrait,
+      Traits\BootEventsTrait;
 
     /**
      * The primary table associated with the model.
@@ -58,7 +68,6 @@ class PostModel extends Model{
      * @var string $mediaField
      */
     protected $mediaField;
-
 
     /**
      * Should we always use tmp table?
@@ -86,6 +95,9 @@ class PostModel extends Model{
       'status' => 'object',
       'customFields' => 'object',
     ];
+
+    // Carbon instance fields
+    protected $dates = ['created_at', 'updated_at', 'published_at'];
 
     /**
      * The primary key of the table
@@ -115,6 +127,41 @@ class PostModel extends Model{
     public static $rowsPerPage = 25;
 
     /**
+     * @var bool
+     */
+    protected static $logFillable = true;
+
+    /**
+     * @var bool
+     */
+    protected static $logOnlyDirty = true;
+
+    /**
+     * @var int
+     */
+    public static $defaultCacheLimit = 1000;
+
+    /**
+     * @var array
+     */
+    public $autoCacheRelations = [];
+
+    /**
+     * List of default table columns
+     *
+     * NOTE: translations shall be referred via __ prefix
+     *
+     * @var array
+     */
+    public static $defaultListColumns = [
+      'postID' => '#ID',
+      'title' => '__accio::base.title',
+      'category' => '__accio::categories.labelSingle',
+      'published_at' => '__accio::post.publishedAt',
+      'author' => '__accio::user.author'
+    ];
+
+    /**
      * @inheritdoc
      * */
     public function __construct(array $attributes = []){
@@ -125,6 +172,16 @@ class PostModel extends Model{
         }
     }
 
+    /**
+     * Create a new Eloquent Collection instance.
+     *
+     * @param  array  $models
+     * @return PostCollection
+     */
+    public function newCollection(array $models = [])
+    {
+        return new PostCollection($models);
+    }
 
     /**
      * Set the table associated with the model.
@@ -165,6 +222,7 @@ class PostModel extends Model{
         $model->setTable($this->table);
         return $model;
     }
+
 
     /**
      * Define menu panel
@@ -216,63 +274,144 @@ class PostModel extends Model{
      * Get posts by Post Type, by a Category or by a custom function
      * If posts are found in cache they are served from it, otherwise it gets them from database
      *
-     * @param  string $cacheName  The name of the cache to request
-     * @param  int    $categoryID ID of the category to get the posts from
-     * @param  string $languageSlug Slug of the language to get the posts from
+     * @param  string $cacheName
+     * @param  array $attributes
+     * @param  bool $returnCollection if false, array is return
      * @return object|null  Returns all posts found as requested
-     * */
-    public  static function getFromCache($cacheName = '', $categoryID = 0, $languageSlug = ""){
+     *
+     */
 
-        // Default Language
-        if(!$languageSlug){
-            $languageSlug = \App::getLocale();
-        }
-
+    public static function getFromCache($cacheName = '', $attributes = [], $returnCollection = true){
         // Default cache name
         if(!$cacheName){
             $cacheName = PostType::getSlug();
         }
 
-        // Handle cache by post type and category
-        if(PostType::findBySlug($cacheName)){
-            // ensure post type name is right
-            $cacheName = 'post_'.cleanPostTypeSlug($cacheName);
+        $cacheInstance = self::initializeCache(Post::class, $cacheName, $attributes);
 
-            //set post type table name
-            if($categoryID){
-                return self::setCacheCategory($cacheName, $categoryID, $languageSlug);
-            }else{
-                return self::setCachePostType($cacheName, $languageSlug);
-            }
-        }else{
-            // Handle custom cache methods
+        $postTypeSlug = (isPostType($cacheName) ? $cacheName : PostType::getSlug());
+        $postTypeData = getPostType($cacheInstance->cacheAttribute('belongsTo', $postTypeSlug));
+        $data = Cache::get($cacheInstance->cacheName);
 
-            // We need an empty cache to fill it later
-            if(!Cache::has($cacheName)){
-                $cachedItems = new \stdClass();
-                Cache::forever($cacheName, $cachedItems);
-            }else{
-                //get requested cache
-                $cachedItems = Cache::get($cacheName);
-            }
-
-            // Execute cache' method if cache doesn't exist
-            if(!isset($cachedItems->$languageSlug)){
-                $functionName = 'setCache'.$cacheName;
-                if(method_exists(__CLASS__,$functionName)){
-                    return self::$functionName($languageSlug);
+        if(!$data){
+            // handle default cache methods
+            if($postTypeData){
+                if($cacheInstance->cacheAttribute('categoryID')){
+                    $data = $cacheInstance->cacheByCategory();
+                }else{
+                    $data = $cacheInstance->cache();
                 }
 
-                return null;
+            }else{ // Handle custom cache methods
+                $data = $cacheInstance->handleCustomCache(Post::class);
             }
         }
 
-        // return posts of current language
-        if(isset($cachedItems->$languageSlug)){
-            return $cachedItems->$languageSlug;
+        if($returnCollection){
+            return $cacheInstance->setCacheCollection($data,  ($postTypeData ? $postTypeData->slug : null));
         }
+
+        return $data;
     }
 
+    /**
+     * Cache posts by post type.
+     *
+     * @return Collection
+     *
+     * @throws \Exception
+     **/
+    private function cache(){
+        $postType = getPostType($this->cacheInstance->cacheAttribute('belongsTo'));
+        if(!$postType){
+            throw new \Exception($this->cacheInstance->cacheAttribute('belongsTo').' doest\'t seem like a post type slug.');
+        }
+
+        // if posts doesn't not exist in this language, query them
+        $data = (new Post())->setTable($postType->slug)
+          ->with($this->cacheInstance->cacheAttribute('with',$this->getDefaultRelations($postType)))
+          ->limit($this->cacheInstance->cacheLimit())
+          ->orderBy(
+            $this->cacheInstance->cacheAttribute('orderBy','published_at'),
+            $this->cacheInstance->cacheAttribute('orderByType','DESC')
+          )
+          ->get()
+          ->toArray();
+
+        // Save in cache
+        Cache::forever($this->cacheName,$data);
+
+        return $data;
+    }
+
+    /**
+     * Delete caches of posts by its categories.
+     *
+     * @return Collection
+     **/
+    private function cacheByCategory(){
+        $postTypeSlug = $this->cacheInstance->cacheAttribute('belongsTo', PostType::getSlug());
+        $postType = getPostType($postTypeSlug);
+        if(!$postType){
+            throw new \Exception($this->cacheInstance->cacheName.' doest\'t seem like a post type slug.');
+        }
+
+        $cacheName = 'category_posts_'.$this->cacheInstance->cacheAttribute('categoryID');
+
+        $data = (new Post())->setTable($postType->slug)
+          ->join('categories_relations','categories_relations.belongsToID',$postType->slug.'.postID')
+          ->where('categories_relations.categoryID', '=', $this->cacheInstance->cacheAttribute('categoryID'))
+          ->with($this->cacheInstance->cacheAttribute('with',$this->getDefaultRelations($postType)))
+          ->limit($this->cacheInstance->cacheLimit())
+          ->orderBy(
+            $this->cacheInstance->cacheAttribute('orderBy','published_at'),
+            $this->cacheInstance->cacheAttribute('orderByType','DESC')
+          )
+          ->get()
+          ->toArray();
+
+        // Save in cache
+        Cache::forever($this->cacheName,$data);
+
+        return $data;
+    }
+
+    /**
+     * Default method to update cache.
+     *
+     * @param $item
+     * @param bool $delete
+     */
+    public function updateCache($item, string $mode){
+        // We can't select a post that is deleted :)
+        $post = $item->where('postID', $item->postID)->with($item->getDefaultRelations(getPostType($item->getTable())))->first();
+        self::manageCacheState($item->getTable(), [], ($post ? $post : $item), $mode, self::$defaultCacheLimit);
+    }
+
+    /**
+     * Update cache in all categories
+     *
+     * @param object $post Post by language
+     */
+    private function updateCacheByCategory($item, $mode){
+        // We can't select a post that is deleted :)
+        $post = $item->where('postID', $item->postID)->with($item->getDefaultRelations(getPostType($item->getTable())))->first();
+
+        if(isset($post->categories)){
+            foreach($post->categories as $category){
+                Cache::forget('category_posts_'.$category->categoryID);
+                self::manageCacheState(
+                  'category_posts_'.$category->categoryID,[
+                  'categoryID' => $category->categoryID,
+                  'belongsTo' => $post->getTable()
+                ],
+                  $post,
+                  $mode,
+                  self::$defaultCacheLimit
+                );
+            }
+        }
+    }
 
     /**
      * Sets up the cache for the most read articles
@@ -280,41 +419,51 @@ class PostModel extends Model{
     public static function setMostReadCache(){
         // check if a article has been read
         if(Cache::has("most_read_articles_ids")){
-            // get the cached post
-            $postCount = Cache::get("most_read_articles_ids");
             // current date and time
             $currentDate = new DateTime();
 
             // use to refresh the cache "most_read_articles_ids", removes posts that are older then 2 days
-            $tmpIDsToRefresh = [];
+            $mostReadIDs = [];
+
             // used to make a new array with postID as key end the count (how many times is the post read) as value
-            $tmpArrayToSort = [];
-            foreach($postCount as $key => $post){
+            $postByCount = [];
+
+            // get the cached post
+            $currentMostReadIDs = Cache::get("most_read_articles_ids");
+            foreach($currentMostReadIDs as $key => $post){
                 $diff = (int) $currentDate->diff($post['date'])->format("%d");
                 if($diff <= 2){
-                    $tmpIDsToRefresh[$key] = $post;
-                    $tmpArrayToSort[$key] = $post['count'];
+                    $mostReadIDs[$key] = $post;
+                    $postByCount[$key] = $post['count'];
                 }
             }
-            Cache::forever("most_read_articles_ids",$tmpIDsToRefresh);
 
-            // sort the posts by value
-            arsort($tmpArrayToSort);
-            // get only the 10 most read posts IDs
-            $ids = array_slice(array_keys($postCount), 0, 10);
+            // save most read id
+            Cache::forever("most_read_articles_ids",$mostReadIDs);
 
-            // get post from db
-            $post = new Post();
-            $post->setTable("post_articles");
-            $posts = $post->whereIn("postID", $ids)->get()->keyBy("postID");
+            // @TODO cache duhet em u gjeneru prej cron-it, jo çdo here sa te hapet nje artikull me ba kete query
+            if(false && $postByCount) {
+                // sort posts by count DESC
+                arsort($postByCount);
 
-            // make array for cache and arrange the posts with the most read
-            $tmpPost = [];
-            foreach($ids as $id){
-                $tmpPost[$id] = $posts[$id];
+                // get only the 10 most read posts IDs
+                $mostReadPostIDs = array_slice(array_keys($postByCount), 0, 10);
+
+                // get post from db
+                $post = new Post();
+                $post->setTable("post_articles");
+                $posts = $post->whereIn("postID", $mostReadPostIDs)->get()->keyBy("postID");
+
+                // make array for cache and arrange the posts with the most read
+                $mosReadPosts = [];
+                foreach ($mostReadPostIDs as $id) {
+                    if (isset($posts[$id])) {
+                        $mosReadPosts[$id] = $posts[$id];
+                    }
+                }
+
+                Cache::forever("most_read_articles", $mosReadPosts);
             }
-
-            Cache::forever("most_read_articles",$tmpPost);
         }
     }
 
@@ -329,163 +478,105 @@ class PostModel extends Model{
     /**
      * @param PostModel $post
      */
-    public static function mostReadArticlesIDs(PostModel $post){
+    public function markAsReadCache($days = 2){
         if(!Cache::has("most_read_articles_ids")){
             Cache::forever("most_read_articles_ids", []);
         }
 
         // push in cache only the post that are not older than 2 days
         $currentDate = new DateTime();
-        $publishedDate = new DateTime($post->published_at);
+        $publishedDate = new DateTime($this->published_at);
         $diff = (int) $currentDate->diff($publishedDate)->format("%d");
-        if($diff <= 2){
+
+        // only save article if is newser than 2 days
+        if($diff <= $days){
             $posts = Cache::get("most_read_articles_ids");
-            if(!isset($posts[$post->postID])){
-                $posts[$post->postID] = [
+
+            // add post in list
+            if(!isset($posts[$this->postID])){
+                $posts[$this->postID] = [
                   'date' => $publishedDate,
                   'count' => 0
                 ];
             }
-            $posts[$post->postID]['count'] += 1;
+
+            $posts[$this->postID]['count'] += 1;
+
             Cache::forever("most_read_articles_ids", $posts);
         }
     }
 
+
     /**
-     * Cache posts by post type
-     *
-     * @param string $postTypeSlug
-     * @param string $languageSlug
-     * @return object
-     **/
-    private static function setCachePostType($postTypeSlug, $languageSlug){
-        if(!Cache::has($postTypeSlug)){
-            $cachedPosts = new \stdClass();
-            Cache::forever($postTypeSlug,$cachedPosts);
-        }else{
-            $cachedPosts = Cache::get($postTypeSlug);
+     * Get cache relations
+     * @param object $postType
+     */
+    public function getDefaultRelations($postType){
+        $relations = [];
+
+        if(count($this->autoCacheRelations)){
+            return $this->autoCacheRelations;
         }
 
-        // if posts doesn't not exist in this language, query them
-        if(!isset($cachedPosts->$languageSlug)){
-            $posts = (new self())->setTable($postTypeSlug)
-              ->with('featuredImage')
-              ->with('categories')
-              ->with('media')
-              ->published($languageSlug)
-              ->limit(1000)
-              ->orderBy('published_at','DESC')
-              ->get();
 
-            $cachedPosts->$languageSlug = $posts;
-
-            //save it to cache
-            Cache::forever($postTypeSlug,$cachedPosts);
-
-            return $posts;
+        // Tags
+        if($postType->hasTags){
+            $relations[] = 'tags';
         }
 
-        if(isset($cachedPosts->$languageSlug)){
-            return $cachedPosts->$languageSlug;
+        // Categories
+        if($postType->hasCategories){
+            $relations[] = 'categories';
         }
+
+        // FeaturedImage
+        $relations[] = 'featuredimage';
+
+        // Media
+        $relations[] = 'media';
+
+        return $relations;
     }
 
 
     /**
      * Gets collection of a tag ($post->tags) and returns other posts with the same tags
      *
+     * @param int $numberOfPosts
      * @return array
      */
-    public function getPostsByTagCollection(int $numberOfPosts = 1000){
-        $tmpTagIDs = [];
-        $postResult = [];
+    public function getPostsByTags(int $numberOfPosts){
+        if(!$this->hasTags()){
+            return [];
+        }
 
-        $tags = $this->tags;
-        foreach($tags as $tag){
+        $tmpTagIDs = [];
+        $postsByTags = [];
+
+        foreach($this->tags as $tag){
             $tmpTagIDs[] = $tag->tagID;
         }
 
+        return [];
+
         $count = 0;
-        $posts = Post::getFromCache($this->getTable());
+        $posts = Post::getFromCache($this->getTable())->published();
         foreach($posts as $post){
-            foreach($tags as $tag){
-                if(in_array($tag->tagID, $tmpTagIDs) && $post->postID != $this->postID && $count < $numberOfPosts){
-                    $postResult[$post->postID] = $post;
-                    $count++;
+            if($post->postID != $this->postID) {
+                foreach ($post->tags as $tag) {
+                    if (in_array($tag->tagID, $tmpTagIDs) && $count <= $numberOfPosts) {
+                        $postsByTags[] = $post;
+                        $count++;
+                    }
                 }
             }
+
             if($count == $numberOfPosts){
                 break;
             }
         }
-        return $postResult;
-    }
 
-
-    /**
-     * Delete caches of posts by post type
-     *
-     * @param object $postData Post data
-     */
-    private static function deleteCachePostType($postData){
-        Cache::forget($postData->getTable());
-    }
-
-    /**
-     * Delete caches of posts by its categories
-     *
-     * @param  string $postTypeSlug
-     * @param  int $categoryID
-     * @param  string $languageSlug
-     * @return object
-     **/
-    private  static function setCacheCategory($postTypeSlug, $categoryID, $languageSlug){
-        $cacheName = 'category_posts_'.$categoryID;
-
-        if(!Cache::has($cacheName)){
-            $cachedPosts = new \stdClass();
-            Cache::forever($cacheName,$cachedPosts);
-        }else{
-            $cachedPosts = Cache::get($cacheName);
-        }
-
-        //if posts doesn't  exists in this language, query them
-        if(!isset($cachedPosts->$languageSlug)){
-            $posts = (new self())->setTable($postTypeSlug)
-              ->join('categories_relations','categories_relations.belongsToID',$postTypeSlug.'.postID')
-              ->where('categories_relations.categoryID', '=', $categoryID)
-              ->with('featuredImage')
-              ->with('media')
-              ->published($languageSlug)
-              ->limit(1000)
-              ->orderBy($postTypeSlug.'.published_at','DESC')
-              ->get()
-              ->keyBy('postID');
-
-            $cachedPosts->$languageSlug = $posts;
-
-            Cache::forever($cacheName,$cachedPosts);
-
-            return $posts;
-        }
-
-        // return posts of current language
-        if(isset($cachedPosts->$languageSlug)){
-            return $cachedPosts->$languageSlug;
-        }
-    }
-
-    /**
-     * Delete post cache by categories
-     *
-     * @param object $postData Post by language
-     */
-    private static function deleteCacheCategories($postData){
-        if(isset($postData->categories)){
-            foreach($postData->categories as $category){
-                Cache::forget('category_posts_'.$category->categoryID);
-            }
-        }
+        return $postsByTags;
     }
 
     /**
@@ -494,51 +585,8 @@ class PostModel extends Model{
     protected static function boot(){
         parent::boot();
 
-        self::retrieved(function($post){
-            Event::fire('post:retrieved', [$post]);
-        });
-
-        self::saving(function($post){
-            Event::fire('post:saving', [$post]);
-        });
-
         self::saved(function($post){
-            self::_saved($post);
-            Event::fire('post:saved', [$post]);
-        });
-
-        self::creating(function($post){
-            Event::fire('post:creating', [$post]);
-        });
-
-        self::created(function($post){
-            // create task
-            Task::create('post','create', $post, ['postType' => $post->getTable()]);
-
-            Event::fire('post:created', [$post]);
-        });
-
-        self::updating(function($post){
-            Event::fire('post:updating', [$post]);
-        });
-
-        self::updated(function($post){
-            // create task
-            Task::create('post', 'update', $post, ['postType' =>  $post->getTable()]);
-
-            Event::fire('post:updated', [$post]);
-        });
-
-        self::deleting(function($post){
-            Event::fire('post:deleting', [$post]);
-        });
-
-        self::deleted(function($post){
-            self::_deleted($post, $post->getTable());
-            Event::fire('post:deleted', [$post]);
-
-            // create delete task
-            Task::create('post','delete', $post, ['postType' => $post->getTable()]);
+            Post::_saved($post);
         });
     }
 
@@ -549,16 +597,6 @@ class PostModel extends Model{
      * */
     public static function _saved($post){
         self::updateMenulink($post);
-        self::deleteCache($post);
-    }
-
-    /**
-     * Perform certain actions after a post is deleted
-     *
-     * @param array $post deleted post
-     * */
-    public static function _deleted($post){
-        self::deleteCache($post);
     }
 
     /**
@@ -575,7 +613,6 @@ class PostModel extends Model{
     }
 
     /**
-
      * Scope a query to only include published posts.
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
@@ -585,7 +622,9 @@ class PostModel extends Model{
             $languageSlug = App::getLocale();
         }
 
-        return $query->where('status->'.$languageSlug, 'published')->where('published_at', '<=', new DateTime());
+        return $query
+          ->where('status->'.$languageSlug, 'published')
+          ->where('published_at', '<=', new DateTime());
     }
 
     /**
@@ -711,7 +750,7 @@ class PostModel extends Model{
 
                 switch ($name) {
                     case 'postTypeSlug';
-                        $params['postTypeSlug'] = cleanPostTypeSlug($item->getTable());
+                        $params['postTypeSlug'] = cleanPostTypeSlug($this->getTable());
                         break;
 
                     case 'postSlug';
@@ -740,7 +779,7 @@ class PostModel extends Model{
             }
             return route($routeName, $params);
         }else{
-            throw new Exception("Route $routeName not found");
+            throw new \Exception("Route $routeName not found");
         }
     }
 
@@ -749,58 +788,45 @@ class PostModel extends Model{
      */
     public function metaData(){
         Meta::setTitle($this->title)
-            ->set("description", $this->content())
-            ->set("author", $this->cachedUser()->firstName." ".$this->cachedUser()->lastName)
-            ->set("og:type", "article", "property")
-            ->set("og:title", $this->title, "property")
-            ->set("og:description", $this->content(), "property")
-            ->set("og:url",$this->href, "property")
-            ->setImageOG($this->featuredImage)
-            ->setArticleOG($this)
-            ->setHrefLangData($this)
-            ->setCanonical($this->href)
-            ->setWildcards([
-                '{categoryTitle}'=>(isset($this->cachedCategory->title) ? $this->cachedCategory->title :  null),
-                '{title}' => $this->title,
-                '{siteTitle}' => settings('siteTitle')
-            ]);
+          ->set("description", $this->content())
+          ->set("author", ($this->user ? $this->user->firstName." ".$this->user->lastName : null) )
+          ->set("og:type", "article", "property")
+          ->set("og:title", $this->title, "property")
+          ->set("og:description", $this->content(), "property")
+          ->set("og:url",$this->href, "property")
+          ->setImageOG(($this->hasFeaturedImage() ? $this->featuredImage : null))
+          ->setArticleOG($this)
+          ->setHrefLangData($this)
+          ->setCanonical($this->href)
+          ->setWildcards([
+            '{categoryTitle}'=>($this->hasCategory() ? $this->category->title :  null),
+            '{title}' => $this->title,
+            '{siteTitle}' => settings('siteTitle')
+          ]);
     }
 
-    /**
-     * Featured image of a post
-     * @return HasOne
-     */
-    public function featuredImage()
-    {
-        return $this->hasOne('App\Models\Media','mediaID','featuredImageID');
-    }
 
-    /**
-     * Featured video of a post
-     * @return HasOne
-     */
-    public function featuredVideo()
-    {
-        return $this->hasOne('App\Models\Media','mediaID','featuredVideoID');
-    }
-
-    /**
-     * Media that belong to a Post
-     * @return HasManyThrough
-     */
-    public function media()
-    {
-        $query =  $this->hasManyThrough('App\Models\Media', 'App\Models\MediaRelation','belongsToID','mediaID','postID', 'mediaID');
-
-        if($this->mediaField){
-            $query->where('media_relations.field',$this->mediaField);
+    public function getMediaAttribute(){
+        // when attribute is available, weo don't ned to re-run relation
+        if ($this->attributeExists('media')) {
+            $items = $this->getAttributeFromArray('media');
+            // when Collection is available, we already have the data for this attribute
+            if(!$items instanceof Collection) {
+                $items = $this->fillCacheAttributes(Media::class, $items);
+            }
+        }
+        // or search tags in relations
+        else{
+            $items = $this->getRelationValue('media');
         }
 
-        // We also need 'field' from media relations, so we can select media based on field name
-        $query->select(['media.*','media_relations.field']);
+        if(is_null($items)){
+            return collect([]);
+        }
 
-        return $query;
+        return $items;
     }
+
 
     /**
      * Get media of a specific field
@@ -831,18 +857,47 @@ class PostModel extends Model{
     }
 
     /**
-     * Get Cached Tags
-     *
-     * @return string
+     * Media that belong to a Post
+     * @return HasManyThrough
      */
-    public function getCachedTagsAttribute()
+    public function media()
     {
-        // Find cached relations from this post type
-        $relations = TagRelation::getFromCache($this->getTable())->where('belongsToID',$this->postID);
-        $tagsID = $relations->pluck(['tagID'])->all();
+        $this->setConnection("mysql"); //@todo temporary, se po i thirr prje arkives kur posti eshte i arkives
+        $query =  $this->hasManyThrough('App\Models\Media', 'App\Models\MediaRelation','belongsToID','mediaID','postID', 'mediaID');
 
-        // Find cached tags from relations
-        return \App\Models\Tag::getFromCache($this->getTable())->whereIn('tagID',$tagsID);
+        if($this->mediaField){
+            $query->where('media_relations.field',$this->mediaField);
+        }
+
+        // We also need 'field' from media relations, so we can select media based on field name
+        $query->select(['media.*','media_relations.field']);
+
+        return $query;
+    }
+
+    /**
+     * Generate default URL to a post
+     *
+     * @return Collection
+     */
+    public function getTagsAttribute()
+    {
+        // request caregory only if post type use categories
+        $getPostType = getPostType($this->getTable());
+        if($getPostType->hasTags) {
+            // when attribute is available, weo don't ned to re-run relation
+            if ($this->attributeExists('tags')) {
+                $items = $this->getAttributeFromArray('tags');
+                // when Collection is available, we already have the data for this attribute
+                if (!$items instanceof Collection) {
+                    $items = $this->fillCacheAttributes(Tag::class, $items);
+                }
+                return $items;
+            } // or search tags in relations
+            else {
+                return $this->getRelationValue('tags');
+            }
+        }
     }
 
     /**
@@ -850,17 +905,34 @@ class PostModel extends Model{
      *
      * @return string
      */
-    public function getCachedCategoriesAttribute()
+    public function getCategoriesAttribute()
     {
-        // Find cached relations from this post type
-        $relations = CategoryRelation::getFromCache($this->getTable())->where('belongsToID',$this->postID);
-        $categoriesID = $relations->pluck(['categoryID'])->all();
+        // request caregory only if post type use categories
+        $getPostType = getPostType($this->getTable());
+        if($getPostType->hasCategories) {
+            if ($this->attributeExists('categories')) {
+                $items = $this->getAttributeFromArray('categories');
+                // when Collection is available, we already have the data for this attribute
+                if (!$items instanceof Collection) {
+                    $items = $this->fillCacheAttributes(Category::class, $items);
+                }
+                return $items;
+            } else {
 
-        // Find cached categories from relations
-        if(Category::getFromCache()){
-            return Category::getFromCache()->whereIn('categoryID',$categoriesID);
+                // Try to find categories in cache
+                $categoriesID = CategoryRelation::getFromCache($this->getTable())
+                  ->where('belongsToID', $this->postID)
+                  ->pluck(['categoryID'])
+                  ->all();
+
+                if ($categoriesID) {
+                    return Category::getFromCache()->whereIn('categoryID', $categoriesID);
+                }
+
+                // or search in relations
+                return $this->getRelationValue('categories');
+            }
         }
-        return;
     }
 
     /**
@@ -868,32 +940,95 @@ class PostModel extends Model{
      *
      * @return string
      */
-    public function getCachedCategoryAttribute()
+    public function getCategoryAttribute()
     {
-        // Find cached relations from this post type
-        $relations = CategoryRelation::getFromCache($this->getTable())->where('belongsToID',$this->postID );
-        $categoryID = $relations->pluck(['categoryID'])->first();
-
-        // Find cached categories from relations
-        if(Category::getFromCache()){
-            return Category::getFromCache()->where('categoryID',$categoryID)->first();
+        if(!is_null($this->categories)){
+            return $this->categories->first();
         }
 
         return;
     }
 
     /**
-     * Get Cached user that belongs to a post
+     * Get user that belongs to a post
      * @return HasOne
      */
-    public function cachedUser()
+    public function getUserAttribute()
     {
-        if(User::getFromCache()) {
-            $user = User::getFromCache()->where('userID', $this->createdByUserID);
-            return $user->first();
+
+        if($this->createdByUserID){
+            // when attribute is available, weo don't ned to re-run relation
+            if ($this->attributeExists('user')) {
+                $items = $this->getAttributeFromArray('user');
+                // when Collection is available, we already have the data for this attribute
+                if(!$items instanceof Collection) {
+                    if($this->createdByUserID){
+                        $items =  User::getFromCache()->where('userID', $this->createdByUserID)->first();
+                    }
+                }
+
+                return $items;
+            }else{
+                // search in cache
+                $user = User::getFromCache()->where('userID', $this->createdByUserID)->first();
+
+                // search in database
+                if (!$user) {
+                    $user = $this->getRelationValue('user');
+                }
+                return $user;
+            }
         }
-        return;
+        return null;
     }
+
+    /**
+     * Get Featured Image that belong to a post
+     * @return HasOne
+     */
+    public function getFeaturedImageAttribute()
+    {
+        if($this->featuredImageID) {
+            // when attribute is available, weo don't ned to re-run relation
+            if ($this->attributeExists('featuredimage')) {
+                $items = $this->getAttributeFromArray('featuredimage');
+                // when Collection is available, we already have the data for this attribute
+                if (!$items instanceof Collection) {
+                    $items = $this->fillCacheAttributes(Media::class, $items)->first();
+                }
+
+                return $items;
+            } // or search tags in relations
+            else {
+                return $this->getRelationValue('featuredImage');
+            }
+        }
+    }
+
+    /**
+     * Featured image of a post
+     * @return HasOne
+     */
+    public function featuredImage()
+    {
+        $this->setConnection("mysql"); //@todo temporary, se po i thirr prje arkives kur posti eshte i arkives
+        return $this->hasOne('App\Models\Media','mediaID','featuredImageID');
+    }
+
+    /**
+     * Featured video of a post
+     * @return HasOne
+     */
+    public function featuredVideo()
+    {
+//        if(!$this->featuredVideoID){
+//            return $this->query;
+//        }
+        $this->setConnection("mysql"); //@todo temporary, se po i thirr prje arkives kur posti eshte i arkives
+        return $this->hasOne('App\Models\Media','mediaID','featuredVideoID');
+    }
+
+
     /**
      * The users that belong to the role.
      */
@@ -909,6 +1044,9 @@ class PostModel extends Model{
     public function categories()
     {
         $findPostType = PostType::findBySlug($this->getTable());
+        if(!$findPostType){
+            throw new \Exception("TaCategories  relations could not be made because the post type of the post #".$this->postID." could ont be found!");
+        }
         return $this->hasManyThrough('App\Models\Category', 'App\Models\CategoryRelation','belongsToID','categoryID','postID','categoryID')->where('postTypeID',$findPostType->postTypeID);
     }
 
@@ -919,6 +1057,9 @@ class PostModel extends Model{
     public function tags()
     {
         $findPostType = PostType::findBySlug($this->getTable());
+        if(!$findPostType){
+            throw new \Exception("Tag relations could not be made because the post type of the post #".$this->postID." could ont be found!");
+        }
         return $this->hasManyThrough('App\Models\Tag', 'App\Models\TagRelation','belongsToID','tagID','postID','tagID')->where('postTypeID',$findPostType->postTypeID);
     }
 

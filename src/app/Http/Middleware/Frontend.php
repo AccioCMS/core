@@ -56,7 +56,6 @@ class Frontend
 
         // Initialize Theme
         new Theme();
-
         return $next($request);
     }
 }

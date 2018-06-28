@@ -2,6 +2,7 @@
 
 namespace Accio\App\Models;
 
+use App\Models\Tag;
 use DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -10,10 +11,16 @@ use Illuminate\Support\Facades\Event;
 use Accio\App\Traits;
 use App\Models\PostType;
 use Accio\Support\Facades\Meta;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class TagModel extends Model{
 
-    use Traits\TagTrait;
+    use
+      Traits\TagTrait,
+      LogsActivity,
+      Traits\CacheTrait,
+      Traits\BootEventsTrait;
+
     /**
      * Fields that can be filled in CRUD
      *
@@ -56,54 +63,22 @@ class TagModel extends Model{
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
 
     /**
+     * @var bool
+     */
+    protected static $logFillable = true;
+
+    /**
+     * @var bool
+     */
+    protected static $logOnlyDirty = true;
+
+    /**
      * @inheritdoc
      * */
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
         Event::fire('tags:construct', [$this]);
-    }
-
-    /**
-     * Get tags from cache. Cache is generated if not found
-     *
-     * @param  string $cacheName Name of the cache ex "post_services". Prefix "tags_" is added automatically on cache name.
-     * @return object|null  Returns requested cache if found, null instead
-     */
-    public static function getFromCache($cacheName =''){
-        if(!Cache::has("tags")){
-            //custom cache
-            $functionName = 'setCache_'.$cacheName;
-            if(method_exists(__CLASS__,$functionName)){
-                return self::$functionName($cacheName);
-            }else{
-                // all tags
-                return self::setCache_All();
-            }
-        }
-
-        return Cache::get("tags");
-    }
-
-    /**
-     * Set cache
-     *
-     * @return object
-     */
-    private static function setCache_All(){
-        $items = self::all();
-        Cache::forever('tags',$items);
-        return $items;
-    }
-
-    /**
-     * Delete all tags cache
-     *
-     * @param object $tag A single tag object
-     * @param string $mode Set "saved" or 'deleted" mode
-     */
-    private static function deleteCache_All($tag, $mode){
-        Cache::forget('tags');
     }
 
     /**
@@ -128,70 +103,15 @@ class TagModel extends Model{
     }
 
     /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($postType){
-            Event::fire('tag:saving', [$postType]);
-        });
-
-        self::saved(function($tag){
-            Event::fire('tag:saved', [$tag]);
-            self::_saved($tag);
-        });
-
-        self::creating(function($tag){
-            Event::fire('tag:creating', [$tag]);
-        });
-
-        self::created(function($tag){
-            Event::fire('tag:created', [$tag]);
-        });
-
-        self::updating(function($tag){
-            Event::fire('tag:updating', [$tag]);
-        });
-
-        self::updated(function($tag){
-            Event::fire('tag:updated', [$tag]);
-        });
-
-        self::deleting(function($tag){
-            Event::fire('tag:deleting', [$tag]);
-        });
-
-        self::deleted(function($tag){
-            Event::fire('tag:deleted', [$tag]);
-            self::_deleted($tag);
-        });
-    }
-
-    /**
-     * Perform certain actions after a tag is saved
+     * Check if a post has featured image
      *
-     * @param object $tag Saved tag
-     * */
-    private static function _saved($tag){
-        //delete existing cache
-        $deleteCacheMethods = preg_grep('/^deleteCache_/', get_class_methods(__CLASS__));
-        foreach($deleteCacheMethods as $method){
-            self::$method($tag, "saved");
+     * @return boolean Returns true if found
+     */
+    public function hasFeaturedImage(){
+        if($this->featuredImageID && $this->featuredImage){
+            return true;
         }
-    }
-
-    /**
-     * Perform certain actions after a tag is deleted
-     *
-     * @param object $tag Deleted tag
-     * */
-    private static function _deleted($tag){
-        //delete existing cache
-        $deleteCacheMethods = preg_grep('/^deleteCache_/', get_class_methods(__CLASS__));
-        foreach($deleteCacheMethods as $method){
-            self::$method($tag,"deleted");
-        }
+        return false;
     }
 
     /**
@@ -202,7 +122,6 @@ class TagModel extends Model{
     {
         return $this->hasOne('App\Models\Media','mediaID','featuredImageID');
     }
-
 
     /**
      * Define single user's SEO Meta data
@@ -216,7 +135,7 @@ class TagModel extends Model{
             ->set("og:title", $this->title, "property")
             ->set("og:description", $this->description, "property")
             ->set("og:url",$this->href, "property")
-            ->setImageOG($this->featuredImage)
+            ->setImageOG(($this->hasFeaturedImage() ? $this->featuredImage : null))
             ->setCanonical($this->href)
             ->setWildcards([
                 '{title}' => $this->title,

@@ -106,7 +106,7 @@ class BaseLanguageController extends MainController{
         ], $messages);
         // if validation fails return json response
         if ($validator->fails()) {
-            return $this->response( "Bad request", 400, null, false, false, true, $validator->errors());
+            return $this->response( "Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
         // Make data a object
@@ -199,7 +199,7 @@ class BaseLanguageController extends MainController{
 
         // if validation fails return json response
         if ($validator->fails()) {
-            return $this->response("Bad request", 400, null, false, false, true, $validator->errors());
+            return $this->response("Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
         if($request->isDefault == true){
             // remove the current default language ( set it to non-default ) if this new one is the default

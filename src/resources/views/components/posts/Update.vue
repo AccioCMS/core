@@ -480,7 +480,7 @@
 
                     <!-- Date and time when the post should be displayed -->
                     <div class="form-group dateAndTimepicker">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__schedulePost}}</label>
+                        <label class="control-label col-md-12 col-sm-12 col-xs-12">{{trans.__publishedAt}}</label>
                         <div class="col-md-12 col-sm-12 col-xs-12 datepickerContainer postsDatepicker">
                             <datepicker v-model="published_at.date" name="date" class="col-md-8 col-sm-8 removePaddingAndMargin" :format="dateFormat"></datepicker>
                             <vue-timepicker v-model="published_at.time" class="col-md-4 col-sm-4"></vue-timepicker>
@@ -590,7 +590,7 @@
                 __categoryTitle: this.__('categories.title'),
                 __tagsTitle: this.__('tags.title'),
                 __visibleIn: this.__('post.visibleIn'),
-                __schedulePost: this.__('post.schedulePost'),
+                __publishedAt: this.__('post.publishedAt'),
                 __multiselectCategoriesPlaceholder: this.__('post.multiselectCategoriesPlaceholder'),
                 __multiselectTagPlaceholder: this.__('post.multiselectTagPlaceholder'),
                 __multiselectAddTagPlaceholder: this.__('post.multiselectAddTagPlaceholder'),
@@ -606,6 +606,7 @@
             // permissions
             this.hasAddPermission = this.hasPermission(this.$route.params.post_type, 'create');
 
+            // generate input data
             this.loadUpdateInputs();
             // get plugin panels
             this.getPluginsPanel(['post', this.$route.params.post_type], 'update');
@@ -623,7 +624,6 @@
                 customFieldOriginalStructure: [],
                 customFieldsGroups: [],
                 childrenFieldsGroups: [],
-                columnSlugs: '',
                 selected: [],
                 isSlugDisabled: true,
                 form:[],
@@ -674,7 +674,7 @@
             },
 
             /**
-             * Used to construct custom fields values of the input type 'db'
+             * Used to construct fields values of the input type 'db'
              * @param formData
              * @returns {Array} custom field arrays
              */
@@ -689,11 +689,12 @@
                             continue;
                         }
 
+                        let id;
                         // primary key name
                         if(formData[k].dbTable.belongsTo == "User"){
-                            var id = "userID";
+                            id = "userID";
                         }else if(formData[k].dbTable.belongsTo == "PostType"){
-                            var id = "postID";
+                            id = "postID";
                         }
 
                         // if custom field is translatable
@@ -733,7 +734,7 @@
                                 // array of object if custom field is multi options
                                 if(formData[k].isMultiple){
                                     if(formData[k].value !== undefined){
-                                        var formDataValue = JSON.parse(formData[k].value);
+                                        let formDataValue = JSON.parse(formData[k].value);
                                         for(let key in formDataValue){
                                             if(parseInt(formData[k].data[dataKey][id]) == parseInt(formDataValue[key])){
                                                 value[count] = formData[k].data[dataKey];
@@ -799,14 +800,14 @@
                 // gets media files of custom fields and writes them to their v-models
                 this.constructMediaForCustomFields();
 
-                var dateFormatted = "";
+                let dateFormatted = "";
                 if(this.published_at.date != ""){
-                    var date = this.published_at.date;
-                    var month = parseInt(date.getMonth())+1;
+                    let date = this.published_at.date;
+                    let month = parseInt(date.getMonth())+1;
                     dateFormatted = date.getDate() + "-" + month + "-" + date.getFullYear();
                 }
                 this.published_at.dateFormatted = dateFormatted;
-                var request = {
+                let request = {
                     formData: this.form,
                     pluginsData: this.pluginsData,
                     customFieldValues: this.customFieldValues,
@@ -894,8 +895,8 @@
              * @param mediaID
              */
             deleteSelectedMediaFile(key, mediaID){
-                var mediaArr = this.mediaSelectedFiles;
-                for(var k in mediaArr[key]){
+                let mediaArr = this.mediaSelectedFiles;
+                for(let k in mediaArr[key]){
                     if(key == "featuredImage" || key == "featuredVideo"){
                         delete mediaArr[key];
                         continue;

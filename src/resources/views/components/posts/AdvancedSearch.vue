@@ -125,7 +125,7 @@
                 this.$store.commit('setSpinner', true);
                 this.$http.post(this.advancedSearchPostUrl, this.form)
                     .then((resp) => {
-                        this.$store.commit('setList', resp.body);
+                        this.$store.dispatch('setList', resp.body);
 
                         this.$router.push({ query: {
                                 pagination: this.form.page,

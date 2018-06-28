@@ -23,7 +23,7 @@ return [
     'published' => 'Published',
     'draft' => 'Draft',
     'pending' => 'Pending',
-    'schedulePost' => 'Published at',
+    'publishedAt' => 'Published at',
     'createFormTitle' => 'Create post form',
     'updateFormTitle' => 'Update post form',
     'prevLink' => 'Preview',

@@ -85,7 +85,7 @@ class BasePermissionController extends MainController{
         ], $messages);
         // if validation fails return json response
         if($validator->fails()){
-            return $this->response( "Bad request", 400,null, false, false, true, $validator->errors());
+            return $this->response( "Please check all required fields!", 400,null, false, false, true, $validator->errors());
         }
 
         $id = $request->id;
@@ -144,7 +144,7 @@ class BasePermissionController extends MainController{
                                 foreach($object as $value){
                                     $class = "App\\Models\\".$appName;
                                     $model = new $class();
-                                    $IDs['ID'.$c] = $value[$model->primaryKey];
+                                    $IDs['ID'.$c] = $value[$model->getKeyName()];
                                     $c++;
                                 }
                                 $query[] = array(
@@ -271,7 +271,7 @@ class BasePermissionController extends MainController{
         }
         // push primary key in selected
         $selected = $request->customPermissions['select'];
-        array_push($selected, $class->primaryKey);
+        array_push($selected, $class->getKeyName());
         $list = $obj->select($selected)->get();
         // filter by language
         $filteredArr = Language::filterRows($list, false );
@@ -287,7 +287,7 @@ class BasePermissionController extends MainController{
                 }
             }
             array_push($result, array(
-                $class->primaryKey => $filtered[$class->primaryKey],
+                $class->primaryKey => $filtered[$class->getKeyName()],
                 'title' => $title
             ));
 
@@ -383,7 +383,7 @@ class BasePermissionController extends MainController{
                                         $class = new $className(); // generated class from model name
                                         // get list from DB by using it's IDS
                                         $IDs = array_values(json_decode($pemissionsValue->ids, true));
-                                        $listFromDB = DB::table($class->table)->whereIn($class->primaryKey, $IDs)->get();
+                                        $listFromDB = DB::table($class->table)->whereIn($class->getKeyName(), $IDs)->get();
                                         // selected columns of table set in the model array of custom permissions
                                         $columns = $app['customPermissions'][$pemissionsValue->key]['value']['select'];
 
@@ -406,7 +406,7 @@ class BasePermissionController extends MainController{
                                                 }
                                                 $count++;
                                             }
-                                            $primaryKey = $class->primaryKey;
+                                            $primaryKey = $class->getKeyName();
                                             $app['customPermissionsValues'][$pemissionsValue->key][] = ['title' => $title, $primaryKey => $item->$primaryKey];
                                         }
                                         break;

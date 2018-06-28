@@ -136,6 +136,7 @@
             addLinkInMenu(){
                 let index = Object.keys(this.menuLinkList).length;
                 let tmpLinks = this.menuLinkList;
+                this.$store.commit('setMenuLinkList', {});
                 for(let k in this.selectedLinks){
 
                     let routeList = this.panel.routes.list;
@@ -167,7 +168,6 @@
                     index++;
                 }
 
-                this.$store.commit('setMenuLinkList', {});
                 this.$store.commit('setMenuLinkList', tmpLinks);
                 this.selectedLinks = [];
             },

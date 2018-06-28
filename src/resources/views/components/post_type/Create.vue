@@ -115,6 +115,21 @@
                                 </div>
                             </div>
 
+                            <div class="form-group" id="form-group-hasFeaturedImage">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__hasFeaturedImage}}</label>
+                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                    <div id="hasFeaturedImage" class="btn-group" data-toggle="buttons">
+                                        <label class="btn btn-default yes" :class="{active: form.hasFeaturedImage}" @click="form.hasFeaturedImage = true">
+                                            <input type="radio" name="hasFeaturedImage" value="true"> &nbsp; {{trans.__true}} &nbsp;
+                                        </label>
+                                        <label class="btn btn-primary active no" :class="{active: !form.hasFeaturedImage}" @click="form.hasFeaturedImage = false">
+                                            <input type="radio" name="hasFeaturedImage" value="false"> {{trans.__false}}
+                                        </label>
+                                        <div class="alert" v-if="StoreResponse.errors.hasFeaturedImage" v-for="error in StoreResponse.errors.hasFeaturedImage">{{ error }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="form-group" id="form-group-isFeaturedImageRequired">
                                 <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__isFeaturedImageRequired}}</label>
                                 <div class="col-md-6 col-sm-6 col-xs-12">
@@ -141,6 +156,21 @@
                                             <input type="radio" name="hasFeaturedVideo" value="false"> {{trans.__false}}
                                         </label>
                                         <div class="alert" v-if="StoreResponse.errors.hasFeaturedVideo" v-for="error in StoreResponse.errors.hasFeaturedVideo">{{ error }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="form-group-isFeaturedVideoRequired">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__isFeaturedVideoRequired}}</label>
+                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                    <div id="isFeaturedVideoRequired" class="btn-group" data-toggle="buttons">
+                                        <label class="btn btn-default yes" :class="{active: form.isFeaturedVideoRequired}" @click="form.isFeaturedVideoRequired = true">
+                                            <input type="radio" name="isFeaturedVideoRequired" value="true"> &nbsp; {{trans.__true}} &nbsp;
+                                        </label>
+                                        <label class="btn btn-primary active no" :class="{active: !form.isFeaturedVideoRequired}" @click="form.isFeaturedVideoRequired = false">
+                                            <input type="radio" name="isFeaturedVideoRequired" value="false"> {{trans.__false}}
+                                        </label>
+                                        <div class="alert" v-if="StoreResponse.errors.isFeaturedVideoRequired" v-for="error in StoreResponse.errors.isFeaturedVideoRequired">{{ error }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -327,6 +357,8 @@
                 __hasTags: this.__('postType.form.hasTags'),
                 __isTagRequired: this.__('postType.form.isTagRequired'),
                 __hasFeaturedVideo: this.__('postType.form.hasFeaturedVideo'),
+                __isFeaturedVideoRequired: this.__('postType.form.isFeaturedVideoRequired'),
+                __hasFeaturedImage: this.__('postType.form.hasFeaturedImage'),
                 __isFeaturedImageRequired: this.__('postType.form.isFeaturedImageRequired'),
                 __true: this.__('base.booleans.true'),
                 __false: this.__('base.booleans.false'),
@@ -372,8 +404,10 @@
                     isCategoryRequired: false,
                     hasTags: false,
                     isTagRequired: false,
+                    hasFeaturedImage: true,
                     isFeaturedImageRequired: false,
                     hasFeaturedVideo: false,
+                    isFeaturedVideoRequired: false,
                     redirect: '',
                     fields: []
                 },

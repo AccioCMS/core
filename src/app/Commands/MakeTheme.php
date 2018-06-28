@@ -54,7 +54,7 @@ class MakeTheme extends Command
         $authEnabled = $this->choice('Include user account functionality?', ['No', 'Yes'], 0);
         $setAsActive = $this->choice('Do you want to make this theme active after its creation?', ['No', 'Yes'], 0);
 
-        $this->info("Creating theme");
+        $this->info("Creating theme...");
 
         $dummyTheme = new DummyTheme([
           'title' => $title,

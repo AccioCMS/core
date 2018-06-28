@@ -158,7 +158,7 @@
                 this.$store.commit('setSpinner', true);
                 this.$http.post(this.searchURL, this.form)
                     .then((resp) => {
-                        this.$store.commit('setList', resp.body);
+                        this.$store.dispatch('setList', resp.body);
 
                         var urlParams = '';
                         var count = 0;

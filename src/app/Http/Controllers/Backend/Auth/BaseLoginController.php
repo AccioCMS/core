@@ -43,7 +43,7 @@ class BaseLoginController extends MainController {
      * @return string
      */
     protected function redirectTo(){
-        return '/'.Config::get('project')['adminPrefix'].'?mode=cms';
+        return '/'.Config::get('project')['adminPrefix'].'?mode=menu';
     }
 
     /**

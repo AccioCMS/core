@@ -2,16 +2,18 @@
 
 namespace Accio\App\Models;
 
+use App\Models\Plugin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Accio\App\Traits;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class PluginModel extends Model{
 
-    use Traits\PluginTrait;
+    use Traits\PluginTrait, LogsActivity, Traits\CacheTrait;
 
     /**
      * The table associated with the model.
@@ -43,28 +45,22 @@ class PluginModel extends Model{
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
 
     /**
+     * @var bool
+     */
+    protected static $logFillable = true;
+
+    /**
+     * @var bool
+     */
+    protected static $logOnlyDirty = true;
+
+    /**
      * @inheritdoc
      * */
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
         Event::fire('plugin:construct', [$this]);
-    }
-
-    /**
-     * Get settings from cache. Cache is generated if not found
-     *
-     * @return object|null  Returns requested cache if found, null instead
-     */
-    public static function getFromCache(){
-        if(!Cache::has('plugins')){
-            $getData = self::all();
-            Cache::forever('plugins', $getData);
-
-            return $getData;
-        }
-
-        return Cache::get('plugins');
     }
 
     /**
@@ -79,7 +75,6 @@ class PluginModel extends Model{
 
         self::saved(function($plugin){
             Event::fire('plugin:saved', [$plugin]);
-            Cache::forget('plugins');
         });
 
         self::creating(function($plugin){
@@ -104,7 +99,6 @@ class PluginModel extends Model{
 
         self::deleted(function($plugin){
             Event::fire('plugin:deleted', [$plugin]);
-            Cache::forget('plugins');
         });
     }
 

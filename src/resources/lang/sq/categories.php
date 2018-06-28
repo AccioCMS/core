@@ -2,6 +2,7 @@
 return [
     'title' => 'Categories',
     'label' => 'Categories',
+    'labelSingle' => 'Kategoria',
     'listTitle' => 'All categories',
     'updateTitle' => 'Update category',
     'add' => 'Add category',

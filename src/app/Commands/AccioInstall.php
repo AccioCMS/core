@@ -344,19 +344,19 @@ class AccioInstall extends Command{
         $this->advanceBar();
 
         $this->info("Creating examples media files");
-        (new \MediaDevSeeder())->run(10);
+        (new \MediaDevSeeder())->run(20);
         $this->advanceBar();
 
         // Create tags example
         $this->info("Creating example tags");
-        (new \TagDevSeeder())->run();
+        (new \TagDevSeeder())->run(20, null, true);
         $this->advanceBar();
 
         // Create a category
         $this->info("Creating an example category");
         $categoryObj = new \CategoryDevSeeder();
         $categoryObj->exampleTitles = true;
-        $categoryObj->run();
+        $categoryObj->run(3, null);
         $this->advanceBar();
 
         // Create default permalinks
@@ -370,7 +370,7 @@ class AccioInstall extends Command{
         $this->advanceBar();
 
         $this->info("Creating example posts");
-        (new \PostDevSeeder())->run(3);
+        (new \PostDevSeeder())->run(0, 5,'', 0, 0, 0, true);
         $this->advanceBar();
 
         // Create Primary Menu
@@ -445,7 +445,7 @@ class AccioInstall extends Command{
         $this->DB_PORT = $this->ask('Your DB PORT', config('database.connections.'.$this->DB_TYPE.'.port'));
         $this->DB_DATABASE = $this->ask('Your Database Name', config('database.connections.'.$this->DB_TYPE.'.database'));
         $this->DB_USERNAME = $this->ask('Your DB Username', config('database.connections.'.$this->DB_TYPE.'.username'));
-        $this->DB_PASSWORD = $this->ask('Your DB Password', config('database.connections.'.$this->DB_TYPE.'.password'));
+        $this->DB_PASSWORD = $this->secret('Your DB Password');
 
         // Validate Database
         $this->validateDatabase();
@@ -489,6 +489,7 @@ class AccioInstall extends Command{
         Settings::setSetting('trackingCode', '');
         Settings::setSetting('useTagManager', 0);
         Settings::setSetting('tagManager', '');
+        Settings::setSetting('watermark', '');
 
         $language = Language::where('isDefault', 1)->first();
         Settings::setSetting('defaultLanguage', $language->languageID);
@@ -508,7 +509,7 @@ class AccioInstall extends Command{
         ]);
 
         // assign role
-        $user->assignRoles([UserGroup::getAdminGroup()->groupID]);
+        $user->assignRoles(UserGroup::getAdminGroup()->groupID);
     }
     /**
      * Calls the artisan key:generate to set the APP_KEY.
@@ -591,7 +592,7 @@ class AccioInstall extends Command{
             $DBConnection = new \PDO($dsn, $this->DB_USERNAME, $this->DB_PASSWORD, array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION));
         }
         catch (PDOException $ex) {
-            throw new Exception('Connection to database failed: ' . $ex->getMessage());
+            throw new \Exception('Connection to database failed: ' . $ex->getMessage());
         }
 
         /*
@@ -605,7 +606,7 @@ class AccioInstall extends Command{
                 break;
             }
             if ($tables > 0) {
-                throw new Exception('Database "' . $this->DB_DATABASE . '" is not empty. Please empty the database or specify another database.');
+                throw new \Exception('Database "' . $this->DB_DATABASE . '" is not empty. Please empty the database or specify another database.');
             }
         }
 

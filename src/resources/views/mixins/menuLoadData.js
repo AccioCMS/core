@@ -9,10 +9,11 @@ export const menuLoadData = {
                 .then((resp) => {
                     this.menuList = resp.body.data;
                     this.menuListLength = this.menuList.length;
-                    for(var k in this.menuList){
+                    for(let k in this.menuList){
                         if(this.menuList[k].menuID == this.$route.params.id){
                             this.selectedMenu = this.menuList[k];
                             this.selectedMenuID = this.menuList[k].menuID;
+                            this.selectedTmpMenuID = this.menuList[k].menuID;
                             break;
                         }
                     }
@@ -30,7 +31,7 @@ export const menuLoadData = {
             var menuLinksPromise = this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/menu/details/'+this.$route.params.id)
                 .then((resp) => {
                     if(resp.body.list.length !== 0){
-                        this.$store.commit('setMenuLinkList', resp.body.list);
+                        this.$store.commit('setMenuLinkList', Object.assign({}, resp.body.list));
                     }else{
                         this.$store.commit('setMenuLinkList', {});
                     }
@@ -72,6 +73,14 @@ export const menuLoadData = {
                 this.$store.commit('setSpinner', false);
             });
 
+        },
+
+        // make array a object
+        toObject(arr) {
+            let rv = {};
+            for (var i = 0; i < arr.length; ++i)
+                rv[i] = arr[i];
+            return rv;
         }
     },
 };
