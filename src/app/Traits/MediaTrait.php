@@ -279,10 +279,13 @@ trait MediaTrait{
      *
      * @return boolean
      */
-    public function createThumb($imageObj, $width, $height=null, array $options = []){
+    public function createThumb($imageObj, $width, $height = null, array $options = []){
         $extension = File::extension($imageObj->url);
         $basePath = base_path('/');
 
+        if(!is_numeric($width)){
+            throw new \Exception("Width must be a number");
+        }
         if ($this->hasImageExtension($extension)){
             //thumb can only be created if original source exist
             if(file_exists($basePath.$imageObj->url) && File::size($basePath.$imageObj->url)) {
@@ -303,12 +306,20 @@ trait MediaTrait{
                 $img = Image::make(base_path($imageObj->url));
                 $resizedHeight = $width * 2;
 
-                if(isset($options['resizeCanvas']) && $options['resizeCanvas'] === true){
-                    $img->resize($width, $height, function ($constraint) {
-                        $constraint->aspectRatio();
-                    })->resizeCanvas($width, $height);
-                }else{
-                    $img->fit($width, $height);
+                // crop with and height
+                if($width && $height) {
+                    if (isset($options['resizeCanvas']) && $options['resizeCanvas'] === true) {
+                        $img->resize($width, $height, function ($constraint) {
+                            $constraint->aspectRatio();
+                        })->resizeCanvas($width, $height);
+                    } else {
+                        $img->fit($width, $height);
+                    }
+                }elseif($width){ // resize only the width of the image
+                    $img->resize($width, null);
+                }
+                elseif($height){ // resize only the height of the image
+                    $img->resize(null, $height);
                 }
 
                 if ($img->save($thumbDir . '/' . $imageObj->filename, 60)) {
