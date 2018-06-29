@@ -75,7 +75,7 @@ trait UserTrait{
 
         if(self::isDefaultGroup()){
             $userSelfDataAccess = ($app == 'User' && $id == Auth::user()->userID);
-            $isPostType = $isPostType($app);
+            $isPostType = isPostType($app);
 
             if (self::isEditor()) {
                 $allowedApps = array('Pages', 'Category', 'Tags', 'Media');
