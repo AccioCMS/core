@@ -243,14 +243,16 @@ trait MediaTrait{
         }
         $thumbDirectory =  $width.($height ? 'x'.$height : "");
         $thumbPath = $imageObj->fileDirectory.'/'.$thumbDirectory.'/'.$imageObj->filename;
+        $thumbUrl = null;
         if(file_exists(base_path($thumbPath))){
-            return asset($thumbPath);
+            $thumbUrl = asset($thumbPath);
         }else{
             if($this->createThumb($imageObj, $width, $height, $options)){
-                return asset($thumbPath);
+                $thumbUrl = asset($thumbPath);
             }
         }
-        return null;
+
+        return ($thumbUrl) ? $thumbUrl . "?" . str_replace(" ", "", $imageObj->updated_at) : null;
     }
 
     /**

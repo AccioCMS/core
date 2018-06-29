@@ -4,6 +4,7 @@ namespace Accio\App\Http\Controllers\Backend;
 
 use App;
 use function foo\func;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use App\Models\Language;
 use Illuminate\Support\Facades\DB;
@@ -52,6 +53,8 @@ class BasePostController extends MainController {
           'customFieldsGroups' => $customFieldsGroups,
           'inTableColumns' => $this->getInTableColumns($postTypeSlug),
           'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug),
+          'users' => User::getFromCache(),
+          'createdByUserID' => Auth::user()->userID,
         ];
     }
 
@@ -750,7 +753,7 @@ class BasePostController extends MainController {
                 $result = $this->response( 'Your post was successfully saved', 200, $postResult['postID'], $redirectParams['view'], $redirectParams['redirectUrl'], false, [], $postResult['noty']);
             }
 
-        }catch (\Exception $e){
+        }catch(\Exception $e){
             $result = $this->response($e->getMessage(), 500, null, false, false, false, [], []);
         }
 
@@ -927,6 +930,7 @@ class BasePostController extends MainController {
             $selectedTags[$tagsRelation->language][] = $tagsRelation;
         }
 
+        $users = User::getFromCache();
 
         $response = array(
           'post' => [
@@ -952,6 +956,7 @@ class BasePostController extends MainController {
           'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug, $post),
           'categories' => $categories,
           'languages' => Language::getFromCache(),
+          'users' => $users,
         );
 
         // Fire event

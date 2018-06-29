@@ -19,6 +19,8 @@ export const postForm = {
             this.languages = '';
             this.defaultLangSlug = '';
             this.dateFormat = 'd MMMM yyyy';
+            this.users = [];
+            this.createdByUserID = 0;
 
             let currentDate = new Date()
             this.published_at = {
@@ -43,6 +45,9 @@ export const postForm = {
                      *  Get and manipulate with languages
                      */
                     this.languages = resp.body.languages;
+                    this.users = resp.body.users;
+                    this.createdByUserID = resp.body.createdByUserID;
+
                     let selectedTags = {};
                     for(let k in this.languages){
                         if(this.languages[k].isDefault){
@@ -215,6 +220,7 @@ export const postForm = {
             this.languages = '';
             this.defaultLangSlug = '';
             this.dateFormat = 'd MMMM yyyy';
+            this.users = [];
 
             let currentDate = new Date()
             this.published_at = {
@@ -238,6 +244,7 @@ export const postForm = {
                 .then((resp) => {
                     // get all languages
                     this.languages = resp.body.languages;
+                    this.users = resp.body.users;
                     for(let k in this.languages){
                         if(this.languages[k].isDefault){
                             this.defaultLangSlug = this.languages[k].slug;
