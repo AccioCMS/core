@@ -977,8 +977,11 @@
                             && this.customFieldValues[keysArray[0]][keysArray[1]] !== undefined
                             && this.customFieldValues[keysArray[0]][keysArray[1]][keysArray[2]] !== undefined){
 
+                            console.log("HELLO HELLO");
                             if(typeof this.customFieldValues[keysArray[0]][keysArray[1]][keysArray[2]] == 'object'){
                                 this.customFieldValues[keysArray[0]][keysArray[1]][keysArray[2]] = this.deleteValue(this.customFieldValues[keysArray[0]][keysArray[1]][keysArray[2]], mediaID);
+                            }else{
+                                this.customFieldValues[keysArray[0]][keysArray[1]][keysArray[2]] = "";
                             }
                         }
 
@@ -991,6 +994,8 @@
 
                             if(typeof this.customFieldValues[keysArray[0]][keysArray[4]][keysArray[1]][keysArray[2]] == 'object'){
                                 this.customFieldValues[keysArray[0]][keysArray[4]][keysArray[1]][keysArray[2]] = this.deleteValue(this.customFieldValues[keysArray[0]][keysArray[4]][keysArray[1]][keysArray[2]], mediaID);
+                            }else{
+                                this.customFieldValues[keysArray[0]][keysArray[4]][keysArray[1]][keysArray[2]] = "";
                             }
                         }
                     }else{

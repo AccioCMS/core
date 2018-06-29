@@ -11,6 +11,7 @@ use App\Models\PostType;
 use App\Models\TagRelation;
 use App\Models\Task;
 use App\Models\Theme;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
@@ -147,7 +148,7 @@ trait PostTrait{
         // on create
         if(!isset($data['postID'])){
             $populatedFields = self::populateStoreColumns($postObj, $data);
-            $populatedFields['post']->createdByUserID = Auth::user()->userID;
+            $populatedFields['post']->createdByUserID = (!User::isAdmin() || !isset($data['createdByUserID'])) ? Auth::user()->userID : $data['createdByUserID'];
             $postObj = $populatedFields['post'];
 
             if(!$postObj->save()){
@@ -160,6 +161,7 @@ trait PostTrait{
             // if posts exists in the primary database
             if($postObj){
                 $populatedFields = self::populateStoreColumns($postObj, $data);
+                $populatedFields['post']->createdByUserID = (!User::isAdmin() || !isset($data['createdByUserID'])) ? Auth::user()->userID : $data['createdByUserID'];
                 $postObj = $populatedFields['post'];
 
                 if($postObj->save()){
@@ -174,7 +176,7 @@ trait PostTrait{
                 // if post exists only in the archive database
                 $postObj = new self();
                 $populatedFields = self::populateStoreColumns($postObj, $data);
-                $populatedFields['post']->createdByUserID = Auth::user()->userID;
+                $populatedFields['post']->createdByUserID = (!User::isAdmin() || !isset($data['createdByUserID'])) ? Auth::user()->userID : $data['createdByUserID'];
                 $populatedFields['post']->postID = $data['postID'];
                 $post = $populatedFields['post'];
 
@@ -808,7 +810,7 @@ trait PostTrait{
     public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = '', array $options = []){
         if($this->hasFeaturedImage()){
             if(!$width && !$height){
-                return url($this->featuredImage->url);
+                return url($this->featuredImage->url) . "?" . str_replace(" ", "", $this->featuredImage->updated_at);
             }else{
                 return $this->featuredImage->thumb($width, $height, $this->featuredImage, $options);
             }
