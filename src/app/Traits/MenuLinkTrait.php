@@ -416,7 +416,7 @@ trait MenuLinkTrait{
                     return route('backend.post.index', [
                       'post_type' => $postType->slug,
                       'view' => 'list',
-                      'category' => $menuLink->belongsToID
+                      'categoryID' => $menuLink->belongsToID
                     ]);
                 }
             }
