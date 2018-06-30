@@ -453,7 +453,7 @@ class BasePostController extends MainController {
             $inTableColumns = $this->getInTableColumns($postType);
 
             foreach($results as $key => $item){
-                $post = (new Post())->setRawAttributes((array) $item);
+                $post = (new Post())->setTable($postType)->setRawAttributes((array) $item);
 
                 // title
                 if(array_key_exists('title', $inTableColumns)){
