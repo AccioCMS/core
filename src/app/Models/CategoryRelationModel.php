@@ -4,6 +4,7 @@ namespace Accio\App\Models;
 
 use Accio\App\Traits\CacheTrait;
 use App\Models\CategoryRelation;
+use App\Models\Post;
 use App\Models\PostType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
