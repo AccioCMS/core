@@ -293,7 +293,6 @@ export const postForm = {
                     }
                     this.$store.commit('setMediaSelectedFiles', media);
 
-
                     this.slug = resp.body.post.slug;
                     this.href = resp.body.post.href;
                     this.title = resp.body.post.title;

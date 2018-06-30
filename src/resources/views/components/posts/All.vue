@@ -71,7 +71,6 @@
                                         <input type="checkbox" :value="item.postID" v-model="bulkDeleteIDs" :id="'ID'+item.postID">
                                     </td>
 
-
                                     <td v-for="(label, key) in getList.inTableColumns">
                                         <template v-if="key !== 'title' && item[key] !== undefined">{{item[key]}}</template>
                                         <template v-if="key === 'title'">
