@@ -373,11 +373,11 @@ class BasePostController extends MainController {
         }else{
             // Advanced Search
             if($advancedSearch){
-                $queryObject = $this->advancedSearch($queryObject, request());
+                $queryObject = $this->advancedSearch($queryObject, request(), $postType);
             }
             // select based on categories
             else if($categoryID){
-                $queryObject = $this->selectByCategory($queryObject, $categoryID);
+                $queryObject = $this->selectByCategory($queryObject, $categoryID, $postType);
             }
 
             // json langauge fields needs to be filtered by their langauge
@@ -401,16 +401,9 @@ class BasePostController extends MainController {
         return $response;
     }
 
-    private function selectByCategory($queryObject, $categoryID){
-        $relations = DB::table('categories_relations')
-          ->select('belongsToID')
-          ->where('categoryID', $categoryID)
-          ->select('belongsToID')
-          ->get()
-          ->pluck('belongsToID')
-          ->toArray();
-
-        return $queryObject->whereIn('postID', $relations);
+    private function selectByCategory($queryObject, $categoryID, $postTypeSlug){
+        return $queryObject->join('categories_relations','categories_relations.belongsToID',$postTypeSlug.'.postID')
+          ->where('categories_relations.categoryID', '=', $categoryID);
     }
 
     /**
@@ -418,9 +411,10 @@ class BasePostController extends MainController {
      *
      * @param object $ibj
      * @param $data object data for the search (table name, title, userID, categoryID, from, to)
+     * @param string $postTypeSlug
      * @return object result
      */
-    public function advancedSearch($obj, $data){
+    public function advancedSearch($obj, $data, $postTypeSlug){
         // Title
         if($data->title != ""){
             $obj->where('title', 'like', '%'.trim($data->title).'%');
@@ -433,7 +427,7 @@ class BasePostController extends MainController {
 
         // Category
         if($data->categoryID != 0){
-            $obj = $this->selectByCategory($obj, $data->categoryID);
+            $obj = $this->selectByCategory($obj, $data->categoryID, $postTypeSlug);
         }
 
         // From date

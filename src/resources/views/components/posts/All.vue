@@ -139,7 +139,8 @@
             this.deleteUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/delete/'+this.$route.params.post_type+'/';
             this.bulkDeleteUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/json/posts/bulk-delete';
             this.advancedSearchPostUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type+'?advancedSearch=1';
-            this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type+(this.$route.query.category !== undefined ? '?categoryID='+this.$route.query.category : '');
+            this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type;
+            console.log("qetu",this.listUrl);
         },
         mounted() {
             // permissions
@@ -227,7 +228,7 @@
         watch:{
             // watch for url changes and component doesn't change
             '$route': function(){
-                this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type+(this.$route.query.category !== undefined ? '?categoryID='+this.$route.query.category : '');
+                this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type;
                 this.viewSearchUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/posts/search/'+this.$route.params.post_type+'/';
                 this.dataSearchUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/search/'+this.$route.params.post_type+'/';
                 this.advancedSearchPostUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type+'?advancedSearch=1';
