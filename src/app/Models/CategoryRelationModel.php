@@ -37,6 +37,7 @@ class CategoryRelationModel extends Model
 
     /**
      * Default method to handle cache query.
+     * Insert all cache relations for the posts the are in chache
      *
      * @return array
      */
@@ -46,7 +47,8 @@ class CategoryRelationModel extends Model
             throw new \Exception('Post type \''.$postTypeSlug.'\' not found in Cetegory relation\'s cache method!');
         }
 
-        $data = CategoryRelation::where('belongsTo',$postTypeSlug)->get()->toArray();
+        $postIDs = Post::getFromCache($postTypeSlug)->pluck("postID")->toArray();
+        $data = CategoryRelation::where('belongsTo',$postTypeSlug)->whereIn('belongsToID', $postIDs)->get()->toArray();
         Cache::forever('categories_relations_'.$postTypeSlug,$data);
         return $data;
     }
