@@ -22,6 +22,7 @@ return [
     'status' => 'Status',
     'published' => 'Published',
     'draft' => 'Draft',
+    'author' => 'Author',
     'pending' => 'Pending',
     'publishedAt' => 'Published at',
     'createFormTitle' => 'Create post form',
