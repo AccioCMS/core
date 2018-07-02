@@ -28,8 +28,24 @@ class Routes{
     {
         //get active theme and theme routes
         new Theme();
-
     }
+
+    /**
+     * Define middleware that routes should pass through.
+     *
+     * @var array
+     */
+    private $middleware = [
+      'backend' => [
+        'auth:admin',
+        'application',
+        'backend'
+      ],
+      'frontend' => [
+        'application',
+        'frontend'
+      ]
+    ];
 
     /**
      * Define Package Backend routes
@@ -42,19 +58,13 @@ class Routes{
         $directory = __DIR__.'/../../routes/backend';
         if(is_dir($directory)) {
             $routeFiles = File::files($directory);
-
-//            \Route::group([
-//              'middleware' => ['web','session'],
-//            ], function () use ($routeFiles) {
-
             \Route::group([
-              'middleware' => 'backend',
+              'middleware' => $this->middleware['backend'],
             ], function () use ($routeFiles) {
                 foreach ($routeFiles as $file) {
                     require $file;
                 }
             });
-//            });
         }
     }
 
@@ -72,7 +82,7 @@ class Routes{
             $routeFiles = File::files($directory);
 
             \Route::group([
-              'middleware' => 'frontend',
+              'middleware' => $this->middleware['frontend'],
             ], function () use ($routeFiles) {
                 foreach ($routeFiles as $file) {
                     // Base.php is loaded from FrontendBaseRoutes method
@@ -130,7 +140,7 @@ class Routes{
             $backendRoutes = $plugin->backendRoutes();
             if($backendRoutes){
                 \Route::group([
-                  'middleware' => ['auth:admin','backend'],
+                  'middleware' => $this->middleware['backend'],
                   'as' => 'Backend.'.$plugin->namespaceWithDot().".",
                   'namespace' => $plugin->parseNamespace().'\Controllers',
                   'prefix' => Config::get('project')['adminPrefix']."/".$plugin->backendURLPrefix()
@@ -157,7 +167,7 @@ class Routes{
             $frontendRoutes = $plugin->frontendRoutes();
             if($frontendRoutes){
                 \Route::group([
-                  'middleware' => ['frontend'],
+                  'middleware' => $this->middleware['frontend'],
                   'as' => $plugin->namespaceWithDot().".",
                   'namespace' => $plugin->parseNamespace().'\Controllers',
                 ], function () use($frontendRoutes) {
@@ -230,7 +240,7 @@ class Routes{
         $baseFile = base_path('routes/base.php');
 
         \Route::group([
-          'middleware' => 'frontend',
+          'middleware' => $this->middleware['frontend'],
         ], function () use($baseFile) {
             require $baseFile;
         });
