@@ -30,10 +30,8 @@ class BaseLoginController extends MainController {
      *
      */
     public function __construct(){
-        if(App::routesAreCached()){
-            $this->middleware('backend');
-        }
         $this->middleware('guest:admin', ['except' => 'logout']);
+        parent::__construct();
     }
 
     /**

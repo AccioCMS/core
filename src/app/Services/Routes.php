@@ -37,7 +37,6 @@ class Routes{
      */
     private $middleware = [
       'backend' => [
-        'auth:admin',
         'application',
         'backend'
       ],
