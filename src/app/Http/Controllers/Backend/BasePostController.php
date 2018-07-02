@@ -207,6 +207,7 @@ class BasePostController extends MainController {
 
         // custom events columns
         $customListColumms = Event::fire('post:table_list_columns', [$postType]);
+//        dd($customListColumms);
         foreach($customListColumms as $customList){
             if(is_array($customList)) {
                 foreach ($customList as $key => $value) {

@@ -138,10 +138,10 @@ trait MediaTrait{
                 if($media->save()){
                     if ($request->fromAlbum === "true" || $request->fromAlbum === true){
                         \Illuminate\Support\Facades\DB::table('album_relations')->insert([
-                          'albumID' => $request->albumID,
-                          'mediaID' => $media->mediaID,
-                          "created_at" =>  \Carbon\Carbon::now(),
-                          "updated_at" => \Carbon\Carbon::now(),
+                            'albumID' => $request->albumID,
+                            'mediaID' => $media->mediaID,
+                            "created_at" =>  \Carbon\Carbon::now(),
+                            "updated_at" => \Carbon\Carbon::now(),
                         ]);
                     }
 
@@ -316,13 +316,17 @@ trait MediaTrait{
                         $img->fit($width, $height);
                     }
                 }elseif($width){ // resize only the width of the image
-                    $img->resize($width, null);
+                    $img->resize($width, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                    });
                 }
                 elseif($height){ // resize only the height of the image
-                    $img->resize(null, $height);
+                    $img->resize(null, $height, function ($constraint) {
+                        $constraint->aspectRatio();
+                    });
                 }
 
-                if ($img->save($thumbDir . '/' . $imageObj->filename, 60)) {
+                if ($img->save($thumbDir . '/' . $imageObj->filename, config('image-optimizer.default_quality'))) {
                     // optimize image
                     $this->optimize($thumbDir . '/' . $imageObj->filename);
                     return true;
@@ -448,10 +452,10 @@ trait MediaTrait{
      */
     public static function allowedExtensions(){
         return array_merge(
-          config('media.image_extensions'),
-          config('media.document_extensions'),
-          config('media.audio_extensions'),
-          config('media.video_extensions')
+            config('media.image_extensions'),
+            config('media.document_extensions'),
+            config('media.audio_extensions'),
+            config('media.video_extensions')
         );
     }
     /**
