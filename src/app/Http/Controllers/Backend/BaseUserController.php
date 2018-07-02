@@ -22,10 +22,11 @@ use App\Models\User;
 use Illuminate\Http\Request;
 
 class BaseUserController extends MainController{
-    // Check authentification in the constructor
+    /**
+     * BaseUserController constructor.
+     */
     public function __construct(){
         parent::__construct();
-        $this->middleware('auth');
     }
 
     /**

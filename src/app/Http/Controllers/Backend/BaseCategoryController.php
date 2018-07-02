@@ -26,7 +26,6 @@ class BaseCategoryController extends MainController {
     // Check authentification in the constructor
     public function __construct(){
         parent::__construct();
-        $this->middleware('auth');
     }
 
     /**

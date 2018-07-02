@@ -14,9 +14,11 @@ use App\Http\Controllers\Controller as Controller;
 
 class BaseGeneralController extends MainController {
 
+    /**
+     * BaseGeneralController constructor.
+     */
     public function __construct(){
         parent::__construct();
-        $this->middleware('auth');
     }
 
     /**
