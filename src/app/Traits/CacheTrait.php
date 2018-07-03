@@ -133,18 +133,19 @@ trait CacheTrait
             throw new \Exception("Cache method $methodName does not exists!");
         }
     }
+
     /**
      * Add, update or remove an item from cache.
      *
-     * @param string $cacheName
-     * @param object $item
-     * @param string $mode
-     * @param integer $limit
-     *
-     * @return Collection
+     * @param $cacheName
+     * @param array $attributes
+     * @param $item
+     * @param bool $mode
+     * @param null $limit
+     * @return array
      */
     private static function manageCacheState($cacheName, array $attributes = [], $item, $mode = false, $limit = null){
-        $classPath = '\\App\\Models\\'.self::getModelFromParent();
+        $classPath = self::getModel();
         $cachedItems = $classPath::cache($cacheName, $attributes, false);
 
         $currentItem = $item->hasCacheItem($cachedItems,  $item->getKeyName(), $item->getKey(), $cacheName);
@@ -219,10 +220,10 @@ trait CacheTrait
      * Default method to update cache.
      *
      * @param $item
-     * @param bool $delete
+     * @return void
      */
     public function updateCache($item, string $mode){
-        $model = $cacheName = self::getModelFromParent();
+        $model = $cacheName = self::getModel();
 
         // Fire cache updated event
         Event::fire(lcfirst($model).':cacheUpdated', [$item, $mode]);
@@ -238,7 +239,7 @@ trait CacheTrait
      * @param $mode
      */
     private function handleUpdateCache($item, $mode){
-        $classPath = '\\App\\Models\\'.self::getModelFromParent();
+        $classPath = self::getModel();
         $modelClass = new $classPath();
 
         //delete existing cache
@@ -250,13 +251,32 @@ trait CacheTrait
     }
 
     /**
-     * Set cache collection
+     * Get parent class.
+     * It removes Accio namespace in order to use project's own model
+     *
+     * @return string
+     */
+    private static function getModel(){
+        $className = get_class();
+
+        // Remove "Model" form class so project's models are called
+        if(strstr(get_class(), 'Accio\\App\\')){
+            $class = str_replace(['Accio\\'],'',$className);
+            $explode = explode('\\',$className);
+            $className = '\\App\\Models\\'.str_replace('Model','',end($explode));
+        }
+
+        return $className;
+    }
+
+    /**
+     * Set cache collection.
      *
      * @param array $data
      * @return Collection
      */
     public function setCacheCollection(array $data, string $table = ''){
-        $modelClass = '\\App\\Models\\'.self::getModelFromParent();
+        $modelClass = $this->getModel();
         $table = $this->getTable();
 
         // model may have its own collection method
@@ -301,29 +321,13 @@ trait CacheTrait
     }
 
     /**
-     * Automatically find model which is calling this method
-     *
-     * @return Collection|array
-     */
-    private static function getModelFromParent(){
-        $explode = explode('\\',get_class());
-        $modelName = str_replace('Model','',end($explode));
-        return $modelName;
-    }
-
-
-    /**
      * Set cache attributes.
      *
-     * @param string $class
      * @param string $cacheName
-     * @param array $attributes
-     *
-     * @return $this
-     * @return void
+     * @return mixed
      */
     public static function initializeCache(string $cacheName){
-        $model = '\\App\\Models\\'.self::getModelFromParent();
+        $model = get_class();
         $instance = new $model();
         $instance->setCacheName($cacheName);
         $instance->setCacheInstance($instance);
@@ -338,9 +342,9 @@ trait CacheTrait
      * @param string $cacheName
      * @return $this
      */
-    public static function cache(string $cacheName = ''){
+    public static function cache($cacheName = ''){
         if(!$cacheName){
-            $cacheName = self::getModelFromParent();
+            $cacheName = self::getModel();
         }
         $cacheInstance = self::initializeCache($cacheName);
         $cacheInstance->cachedItems = Cache::get($cacheInstance->cacheName);
@@ -348,7 +352,7 @@ trait CacheTrait
         return $cacheInstance;
     }
 
-    
+
     /**
      * Specifies an ordering for the cache query results.
      * Replaces any previously specified orderings, if any.
@@ -375,7 +379,8 @@ trait CacheTrait
      * @param $key
      * @param $operator
      * @param null $value
-     * @return PostCollection
+     *
+     * @return $this
      */
     public function whereCache($key, $operator, $value = null){
         if (func_num_args() === 2) {
@@ -393,9 +398,10 @@ trait CacheTrait
     }
 
     /**
-     * Gete where cache value.
+     * Get where cache value.
      *
-     * @param string|null $key
+     * @param $key
+     * @return null
      */
     protected function whereCacheValue($key){
         foreach($this->whereCache as $where){
@@ -445,8 +451,11 @@ trait CacheTrait
     /**
      * Get items from cache.
      *
+     * @param string $customCacheMethod
      * @param bool $returnCollection
-     * @return PostCollection|array Returns array on [TRUE], array on false
+     *
+     * @return array|Collection|mixed
+     * @throws \Exception
      */
     public function getItems($customCacheMethod = '', $returnCollection = true){
         // Generate cache if it doesn't exist
@@ -530,11 +539,12 @@ trait CacheTrait
     }
 
     /**
-     * Fill cache attributes
+     * Fill cache attributes.
      *
      * @param $class
-     * @param array $attributes
+     * @param $items
      * @return Collection
+     * @throws \Exception
      */
     public function fillCacheAttributes($class,  $items){
         if(is_null($items) || $items == '[]' || is_array($items) && !count($items)){
