@@ -371,8 +371,6 @@ class PostModel extends Model{
           ->get()
           ->toArray();
 
-        dump(" u ba queryyyyyy ");
-
         // Save in cache
         Cache::forever($this->cacheName,$data);
 
