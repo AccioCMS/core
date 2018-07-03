@@ -22,8 +22,10 @@ class MainController extends Controller{
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
     public function __construct(){
-        $this->middleware('auth');
-        $this->middleware('backend');
+        if(App::routesAreCached()) {
+            $this->middleware('application');
+            $this->middleware('backend');
+        }
     }
 
     /**

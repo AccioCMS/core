@@ -20,6 +20,7 @@ return [
     'multiselectAddTagPlaceholder' => 'Add this as new tag',
     'visibleIn' => 'Visible in',
     'status' => 'Status',
+    'author' => 'Author',
     'published' => 'Published',
     'draft' => 'Draft',
     'pending' => 'Pending',

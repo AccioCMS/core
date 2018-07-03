@@ -18,10 +18,11 @@ class BaseCustomFieldController extends MainController{
 
     public $usedSlugs = [];
 
-    // Check authentification in the constructor
+    /**
+     * BaseCustomFieldController constructor.
+     */
     public function __construct(){
         parent::__construct();
-        $this->middleware('auth');
     }
 
     /**

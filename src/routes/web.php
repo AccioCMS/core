@@ -16,7 +16,6 @@
  */
 use Accio\Support\Facades\Routes;
 
-
 $routes = new Routes();
 
 // Backend Routes

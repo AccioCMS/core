@@ -4,6 +4,7 @@ namespace Accio\App\Http\Controllers\Backend;
 
 use App;
 use function foo\func;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use App\Models\Language;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,6 @@ class BasePostController extends MainController {
     // Check authentification in the constructor
     public function __construct(){
         parent::__construct();
-        $this->middleware('auth');
     }
 
     /**
@@ -52,6 +52,8 @@ class BasePostController extends MainController {
           'customFieldsGroups' => $customFieldsGroups,
           'inTableColumns' => $this->getInTableColumns($postTypeSlug),
           'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug),
+          'users' => User::getFromCache(),
+          'createdByUserID' => Auth::user()->userID,
         ];
     }
 
@@ -204,6 +206,7 @@ class BasePostController extends MainController {
 
         // custom events columns
         $customListColumms = Event::fire('post:table_list_columns', [$postType]);
+//        dd($customListColumms);
         foreach($customListColumms as $customList){
             if(is_array($customList)) {
                 foreach ($customList as $key => $value) {
@@ -370,11 +373,11 @@ class BasePostController extends MainController {
         }else{
             // Advanced Search
             if($advancedSearch){
-                $queryObject = $this->advancedSearch($queryObject, request());
+                $queryObject = $this->advancedSearch($queryObject, request(), $postType);
             }
             // select based on categories
             else if($categoryID){
-                $queryObject = $this->selectByCategory($queryObject, $categoryID);
+                $queryObject = $this->selectByCategory($queryObject, $categoryID, $postType);
             }
 
             // json langauge fields needs to be filtered by their langauge
@@ -398,16 +401,9 @@ class BasePostController extends MainController {
         return $response;
     }
 
-    private function selectByCategory($queryObject, $categoryID){
-        $relations = DB::table('categories_relations')
-          ->select('belongsToID')
-          ->where('categoryID', $categoryID)
-          ->select('belongsToID')
-          ->get()
-          ->pluck('belongsToID')
-          ->toArray();
-
-        return $queryObject->whereIn('postID', $relations);
+    private function selectByCategory($queryObject, $categoryID, $postTypeSlug){
+        return $queryObject->join('categories_relations','categories_relations.belongsToID',$postTypeSlug.'.postID')
+          ->where('categories_relations.categoryID', '=', $categoryID);
     }
 
     /**
@@ -415,9 +411,10 @@ class BasePostController extends MainController {
      *
      * @param object $ibj
      * @param $data object data for the search (table name, title, userID, categoryID, from, to)
+     * @param string $postTypeSlug
      * @return object result
      */
-    public function advancedSearch($obj, $data){
+    public function advancedSearch($obj, $data, $postTypeSlug){
         // Title
         if($data->title != ""){
             $obj->where('title', 'like', '%'.trim($data->title).'%');
@@ -430,7 +427,7 @@ class BasePostController extends MainController {
 
         // Category
         if($data->categoryID != 0){
-            $obj = $this->selectByCategory($obj, $data->categoryID);
+            $obj = $this->selectByCategory($obj, $data->categoryID, $postTypeSlug);
         }
 
         // From date
@@ -456,7 +453,7 @@ class BasePostController extends MainController {
             $inTableColumns = $this->getInTableColumns($postType);
 
             foreach($results as $key => $item){
-                $post = (new Post())->setRawAttributes((array) $item);
+                $post = (new Post())->setTable($postType)->setRawAttributes((array) $item);
 
                 // title
                 if(array_key_exists('title', $inTableColumns)){
@@ -750,7 +747,7 @@ class BasePostController extends MainController {
                 $result = $this->response( 'Your post was successfully saved', 200, $postResult['postID'], $redirectParams['view'], $redirectParams['redirectUrl'], false, [], $postResult['noty']);
             }
 
-        }catch (\Exception $e){
+        }catch(\Exception $e){
             $result = $this->response($e->getMessage(), 500, null, false, false, false, [], []);
         }
 
@@ -927,6 +924,7 @@ class BasePostController extends MainController {
             $selectedTags[$tagsRelation->language][] = $tagsRelation;
         }
 
+        $users = User::getFromCache();
 
         $response = array(
           'post' => [
@@ -952,6 +950,7 @@ class BasePostController extends MainController {
           'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug, $post),
           'categories' => $categories,
           'languages' => Language::getFromCache(),
+          'users' => $users,
         );
 
         // Fire event

@@ -12,10 +12,11 @@ use App\Models\Language;
 use App\Models\Permission;
 
 class BasePermissionController extends MainController{
-    // Check authentification in the constructor
+    /**
+     * BasePermissionController constructor.
+     */
     public function __construct(){
         parent::__construct();
-        $this->middleware('auth');
     }
 
     /**

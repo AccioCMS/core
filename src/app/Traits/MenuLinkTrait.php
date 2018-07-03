@@ -228,25 +228,32 @@ trait MenuLinkTrait{
     }
 
     /**
-     * Find MenuLink that is defined HomePage
      *
-     * @return array|string|null Returns column value if column found, null if not found. If column is not given all MenuLink data will be returned
+     * Get Home Page's data
+     * Home is supposed to be served form post_pages post type
+     *
+     * @return object
+     * @throws \Exception
      */
     public static function sethomepage(){
-        if(Post::gethomepage('postID')) {
-            $menuLinkHomePage = \App\Models\MenuLink::getFromCache()
-              ->where('belongsToID', Post::gethomepage('postID'))
-              ->where('belongsTo', 'post_pages');
-
-            // The first MenuLink is returned if no HomePage is defined
-            if (!$menuLinkHomePage) {
-                $menuLinkHomePage = $menuLinkHomePage->first();
-            } else {
-                $menuLinkHomePage = Language::translate($menuLinkHomePage->first());
+        if(!self::$homepage) {
+            $findHomePage = null;
+            if (settings('homepageID')) {
+                $findHomePage = Post::getFromCache('post_pages')->where('postID', settings('homepageID'))->first();
             }
 
-            self::$homepage = $menuLinkHomePage;
+            // get the first found page if no homepage is defined
+            if (!$findHomePage) {
+                $findHomePage = Post::getFromCache('post_pages')->first();
+            }
+
+            if(!$findHomePage){
+                throw new \Exception("No homepage found. Please add a page post!");
+            }
+            self::$homepage = $findHomePage;
         }
+
+        return self::$homepage;
     }
 
     /**
@@ -359,11 +366,6 @@ trait MenuLinkTrait{
                         Redirect::to('/', 301)->send();
                     }
                 }
-
-                //set language
-                if(!Request::route('lang')){
-                    \Request::route()->setParameter('lang', $getLanguage->slug);
-                }
             }
         }
     }
@@ -416,7 +418,7 @@ trait MenuLinkTrait{
                     return route('backend.post.index', [
                       'post_type' => $postType->slug,
                       'view' => 'list',
-                      'category' => $menuLink->belongsToID
+                      'categoryID' => $menuLink->belongsToID
                     ]);
                 }
             }
@@ -805,8 +807,8 @@ trait MenuLinkTrait{
             }
         }else{ // frontend
             Post::sethomepage();
-            self::sethomepage();
 
+            // Set active menulinks
             self::setActiveIDs();
 
             // Set home page MenuLink if home page is requested

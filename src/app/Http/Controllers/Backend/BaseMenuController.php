@@ -264,7 +264,7 @@ class BaseMenuController extends MainController{
                     $controllerName = str_replace('.php', '', $file->getFileName());
                     $controllerClass = Theme::getNamespace() . '\\Controllers\\' . $controllerName;
                     $routes = $controllerClass::getMenuLinkRoutes($controllerName);
-                    if ($routes) {
+                    if($routes){
                         $menuLinkRoutes[$controllerName] = $routes;
                     }
                 }
@@ -274,7 +274,7 @@ class BaseMenuController extends MainController{
 
 
         // Check post types have routes
-        $postTypes = PostType::where('isVisible', true)->get();
+        $postTypes = PostType::getFromCache()->where('isVisible', true);
         foreach($postTypes as $postType){
             $postTypeControllerName = ucfirst(camel_case($postType->slug)).'Controller';
 

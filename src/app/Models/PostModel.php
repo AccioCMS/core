@@ -139,7 +139,7 @@ class PostModel extends Model{
     /**
      * @var int
      */
-    public static $defaultCacheLimit = 1000;
+    public static $defaultCacheLimit = 20;
 
     /**
      * @var array
@@ -274,11 +274,11 @@ class PostModel extends Model{
      * Get posts by Post Type, by a Category or by a custom function
      * If posts are found in cache they are served from it, otherwise it gets them from database
      *
-     * @param  string $cacheName
-     * @param  array $attributes
-     * @param  bool $returnCollection if false, array is return
-     * @return object|null  Returns all posts found as requested
-     *
+     * @param string $cacheName
+     * @param array $attributes
+     * @param bool $returnCollection
+     * @return Collection|mixed
+     * @throws \Exception
      */
 
     public static function getFromCache($cacheName = '', $attributes = [], $returnCollection = true){
@@ -338,6 +338,7 @@ class PostModel extends Model{
           ->get()
           ->toArray();
 
+
         // Save in cache
         Cache::forever($this->cacheName,$data);
 
@@ -383,35 +384,75 @@ class PostModel extends Model{
      * @param bool $delete
      */
     public function updateCache($item, string $mode){
-        // We can't select a post that is deleted :)
-        $post = $item->where('postID', $item->postID)->with($item->getDefaultRelations(getPostType($item->getTable())))->first();
-        self::manageCacheState($item->getTable(), [], ($post ? $post : $item), $mode, self::$defaultCacheLimit);
+        // Saved Event
+        Event::listen('post:stored', function ($data, $postObj) use($item, $mode){
+            $this->updatePostInCache($item, $mode);
+        });
     }
 
+
     /**
-     * Update cache in all categories
+     * Update cache in all categories.
      *
-     * @param object $post Post by language
+     * @param $item
+     * @param $mode
      */
     private function updateCacheByCategory($item, $mode){
         // We can't select a post that is deleted :)
-        $post = $item->where('postID', $item->postID)->with($item->getDefaultRelations(getPostType($item->getTable())))->first();
+        if($mode === 'deleting'){
+            self::$deletingItem = $item
+              ->where('postID', $item->postID)
+              ->with($item->getDefaultRelations(getPostType($item->getTable())))
+              ->first();
+        }else if ($mode === 'deleted') {
+            $this->removePostFromCache(self::$deletingItem);
+        }else{
 
-        if(isset($post->categories)){
-            foreach($post->categories as $category){
-                Cache::forget('category_posts_'.$category->categoryID);
+            // Saved Event
+            Event::listen('post:stored', function () use ($item, $mode) {
+                $this->updatePostInCache($item, $mode);
+            });
+        }
+    }
+
+    private function removePostFromCache($post){
+        if (isset($post->categories)) {
+
+            // TODO update on category realtions remove
+            foreach ($post->categories as $category) {
                 self::manageCacheState(
-                  'category_posts_'.$category->categoryID,[
+                  'category_posts_' . $category->categoryID, [
                   'categoryID' => $category->categoryID,
                   'belongsTo' => $post->getTable()
                 ],
                   $post,
-                  $mode,
+                  'deleted',
                   self::$defaultCacheLimit
                 );
             }
         }
     }
+
+    private function updatePostInCache($itemObj, $mode){
+        // We can't select a post that is deleted :)
+        $post = $itemObj
+          ->where('postID', $itemObj->postID)
+          ->with($itemObj->getDefaultRelations(getPostType($itemObj->getTable())))
+          ->first();
+
+        foreach ($post->categories as $category) {
+            self::manageCacheState(
+              'category_posts_' . $category->categoryID, [
+              'categoryID' => $category->categoryID,
+              'belongsTo' => $post->getTable()
+            ],
+              $post,
+              $mode,
+              self::$defaultCacheLimit
+            );
+        }
+    }
+
 
     /**
      * Sets up the cache for the most read articles

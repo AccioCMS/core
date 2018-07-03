@@ -2,13 +2,14 @@
 
 namespace Accio\App\Http\Controllers\Backend\Auth;
 
+use Accio\App\Http\Controllers\Backend\MainController;
 use Illuminate\Routing\Controller;
 use App\Models\User;
 use Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Auth;
 
-class BaseRegisterController extends Controller{
+class BaseRegisterController extends MainController {
     /*
     |--------------------------------------------------------------------------
     | Register Controller
@@ -36,6 +37,7 @@ class BaseRegisterController extends Controller{
      */
     public function __construct(){
         $this->middleware('guest');
+        parent::__construct();
     }
 
     /**
