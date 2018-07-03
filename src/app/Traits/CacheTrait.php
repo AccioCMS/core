@@ -36,21 +36,34 @@ trait CacheTrait
     protected $cacheInstance;
 
     /**
+     * @var array
+     */
+    protected $whereCache = [];
+
+    /**
+     * @var
+     */
+    protected static $deletingItem;
+
+    /**
      * Boot Cache Trait Events.
      *
      * @return void
      */
     protected static function bootCacheTrait(){
-        self::saved(function($item){
-            $item->handleUpdateCache($item, "saved");
-        });
-
         self::created(function($item){
             $item->handleUpdateCache($item, "created");
         });
 
+        self::updated(function($item){
+            $item->handleUpdateCache($item, "updated");
+        });
 
-        self::deleting(function($item){
+        $test = self::deleting(function($item){
+            $item->handleUpdateCache($item, "deleting");
+        });
+
+        self::deleted(function($item) use($test){
             $item->handleUpdateCache($item, "deleted");
         });
     }
@@ -192,23 +205,27 @@ trait CacheTrait
         $classPath = '\\App\\Models\\'.self::getModelFromParent();
         $cachedItems = $classPath::getFromCache($cacheName, $attributes, false);
 
-        $currentItem = $item->hasCacheItem($cachedItems,  $item->getKeyName(), $item->getKey());
+        $currentItem = $item->hasCacheItem($cachedItems,  $item->getKeyName(), $item->getKey(), $cacheName);
 
         if(!$cachedItems){
             $cachedItems = [];
         }
 
         // DELETE
-        if($mode == 'delete'){
+        if($mode == 'deleted'){
             if ($currentItem) {
-                $cachedItems = array_pull($cachedItems, key($currentItem));
+                unset($cachedItems[key($currentItem)]);
             }
         }else {
             // UPDATE
             if ($currentItem) {
                 $cachedItems[key($currentItem)] = $item->toArray();
             } else { // ADD
-                $cachedItems = array_add($cachedItems, $item->getKey(), $item->toArray());
+                // push new item to cache
+                array_push($cachedItems, $item->toArray());
+
+                // Let's make sure the latest item is sorted at the end of cachedItems
+                $cachedItems = array_values($cachedItems);
 
                 // Limit results
                 if($limit) {
@@ -226,11 +243,24 @@ trait CacheTrait
         return $cachedItems;
     }
 
-    private function hasCacheItem($array, $keyName, $keyValue){
-        return array_where($array, function ($item) use($keyName, $keyValue) {
-            return ($keyValue == $item[$keyName]);
-        });
 
+    /**
+     * Check if a key/value is in cache.
+     *
+     * @param $array
+     * @param $keyName
+     * @param $keyValue
+     *
+     * @return array
+     */
+    private function hasCacheItem($array, $keyName, $keyValue){
+        foreach ($array as $index => $row){
+            if($row[$keyName] ==  $keyValue){
+                return [ $index => $row];
+            }
+        }
+
+        return [];
     }
 
     public function cacheLimit(){
@@ -288,7 +318,6 @@ trait CacheTrait
     public function setCacheCollection(array $data, string $table = ''){
         $model = $this->getModel();
         $table = $this->cacheAttribute('table', $table);
-
 
         // model may have its own collection method
         if(method_exists($model,'newCollection')){

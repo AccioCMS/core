@@ -58,6 +58,35 @@ class PostCollection extends Collection
         return $paginator;
     }
 
+    /**
+     * Perform order by.
+     * It performs similar to sortBy method of collection but simplifies parameter order.
+     *
+     * @param $key
+     * @param string $mode
+     * @param int $options
+     * @return PostCollection
+     */
+    public function orderBy($key, $mode = 'ASC', $options = SORT_REGULAR){
+        return $this->sortBy($key, $options, ($mode === 'DESC' ? true : false));
+
+    }
+
+    /**
+     * Where json operator.
+     *
+     * @param $key
+     * @param $operator
+     * @param null $value
+     * @return PostCollection
+     */
+    public function whereCache($key, $operator, $value = null){
+        if (func_num_args() === 2) {
+            $value = $operator;
+            $operator = '=';
+        }
+    }
+
 
     /**
      * Where json operator.
