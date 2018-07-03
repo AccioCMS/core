@@ -30,7 +30,7 @@ trait MenuTrait
     public static function setMenuLinksByMenu(){
         //firstly, list them by MenuID
         $menuLinksByMenu = [];
-        foreach (\App\Models\MenuLink::getFromCache() as $menuLink) {
+        foreach (\App\Models\MenuLink::cache()->getItems() as $menuLink) {
             $menuLinksByMenu[$menuLink->menuID][$menuLink->menuLinkID] = $menuLink;
         }
 
@@ -67,12 +67,12 @@ trait MenuTrait
      * @return int|void Returns the ID of primary Menu if found, null instead
      **/
     public static function setPrimaryMenuID(){
-        if(Menu::getFromCache()) {
-            $primaryMenu = Menu::getFromCache()->where('isPrimary', 1);
+        if(Menu::cache()) {
+            $primaryMenu = Menu::cache()->getItems()->where('isPrimary', 1);
 
             //if no primary menu is found, get the first one from the list
             if (!$primaryMenu) {
-                $primaryMenu = Menu::getFromCache()->first();
+                $primaryMenu = Menu::cache()->getItems()->first();
             } else {
                 $primaryMenu = $primaryMenu->first();
             }
@@ -123,8 +123,8 @@ trait MenuTrait
      *
      */
     public static function findBySlug($slug){
-        if(\App\Models\Menu::getFromCache()) {
-            $getMenuLink = \App\Models\Menu::getFromCache()->where('slug', $slug);
+        if(\App\Models\Menu::cache()->getItems()) {
+            $getMenuLink = \App\Models\Menu::cache()->getItems()->where('slug', $slug);
 
             if ($getMenuLink) {
                 return $getMenuLink->first();
@@ -141,8 +141,8 @@ trait MenuTrait
      *
      */
     public static function findByID($menuID){
-        if(\App\Models\Menu::getFromCache()) {
-            $getMenuLink = \App\Models\Menu::getFromCache()->where('id', $menuID);
+        if(\App\Models\Menu::cache()->getItems()) {
+            $getMenuLink = \App\Models\Menu::cache()->getItems()->where('id', $menuID);
 
             if ($getMenuLink) {
                 return $getMenuLink->first();

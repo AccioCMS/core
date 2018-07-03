@@ -3,17 +3,13 @@
 namespace Accio\App\Traits;
 
 
+use Accio\Support\PostCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 
 trait CacheTrait
 {
-
-    /**
-     * @var
-     */
-    protected $cacheModel;
 
     /**
      * @var
@@ -41,9 +37,36 @@ trait CacheTrait
     protected $whereCache = [];
 
     /**
-     * @var
+     * @var object
      */
     protected static $deletingItem;
+
+    /**
+     *
+     * @var array =
+     */
+    protected $cachedItems;
+
+    /**
+     * @var integer|null
+     */
+    protected $limitCache;
+
+    /**
+     * @var array
+     */
+    protected $joinCache;
+
+
+    /**
+     * @var array
+     */
+    protected $withCache;
+
+    /**
+     * @var array
+     */
+    protected $orderByCache;
 
     /**
      * Boot Cache Trait Events.
@@ -87,24 +110,6 @@ trait CacheTrait
     }
 
     /**
-     * Set model.
-     *
-     * @param string $model
-     */
-    private function setModel(string $model){
-        $this->cacheModel = $model;
-    }
-
-    /**
-     * Get model.
-     *
-     * @return mixed
-     */
-    private function getModel(){
-        return $this->cacheModel;
-    }
-
-    /**
      * Cache name.
      *
      * @param string $cacheName
@@ -115,76 +120,13 @@ trait CacheTrait
 
 
     /**
-     * Set cache attributes.
-     *
-     * @param string $class
-     * @param string $cacheName
-     * @param array $attributes
-     *
-     * @return $this
-     * @return void
-     */
-    public static function initializeCache($model, string $cacheName, array $attributes){
-        $instance = (new self());
-        $instance->setModel($model);
-        $instance->setCacheName($cacheName);
-        $instance->setCacheAttributes($attributes);
-        $instance->setCacheInstance($instance);
-        return $instance;
-    }
-
-    /**
-     * Set cache attributes.
-     *
-     * @param array $attributes
-     * @return void
-     */
-    private function setCacheAttributes(array $attributes){
-        $this->cacheAttributes = $attributes;
-        return;
-    }
-
-    /**
-     * Get cache attribute.
-     *
-     * @param string $key
-     * @param mixed $default
-     */
-    private function cacheAttribute($key, $default = null){
-        if(isset($this->cacheAttributes[$key])){
-            return $this->cacheAttributes[$key];
-        }
-
-        $this->cacheAttributes[$key] = $default;
-
-        return $this->cacheAttributes[$key];
-    }
-
-    private function cacheWhere($key, $default = null){
-        $whereList = $this->cacheAttribute('where');
-        if($whereList){
-            if(isset($whereList[$key])){
-                return $whereList[$key];
-            }
-        }
-
-        return $default;
-    }
-
-    /**
      * @param string $cacheName
      * @param string $class
      * @return mixed
      *
      * @throws \Exception
      */
-    private function handleCustomCache(){
-        if($this->cacheAttribute('method')){
-            $methodName = $this->cacheAttribute('method');
-        }else{
-            $methodName = 'cache'.ucfirst($this->cacheName);
-        }
-
+    private function handleCustomCache($methodName){
         if(method_exists($this,$methodName)){
             return $this->$methodName();
         }else{
@@ -203,7 +145,7 @@ trait CacheTrait
      */
     private static function manageCacheState($cacheName, array $attributes = [], $item, $mode = false, $limit = null){
         $classPath = '\\App\\Models\\'.self::getModelFromParent();
-        $cachedItems = $classPath::getFromCache($cacheName, $attributes, false);
+        $cachedItems = $classPath::cache($cacheName, $attributes, false);
 
         $currentItem = $item->hasCacheItem($cachedItems,  $item->getKeyName(), $item->getKey(), $cacheName);
 
@@ -263,16 +205,14 @@ trait CacheTrait
         return [];
     }
 
-    public function cacheLimit(){
-        $classPath = '\\App\\Models\\'.self::getModelFromParent();
-
-        // Set cache limit
-        $limit = null;
-        if(property_exists($classPath, 'defaultCacheLimit')){
-            $limit = $classPath::$defaultCacheLimit;
+    /**
+     * @return $this
+     */
+    public function limitCache($limit = null){
+        if($limit){
+            $this->limitCache = $limit;
         }
-
-        return  $this->cacheAttribute('limit', $limit);
+        return $this;
     }
 
     /**
@@ -316,17 +256,17 @@ trait CacheTrait
      * @return Collection
      */
     public function setCacheCollection(array $data, string $table = ''){
-        $model = $this->getModel();
-        $table = $this->cacheAttribute('table', $table);
+        $modelClass = '\\App\\Models\\'.self::getModelFromParent();
+        $table = $this->getTable();
 
         // model may have its own collection method
-        if(method_exists($model,'newCollection')){
-            $collection = (new $model())->newCollection($data);
+        if(method_exists($this,'newCollection')){
+            $collection = $this->newCollection($data);
         }else{
             $collection = new Collection($data);
         }
 
-        $collection->transform(function ($row) use($model,$table) {
+        $collection->transform(function ($row) use($modelClass,$table) {
 
             // because cache saves json values are object, we need to encode them so
             // we laravel does not try to cast tham again
@@ -345,7 +285,7 @@ trait CacheTrait
             }
 
             // initialize model
-            $modelObj = new $model();
+            $modelObj = new $modelClass();
 
             // change table
             if($table){
@@ -371,30 +311,159 @@ trait CacheTrait
         return $modelName;
     }
 
+
     /**
-     * Get items from cache.
+     * Set cache attributes.
+     *
+     * @param string $class
+     * @param string $cacheName
+     * @param array $attributes
+     *
+     * @return $this
+     * @return void
+     */
+    public static function initializeCache(string $cacheName){
+        $model = '\\App\\Models\\'.self::getModelFromParent();
+        $instance = new $model();
+        $instance->setCacheName($cacheName);
+        $instance->setCacheInstance($instance);
+        return $instance;
+    }
+
+
+    /**
+     * Initialize cache instance.
      * Cache is generated if not found.
      *
-     * @return Collection
+     * @param string $cacheName
+     * @return $this
      */
-    public static function getFromCache(string $cacheName = '', $attributes = [], $returnCollection = true){
+    public static function cache(string $cacheName = ''){
         if(!$cacheName){
             $cacheName = self::getModelFromParent();
         }
-        $classPath = '\\App\\Models\\'.self::getModelFromParent();
+        $cacheInstance = self::initializeCache($cacheName);
+        $cacheInstance->cachedItems = Cache::get($cacheInstance->cacheName);
 
-        $cacheInstance = self::initializeCache($classPath, $cacheName, $attributes);
-        $data = Cache::get($cacheInstance->cacheName);
+        return $cacheInstance;
+    }
 
-        if(!$data){
-            $data  = $cacheInstance->cache();
+    
+    /**
+     * Specifies an ordering for the cache query results.
+     * Replaces any previously specified orderings, if any.
+     *
+     * @param string $sort  The ordering expression.
+     * @param string $order The ordering direction.
+     *
+     * @return $this This QueryBuilder instance.
+     */
+    public function orderByCache($sort, $order = null)
+    {
+        $this->orderByCache = [
+          'sort' => $sort,
+          'order' => (! $order ? 'ASC' : $order)
+        ];
+
+        return $this;;
+    }
+
+    /**
+     * Where cache.
+     * User to generate cache query.
+     *
+     * @param $key
+     * @param $operator
+     * @param null $value
+     * @return PostCollection
+     */
+    public function whereCache($key, $operator, $value = null){
+        if (func_num_args() === 2) {
+            $value = $operator;
+            $operator = '=';
         }
 
+        $this->whereCache[] = [
+          'key' => $key,
+          'operator' => $operator,
+          'value' => $value,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Gete where cache value.
+     *
+     * @param string|null $key
+     */
+    protected function whereCacheValue($key){
+        foreach($this->whereCache as $where){
+            if($where['key'] === $key){
+                return $where['value'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Join cache query.
+     *
+     * @param $table
+     * @param $first
+     * @param null $operator
+     * @param null $second
+     * @param string $type
+     * @param bool $where
+     * @return $this
+     */
+    public function joinCache($table, $first, $operator = null, $second = null, $type = 'inner', $where = false){
+        $this->jsonCache[] = [
+          'table' => $table,
+          'fill' => $first,
+          'operator' => $operator,
+          'second' => $second,
+          'type' => $type,
+          'where' => $where
+        ];
+        return $this;
+    }
+
+
+    /**
+     * Set the relationships that should be eager loaded to cache.
+     *
+     * @param  mixed  $relations
+     * @return $this
+     */
+    public function withCache($relations){
+        $this->withCache = $relations;
+        return $this;
+    }
+
+    /**
+     * Get items from cache.
+     *
+     * @param bool $returnCollection
+     * @return PostCollection|array Returns array on [TRUE], array on false
+     */
+    public function getItems($customCacheMethod = '', $returnCollection = true){
+        // Generate cache if it doesn't exist
+        if(!$this->cachedItems){
+            if($customCacheMethod){
+                $this->cachedItems = $this->handleCustomCache($customCacheMethod);
+            }else{
+                $this->cachedItems = $this->generateCache();
+            }
+        }
+
+        // Return collection
         if($returnCollection){
-            return $cacheInstance->setCacheCollection($data);
+            return $this->setCacheCollection($this->cachedItems);
         }
 
-        return $data;
+        return $this->cachedItems;
     }
 
     /**
@@ -402,13 +471,50 @@ trait CacheTrait
      *
      * @return array
      */
-    public function cache(){
-        $classPath = '\\App\\Models\\'.self::getModelFromParent();
-        $data  = $classPath::all()->toArray();
+    public function generateCache(){
+        $queryObject = $this;
 
+        // Join
+        if($this->joinCache){
+            foreach($this->joinCache as $join){
+                $queryObject = $queryObject->join($join['table'], $join['first'], $join['operator'], $join['second'], $join['type'], $join['where']);
+            }
+        }
+
+        // With relations
+        $withRelations = $this->withCache;
+        if($withRelations){
+            $queryObject->with($withRelations);
+        }
+
+        // Where conditions
+        if($this->whereCache){
+            foreach($this->whereCache as $where){
+                $queryObject = $queryObject->where($where['key'], $where['operator'], $where['value']);
+            }
+        }
+
+        // Limit
+        $limit = (property_exists($this,'defaultLimitCache') ? $this->defaultLimitCache : $this->limitCache);
+        if($limit){
+            $queryObject = $queryObject->limit($limit);
+        }
+
+        // Order
+        $orderBy = $this->orderByCache;
+        if($orderBy){
+            $queryObject = $queryObject->orderBy($orderBy['key'],$orderBy['type']);
+        }
+
+        // Execute query
+        $data = $queryObject->get()->toArray();
+
+        // Save in cache
         Cache::forever($this->cacheName,$data);
+
         return $data;
     }
+
 
     /**
      * Check if an attribute is listed in model

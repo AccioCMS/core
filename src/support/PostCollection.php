@@ -80,22 +80,6 @@ class PostCollection extends Collection
      * @param null $value
      * @return PostCollection
      */
-    public function whereCache($key, $operator, $value = null){
-        if (func_num_args() === 2) {
-            $value = $operator;
-            $operator = '=';
-        }
-    }
-
-
-    /**
-     * Where json operator.
-     *
-     * @param $key
-     * @param $operator
-     * @param null $value
-     * @return PostCollection
-     */
     public function whereJson($key, $operator, $value = null){
         return $this->filter($this->jsonOperator(...func_get_args()));
     }

@@ -40,19 +40,19 @@ class BasePostController extends MainController {
         $customFieldsGroups = CustomFieldGroup::findGroups('post-type', 'create', 0, $postTypeSlug);
 
         // post type
-        $postType = PostType::getFromCache()->where('slug', $postTypeSlug)->first();
+        $postType = PostType::cache()->getItems()->where('slug', $postTypeSlug)->first();
 
         // Categories (options to select)
-        $categories = array_values(App\Models\Category::getFromCache()->where("postTypeID", $postType->postTypeID)->toArray());
+        $categories = array_values(App\Models\Category::cache()->getItems()->where("postTypeID", $postType->postTypeID)->toArray());
 
         return[
           'postType' => $postType,
-          'languages' => Language::getFromCache(),
+          'languages' => Language::cache()->getItems(),
           'categories' => $categories,
           'customFieldsGroups' => $customFieldsGroups,
           'inTableColumns' => $this->getInTableColumns($postTypeSlug),
           'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug),
-          'users' => User::getFromCache(),
+          'users' => User::cache()->getItems(),
           'createdByUserID' => Auth::user()->userID,
         ];
     }
@@ -206,7 +206,6 @@ class BasePostController extends MainController {
 
         // custom events columns
         $customListColumms = Event::fire('post:table_list_columns', [$postType]);
-//        dd($customListColumms);
         foreach($customListColumms as $customList){
             if(is_array($customList)) {
                 foreach ($customList as $key => $value) {
@@ -226,7 +225,7 @@ class BasePostController extends MainController {
      */
     public function getPostTypeFieldsValues(string $postType, $post = ""){
         $fields = App\Models\PostType::getFields($postType);
-        $languages = Language::getFromCache();
+        $languages = Language::cache()->getItems();
         $values = [];
 
         foreach ($fields as $field){
@@ -898,7 +897,7 @@ class BasePostController extends MainController {
         }
 
         // Categories (options to select)
-        $categories = array_values(App\Models\Category::getFromCache()->where("postTypeID", $currentPostType->postTypeID)->toArray());
+        $categories = array_values(App\Models\Category::cache()->getItems()->where("postTypeID", $currentPostType->postTypeID)->toArray());
 
         // get the selected categories from the DB table categories_relations
         $selectedCategories = $mysqlConnection->table('categories_relations')
@@ -924,7 +923,7 @@ class BasePostController extends MainController {
             $selectedTags[$tagsRelation->language][] = $tagsRelation;
         }
 
-        $users = User::getFromCache();
+        $users = User::cache()->getItems();
 
         $response = array(
           'post' => [
@@ -949,7 +948,7 @@ class BasePostController extends MainController {
           'customFieldsGroups' => $customFieldGroups,
           'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug, $post),
           'categories' => $categories,
-          'languages' => Language::getFromCache(),
+          'languages' => Language::cache()->getItems(),
           'users' => $users,
         );
 

@@ -42,13 +42,13 @@ class CategoryRelationModel extends Model
      *
      * @return array
      */
-    public function cache(){
+    public function generateCache(){
         $postTypeSlug = $this->cacheAttribute('belongsTo', $this->cacheName);
         if(!isPostType($postTypeSlug)){
             throw new \Exception('Post type \''.$postTypeSlug.'\' not found in Cetegory relation\'s cache method!');
         }
 
-        $postIDs = Post::getFromCache($postTypeSlug)->pluck("postID")->toArray();
+        $postIDs = Post::cache($postTypeSlug)->getItems()->pluck("postID")->toArray();
         $data = CategoryRelation::where('belongsTo',$postTypeSlug)->whereIn('belongsToID', $postIDs)->get()->toArray();
         Cache::forever('categories_relations_'.$postTypeSlug,$data);
         return $data;

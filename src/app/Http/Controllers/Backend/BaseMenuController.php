@@ -264,7 +264,7 @@ class BaseMenuController extends MainController{
                     $controllerName = str_replace('.php', '', $file->getFileName());
                     $controllerClass = Theme::getNamespace() . '\\Controllers\\' . $controllerName;
                     $routes = $controllerClass::getMenuLinkRoutes($controllerName);
-                    if($routes){
+                    if ($routes) {
                         $menuLinkRoutes[$controllerName] = $routes;
                     }
                 }
@@ -274,7 +274,7 @@ class BaseMenuController extends MainController{
 
 
         // Check post types have routes
-        $postTypes = PostType::getFromCache()->where('isVisible', true);
+        $postTypes = PostType::where('isVisible', true)->get();
         foreach($postTypes as $postType){
             $postTypeControllerName = ucfirst(camel_case($postType->slug)).'Controller';
 
@@ -383,7 +383,7 @@ class BaseMenuController extends MainController{
         $final = array(
             'list' => $convertedMenuLinks,
             'menu' => $menu,
-            'languages' => Language::getFromCache()
+            'languages' => Language::cache()->getItems()
         );
 
         // Fire event
@@ -478,7 +478,7 @@ class BaseMenuController extends MainController{
      * @return array list of the related apps for a specific menu link
      * */
     public function getRelatedApps($lang, $menuLinksID){
-        $postTypes = PostType::getFromCache();
+        $postTypes = PostType::cache()->getItems();
         $categories = Category::all();
         $menuLinks = MenuLinkConfig::where('menuLinkID', $menuLinksID)->get();
 
