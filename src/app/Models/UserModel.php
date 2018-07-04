@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Accio\App\Traits;
 use Accio\Support\Facades\Meta;
+use Laravel\Passport\HasApiTokens;
 use Spatie\Activitylog\Traits\HasActivity;
 
 class UserModel extends Authenticatable
@@ -30,7 +31,8 @@ class UserModel extends Authenticatable
       Traits\UserTrait,
       Traits\TranslatableTrait,
       Traits\CacheTrait,
-      Traits\BootEventsTrait;
+      Traits\BootEventsTrait,
+      HasApiTokens;
 
     /** @var array $fillable fields that can be filled in CRUD*/
     protected $fillable = [

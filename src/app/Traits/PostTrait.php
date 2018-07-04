@@ -855,6 +855,45 @@ trait PostTrait{
     }
 
     /**
+     * Get posts a tag.
+     * Accepts query parameters: limit, belongsTo
+     *
+     * @param int $limit
+     * @param array $tagIDs
+     *
+     * @return mixed
+     */
+    public function getPostsByTags($limit = 6, $tagIDs = [])
+    {
+        // Validate post type
+        if(!$tagIDs) {
+            $tagIDs = [];
+            foreach ($this->tags as $tag) {
+                $tagIDs[] = $tag->tagID;
+            }
+        }
+
+        if($tagIDs) {
+            $postsObj = new Post();
+            $postsObj->setTable($this->getTable());
+            $posts = $postsObj
+              ->select('postID', 'title', 'featuredImageID', 'slug')
+              ->join('tags_relations', 'tags_relations.belongsToID', $this->getTable() . '.postID')
+              ->where('belongsTo', $this->getTable())
+              ->with('featuredImage')
+              ->published()
+              ->whereIn('tagID', $tagIDs)
+              ->orderBy('published_at', 'DESC')
+              ->limit($limit)
+              ->get();
+
+            return $posts;
+        }else{
+            return collect();
+        }
+    }
+
+    /**
      * Handle post's content
      * @return mixed
      */

@@ -625,49 +625,6 @@ class PostModel extends Model{
         return $relations;
     }
 
-
-    /**
-     * Gets collection of a tag ($post->tags) and returns other posts with the same tags.
-     *
-     * todo me e ndreq
-     * @param int $numberOfPosts
-     * @return array
-     * @throws \Exception
-     */
-    public function getPostsByTags(int $numberOfPosts){
-        if(!$this->hasTags()){
-            return [];
-        }
-
-        $tmpTagIDs = [];
-        $postsByTags = [];
-
-        foreach($this->tags as $tag){
-            $tmpTagIDs[] = $tag->tagID;
-        }
-
-        return [];
-
-        $count = 0;
-        $posts = Post::cache($this->getTable())->getItems()->published();
-        foreach($posts as $post){
-            if($post->postID != $this->postID) {
-                foreach ($post->tags as $tag) {
-                    if (in_array($tag->tagID, $tmpTagIDs) && $count <= $numberOfPosts) {
-                        $postsByTags[] = $post;
-                        $count++;
-                    }
-                }
-            }
-
-            if($count == $numberOfPosts){
-                break;
-            }
-        }
-
-        return $postsByTags;
-    }
-
     /**
      * Handle callback of insert, update, delete
      * */
