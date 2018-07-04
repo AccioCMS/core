@@ -21,6 +21,8 @@ export const postForm = {
             this.dateFormat = 'd MMMM yyyy';
             this.users = [];
             this.createdByUserID = 0;
+            this.$store.commit('setMediaSelectedFiles', {});
+
 
             let currentDate = new Date()
             this.published_at = {
@@ -95,10 +97,11 @@ export const postForm = {
                         this.categoriesOptions = values
 
                         // if url query category make that category selected
-                        if(Object.keys(this.$route.query).length && this.$route.query.category !== undefined){
+                        if(Object.keys(this.$route.query).length && this.$route.query.categoryID !== undefined){
+
                             for(let k in this.categoriesOptions){
-                                if(this.categoriesOptions[k].categoryID == this.$route.query.category){
-                                    this.selectedCategories[0] = this.categoriesOptions[k];
+                                if(this.categoriesOptions[k].categoryID == this.$route.query.categoryID){
+                                    this.selectedCategories.push(this.categoriesOptions[k]);
                                 }
                             }
                         }

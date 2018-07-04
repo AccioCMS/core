@@ -535,6 +535,11 @@
         </div>
     </div>
 </template>
+<style scoped>
+    .hide{
+        display: none !important;
+    }
+</style>
 <script>
     import Datepicker from 'vuejs-datepicker';
     import VueTimepicker from 'vue2-timepicker';
@@ -707,6 +712,7 @@
                 }).then((resp) => {
                     if(resp.code == 200){
                         this.onStoreBtnClicked('post-',redirectChoice,resp.id);
+                        this.loadCreateInputs();
                         this.$emit('emitStore', {
                             on: "create",
                             response: resp
@@ -778,6 +784,10 @@
                         this.slug[langSlug] = response;
                         $("#slug_"+langSlug).val(response);
                     });
+            },
+
+            test(){
+                console.log("TEST TEST")
             }
         },
         computed: {
@@ -798,13 +808,23 @@
             },
             getSubFields(){
                 return this.$store.getters.get_sub_custom_fields;
-            },
+            }
         },
 
         watch:{
             // watch for url changes and component doesn't change
             '$route': function(){
                 this.loadCreateInputs();
+            },
+            areTagsLoading: function(newVal, oldVal) { // watch it
+                // $(".multiselect__content-wrapper")
+                if(newVal){
+                    $(".multiselect__content-wrapper").addClass("hide");
+                }else {
+                    $(".multiselect__content-wrapper").removeClass("hide");
+                }
+                console.log("TEST areTagsLoading");
+                console.log('Prop changed: ', newVal, ' | was: ', oldVal)
             }
         }
     }
