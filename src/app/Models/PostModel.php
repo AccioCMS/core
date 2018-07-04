@@ -1017,8 +1017,9 @@ class PostModel extends Model{
      */
     public function getCategoriesAttribute()
     {
-        // request caregory only if post type use categories
+        // Request category only if post type uses categories
         $getPostType = getPostType($this->getTable());
+
         if($getPostType->hasCategories) {
             if ($this->attributeExists('categories')) {
                 $items = $this->getAttributeFromArray('categories');
@@ -1028,17 +1029,6 @@ class PostModel extends Model{
                 }
                 return $items;
             } else {
-
-                // Try to find categories in cache
-                $categoriesID = CategoryRelation::cache($this->getTable())->getItems()
-                  ->where('belongsToID', $this->postID)
-                  ->pluck(['categoryID'])
-                  ->all();
-
-                if ($categoriesID) {
-                    return Category::cache()->getItems()->whereIn('categoryID', $categoriesID);
-                }
-
                 // or search in relations
                 return $this->getRelationValue('categories');
             }
@@ -1158,7 +1148,7 @@ class PostModel extends Model{
     {
         $findPostType = PostType::findBySlug($this->getTable());
         if(!$findPostType){
-            throw new \Exception("TaCategories  relations could not be made because the post type of the post #".$this->postID." could ont be found!");
+            throw new \Exception("Categories  relations could not be made because the post type of the post #".$this->postID." could ont be found!");
         }
         return $this->hasManyThrough('App\Models\Category', 'App\Models\CategoryRelation','belongsToID','categoryID','postID','categoryID')->where('postTypeID',$findPostType->postTypeID);
     }
