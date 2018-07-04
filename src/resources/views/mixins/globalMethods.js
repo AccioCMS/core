@@ -33,7 +33,7 @@ export const globalMethods = {
             }else if(redirectChoice == 'close'){
                 this.redirect(routeNamePrefix+'list');
             }else if(redirectChoice == 'new'){
-                this.redirect(routeNamePrefix+'create');
+                this.redirect(routeNamePrefix+'create', '', '', this.$route.query);
             }else{
                 alert("Some error occurred");
             }

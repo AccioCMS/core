@@ -326,7 +326,7 @@ trait MediaTrait{
                     });
                 }
 
-                if ($img->save($thumbDir . '/' . $imageObj->filename, config('image-optimizer.default_quality'))) {
+                if ($img->save($thumbDir . '/' . $imageObj->filename, config('image-optimizer.default_quality'))){
                     // optimize image
                     $this->optimize($thumbDir . '/' . $imageObj->filename);
                     return true;
