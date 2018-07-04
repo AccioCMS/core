@@ -841,7 +841,8 @@ trait PostTrait{
      * @return boolean Returns true if found
      */
     public function hasTags(){
-        return (isset($this->tags) && !$this->tags->isEmpty());
+        $postType = getPostType($this->getTable());
+        return ($postType->hasTags && isset($this->tags) && !$this->tags->isEmpty());
     }
 
     /**
@@ -849,7 +850,8 @@ trait PostTrait{
      * @return bool
      */
     public function hasCategory(){
-        return (isset($this->categories) && !$this->categories->isEmpty());
+        $postType = getPostType($this->getTable());
+        return ($postType->hasCategories && isset($this->categories) && !$this->categories->isEmpty());
     }
 
     /**

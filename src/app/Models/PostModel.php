@@ -273,6 +273,38 @@ class PostModel extends Model{
     }
 
     /**
+     * Initialize cache instance.
+     * Cache is generated if not found.
+     *
+     * @param string $cacheName
+     * @return mixed
+     * @throws \Exception
+     */
+    public static function cache($cacheName = ''){
+        if(!$cacheName){
+            $cacheName = self::getAutoCacheName();
+        }
+        $cacheInstance = self::initializeCache($cacheName);
+        $cacheInstance->cachedItems = Cache::get($cacheInstance->cacheName);
+
+        // Validate post type by cache name
+        $postType = getPostType($cacheInstance->cacheName);
+        if(!$postType){
+            // or from table
+            $postType = getPostType($cacheInstance->getTable());
+
+            if(!$postType) {
+                throw new \Exception($cacheInstance->cacheName . ' doest\'t seem like a post type slug.');
+            }
+        }
+
+        // Set table to this post type
+        $cacheInstance->setTable($postType->slug);
+
+        return $cacheInstance;
+    }
+
+    /**
      * Cache posts by post type.
      *
      * @return Collection
@@ -280,14 +312,7 @@ class PostModel extends Model{
      * @throws \Exception
      **/
     private function generateCache(){
-        // Validate post type
-        $postType = getPostType($this->cacheName);
-        if(!$postType){
-            $postType = getPostType($this->getTable());
-            if(!$postType) {
-                throw new \Exception($this->cacheName . ' doest\'t seem like a post type slug.');
-            }
-        }
+        $postType = getPostType($this->getTable());
 
         $queryObject = $this;
 
@@ -744,7 +769,7 @@ class PostModel extends Model{
      * @return object
      * @throws \Exception
      */
-    public static function sethomepage(){
+    public static function setHomepage(){
         if(!self::$homepage) {
             $findHomePage = null;
             if (settings('homepageID')) {
@@ -770,14 +795,14 @@ class PostModel extends Model{
      *
      * @param string $columnName Column of page to be returned
      *
-     * @return array|null Returns the data of the primary Menu if found, null instead
+     * @return array|string|null Returns the data of the primary Menu if found, null instead
      */
     public static function getHomepage($columnName = ''){
         if($columnName){
             if(isset(self::$homepage->$columnName)){
                 return self::$homepage->$columnName;
             }
-            return;
+            return null;
         }
         return self::$homepage;
     }

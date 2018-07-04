@@ -354,7 +354,6 @@ trait CacheTrait
         return $instance;
     }
 
-
     /**
      * Initialize cache instance.
      * Cache is generated if not found.
@@ -371,7 +370,6 @@ trait CacheTrait
 
         return $cacheInstance;
     }
-
 
     /**
      * Specifies an ordering for the cache query results.
