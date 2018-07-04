@@ -12,11 +12,9 @@ export const globalMethods = {
         },
         redirect(name, id = '', params = '', query = {}){
             if(id === undefined || id == ''){
-                console.log("QITUUU 11", query)
 
                 this.$router.push({ name: name, query: query });
             }else{
-                console.log("QITUUU 22", query)
                 this.$router.push({ name: name, params: {id: id}, query: query});
             }
         },
