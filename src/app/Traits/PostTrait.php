@@ -37,6 +37,7 @@ trait PostTrait{
     public function getNotyMessages(){
         return $this->notyMessages;
     }
+
     public function noty($type, $message, $key = ""){
         array_push($this->notyMessages,[
           'key' => $key,
@@ -47,11 +48,11 @@ trait PostTrait{
     }
 
     /**
-     * Find a post by slug
+     * Find a post by slug.
      *
      * @param  string  $slug the slug of the post
      * @param  string  $postTypeSlug the name of the post type, ex. post_services
-     * @param  boolean $showUnPublished check if the result should include unpublished posts or not.
+     *
      * @return object|null Returns post as array or null if not found
      **/
     public static function findBySlug($slug, $postTypeSlug = ''){
@@ -67,36 +68,26 @@ trait PostTrait{
         if($post){
             return $post;
         }
-        else { // than search in database
+        else { // when not available in cache, search in database
             $postObj = (new Post())->setTable($postTypeSlug);
             $post = $postObj
               ->where('slug->'.App::getLocale(), $slug)
               ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
               ->first();
 
-            // search in archive if not found in main database
-            if(!$post && env('DB_ARCHIVE')){
-                $postObj->setConnection('mysql_archive');
-                $post = $postObj
-                  ->where('slug->'.App::getLocale(), $slug)
-                  ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
-                  ->first();;
-            }
-
             return $post;
         }
     }
 
     /**
-     * Find a post by ID
+     * Find a post by ID.
      *
      * @param  int     $postID ID of the post
      * @param  string  $postTypeSlug Name of the post type, ex. post_services
-     * @param  boolean $showUnPublished Check if the result should include unpublished posts or not.
      *
      * @return object|null Returns post as array or null if not found
      **/
-    public static function findByID($postID, $postTypeSlug = '', $showUnPublished = false){
+    public static function findByID($postID, $postTypeSlug = ''){
         $post = null;
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
@@ -109,15 +100,13 @@ trait PostTrait{
         if($post){
             return $post;
         }
-        else { // than search in database
+        else { // when not available in cache, search in database
             $postObj = (new Post())->setTable($postTypeSlug);
-            $post = $postObj->where('postID', $postID)->first();
+            $post = $postObj
+              ->where('postID', $postID)
+              ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
+              ->first();
 
-            // search in archive if not found in main database
-            if(!$post && env('DB_ARCHIVE')){
-                $postObj->setConnection('mysql_archive');
-                $post = $postObj->where('postID', $postID)->first();;
-            }
             return $post;
         }
     }
@@ -127,7 +116,7 @@ trait PostTrait{
      *
      * @param $data array of data from request
      * @return array Returns 200 if successful, 500 if any internal error is found
-     * @throws Exception
+     * @throws \Exception
      * */
     public static function store($data){
         // return errors if there are any
@@ -137,7 +126,7 @@ trait PostTrait{
         }
 
         // Set posts table
-        $postObj = new \App\Models\Post();
+        $postObj = new Post();
         $postObj->setTable($data['postType']);
 
         // Remove foreign key check
@@ -475,7 +464,6 @@ trait PostTrait{
                             $c = 0;
                             foreach ($valuesByLang as $singleValue){
                                 if(isset($singleValue[$primaryKey])) {
-//                                    $tmpArr[$langSlug]['k_' . $c] = $singleValue[$primaryKey];
                                     $tmpArr[$langSlug][] = $singleValue[$primaryKey];
                                     $c++;
                                 }
@@ -493,7 +481,6 @@ trait PostTrait{
                     $c = 0;
                     foreach ($formData['value'] as $singleValue){
                         if(isset($singleValue[$primaryKey])) {
-//                            $tmpArr['k_' . $c] = $singleValue[$primaryKey];
                             $tmpArr[] = $singleValue[$primaryKey];
                             $c++;
                         }
@@ -774,14 +761,22 @@ trait PostTrait{
      *
      * @return string|null Returns url of featured image if found, null instead
      */
-    public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = '', array $options = []){
-        if($this->hasFeaturedImage()){
-            if(!$width && !$height){
-                return url($this->featuredImage->url) . "?" . str_replace(" ", "", $this->featuredImage->updated_at);
-            }else{
-                return $this->featuredImage->thumb($width, $height, $this->featuredImage, $options);
+    public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = '', array $options = [])
+    {
+        $imageURL = null;
+        if ($this->hasFeaturedImage()) {
+            if (!$width && !$height) {
+                $imageURL = url($this->featuredImage->url) . "?" . str_replace(" ", "", $this->featuredImage->updated_at);
+            } else {
+                $imageURL = $this->featuredImage->thumb($width, $height, $this->featuredImage, $options);
             }
-        }else if($defaultFeaturedImageURL){
+        }
+
+        if ($imageURL){
+            return $imageURL;
+        }
+        else if(!$imageURL && $defaultFeaturedImageURL){
+            // return default image if not image is found
             return $defaultFeaturedImageURL;
         }
 

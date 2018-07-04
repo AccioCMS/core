@@ -42,6 +42,11 @@ trait CacheTrait
     protected static $deletingItem;
 
     /**
+     * @var object
+     */
+    protected static $updatingItem;
+
+    /**
      *
      * @var array =
      */
@@ -76,6 +81,10 @@ trait CacheTrait
     protected static function bootCacheTrait(){
         self::created(function($item){
             $item->handleUpdateCache($item, "created");
+        });
+
+        self::updating(function($item){
+            $item->handleUpdateCache($item, "updating");
         });
 
         self::updated(function($item){
@@ -120,8 +129,8 @@ trait CacheTrait
 
 
     /**
-     * @param string $cacheName
-     * @param string $class
+     * @param string $methodName Method name
+     *
      * @return mixed
      *
      * @throws \Exception
@@ -137,21 +146,19 @@ trait CacheTrait
     /**
      * Add, update or remove an item from cache.
      *
-     * @param $cacheName
-     * @param array $attributes
-     * @param $item
-     * @param bool $mode
-     * @param null $limit
-     * @return array
+     * @param object $item
+     * @param string $mode created, updated or deleted
+     * @param $callback todo execute callback that generates cache if it doesn't exist
+     * @return $this
+     *
+     * @throws \Exception
      */
-    private static function manageCacheState($cacheName, array $attributes = [], $item, $mode = false, $limit = null){
-        $classPath = self::getModel();
-        $cachedItems = $classPath::cache($cacheName, $attributes, false);
-
-        $currentItem = $item->hasCacheItem($cachedItems,  $item->getKeyName(), $item->getKey(), $cacheName);
+    public function refreshState($item, $mode, $callback = null){
+        $cachedItems = $this->getItems('', false);
+        $currentItem = $this->hasCacheItem($cachedItems,  $item->getKeyName(), $item->getKey());
 
         if(!$cachedItems){
-            $cachedItems = [];
+            $cachedItems = $this->getItems();
         }
 
         // DELETE
@@ -171,6 +178,7 @@ trait CacheTrait
                 $cachedItems = array_values($cachedItems);
 
                 // Limit results
+                $limit = (property_exists($this,'defaultLimitCache') ? $this->defaultLimitCache : $this->limitCache);
                 if($limit) {
                     $countItems = count($cachedItems);
                     if ($countItems > $limit) {
@@ -181,11 +189,10 @@ trait CacheTrait
         }
 
         // Save cache
-        Cache::forever($cacheName,$cachedItems);
+        Cache::forever($this->cacheName,$cachedItems);
 
-        return $cachedItems;
+        return $this;
     }
-
 
     /**
      * Check if a key/value is in cache.
@@ -493,7 +500,7 @@ trait CacheTrait
         // With relations
         $withRelations = $this->withCache;
         if($withRelations){
-            $queryObject->with($withRelations);
+            $queryObject = $queryObject->with($withRelations);
         }
 
         // Where conditions
