@@ -80,7 +80,7 @@
 
                                     <td>
                                         <div class="btn-group">
-                                            <button type="button" class="btn btn-primary" @click="redirect('post-update', item.postID)" v-if="isOwner(item.createdByUserID, hasUpdatePermission)">
+                                            <button type="button" class="btn btn-primary" @click="redirect('post-update', item.postID, '', $route.query)" v-if="isOwner(item.createdByUserID, hasUpdatePermission)">
                                                 {{trans.__updateBtn}}
                                             </button>
 

@@ -10,11 +10,14 @@ export const globalMethods = {
             this.$store.dispatch('checkPermission', {app: app, key: key});
             return this.getHasPermission; // This is causing a loop @todo
         },
-        redirect(name, id = '', params = '', query = ''){
+        redirect(name, id = '', params = '', query = {}){
             if(id === undefined || id == ''){
+                console.log("QITUUU 11", query)
+
                 this.$router.push({ name: name, query: query });
             }else{
-                this.$router.push({ name: name, params: {id: id}});
+                console.log("QITUUU 22", query)
+                this.$router.push({ name: name, params: {id: id}, query: query});
             }
         },
 
