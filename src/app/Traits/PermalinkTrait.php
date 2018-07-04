@@ -27,7 +27,7 @@ trait PermalinkTrait
     public static function getByName($belongsTo, $name, $defaultURL = '')
     {
         //find by full name
-        $permalinks = Permalink::getFromCache();
+        $permalinks = Permalink::cache()->getItems();
         $singlePermalink = false;
 
         if ($permalinks) {

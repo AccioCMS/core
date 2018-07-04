@@ -259,7 +259,7 @@ class Routes{
             // Only proced base route that has translate as a middleware
             // base.homepage routes is handled in a separate method, for language purposes
             if($baseRoute->getName() == 'base.homepage' && in_array("translate",$baseRoute->middleware())){
-                foreach(Language::getFromCache() as $language){
+                foreach(Language::cache()->getItems() as $language){
                     // Create default language routes
                     $newRoute = Route::get($baseRoute->uri().'/'.$language->slug,$baseRoute->getActionName());
 

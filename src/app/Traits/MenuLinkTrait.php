@@ -64,7 +64,7 @@ trait MenuLinkTrait{
             // Get active MenuLinks by routeName and params
             $currentMenuLinkIDs = [];
             $isDefaultLanguage = (App::getLocale() == Language::getDefault('slug') ? '.default' : false);
-            foreach (\App\Models\MenuLink::getFromCache() as $menuLink) {
+            foreach (\App\Models\MenuLink::cache()->getItems() as $menuLink) {
                 $menuLinkRoute = Route::getRoutes()->getByName($menuLink->routeName . $isDefaultLanguage);
                 // maybe route doesn't have .default suffix
                 if (!$menuLinkRoute) {
@@ -228,53 +228,16 @@ trait MenuLinkTrait{
     }
 
     /**
+     * Get menulink by slug.
      *
-     * Get Home Page's data
-     * Home is supposed to be served form post_pages post type
+     * @param $slug
+     * @param string $languageSlug
      *
-     * @return object
+     * @return bool|mixed
      * @throws \Exception
      */
-    public static function sethomepage(){
-        if(!self::$homepage) {
-            $findHomePage = null;
-            if (settings('homepageID')) {
-                $findHomePage = Post::getFromCache('post_pages')->where('postID', settings('homepageID'))->first();
-            }
-
-            // get the first found page if no homepage is defined
-            if (!$findHomePage) {
-                $findHomePage = Post::getFromCache('post_pages')->first();
-            }
-
-            if(!$findHomePage){
-                throw new \Exception("No homepage found. Please add a page post!");
-            }
-            self::$homepage = $findHomePage;
-        }
-
-        return self::$homepage;
-    }
-
-    /**
-     * Get MenuLink that is set as Homepage
-     *
-     * @return array|string|null Returns column value if column found, null if not found. If column is not given all MenuLink data will be returned
-     */
-    public static function gethomepage(){
-        return self::$homepage;
-    }
-
-    /**
-     * Get MenuLink by slug
-     *
-     * @param string $slug The slug of MenuLink ex. "about-us"
-     *
-     * @return array|boolean MenuLink data if found, false if not found
-     *
-     */
     public static function findBySlug($slug,$languageSlug = ""){
-        $getMenuLink = array_where(\App\Models\MenuLink::getFromCache($languageSlug), function ($value)  use($slug){
+        $getMenuLink = array_where(MenuLink::cache($languageSlug)->getItems(), function ($value)  use($slug){
             return ($value['slug'] == $slug);
         });
 
@@ -285,16 +248,15 @@ trait MenuLinkTrait{
     }
 
     /**
-     * Get MenuLink by ID
+     * Get MenuLink by ID.
      *
-     * @param int $menuLinkID The ID of MenuLink.
-     * @param string $languageSlug Slug of lanaguage
-     *
-     * @return object|null MenuLink data if found, null if not found
-     *
+     * @param $menuLinkID
+     * @param string $languageSlug
+     * @return mixed
+     * @throws \Exception
      */
     public static function findByID($menuLinkID,$languageSlug=""){
-        $menuLinks = MenuLink::getFromCache($languageSlug);
+        $menuLinks = MenuLink::cache($languageSlug)->getItems();
         if($menuLinks){
             return $menuLinks->where('menuLinkID',$menuLinkID)->first();
         }
@@ -327,8 +289,8 @@ trait MenuLinkTrait{
     public static function parentID($menuLinkID){
         $parentIDs = [];
         while($menuLinkID != NULL){
-            if(MenuLink::getFromCache()) {
-                $parentObj = MenuLink::getFromCache()->where('menuLinkID', $menuLinkID)->first();
+            if(MenuLink::cache()->getItems()) {
+                $parentObj = MenuLink::cache()->getItems()->where('menuLinkID', $menuLinkID)->first();
                 if ($parentObj) {
                     $menuLinkID = $parentObj->parent;
                     if ($menuLinkID) {
@@ -433,7 +395,7 @@ trait MenuLinkTrait{
      */
     public static function cmsMenus(){
         $result = [];
-        foreach(\App\Models\Menu::getFromCache() as $menu){
+        foreach(\App\Models\Menu::cache()->getItems() as $menu){
             $result[$menu->slug] = [
               'menuID' => $menu->menuID,
               'title' => $menu->title,
@@ -651,7 +613,7 @@ trait MenuLinkTrait{
           ]
         ];
 
-        foreach (PostType::getFromCache() as $postType){
+        foreach (PostType::cache()->getItems() as $postType){
             if(!$postType->isVisible){
                 continue;
             }
@@ -814,7 +776,7 @@ trait MenuLinkTrait{
             // Set home page MenuLink if home page is requested
             $getCurrentPath = Request::path();
             if($getCurrentPath == '/' || $getCurrentPath == App::getLocale()){
-                self::setCurrent(MenuLink::gethomepage());
+                self::setCurrent(Post::gethomepage());
             }
             //or if any other menulink is active
             else if(self::getActiveIDs()){

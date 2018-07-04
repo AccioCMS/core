@@ -346,7 +346,7 @@ trait UserTrait{
      * */
 
     public static function findBySlug($slug, $columnName = ''){
-        $userObj = \App\Models\User::getFromCache()->where('slug', $slug)->first();
+        $userObj = \App\Models\User::cache()->getItems()->where('slug', $slug)->first();
 
         // return custom column
         if ($columnName && isset($userObj->$columnName)) {
@@ -365,7 +365,7 @@ trait UserTrait{
      * @return object|null Returns requested user if found, null instead
      * */
     public static function findByID($userID, $columnName = ''){
-        $userObj = \App\Models\User::getFromCache()->where('userID', $userID)->first();
+        $userObj = \App\Models\User::cache()->getItems()->where('userID', $userID)->first();
 
         // return custom column
         if ($columnName && isset($userObj->$columnName)) {
@@ -573,7 +573,7 @@ trait UserTrait{
      * @return bool
      */
     private function hasDataInPostsType(){
-        $postTypes = PostType::getFromCache();
+        $postTypes = PostType::cache()->getItems();
         foreach($postTypes as $postType){
             $hasData = DB::table($postType->slug)->where("createdByUserID", $this->userID)->count();
             if($hasData){
@@ -584,12 +584,12 @@ trait UserTrait{
                 if($field->type->inputType == "db" && $field->dbTable->name == "users"){
                     if($field->translatable){
                         if($field->isMultiple){
-                            foreach(Language::getFromCache() as $language){
+                            foreach(Language::cache()->getItems() as $language){
                                 $hasData = DB::table("post_articles")->whereRaw("JSON_CONTAINS($field->slug->\"$.$language->slug\", '[$this->userID]')")->count();
                                 if($hasData) return true;
                             }
                         }else{
-                            foreach(Language::getFromCache() as $language){
+                            foreach(Language::cache()->getItems() as $language){
                                 $hasData = DB::table($postType->slug)->where($field->slug."->".$language->slug, $this->userID)->count();
                                 if($hasData) return true;
                             }

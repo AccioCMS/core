@@ -34,32 +34,4 @@ class CategoryRelationModel extends Model
      * @var string
      */
     public static $label = "categories.relations.label";
-
-
-    /**
-     * Default method to handle cache query.
-     * Insert all cache relations for the posts the are in chache
-     *
-     * @return array
-     */
-    public function cache(){
-        $postTypeSlug = $this->cacheAttribute('belongsTo', $this->cacheName);
-        if(!isPostType($postTypeSlug)){
-            throw new \Exception('Post type \''.$postTypeSlug.'\' not found in Cetegory relation\'s cache method!');
-        }
-
-        $postIDs = Post::getFromCache($postTypeSlug)->pluck("postID")->toArray();
-        $data = CategoryRelation::where('belongsTo',$postTypeSlug)->whereIn('belongsToID', $postIDs)->get()->toArray();
-        Cache::forever('categories_relations_'.$postTypeSlug,$data);
-        return $data;
-    }
-
-    /**
-     * Delete post cache by categories
-     *
-     * @param string $postTypeSlug
-     */
-    public static function updateCache($item, $mode){
-        self::manageCacheState('categories_relations_'.$item->belongsTo, ['belongsTo' => $item->belongsTo], $item, $mode);
-    }
 }

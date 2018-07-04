@@ -11,21 +11,20 @@ class PostCollection extends Collection
 {
 
     /**
-     * Scope a query to only include published posts.
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * Scope a query to only include published posts..
+     *
+     * @return PostCollection
      */
     public function published(){
-
         return $this
           ->where('published_at', '<=', date('Y-m-d H:i:s'))
           ->whereJson('status->'.App::getLocale(),'published');
     }
 
     /**
-     * Scope a query to only include unpublished posts.
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * Scope a query to only include unpublished posts..
+     *
+     * @return PostCollection
      */
     public function unpublished(){
         return $this
@@ -36,11 +35,10 @@ class PostCollection extends Collection
     /**
      * Create a pagination of items from array or collection.
      *
-     * @param array|Collection      $items
-     * @param int  $perPage
-     * @param int  $page
+     * @param int $perPage
+     * @param null $page
      * @param array $options
-     *
+     * @param null $setPath
      * @return LengthAwarePaginator
      */
     public function paginate($perPage = 15, $page = null, $options = [], $setPath = null)
@@ -71,22 +69,6 @@ class PostCollection extends Collection
         return $this->sortBy($key, $options, ($mode === 'DESC' ? true : false));
 
     }
-
-    /**
-     * Where json operator.
-     *
-     * @param $key
-     * @param $operator
-     * @param null $value
-     * @return PostCollection
-     */
-    public function whereCache($key, $operator, $value = null){
-        if (func_num_args() === 2) {
-            $value = $operator;
-            $operator = '=';
-        }
-    }
-
 
     /**
      * Where json operator.
