@@ -14,6 +14,7 @@ class Post extends MainController
 
     /**
      * Get data for "you may like "component.
+     * Accepts query parameters: limit, width, height
      *
      * @param $postID
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Support\Collection
@@ -27,6 +28,11 @@ class Post extends MainController
 
         // get related
         $limitTags = (is_numeric(request('limit')) ? request('limit') : 6);
+        $thumbWidth = (is_numeric(request('width')) ? request('width') : 200);
+        $thumbHeight = (is_numeric(request('height')) ? request('height') : 200);
+
+
+        // get posts by tags
         $relatedPosts = $post->getPostsByTags($limitTags);
 
         // get random posts if there are less posts than required limit
@@ -55,7 +61,7 @@ class Post extends MainController
             $posts[$row->postID]['postID'] = $row->postID;
             $posts[$row->postID]['title'] = $row->title;
             $posts[$row->postID]['href'] = $row->href;
-            $posts[$row->postID]['featuredImage'] = $row->featuredImage;
+            $posts[$row->postID]['featuredImage'] = $row->featuredImageURL($thumbWidth, $thumbHeight);
         }
 
         return response()->json(['data' => $posts], 200);
