@@ -35,7 +35,6 @@ class BasePostController extends MainController {
      * @return array
      */
     public function getDataForCreate($lang, $postTypeSlug){
-
         // Custom field groups
         $customFieldsGroups = CustomFieldGroup::findGroups('post-type', 'create', 0, $postTypeSlug);
 
