@@ -204,6 +204,9 @@ trait CacheTrait
      * @return array
      */
     private function hasCacheItem($array, $keyName, $keyValue){
+        if(!$array || !count($array)){
+            return [];
+        }
         foreach ($array as $index => $row){
             if($row[$keyName] ==  $keyValue){
                 return [ $index => $row];
@@ -230,13 +233,14 @@ trait CacheTrait
      * @return void
      */
     public function updateCache($item, string $mode){
-        $model = $cacheName = self::getModel();
+        $model =  self::getModel();
+        $cacheName = self::getAutoCacheName();
 
         // Fire cache updated event
         Event::fire(lcfirst($model).':cacheUpdated', [$item, $mode]);
 
         // Manage cache state
-        self::manageCacheState($cacheName, [], $item, $mode, $this->cacheLimit());
+        $model::cache($cacheName)->refreshState($item, $mode);
     }
 
     /**
@@ -268,12 +272,21 @@ trait CacheTrait
 
         // Remove "Model" form class so project's models are called
         if(strstr(get_class(), 'Accio\\App\\')){
-            $class = str_replace(['Accio\\'],'',$className);
             $explode = explode('\\',$className);
             $className = '\\App\\Models\\'.str_replace('Model','',end($explode));
         }
 
         return $className;
+    }
+
+    /**
+     * Get cache name automatically based on model's name.
+     *
+     * @return string
+     */
+    private static function getAutoCacheName(){
+        $explode = explode('\\',get_class());
+        return str_replace('Model','',end($explode));
     }
 
     /**
@@ -283,7 +296,7 @@ trait CacheTrait
      * @return Collection
      */
     public function setCacheCollection(array $data, string $table = ''){
-        $modelClass = $this->getModel();
+        $modelClass = self::getModel();
         $table = $this->getTable();
 
         // model may have its own collection method
@@ -351,7 +364,7 @@ trait CacheTrait
      */
     public static function cache($cacheName = ''){
         if(!$cacheName){
-            $cacheName = self::getModel();
+            $cacheName = self::getAutoCacheName();
         }
         $cacheInstance = self::initializeCache($cacheName);
         $cacheInstance->cachedItems = Cache::get($cacheInstance->cacheName);

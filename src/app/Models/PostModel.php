@@ -418,7 +418,7 @@ class PostModel extends Model{
                 // We need category relations, to remove category's cache.
                 $postObj = self::$deletingItem;
 
-                if (isset($postObj->categories)) {
+                if ($postObj->hasCategory()) {
                     foreach ($postObj->categories as $category) {
                         $this->refreshPostInCacheCategory($postObj, $mode, $category);
                     }
@@ -431,20 +431,29 @@ class PostModel extends Model{
                 // Post has relations that are saved after a post is saved
                 // therefore we need to fire cache refresh after all relations are saved.
                 Event::listen('post:stored', function ($data, $postObj) use($mode){
-                    foreach ($postObj->categories as $category) {
+                    if ($postObj->hasCategory()) {
+                        foreach ($postObj->categories as $category) {
 
-                        // Remove cache of previous selected categories, if there is any change
-                        if(isset(self::$updatingItem->categories)){
-                            foreach(self::$updatingItem->categories as $prevCategory){
-                                // only update if previous category is currently not selected
-                                if($postObj->categories->where('categoryID', $prevCategory->categoryID)->isEmpty()){
-                                    $this->refreshPostInCacheCategory($postObj, "deleted", $prevCategory);
+                            // Remove cache of previous selected categories, if there is any change
+                            if (self::$updatingItem->hasCategory()) {
+                                foreach (self::$updatingItem->categories as $prevCategory) {
+                                    // only update if previous category is currently not selected
+                                    if ($postObj->categories->where('categoryID', $prevCategory->categoryID)->isEmpty()) {
+                                        $this->refreshPostInCacheCategory($postObj, "deleted", $prevCategory);
+                                    }
                                 }
                             }
-                        }
 
-                        // update from current changes
-                        $this->refreshPostInCacheCategory($postObj, $mode, $category);
+                            // update from current changes
+                            $this->refreshPostInCacheCategory($postObj, $mode, $category);
+                        }
+                    }else{
+                        // Remove post from previous category if there is no category selected
+                        if (self::$updatingItem->hasCategory()) {
+                            foreach (self::$updatingItem->categories as $prevCategory) {
+                                $this->refreshPostInCacheCategory($postObj, "deleted", $prevCategory);
+                            }
+                        }
                     }
                 });
                 break;
