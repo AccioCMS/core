@@ -596,8 +596,10 @@ class PostModel extends Model{
 
 
     /**
-     * Get cache relations
-     * @param object $postType
+     * Get cache relations.
+     *
+     * @param $postType
+     * @return array
      */
     public function getDefaultRelations($postType){
         $relations = [];
@@ -619,9 +621,6 @@ class PostModel extends Model{
 
         // FeaturedImage
         $relations[] = 'featuredimage';
-
-        // Media
-        $relations[] = 'media';
 
         return $relations;
     }
