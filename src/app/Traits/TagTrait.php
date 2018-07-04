@@ -15,7 +15,7 @@ trait TagTrait{
      * @return object|null Returns an object with post type's data if found, or nullnull if not found
      * */
     public static function findBySlug($tagSlug){
-        $getPostTypeTags = self::getFromCache();
+        $getPostTypeTags = self::cache()->getItems();
 
         if($getPostTypeTags) {
             $tag = $getPostTypeTags->where('slug',$tagSlug);
@@ -33,7 +33,7 @@ trait TagTrait{
      * @return object|null Returns an object with tag's data if found, or null if not found
      * */
     public static function findByID($tagID){
-        $getTags = self::getFromCache();
+        $getTags = self::cache()->getItems();
 
         if(isset($getTags->$tagID)){
             return $getTags->$tagID;

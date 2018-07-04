@@ -11,6 +11,7 @@ use App\Models\PostType;
 use App\Models\TagRelation;
 use App\Models\Task;
 use App\Models\Theme;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
@@ -58,7 +59,7 @@ trait PostTrait{
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
         // search in cache
-        $cachedPosts = self::getFromCache($postTypeSlug);
+        $cachedPosts = self::cache($postTypeSlug)->getItems();
         if($cachedPosts){
             $post = $cachedPosts->where('slug',$slug)->first();
         }
@@ -100,7 +101,7 @@ trait PostTrait{
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
         // search in cache
-        $cachedPosts = self::getFromCache($postTypeSlug);
+        $cachedPosts = self::cache($postTypeSlug)->getItems();
         if($cachedPosts){
             $post = $cachedPosts->where('postID',$postID)->first();
         }
@@ -129,8 +130,6 @@ trait PostTrait{
      * @throws Exception
      * */
     public static function store($data){
-        $isInArchive = false;
-
         // return errors if there are any
         $errorMessages = self::validateStore($data);
         if(count($errorMessages)){
@@ -147,7 +146,7 @@ trait PostTrait{
         // on create
         if(!isset($data['postID'])){
             $populatedFields = self::populateStoreColumns($postObj, $data);
-            $populatedFields['post']->createdByUserID = Auth::user()->userID;
+            $populatedFields['post']->createdByUserID = (!User::isAdmin() || !isset($data['createdByUserID'])) ? Auth::user()->userID : $data['createdByUserID'];
             $postObj = $populatedFields['post'];
 
             if(!$postObj->save()){
@@ -157,9 +156,10 @@ trait PostTrait{
             $postID = $postObj->postID;
         }else{ // on update
             $postObj = $postObj->where('postID',$data['postID'])->first();
-            // if posts exists in the primary database
+
             if($postObj){
                 $populatedFields = self::populateStoreColumns($postObj, $data);
+                $populatedFields['post']->createdByUserID = (!User::isAdmin() || !isset($data['createdByUserID'])) ? Auth::user()->userID : $data['createdByUserID'];
                 $postObj = $populatedFields['post'];
 
                 if($postObj->save()){
@@ -171,42 +171,22 @@ trait PostTrait{
 
                 $postID = $postObj->postID;
             }else{
-                // if post exists only in the archive database
-                $postObj = new self();
-                $populatedFields = self::populateStoreColumns($postObj, $data);
-                $populatedFields['post']->createdByUserID = Auth::user()->userID;
-                $populatedFields['post']->postID = $data['postID'];
-                $post = $populatedFields['post'];
-
-                // Event fired after post is tasked to be archived
-                Event::fire('post:updated:archiving', [$data, $post]);
-
-                $postObj->noty("success", "Changes will be made after 10 min");
-                // create task
-                Task::create('post', 'update', $post, ['data' => $data]);
-
-                $postID = $data['postID'];
-
-                $isInArchive = true;
+                throw new \Exception("Trying to edit a post that doesn't exist!");
             }
-
         }
-
 
         if($postID){
             // Insert categories
-            self::insertCategories($data['selectedCategories'], $postObj->postID, $data['postType'], $isInArchive);
+            self::insertCategories($data['selectedCategories'], $postObj->postID, $data['postType']);
 
             // Insert tags
-            self::insertTags($data['selectedTags'], $postObj->postID, $data['postType'], $isInArchive);
+            self::insertTags($data['selectedTags'], $postObj->postID, $data['postType']);
 
             // Insert media
             self::insertMedia($data['files'],$postObj->postID, $data['postType'], $data['languages'], $populatedFields['files'], $data['filesToBeIgnored']);
 
-            if(!$isInArchive){
-                // Event fired after post is stored
-                Event::fire('post:stored', [$data, $postObj]);
-            }
+            // Event fired after post is stored
+            Event::fire('post:stored', [$data, $postObj]);
 
             return [
               'error' => false,
@@ -544,7 +524,7 @@ trait PostTrait{
      *
      * @return array List of inserted categories IDs
      * */
-    public static function insertCategories($selectedCategories, $postID, $postTypeSlug, $isInArchive){
+    public static function insertCategories($selectedCategories, $postID, $postTypeSlug){
         if (count($selectedCategories)){
             $categoriesIDs = [];
             $newCategoryRelation = [];
@@ -560,18 +540,12 @@ trait PostTrait{
             }
 
             // if post is only in the archive
-            if($isInArchive){
+            // if post is in the main database
+            $insertedCategories = DB::table('categories_relations')->insert($newCategoryRelation);
+            if ($insertedCategories){
                 // create task
                 Task::create('categories_relations', 'create', $newCategoryRelation, ['postID' => $postID, 'postType' => $postTypeSlug]);
-            }else{
-                // if post is in the main database
-                $insertedCategories = DB::table('categories_relations')->insert($newCategoryRelation);
-                if ($insertedCategories){
-                    // create task
-                    Task::create('categories_relations', 'create', $newCategoryRelation, ['postID' => $postID, 'postType' => $postTypeSlug]);
-                    return $categoriesIDs;
-                }
-
+                return $categoriesIDs;
             }
         }
         return [];
@@ -587,7 +561,7 @@ trait PostTrait{
      * @return array  List of inserted media files
      * */
 
-    public static function insertTags($selectedTags, $postID, $postTypeSlug, $isInArchive){
+    public static function insertTags($selectedTags, $postID, $postTypeSlug){
         if(count($selectedTags)){
             $tagsIDs = [];
             $postType = PostType::findBySlug($postTypeSlug);
@@ -624,19 +598,14 @@ trait PostTrait{
                     }
                 }
             }
-            // if post is only in the archive
-            if($isInArchive){
+
+            // if post is in the main database
+            $insertedTags = DB::table('tags_relations')->insert($newTagsRelations);
+            if($insertedTags){
                 // create task
                 Task::create('tags_relations', 'create', $newTagsRelations, ['postID' => $postID, 'postType' => $postTypeSlug]);
-            }else{
-                // if post is in the main database
-                $insertedTags = DB::table('tags_relations')->insert($newTagsRelations);
-                if($insertedTags){
-                    // create task
-                    Task::create('tags_relations', 'create', $newTagsRelations, ['postID' => $postID, 'postType' => $postTypeSlug]);
 
-                    return $tagsIDs;
-                }
+                return $tagsIDs;
             }
         }
         return [];
@@ -808,7 +777,7 @@ trait PostTrait{
     public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = '', array $options = []){
         if($this->hasFeaturedImage()){
             if(!$width && !$height){
-                return url($this->featuredImage->url);
+                return url($this->featuredImage->url) . "?" . str_replace(" ", "", $this->featuredImage->updated_at);
             }else{
                 return $this->featuredImage->thumb($width, $height, $this->featuredImage, $options);
             }

@@ -138,10 +138,10 @@ trait MediaTrait{
                 if($media->save()){
                     if ($request->fromAlbum === "true" || $request->fromAlbum === true){
                         \Illuminate\Support\Facades\DB::table('album_relations')->insert([
-                          'albumID' => $request->albumID,
-                          'mediaID' => $media->mediaID,
-                          "created_at" =>  \Carbon\Carbon::now(),
-                          "updated_at" => \Carbon\Carbon::now(),
+                            'albumID' => $request->albumID,
+                            'mediaID' => $media->mediaID,
+                            "created_at" =>  \Carbon\Carbon::now(),
+                            "updated_at" => \Carbon\Carbon::now(),
                         ]);
                     }
 
@@ -243,14 +243,16 @@ trait MediaTrait{
         }
         $thumbDirectory =  $width.($height ? 'x'.$height : "");
         $thumbPath = $imageObj->fileDirectory.'/'.$thumbDirectory.'/'.$imageObj->filename;
+        $thumbUrl = null;
         if(file_exists(base_path($thumbPath))){
-            return asset($thumbPath);
+            $thumbUrl = asset($thumbPath);
         }else{
             if($this->createThumb($imageObj, $width, $height, $options)){
-                return asset($thumbPath);
+                $thumbUrl = asset($thumbPath);
             }
         }
-        return null;
+
+        return ($thumbUrl) ? $thumbUrl . "?" . str_replace(" ", "", $imageObj->updated_at) : null;
     }
 
     /**
@@ -277,10 +279,13 @@ trait MediaTrait{
      *
      * @return boolean
      */
-    public function createThumb($imageObj, $width, $height=null, array $options = []){
+    public function createThumb($imageObj, $width, $height = null, array $options = []){
         $extension = File::extension($imageObj->url);
         $basePath = base_path('/');
 
+        if(!is_numeric($width)){
+            throw new \Exception("Width must be a number");
+        }
         if ($this->hasImageExtension($extension)){
             //thumb can only be created if original source exist
             if(file_exists($basePath.$imageObj->url) && File::size($basePath.$imageObj->url)) {
@@ -301,15 +306,27 @@ trait MediaTrait{
                 $img = Image::make(base_path($imageObj->url));
                 $resizedHeight = $width * 2;
 
-                if(isset($options['resizeCanvas']) && $options['resizeCanvas'] === true){
-                    $img->resize($width, $height, function ($constraint) {
+                // crop with and height
+                if($width && $height) {
+                    if (isset($options['resizeCanvas']) && $options['resizeCanvas'] === true) {
+                        $img->resize($width, $height, function ($constraint) {
+                            $constraint->aspectRatio();
+                        })->resizeCanvas($width, $height);
+                    } else {
+                        $img->fit($width, $height);
+                    }
+                }elseif($width){ // resize only the width of the image
+                    $img->resize($width, null, function ($constraint) {
                         $constraint->aspectRatio();
-                    })->resizeCanvas($width, $height);
-                }else{
-                    $img->fit($width, $height);
+                    });
+                }
+                elseif($height){ // resize only the height of the image
+                    $img->resize(null, $height, function ($constraint) {
+                        $constraint->aspectRatio();
+                    });
                 }
 
-                if ($img->save($thumbDir . '/' . $imageObj->filename, 60)) {
+                if ($img->save($thumbDir . '/' . $imageObj->filename, config('image-optimizer.default_quality'))) {
                     // optimize image
                     $this->optimize($thumbDir . '/' . $imageObj->filename);
                     return true;
@@ -435,10 +452,10 @@ trait MediaTrait{
      */
     public static function allowedExtensions(){
         return array_merge(
-          config('media.image_extensions'),
-          config('media.document_extensions'),
-          config('media.audio_extensions'),
-          config('media.video_extensions')
+            config('media.image_extensions'),
+            config('media.document_extensions'),
+            config('media.audio_extensions'),
+            config('media.video_extensions')
         );
     }
     /**

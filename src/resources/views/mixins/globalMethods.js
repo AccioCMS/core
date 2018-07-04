@@ -18,7 +18,13 @@ export const globalMethods = {
             }
         },
 
-
+        isAdmin(){
+            //admin has access into all permissions
+            if(this.getGlobalPermissions.global.admin !== undefined){
+                return true;
+            }
+            return false;
+        },
 
         // used to filter where to redirect depending which store btn is clicked
         onStoreBtnClicked(routeNamePrefix, redirectChoice, id){
@@ -88,7 +94,6 @@ export const globalMethods = {
         },
         // toggle the action bar in tables (when listing items)
         toggleListActionBar(index){
-            //console.log("index", index);
             if(this.openedItemActionBar === index){
                 this.openedItemActionBar = '';
             }else{

@@ -17,10 +17,11 @@ use App\Models\User;
 use Illuminate\Http\Request;
 
 class BaseTagController extends MainController{
-    // Check authentification in the constructor
+    /**
+     * BaseTagController constructor.
+     */
     public function __construct(){
         parent::__construct();
-        $this->middleware('auth');
     }
 
     /**
@@ -278,7 +279,7 @@ class BaseTagController extends MainController{
         }
 
         $adminPrefix = Config::get('project')['adminPrefix'];
-        $postTypes = \App\Models\PostType::getFromCache(); // get the post types list for the navigation bar from the middleware
+        $postTypes = \App\Models\PostType::cache()->getItems(); // get the post types list for the navigation bar from the middleware
 
         $view = 'tagsearch';
         $pagination = 1;

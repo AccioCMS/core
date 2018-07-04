@@ -18,18 +18,6 @@ class Backend{
      */
     public  function handle($request, Closure $next){
         if ($request->is(Config::get('project')['adminPrefix'].'*')) {
-            // Set default language
-            Language::setDefault();
-
-            // Add lang parameter to every route/action request if user is accessing a language that's different than default
-            if (config('project.multilanguage')) {
-                if(\Request::route('lang')) {
-                    // set current language
-                    Language::setCurrent(\Request::route('lang'));
-                }
-                Language::setLangAttribute($request);
-            }
-
             if (Auth::check()) {
                 // get all permissions
                 Auth::user()->getPermissions();
@@ -40,16 +28,12 @@ class Backend{
                 }
             }
 
-            //check if language exists
+            // Validate language
             if (\Request::route('lang')) {
                 if (!Language::checkBySlug(\Request::route('lang'))) {
                     return response()->view('errors.404', ['message' => "This language does not exists!"], 404);
                 }
             }
-
-            // Initialize MenuLinks
-            MenuLink::initialize($request);
-
         }
         return $next($request);
     }

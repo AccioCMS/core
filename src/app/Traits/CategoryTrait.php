@@ -28,7 +28,7 @@ trait CategoryTrait{
      *
      */
     public static function findByID($categoryID){
-        $categories = \App\Models\Category::getFromCache();
+        $categories = \App\Models\Category::cache()->getItems();
         if($categories){
             return $categories->where('categoryID',$categoryID)->first();
         }
@@ -44,7 +44,7 @@ trait CategoryTrait{
      *
      */
     public static function findBySlug($categorySlug){
-        $categories = \App\Models\Category::getFromCache();
+        $categories = \App\Models\Category::cache()->getItems();
         if($categories){
             return $categories->where('slug',$categorySlug)->first();
         }
@@ -62,7 +62,7 @@ trait CategoryTrait{
     public static function findByPostType($postTypeSlug){
         $postType = PostType::findBySlug($postTypeSlug);
         if($postType){
-            $categories = self::getFromCache();
+            $categories = self::cache()->getItems();
             if($categories){
                 return $categories->where('postTypeID',$postType->postTypeID);
             }

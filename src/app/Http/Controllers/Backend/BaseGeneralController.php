@@ -14,9 +14,11 @@ use App\Http\Controllers\Controller as Controller;
 
 class BaseGeneralController extends MainController {
 
+    /**
+     * BaseGeneralController constructor.
+     */
     public function __construct(){
         parent::__construct();
-        $this->middleware('auth');
     }
 
     /**
@@ -72,7 +74,7 @@ class BaseGeneralController extends MainController {
         $settings['logo'] = $projectLogoURL;
 
         // User data object
-        $postTypeSlugs = PostType::getFromCache()->keys();
+        $postTypeSlugs = PostType::cache()->getItems()->keys();
         $globalData = [
             'post_type_slugs' => $postTypeSlugs,
             'permissions' => $user->getPermissions(),
@@ -82,7 +84,7 @@ class BaseGeneralController extends MainController {
         ];
 
         // all languages
-        $languages = Language::getFromCache();
+        $languages = Language::cache()->getItems();
 
         return [
             'languages' => $languages,

@@ -137,7 +137,7 @@ class UserModel extends Authenticatable
      *
      * @return array
      */
-    public function cache(){
+    public function generateCache(){
         $data  = User::with("profileimage")->get()->toArray();
         Cache::forever($this->cacheName,$data);
         return $data;

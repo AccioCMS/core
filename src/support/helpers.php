@@ -505,7 +505,11 @@ if (! function_exists('getPostType')) {
      * @param mixed $postTypeSlug without the post_ prefix
      * @return mixed
      */
-    function getPostType($postTypeSlug){
+    function getPostType($postTypeSlug = ''){
+        if(!$postTypeSlug){
+            $postTypeSlug = config('project.default_post_type');
+        }
+
         // find it by slug
         $postType  = \App\Models\PostType::findBySlug($postTypeSlug);
         if($postType){
