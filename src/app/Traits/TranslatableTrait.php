@@ -233,7 +233,7 @@ trait TranslatableTrait
                 if(is_array($attr)){
                     continue;
                 }
-                if($attr == null || $attr == ""){
+                if($attr == null || $attr == "" || $attr == '[]'){
                     $attr = new \stdClass();
                 }else{
                     if(!is_object($attr)){

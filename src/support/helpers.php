@@ -568,6 +568,21 @@ if (! function_exists('adminURL')) {
     }
 }
 
+if (! function_exists('isInAdmin')) {
+    /**
+     * Check if current request belong to admin interface.
+     *
+     * @return bool
+     */
+    function isInAdmin(){
+        if (request()->is((string) Config::get('project')['adminPrefix'].'*')) {
+            return true;
+        }
+        return false;
+    }
+}
+
+
 if (! function_exists('currentMenuLink')) {
     /**
      * Current MenuLink

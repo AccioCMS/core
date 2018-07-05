@@ -458,7 +458,7 @@ trait LanguageTrait
         if(config('project.multilanguage')) {
             // hide slug on default language in frontend
             //backend
-            if (!$request->is(Config::get('project')['adminPrefix'].'*')) {
+            if (!isInAdmin()) {
                 if (config('project.hideDefaultLanguageInURL') && $languageSlug ==  Language::getDefault('slug')) {
                     $languageSlug = '';
                 }

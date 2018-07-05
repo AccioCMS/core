@@ -762,7 +762,7 @@ trait MenuLinkTrait{
         Menu::setMenuLinksByMenu();
 
         //Backend
-        if ($request->is(Config::get('project')['adminPrefix'].'*')){
+        if (isInAdmin()){
             $menuLinkID = (is_numeric(Input::get('menu_link_id')) ? Input::get('menu_link_id') : FALSE);
             if($menuLinkID){
                 self::setCurrent(self::findByID($menuLinkID));

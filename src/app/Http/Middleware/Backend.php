@@ -17,7 +17,7 @@ class Backend{
      * @throws \Exception
      */
     public  function handle($request, Closure $next){
-        if ($request->is(Config::get('project')['adminPrefix'].'*')) {
+        if (isInAdmin()) {
             if (Auth::check()) {
                 // get all permissions
                 Auth::user()->getPermissions();
