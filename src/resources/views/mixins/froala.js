@@ -24,18 +24,12 @@ export const froalaMixin = {
                 refreshAfterCallback: false,
                 // open media when this button is clicked
                 callback: function (e) {
+                    this.selection.save()
+                    let id = $(this.el.parentNode).parents(2).find('textarea').attr('id')
 
-                    $('button[data-cmd="addImage"]').click(function () { // get button click event to get the ID of the editor
-                        let isDisabled = $(this).attr('aria-disabled'); // get if btn is disabled
-                        if(isDisabled === undefined || isDisabled === 'false'){ // if btn is disabled should not be clickable
-                            let id = $(this).parents('.froala-container').children('.froala').attr('id');
-                            global.$store.commit('setOpenMediaOptions', { format : 'image', inputName: id, langSlug: '' });
-                            global.$store.commit('setIsMediaOpen', true);
-                        }
-
-                        //this.selection.save();
-                    });
-                },
+                    global.$store.commit('setOpenMediaOptions', { format : 'image', inputName: id, langSlug: '',  froalaInstance:this });
+                    global.$store.commit('setIsMediaOpen', true);
+                }
             });
 
             // Define a button.
@@ -44,15 +38,12 @@ export const froalaMixin = {
                 title: 'Add image',
                 undo: true,
                 // Callback for the button.
-                callback: function () {
-                    $('a[data-cmd="addImage"]').click(function () { // get button click event to get the ID of the editor
-                        let isDisabled = $(this).attr('aria-disabled'); // get if btn is disabled
-                        if(isDisabled === undefined || isDisabled === 'false'){ // if btn is disabled should not be clickable
-                            let id = $(this).parents('.froala-container').children('.froala').attr('id');
-                            global.$store.commit('setOpenMediaOptions', { format : 'image', inputName: id, langSlug: '' });
-                            global.$store.commit('setIsMediaOpen', true);
-                        }
-                    });
+                callback: function (e) {
+                    this.selection.save()
+                    let id = $(this.el.parentNode).parents(2).find('textarea').attr('id')
+
+                    global.$store.commit('setOpenMediaOptions', { format : 'image', inputName: id, langSlug: '',  froalaInstance:this });
+                    global.$store.commit('setIsMediaOpen', true);
                 }
             });
         },
@@ -72,16 +63,12 @@ export const froalaMixin = {
                 refreshAfterCallback: false,
                 // open media when this button is clicked
                 callback: function (e) {
-                    var editor = this;
-                    $('button[data-cmd="addVideo"]').click(function () { // get button click event to get the ID of the editor
-                        let isDisabled = $(this).attr('aria-disabled'); // get if btn is disabled
-                        if(isDisabled === undefined || isDisabled === 'false'){ // if btn is disabled should not be clickable
-                            let id = $(this).parents('.froala-container').children('.froala').attr('id');
-                            global.$store.commit('setOpenMediaOptions', { format : 'video', inputName: id, langSlug: '' });
-                            global.$store.commit('setIsMediaOpen', true);
-                        }
-                    });
-                }
+                    this.selection.save()
+                    let id = $(this.el.parentNode).parents(2).find('textarea').attr('id')
+
+                    global.$store.commit('setOpenMediaOptions', { format : 'video', inputName: id, langSlug: '',  this:froalaInstance });
+                    global.$store.commit('setIsMediaOpen', true);
+                },
             });
 
             // Define a button.
@@ -91,15 +78,12 @@ export const froalaMixin = {
                 // Save changes to undo stack.
                 undo: true,
                 // Callback for the button.
-                callback: function () {
-                    $('button[data-cmd="addVideo"]').click(function () { // get button click event to get the ID of the editor
-                        let isDisabled = $(this).attr('aria-disabled'); // get if btn is disabled
-                        if(isDisabled === undefined || isDisabled === 'false'){ // if btn is disabled should not be clickable
-                            let id = $(this).parents('.froala-container').children('.froala').attr('id');
-                            global.$store.commit('setOpenMediaOptions', { format : 'video', inputName: id, langSlug: '' });
-                            global.$store.commit('setIsMediaOpen', true);
-                        }
-                    });
+                callback: function (e) {
+                    this.selection.save()
+                    let id = $(this.el.parentNode).parents(2).find('textarea').attr('id')
+
+                    global.$store.commit('setOpenMediaOptions', { format : 'video', inputName: id, langSlug: '',  froalaInstance:this });
+                    global.$store.commit('setIsMediaOpen', true);
                 }
             });
         },
