@@ -460,7 +460,7 @@ class PostModel extends Model{
                         foreach ($postObj->categories as $category) {
 
                             // Remove cache of previous selected categories, if there is any change
-                            if (self::$updatingItem->hasCategory()) {
+                            if (self::$updatingItem && self::$updatingItem->hasCategory()) {
                                 foreach (self::$updatingItem->categories as $prevCategory) {
                                     // only update if previous category is currently not selected
                                     if ($postObj->categories->where('categoryID', $prevCategory->categoryID)->isEmpty()) {
@@ -474,7 +474,7 @@ class PostModel extends Model{
                         }
                     }else{
                         // Remove post from previous category if there is no category selected
-                        if (self::$updatingItem->hasCategory()) {
+                        if (self::$updatingItem && self::$updatingItem->hasCategory()) {
                             foreach (self::$updatingItem->categories as $prevCategory) {
                                 $this->refreshPostInCacheCategory($postObj, "deleted", $prevCategory);
                             }
