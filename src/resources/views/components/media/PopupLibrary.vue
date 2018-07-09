@@ -875,7 +875,6 @@
                         }
 
                         // Insert images into editor
-                        console.log("html :: ", html)
                         this.mediaOptions.froalaInstance.html.insert(html, false);
 
                         this.$store.commit('setSelectedAlbumID', 0);

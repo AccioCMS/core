@@ -365,7 +365,7 @@ export const froalaMixin = {
 
                     });
 
-                    if( editorsCount === initializedEditorsIDs.length){
+                    if(editorsCount === initializedEditorsIDs.length){
                         clearInterval(interval);
                     }
                 }

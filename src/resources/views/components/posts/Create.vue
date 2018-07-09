@@ -785,10 +785,6 @@
                         $("#slug_"+langSlug).val(response);
                     });
             },
-
-            test(){
-                console.log("TEST TEST")
-            }
         },
         computed: {
             isMediaOpen(){
@@ -823,8 +819,6 @@
                 }else {
                     $(".multiselect__content-wrapper").removeClass("hide");
                 }
-                console.log("TEST areTagsLoading");
-                console.log('Prop changed: ', newVal, ' | was: ', oldVal)
             }
         }
     }
