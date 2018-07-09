@@ -575,7 +575,7 @@
                                         multiFilesSelectedIndexes.push(sCount);
                                     }
                                     multiFilesSelectedIndexes.push(currentClicked);
-                                // if the first selected element has a lower index as the current selected
+                                    // if the first selected element has a lower index as the current selected
                                 }else if(firstChild > currentClicked){
                                     $(".imageWrapper.active").removeClass("active");
                                     for(var sCount = firstChild; sCount > currentClicked; sCount--){
@@ -608,8 +608,8 @@
                         this.selectedFiles.push(this.getMediaList[multiFilesSelectedIndexes[k]]);
                     }
 
-                // if there is only a file selected
-                // make selected list
+                    // if there is only a file selected
+                    // make selected list
                 }else{
                     for(var i = 0; i < this.getMediaList.length; i++){
                         // if it is being selected insert it into the selected array
@@ -703,14 +703,14 @@
             },
             // delete the selected media file
             deleteSelected(){
-              // open loading
-              this.$store.dispatch('openLoading');
+                // open loading
+                this.$store.dispatch('openLoading');
 
                 let selectedFiles = this.selectedFiles;
                 this.selectedFiles = [];
 
-              var global = this;
-              this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/delete', selectedFiles)
+                var global = this;
+                this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/delete', selectedFiles)
                     .then((resp) => {
                         if(resp.body == "OK"){
                             this.reset(false);
@@ -742,11 +742,11 @@
                     });
             },
             setWatermark(){
-              // open loading
-              this.$store.dispatch('openLoading');
+                // open loading
+                this.$store.dispatch('openLoading');
 
-              var global = this;
-              this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/assign-watermark', this.selectedFiles)
+                var global = this;
+                this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/assign-watermark', this.selectedFiles)
                     .then((resp) => {
                         // if response is ok - if watermarks are set
                         if(resp.body == "OK"){
@@ -826,56 +826,56 @@
                 var type = "";
                 var text = "";
 
-
                 // if media is open from editor button
                 if(this.mediaOptions.inputName !== undefined){
-                    let inputName = this.mediaOptions.inputName;
-                    if(inputName.indexOf('froala') !== -1){
-                        let editorObject  = $('#'+this.mediaOptions.inputName);
+                    if(this.mediaOptions.froalaInstance !== undefined){
+                        // restore selection
+                        this.mediaOptions.froalaInstance.selection.restore();
+                        let html = "";
 
                         for(let k in this.selectedFiles){
                             if(this.mediaOptions.format == "image"){
-                                let html = "<figure>";
-                                    html += "<img src='"+this.baseURL+'/'+this.selectedFiles[k].url+"' alt='"+this.selectedFiles[k].description+"' title='"+this.selectedFiles[k].title+"' />";
+                                html += "<figure>";
+                                html += "<img src='"+this.baseURL+'/'+this.selectedFiles[k].url+"' alt='"+this.selectedFiles[k].description+"' title='"+this.selectedFiles[k].title+"' />";
 
-                                    if(this.selectedFiles[k].description || this.selectedFiles[k].credit){
-                                        html += "<figcaption>";
-                                        if(this.selectedFiles[k].description){
-                                            html += "<span>"+this.selectedFiles[k].description+"</span>";
-                                        }
-                                        if(this.selectedFiles[k].credit){
-                                            html += "<cite>"+this.selectedFiles[k].credit+"</cite>";
-                                        }
-                                        html += "</figcaption>";
+                                if(this.selectedFiles[k].description || this.selectedFiles[k].credit){
+                                    html += "<figcaption>";
+                                    if(this.selectedFiles[k].description){
+                                        html += "<span>"+this.selectedFiles[k].description+"</span>";
                                     }
+                                    if(this.selectedFiles[k].credit){
+                                        html += "<cite>"+this.selectedFiles[k].credit+"</cite>";
+                                    }
+                                    html += "</figcaption>";
+                                }
 
-                                    html += "</figure> \n";
-
-                                // insert selected images to editor
-                                editorObject.froalaEditor('html.insert', html, false);
+                                html += "</figure> \n";
                             }else if(this.mediaOptions.format == "video") {
-                                let html = "<figure>";
-                                    html += "<video controls>";
-                                    html += "<img src='" + this.baseURL+'/'+  this.selectedFiles[k].url + "' alt='" + this.selectedFiles[k].description + "' title='" + this.selectedFiles[k].title + "' />";
-                                    html += "<source src='" + this.baseURL+'/' + this.selectedFiles[k].url + "' type='video/" + this.selectedFiles[k].extension + "' />";
-                                    html += "</video>\n";
-                                    if(this.selectedFiles[k].description || this.selectedFiles[k].credit){
-                                        html += "<figcaption>";
-                                        if(this.selectedFiles[k].description){
-                                            html += "<span>" + this.selectedFiles[k].description + "</span>";
-                                        }
-                                        if(this.selectedFiles[k].credit){
-                                            html += "<cite>" + this.selectedFiles[k].credit + "</cite>";
-                                        }
-                                        html += "</figcaption>";
+                                html += "<figure>";
+                                html += "<video controls>";
+                                html += "<img src='" + this.baseURL+'/'+  this.selectedFiles[k].url + "' alt='" + this.selectedFiles[k].description + "' title='" + this.selectedFiles[k].title + "' />";
+                                html += "<source src='" + this.baseURL+'/' + this.selectedFiles[k].url + "' type='video/" + this.selectedFiles[k].extension + "' />";
+                                html += "</video>\n";
+                                if(this.selectedFiles[k].description || this.selectedFiles[k].credit){
+                                    html += "<figcaption>";
+                                    if(this.selectedFiles[k].description){
+                                        html += "<span>" + this.selectedFiles[k].description + "</span>";
                                     }
-                                    html += "</figure> \n";
+                                    if(this.selectedFiles[k].credit){
+                                        html += "<cite>" + this.selectedFiles[k].credit + "</cite>";
+                                    }
+                                    html += "</figcaption>";
+                                }
+                                html += "</figure> \n";
+
                                 // insert selected images to editor
-                                editorObject.froalaEditor('html.insert',html, false);
+                                // $('#'+this.mediaOptions.inputName).froalaEditor('codeView.toggle');
+                                // $('#'+this.mediaOptions.inputName).froalaEditor('codeView.toggle');
                             }
-                            $('#'+this.mediaOptions.inputName).froalaEditor('codeView.toggle');
-                            $('#'+this.mediaOptions.inputName).froalaEditor('codeView.toggle');
                         }
+
+                        // Insert images into editor
+                        this.mediaOptions.froalaInstance.html.insert(html, false);
 
                         this.$store.commit('setSelectedAlbumID', 0);
                         this.deleteSavedState();
@@ -953,8 +953,8 @@
                         // add the new sessions selected files to the stack to
                         for(let k in currentSelectedFiles){
                             this.selectedFiles.push(currentSelectedFiles[k]);
-                            }
                         }
+                    }
                 }
             },
             shouldHide(type, id){ // this function hides files if they format is not required

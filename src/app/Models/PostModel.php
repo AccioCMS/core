@@ -375,16 +375,16 @@ class PostModel extends Model{
         // Get post data
         switch ($mode) {
             case 'deleting':
-                self::$deletingItem = Post::findByID($postObj->postID);
+                self::$deletingItem = Post::findByID($postObj->postID, $postObj->getTable());
                 break;
 
             case 'updating':
-                self::$updatingItem = Post::findByID($postObj->postID);
+                self::$updatingItem = Post::findByID($postObj->postID, $postObj->getTable());
                 break;
 
             default:
                 // Select post with all of its relations
-                $postObj = Post::findByID($postObj->postID);
+                $postObj = Post::findByID($postObj->postID, $postObj->getTable());
                 break;
         }
 
