@@ -333,7 +333,7 @@ export const store = new Vuex.Store({
                 }
 
                 if(permissions.global.author !== undefined){
-                    if(key == 'read'){
+                    if(key == 'read' || app.startsWith("post_")){
                         hasSinglePermission = true;
                     }
                 }else{
@@ -360,18 +360,14 @@ export const store = new Vuex.Store({
                     context.commit('setHasPermission', true);
                     return true;
                 }
-            }
-
-            //check editor
-            else if(permissions.global.author !== undefined && permissions.global.editor !== undefined){
+            }else if(permissions.global.author !== undefined && permissions.global.editor !== undefined){
+                //check editor
                 if(appPermission || hasSinglePermission){
                     context.commit('setHasPermission', true);
                     return true;
                 }
-            }
-
-            //check specific permission
-            else if (hasSinglePermission){
+            }else if (hasSinglePermission){
+                //check specific permission
                 context.commit('setHasPermission', true);
                 return true;
             }
