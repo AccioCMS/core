@@ -172,17 +172,18 @@ trait CacheTrait
                 $cachedItems[key($currentItem)] = $item->toArray();
             } else { // ADD
                 // push new item to cache
-                array_push($cachedItems, $item->toArray());
+                $newCachedItems = [];
+                array_push($newCachedItems, $item->toArray());
 
                 // Let's make sure the latest item is sorted at the end of cachedItems
-                $cachedItems = array_values($cachedItems);
+                $cachedItems = array_merge($newCachedItems, $cachedItems);
 
                 // Limit results
                 $limit = (property_exists($this,'defaultLimitCache') ? $this->defaultLimitCache : $this->limitCache);
                 if($limit) {
                     $countItems = count($cachedItems);
                     if ($countItems > $limit) {
-                        $cachedItems = array_slice($cachedItems, ($countItems - $limit));
+                        $cachedItems = array_slice($cachedItems, 0, ($limit - $countItems));
                     }
                 }
             }
