@@ -231,6 +231,7 @@ trait UserTrait{
             return self::$permissions;
         }
 
+
         $groupIDs = [];
         foreach (Auth::user()->roles as $group) {
             if ($group->isDefault) {
