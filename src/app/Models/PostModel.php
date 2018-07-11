@@ -561,7 +561,11 @@ class PostModel extends Model{
      * @return array
      */
     public static function getMostReadCache(){
-        return Cache::get("most_read_articles");
+        $mostRead = Cache::get("most_read_articles");
+        if(!$mostRead || $mostRead == null || $mostRead->isEmpty()){
+            return [];
+        }
+        return $mostRead;
     }
 
     /**
