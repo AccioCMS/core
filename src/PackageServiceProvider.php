@@ -12,6 +12,7 @@ use Accio\App\Commands\Deploy\Database;
 use Accio\App\Commands\Deploy\EnvFile;
 use Accio\App\Commands\Deploy\SetPermissions;
 use Accio\App\Commands\DeployCron;
+use Accio\App\Commands\PluginUpdate;
 use Accio\App\Commands\PostCreateProject;
 use Accio\App\Commands\SetWritePermissions;
 use Accio\App\Services\Routes;
@@ -67,6 +68,7 @@ class PackageServiceProvider extends ServiceProvider{
       AccioInstall::class,
       AccioUninstall::class,
       PluginInstall::class,
+      PluginUpdate::class,
       SetWritePermissions::class,
       PostCreateProject::class,
       CopyUploads::class,
