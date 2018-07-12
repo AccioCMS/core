@@ -254,7 +254,7 @@ trait MediaTrait{
             }
         }
 
-        return ($thumbUrl) ? $thumbUrl . "?" . str_replace(" ", "", $imageObj->updated_at) : null;
+        return ($thumbUrl) ? $thumbUrl . "?" .strtotime($imageObj->updated_at) : null;
     }
 
     /**

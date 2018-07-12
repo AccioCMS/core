@@ -382,6 +382,10 @@ class PostModel extends Model{
                 self::$updatingItem = Post::findByID($postObj->postID, $postObj->getTable());
                 break;
 
+            case 'deleted':
+                $postObj = self::$deletingItem;
+                break;
+
             default:
                 // Select post with all of its relations
                 $postObj = Post::findByID($postObj->postID, $postObj->getTable());
@@ -440,9 +444,6 @@ class PostModel extends Model{
     private function updateCategoriesPostsCache($postObj, string $mode){
         switch ($mode){
             case 'deleted':
-                // We need category relations, to remove category's cache.
-                $postObj = self::$deletingItem;
-
                 if ($postObj->hasCategory()) {
                     foreach ($postObj->categories as $category) {
                         $this->refreshPostInCacheCategory($postObj, $mode, $category);
@@ -560,7 +561,11 @@ class PostModel extends Model{
      * @return array
      */
     public static function getMostReadCache(){
-        return Cache::get("most_read_articles");
+        $mostRead = Cache::get("most_read_articles");
+        if(!$mostRead || $mostRead == null || $mostRead->isEmpty()){
+            return [];
+        }
+        return $mostRead;
     }
 
     /**
@@ -1179,3 +1184,4 @@ class PostModel extends Model{
         Event::fire('post:destruct', [$this]);
     }
 }
+
