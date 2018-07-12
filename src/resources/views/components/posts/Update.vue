@@ -543,7 +543,7 @@
                         </ul>
                     </div>
 
-                    <button type="button" class="btn btn-info" id="globalCancel" @click="redirect('post-list')">{{trans.__globalCancelBtn}}</button>
+                    <button type="button" class="btn btn-info" id="globalCancel" @click="redirect('post-list', '', '', $route.query)">{{trans.__globalCancelBtn}}</button>
                 </div>
             </div>
 
