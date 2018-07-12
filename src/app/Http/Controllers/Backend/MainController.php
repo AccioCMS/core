@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Accio\Support\Facades\Search;
 use App\Models\User;
 use App\Models\Language;
+use Illuminate\Support\Facades\Session;
 use ImageOptimizer;
 
 class MainController extends Controller{
