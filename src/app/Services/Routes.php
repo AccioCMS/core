@@ -46,12 +46,13 @@ class Routes{
       ]
     ];
 
+
     /**
      * Define Package Backend routes
      *
      * These routes are taken from package/routes/backend
      *
-     * @return void
+     * @return $this
      */
     public function mapBackendRoutes(){
         $directory = __DIR__.'/../../routes/backend';
@@ -65,6 +66,7 @@ class Routes{
                 }
             });
         }
+        return $this;
     }
 
     /**
@@ -72,25 +74,27 @@ class Routes{
      *
      * These routes are taken from /routes and are applied across all themes
      *
-     * @return void
+     * @return $this
      */
     public function mapFrontendRoutes(){
         $directory = base_path('routes');
-
         if(is_dir($directory)) {
             $routeFiles = File::files($directory);
 
-            \Route::group([
+            $excludeRoutes = ['base.php', 'api.php'];
+
+            Route::group([
               'middleware' => $this->middleware['frontend'],
-            ], function () use ($routeFiles) {
+            ], function () use ($routeFiles, $excludeRoutes) {
                 foreach ($routeFiles as $file) {
                     // Base.php is loaded from FrontendBaseRoutes method
-                    if ($file->getFilename() !== 'base.php') {
+                    if (!in_array($file->getFilename(), $excludeRoutes)) {
                         require $file;
                     }
                 }
             });
         }
+        return $this;
     }
 
     /**
@@ -98,141 +102,18 @@ class Routes{
      *
      * These routes are taken from current Theme
      *
-     * @return void
+     * @return $this
      */
     public function mapThemeRoutes(){
         $this->getRoutsFromTheme(Theme::getActiveTheme());
+        return $this;
     }
 
     /**
-     * Get routes from a specific theme
+     * Add Frontend base routes.
      *
-     * @param string $themeName Directoy Name of theme
-     */
-    public function getRoutsFromTheme($themeName){
-        if(Theme::ifExists($themeName)) {
-            $routeDir = base_path('themes/' . $themeName . '/routes');
-            if (is_dir($routeDir)) {
-                $routeFiles = File::files($routeDir);
-
-//                \Route::group([
-//                    'middleware' => 'frontend', // TODO add theme middleware
-//                    'namespace' => Theme::getNamespaceOf(Theme::getActiveTheme()),
-//                ], function () use ($routeFiles) {
-//                    foreach ($routeFiles as $file) {
-//                        require_once $file;
-//                    }
-//                });
-            }
-        }
-    }
-
-    /**
-     * Define "Plugins" backend routes for the application.
-     *
-     * It only takes in consideration active plugins
-     *
-     * @return void
-     */
-    public function mapPluginsBackendRoutes(){
-        foreach(Plugin::activePlugins() as $plugin){
-            $backendRoutes = $plugin->backendRoutes();
-            if($backendRoutes){
-                \Route::group([
-                  'middleware' => $this->middleware['backend'],
-                  'as' => 'Backend.'.$plugin->namespaceWithDot().".",
-                  'namespace' => $plugin->parseNamespace().'\Controllers',
-                  'prefix' => Config::get('project')['adminPrefix']."/".$plugin->backendURLPrefix()
-                ], function () use($backendRoutes) {
-                    foreach($backendRoutes as $file){
-                        require $file->getPathname();
-                    }
-                });
-            }
-        }
-        return;
-    }
-
-    /**
-     * Define "Plugins" frontend routes for the application.
-     *
-     * It only takes in consideration active plugins
-     *
-     * @return void
-     */
-    public function mapPluginsFrontendRoutes(){
-        foreach(Plugin::activePlugins() as $plugin){
-            // Frontend routes
-            $frontendRoutes = $plugin->frontendRoutes();
-            if($frontendRoutes){
-                \Route::group([
-                  'middleware' => $this->middleware['frontend'],
-                  'as' => $plugin->namespaceWithDot().".",
-                  'namespace' => $plugin->parseNamespace().'\Controllers',
-                ], function () use($frontendRoutes) {
-                    foreach($frontendRoutes as $file){
-                        require $file->getPathname();
-                    }
-                });
-            }
-        }
-        return;
-    }
-
-    /**
-     * Generate an full http/s link to easily create links in front-end whether the project is multilanguage or not
-     *
-     * @param  string $link The suffix of a link after the domain  (ex. "/about-us/")
-     * @param  string $baseURL The link of the domain to be added before the $link (ex. http://www.mywebsite.com). If empty, current project URL will be used
-     *
-     * @return string
-     * */
-    public function url($link = '',$baseURL = ''){
-        $projectConfig = Config::get('project');
-
-        $language = '';
-        //don't show language slug current url belongs to default language
-        if ($projectConfig['multilanguage'] && App::getLocale() != Language::getDefault("slug")) {
-            $language .= App::getLocale().'/';
-        }
-
-        if($baseURL){
-            return $baseURL.$language.$link.'/';
-        }else{
-            return url($language.$link);
-        }
-    }
-
-
-    /**
-     * Generate the URL to a controller action, depending if url should contain language slug or not.
-     *
-     * It uses Laravel's action method
-     *
-     * @param  string  $action ex. PostController@single
-     * @param  array   $parameters
-     * @param  bool    $absolute
-     * @return string
-     */
-    public function action($action, $parameters = [], $absolute = true){
-        $getProjectConfig = Config::get('project');
-        //add language if current language
-        if($getProjectConfig['multilanguage'] && App::getLocale() != Language::getDefault('slug')){
-            $langParameter = array('lang'=> App::getLocale() );
-        }else{
-            $langParameter = array('lang'=>"");
-        }
-
-        $parameters = array_merge($langParameter, $parameters);
-        $method = Theme::getNamespace().$action;
-        $url = action($method,$parameters);
-        return $url;
-    }
-
-    /**
-     *  Add Frontend base routes
-     *
-     * @return void
+     * @return $this
+     * @throws \Exception
      */
     public function mapFrontendBaseRoutes(){
         $projectConfig = Config::get('project');
@@ -278,12 +159,142 @@ class Routes{
             }
         }
 
-        return;
+        return $this;
     }
+
+    /**
+     * Get routes from a specific theme
+     *
+     * @param string $themeName Directoy Name of theme
+     *
+     * @return $this
+     */
+    public function getRoutsFromTheme($themeName){
+        if(Theme::ifExists($themeName)) {
+            $routeDir = base_path('themes/' . $themeName . '/routes');
+            if (is_dir($routeDir)) {
+                $routeFiles = File::files($routeDir);
+
+//                \Route::group([
+//                    'middleware' => 'frontend', // TODO add theme middleware
+//                    'namespace' => Theme::getNamespaceOf(Theme::getActiveTheme()),
+//                ], function () use ($routeFiles) {
+//                    foreach ($routeFiles as $file) {
+//                        require_once $file;
+//                    }
+//                });
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Define "Plugins" backend routes for the application.
+     *
+     * It only takes in consideration active plugins
+     *
+     * @return $this
+     */
+    public function mapPluginsBackendRoutes(){
+        foreach(Plugin::activePlugins() as $plugin){
+            $backendRoutes = $plugin->backendRoutes();
+            if($backendRoutes){
+                \Route::group([
+                  'middleware' => $this->middleware['backend'],
+                  'as' => 'Backend.'.$plugin->namespaceWithDot().".",
+                  'namespace' => $plugin->parseNamespace().'\Controllers',
+                  'prefix' => Config::get('project')['adminPrefix']."/".$plugin->backendURLPrefix()
+                ], function () use($backendRoutes) {
+                    foreach($backendRoutes as $file){
+                        require $file->getPathname();
+                    }
+                });
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Define "Plugins" frontend routes for the application.
+     *
+     * It only takes in consideration active plugins
+     *
+     * @return $this
+     */
+    public function mapPluginsFrontendRoutes(){
+        foreach(Plugin::activePlugins() as $plugin){
+            // Frontend routes
+            $frontendRoutes = $plugin->frontendRoutes();
+            if($frontendRoutes){
+                \Route::group([
+                  'middleware' => $this->middleware['frontend'],
+                  'as' => $plugin->namespaceWithDot().".",
+                  'namespace' => $plugin->parseNamespace().'\Controllers',
+                ], function () use($frontendRoutes) {
+                    foreach($frontendRoutes as $file){
+                        require $file->getPathname();
+                    }
+                });
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Generate an full http/s link to easily create links in front-end whether the project is multilanguage or not
+     *
+     * @param  string $link The suffix of a link after the domain  (ex. "/about-us/")
+     * @param  string $baseURL The link of the domain to be added before the $link (ex. http://www.mywebsite.com). If empty, current project URL will be used
+     *
+     * @return string
+     * */
+    public function url($link = '',$baseURL = ''){
+        $projectConfig = Config::get('project');
+
+        $language = '';
+        //don't show language slug current url belongs to default language
+        if ($projectConfig['multilanguage'] && App::getLocale() != Language::getDefault("slug")) {
+            $language .= App::getLocale().'/';
+        }
+
+        if($baseURL){
+            return $baseURL.$language.$link.'/';
+        }else{
+            return url($language.$link);
+        }
+    }
+
+    /**
+     * Generate the URL to a controller action, depending if url should contain language slug or not.
+     *
+     * It uses Laravel's action method
+     *
+     * @param  string  $action ex. PostController@single
+     * @param  array   $parameters
+     * @param  bool    $absolute
+     * @return string
+     */
+    public function action($action, $parameters = [], $absolute = true){
+        $getProjectConfig = Config::get('project');
+        //add language if current language
+        if($getProjectConfig['multilanguage'] && App::getLocale() != Language::getDefault('slug')){
+            $langParameter = array('lang'=> App::getLocale() );
+        }else{
+            $langParameter = array('lang'=>"");
+        }
+
+        $parameters = array_merge($langParameter, $parameters);
+        $method = Theme::getNamespace().$action;
+        $url = action($method,$parameters);
+        return $url;
+    }
+
     /**
      * Add {lang} param to all Frontend routes, if the site is multilanguage
      *
      * Backend routes are excluded
+     *
+     * @return $this
      */
     public  function addLanguagePrefix(){
         $projectConfig = Config::get('project');
@@ -319,6 +330,7 @@ class Routes{
                 }
             }
         }
+        return $this;
     }
 
     /**
