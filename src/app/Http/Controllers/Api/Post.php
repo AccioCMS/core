@@ -35,33 +35,39 @@ class Post extends MainController
         // get posts by tags
         $relatedPosts = $post->getPostsByTags($limitTags);
 
-        // get random posts if there are less posts than required limit
+        // When there are not enough related post, we need to fill the space with latest posts from category
         if(count($relatedPosts) < $limitTags){
             if($post->hasCategory()){
-                $getPosts = \App\Models\Post::cache('category_posts_'.$post->category->categoryID)
+                $latestPosts = \App\Models\Post::cache('category_posts_'.$post->category->categoryID)
                   ->whereCache('categories_relations.categoryID',$post->category->categoryID)
                   ->getItems()
                   ->published()
                   ->orderBy('published_at','DESC');
             }else{
-                $getPosts = \App\Models\Post::cache()
+                $latestPosts = \App\Models\Post::cache()
                   ->getItems()
                   ->whereNotIn("postID", array_keys($relatedPosts))
                   ->published()
                   ->orderBy('published_at','DESC');
             }
 
-            if($getPosts->count() >= $limitTags) {
-                $relatedPosts = $getPosts->random(($limitTags - count($relatedPosts)));
+            if($latestPosts->count() >= $limitTags) {
+                $randomPosts = $latestPosts->random(($limitTags - count($relatedPosts)));
+                foreach($randomPosts as $post){
+                    $relatedPosts->push($post);
+                }
             }
         }
 
+
         $posts = [];
+        $l = 0;
         foreach($relatedPosts as $key => $row){
-            $posts[$row->postID]['postID'] = $row->postID;
-            $posts[$row->postID]['title'] = $row->title;
-            $posts[$row->postID]['href'] = $row->href;
-            $posts[$row->postID]['featuredImage'] = $row->featuredImageURL($thumbWidth, $thumbHeight);
+            $posts[$l]['postID'] = $row->postID;
+            $posts[$l]['title'] = $row->title;
+            $posts[$l]['href'] = $row->href;
+            $posts[$l]['featuredImage'] = $row->featuredImageURL($thumbWidth, $thumbHeight);
+            $l++;
         }
 
         return response()->json(['data' => $posts], 200);

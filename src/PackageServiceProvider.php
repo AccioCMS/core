@@ -14,6 +14,7 @@ use Accio\App\Commands\Deploy\SetPermissions;
 use Accio\App\Commands\DeployCron;
 use Accio\App\Commands\PostCreateProject;
 use Accio\App\Commands\SetWritePermissions;
+use Accio\App\Services\Routes;
 use App\Models\Plugin;
 use App\Models\Theme;
 use Illuminate\Routing\Router;
@@ -57,27 +58,27 @@ class PackageServiceProvider extends ServiceProvider{
      * @var array
      */
     protected $commands = [
-        MakeDummy::class,
-        MakeUser::class,
-        MakeArchive::class,
-        DBDumper::class,
-        MakeTheme::class,
-        CheckRequirements::class,
-        AccioInstall::class,
-        AccioUninstall::class,
-        PluginInstall::class,
-        SetWritePermissions::class,
-        PostCreateProject::class,
-        CopyUploads::class,
-        Cronjobs::class,
-        Database::class,
-        EnvFile::class,
-        CreateSymlinks::class,
-        ActivateNewReleaseAfter::class,
-        ActivateNewReleaseBefore::class,
-        PurgeOldReleaseBefore::class,
-        PurgeOldReleaseAfter::class,
-        DdCommand::class
+      MakeDummy::class,
+      MakeUser::class,
+      MakeArchive::class,
+      DBDumper::class,
+      MakeTheme::class,
+      CheckRequirements::class,
+      AccioInstall::class,
+      AccioUninstall::class,
+      PluginInstall::class,
+      SetWritePermissions::class,
+      PostCreateProject::class,
+      CopyUploads::class,
+      Cronjobs::class,
+      Database::class,
+      EnvFile::class,
+      CreateSymlinks::class,
+      ActivateNewReleaseAfter::class,
+      ActivateNewReleaseBefore::class,
+      PurgeOldReleaseBefore::class,
+      PurgeOldReleaseAfter::class,
+      DdCommand::class
     ];
 
     /**
@@ -86,26 +87,34 @@ class PackageServiceProvider extends ServiceProvider{
      * @var array
      */
     protected $aliases = [
-        'Pagination' => 'Accio\App\Services\Pagination',
-        'Routes' => 'Accio\App\Services\Routes',
-        'Search' => 'Accio\App\Services\Search',
-        'Meta' => 'Accio\App\Services\Meta',
+      'Pagination' => 'Accio\App\Services\Pagination',
+      'Routes' => 'Accio\App\Services\Routes',
+      'Search' => 'Accio\App\Services\Search',
+      'Meta' => 'Accio\App\Services\Meta',
     ];
 
     /**
-     * Define the "web" routes for the application.
+     * Define the "web" routes for the application..
      *
-     * These routes all receive session state, CSRF protection, etc.
-     *
-     * @return void
+     * @throws \Exception
      */
     protected function mapRoutes(){
         if (!$this->app->routesAreCached()) {
-            Route::group([
-                'middleware' => ['web'],
-            ], function ($router) {
-                require __DIR__.'/routes/web.php';
-            });
+            $routes = new Routes();
+
+            // Backend Routes
+            $routes->mapBackendRoutes()
+              ->mapPluginsBackendRoutes();
+
+            // Frontend Routes
+            $routes->mapFrontendBaseRoutes()
+              ->mapFrontendRoutes()
+              ->mapThemeRoutes()
+              ->mapPluginsFrontendRoutes();
+
+            // Add Language {lang} prefix
+            $routes->addLanguagePrefix()
+              ->sortRoutes();
         }
     }
 
@@ -119,7 +128,13 @@ class PackageServiceProvider extends ServiceProvider{
             $this->app['request']->server->set('HTTPS', true);
         }
     }
-    
+
+    /**
+     * Boot Accio.
+     *
+     * @param UrlGenerator $url
+     * @throws \Exception
+     */
     public function boot(UrlGenerator $url){
         /**
          * Register commands, so you may execute them using the Artisan CLI.
@@ -144,8 +159,6 @@ class PackageServiceProvider extends ServiceProvider{
              */
             $kernel = $this->app['Illuminate\Contracts\Http\Kernel'];
             $kernel->pushMiddleware('Accio\App\Http\Middleware\HelpersEvents');
-            //$kernel->pushMiddleware('Accio\App\Http\Middleware\MenuLink');
-            //$kernel->pushMiddleware('Accio\App\Http\Middleware\Backend');
 
             /**
              * Register Service Providers
@@ -161,6 +174,7 @@ class PackageServiceProvider extends ServiceProvider{
             $this->loadViewsFrom(accioPath('resources/views'), 'accio');
 
 
+            // Map routes
             $this->mapRoutes();
 
             /**
@@ -179,7 +193,7 @@ class PackageServiceProvider extends ServiceProvider{
 
             // Load Theme views
             $this->loadViewsFrom(Theme::getPath().'/'.'views', Theme::config('namespace'));
-            
+
             Event::fire('system:boot', [$this]);
         }
     }
@@ -196,7 +210,7 @@ class PackageServiceProvider extends ServiceProvider{
          * Config::get('accio.test')
          */
         $this->mergeConfigFrom(
-            __DIR__.'/config/app.php', 'accio'
+          __DIR__.'/config/app.php', 'accio'
         );
 
         /**

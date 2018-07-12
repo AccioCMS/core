@@ -883,6 +883,7 @@ trait PostTrait{
               ->with('featuredImage')
               ->published()
               ->whereIn('tagID', $tagIDs)
+              ->where('postID', "!=",$this->postID)
               ->orderBy('published_at', 'DESC')
               ->limit($limit)
               ->get();
