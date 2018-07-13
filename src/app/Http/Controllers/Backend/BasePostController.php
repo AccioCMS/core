@@ -294,7 +294,7 @@ class BasePostController extends MainController {
                     $field->categories = 0;
                 }
 
-                if(count($field->dbTable)){
+                if($field->dbTable){
                     $table = $field->dbTable->name;
                     $field->data = Language::filterRows(DB::table($table)->get(), false);
                     // if user add fullName as key
