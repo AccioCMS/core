@@ -12,6 +12,7 @@ use Accio\App\Commands\Deploy\Database;
 use Accio\App\Commands\Deploy\EnvFile;
 use Accio\App\Commands\Deploy\SetPermissions;
 use Accio\App\Commands\DeployCron;
+use Accio\App\Commands\PluginUpdate;
 use Accio\App\Commands\PostCreateProject;
 use Accio\App\Commands\SetWritePermissions;
 use Accio\App\Services\Routes;
@@ -67,6 +68,7 @@ class PackageServiceProvider extends ServiceProvider{
       AccioInstall::class,
       AccioUninstall::class,
       PluginInstall::class,
+      PluginUpdate::class,
       SetWritePermissions::class,
       PostCreateProject::class,
       CopyUploads::class,
@@ -99,23 +101,27 @@ class PackageServiceProvider extends ServiceProvider{
      * @throws \Exception
      */
     protected function mapRoutes(){
-        if (!$this->app->routesAreCached()) {
-            $routes = new Routes();
+        Route::group(['middleware' => ['web']], function () {
+           // if (!$this->app->routesAreCached()) {
+            // todo me e kontrollu pse e kena cehck routesAreCached dhe aka nevoje me e la a jo
+                $routes = new Routes();
 
-            // Backend Routes
-            $routes->mapBackendRoutes()
-              ->mapPluginsBackendRoutes();
+                // Backend Routes
+                $routes->mapBackendRoutes()
+                  ->mapPluginsBackendRoutes();
 
-            // Frontend Routes
-            $routes->mapFrontendBaseRoutes()
-              ->mapFrontendRoutes()
-              ->mapThemeRoutes()
-              ->mapPluginsFrontendRoutes();
+                // Frontend Routes
+                $routes->mapFrontendBaseRoutes()
+                  ->mapFrontendRoutes()
+                  ->mapThemeRoutes()
+                  ->mapPluginsFrontendRoutes();
 
-            // Add Language {lang} prefix
-            $routes->addLanguagePrefix()
-              ->sortRoutes();
-        }
+                // Add Language {lang} prefix
+                $routes->addLanguagePrefix()
+                  ->sortRoutes();
+           // }
+        });
+
     }
 
     /**

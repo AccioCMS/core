@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Accio\App\Traits\OutputStyles;
 use Cz\Git\GitRepository;
 
-class PluginInstall extends Command
+class PluginUpdate extends Command
 {
 
     use OutputStyles;
@@ -21,14 +21,14 @@ class PluginInstall extends Command
      *
      * @var string
      */
-    protected $signature = 'plugin:install {source}';
+    protected $signature = 'plugin:update {source}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Install a plugin';
+    protected $description = 'Update a plugin';
 
     /**
      * Saves plugin namespace
@@ -57,7 +57,8 @@ class PluginInstall extends Command
     protected $tmpRandomName;
 
     /**
-     * Installing plugin's config content
+     * Plugin's config content.
+     *
      * @var object $configContent
      */
     protected $configContent;
@@ -83,7 +84,7 @@ class PluginInstall extends Command
         // Ensure there are no caches
         $this->callSilent('cache:clear');
 
-        // Install plugin from a zip source
+        // Update plugin from a zip source
         if(substr($this->argument('source'),-3) === 'zip'){
             $this
               ->getZip()
@@ -95,22 +96,22 @@ class PluginInstall extends Command
         elseif(strstr($this->argument('source'),'git')){
             $this->cloneFromGit()->readConfigFile()->copySourceContent();
         }else{
-            $this->pluginNamespace = $this->argument('source');
+            $this->error('Invalid plugin namespace or git url.');
+            $this->error('You should either specify a git url or a zip url.');
+            return false;
         }
 
-        // Validate and install
-        if ($this->canInstall()) {
-            $this->info("Installing...");
-            if ($this->pluginInstance->install($this)) {
-                if ($this->addPluginInDB()) {
-                    $this->cleanTmp();
+        // Validate and update
+        if ($this->canUpdate()) {
+            $this->info("Updating...");
+            if ($this->pluginInstance->update($this)) {
+                $this->cleanTmp();
 
-                    $this->line('');
-                    $this->block('Plugin installed successfully', 'fg=black;bg=green');
-                    $this->line('');
-                    $this->comment('Next step: Execute "npm run watch" to compile view files');
-                    $this->line('');
-                }
+                $this->line('');
+                $this->block('Plugin updated successfully', 'fg=black;bg=green');
+                $this->line('');
+                $this->comment('Next step: Execute "npm run watch" to compile view files');
+                $this->line('');
             }
         }
     }
@@ -126,14 +127,14 @@ class PluginInstall extends Command
         GitRepository::cloneRepository($this->argument('source'), $this->tmpDirectory);
         return $this;
     }
-    
+
     /**
-     * Checks if a plugin can be installed
+     * Checks if a plugin can be updated
      *
      * @return bool
      * @throws \Exception
      */
-    private function canInstall(){
+    private function canUpdate(){
         $this->info("Validating");
 
         // Exists as a directory
@@ -141,11 +142,16 @@ class PluginInstall extends Command
             throw new \Exception("Plugin ".$this->pluginNamespace." not found in plugins directory!");
         }
 
-        // Remove composer autoloader
-        exec('composer dump-autoload', $output, $return_var);
+        // Plugin should be in DB Table
+        if(!Plugin::where('namespace',$this->pluginNamespace)->first()){
+            throw new \Exception("Plugin ".$this->pluginNamespace." doesn't exists in DB!");
+        }
 
         // Clear laravel compiled files
         $this->callSilent('clear-compiled');
+
+        // Remove composer autoloader
+//        exec('composer dump-autoload', $output, $return_var);
 
         // Plugin class exists
         $fullNamespace =  'Plugins\\'.str_replace('/','\\', $this->pluginNamespace.'\\Plugin');
@@ -165,15 +171,10 @@ class PluginInstall extends Command
             throw new \Exception("Class $fullNamespace not found!");
         }
 
-        // Plugin needs to have an "install" method
+        // Plugin needs to have an "update" method
         $this->pluginInstance = new $fullNamespace();
-        if(!method_exists($this->pluginInstance, 'install')){
-            throw new \Exception("Plugin ".$this->pluginNamespace." does not have an install method!");
-        }
-
-        // Plugin should not be in DB Table
-        if(Plugin::where('namespace',$this->pluginNamespace)->first()){
-            throw new \Exception("Plugin ".$this->pluginNamespace." already exists in DB!");
+        if(!method_exists($this->pluginInstance, 'update')){
+            throw new \Exception("Plugin ".$this->pluginNamespace." does not have an update method!");
         }
 
         // Config file exist
@@ -194,16 +195,8 @@ class PluginInstall extends Command
         $this->info("Copying source to plugins directory");
         $this->pluginNamespace = str_replace('\\','/',$this->configContent->namespace);
 
-        if(file_exists(pluginsPath($this->pluginNamespace))){
-            $this->cleanTmp();
-            throw new \Exception('A plugin with the same namespace already exists in plugins directory');
-        }
-
-        // Created organisation directory if it doesn't exist
-        $explodeNamespace = explode('/',$this->pluginNamespace);
-        if(!file_exists(pluginsPath($explodeNamespace[0]))) {
-            File::makeDirectory(pluginsPath($explodeNamespace[0]), 0755, true);
-        }
+        // Delete current plugin directory
+        File::deleteDirectory(pluginsPath($this->pluginNamespace));
 
         // Delete created directory if rename can not be executed
         if(!File::move($this->tmpDirectory, pluginsPath($this->pluginNamespace))){
@@ -228,7 +221,7 @@ class PluginInstall extends Command
     }
 
     /**
-     * Readon installing plugin's config file
+     * Read updating plugin's config file
      *
      * @return $this
      * @throws \Exception
