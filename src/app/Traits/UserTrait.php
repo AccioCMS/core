@@ -33,7 +33,7 @@ trait UserTrait{
      * @return boolean
      * */
     public static function hasOwnership($app,$ownershipPostID){
-        if ($ownershipPostID){
+        if($ownershipPostID){
             if(isPostType($app)){
                 $checkDB = DB::table($app)
                   ->where('postID',$ownershipPostID)

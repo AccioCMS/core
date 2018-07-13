@@ -539,10 +539,10 @@
             },
 
             selectFile(event){
-                var currentClicked = '';
-                var selectedIndex = '';
-                var removedSelectedIndex = '';
-                var multiFilesSelectedIndexes = []; // when selecting multiple images with shift
+                let currentClicked = '';
+                let selectedIndex = '';
+                let removedSelectedIndex = '';
+                let multiFilesSelectedIndexes = []; // when selecting multiple images with shift
                 this.selectedFileAlbums = [];
 
                 let path = event.path || (event.composedPath && event.composedPath());

@@ -406,10 +406,9 @@ class BasePostController extends MainController {
         $response['inTableColumns'] = $this->getInTableColumns($postType);
 
 
+        $lang = App::getLocale();
         // set category title and author name
         foreach ($response['data'] as $key => $item){
-            $item['category'] = $item['categories'][0]['title'];
-            $lang = App::getLocale();
             if(isset($item['categories']) && count($item['categories'])){
                 array_set($response, "data.$key.category",$item['categories'][0]['title']->$lang);
             }
