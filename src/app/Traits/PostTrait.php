@@ -766,7 +766,7 @@ trait PostTrait{
         $imageURL = null;
         if ($this->hasFeaturedImage()) {
             if (!$width && !$height) {
-                $imageURL = url($this->featuredImage->url) . "?" . str_replace(" ", "", $this->featuredImage->updated_at);
+                $imageURL = url($this->featuredImage->url) . "?" . strtotime($this->updated_at);
             } else {
                 $imageURL = $this->featuredImage->thumb($width, $height, $this->featuredImage, $options);
             }

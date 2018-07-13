@@ -625,7 +625,7 @@ class PostModel extends Model{
         }
 
         // FeaturedImage
-        $relations[] = 'featuredimage';
+        $relations[] = 'featuredImage';
 
         return $relations;
     }
