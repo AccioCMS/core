@@ -54,7 +54,7 @@
                                     {{label}}
                                     <i :class="tableHeaderOrderIcons(key)" aria-hidden="true"></i>
                                 </th>
-                                <th>{{trans.__action}}</th>
+                                <th class="action">{{trans.__action}}</th>
                             </tr>
                             </thead>
 
@@ -114,6 +114,11 @@
         </div>
     </div>
 </template>
+<style>
+    th.action{
+        width: 125px;
+    }
+</style>
 <script>
     import RelatedButtons from '../menu/RelatedButtons.vue'
     import { globalComputed } from '../../mixins/globalComputed';
