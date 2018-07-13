@@ -545,14 +545,16 @@
                 var multiFilesSelectedIndexes = []; // when selecting multiple images with shift
                 this.selectedFileAlbums = [];
 
+                let path = event.path || (event.composedPath && event.composedPath());
+
                 // find wich file is beeing selected
-                for(let i = 0; i < event.path.length; i++){
+                for(let i = 0; i < path.length; i++){
                     // check if image is selected
-                    if(event.path[i].className == "imageWrapper"){
+                    if(path[i].className == "imageWrapper"){
                         // get current clicked media index
-                        currentClicked = event.path[i].dataset.index;
+                        currentClicked = path[i].dataset.index;
                         // get current media file ID (mediaID)
-                        selectedIndex = event.path[i].id;
+                        selectedIndex = path[i].id;
 
                         // if shift key is not pressed
                         if(!event.shiftKey){
@@ -588,15 +590,15 @@
                             }
                         }
                         // set clicked file to active active class
-                        event.path[i].className = "imageWrapper active";
-                    }else if(event.path[i].className == "imageWrapper active"){ // if clicked media file is active
+                        path[i].className = "imageWrapper active";
+                    }else if(path[i].className == "imageWrapper active"){ // if clicked media file is active
                         if(!event.ctrlKey){ // check if ctrl key is presed and if yes deselect all files
                             this.selectedFiles = [];
                             $(".imageWrapper.active").removeClass("active");
-                            event.path[i].className = "imageWrapper active"; // make clicked media file active
+                            path[i].className = "imageWrapper active"; // make clicked media file active
                         }
-                        removedSelectedIndex = event.path[i].id;
-                        event.path[i].className = "imageWrapper";
+                        removedSelectedIndex = path[i].id;
+                        path[i].className = "imageWrapper";
                     }
                 }
 
