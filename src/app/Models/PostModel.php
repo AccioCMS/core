@@ -42,12 +42,12 @@ use Accio\Support\PostCollection;
 
 class PostModel extends Model{
     use
-      Traits\PostTrait,
-      Traits\TranslatableTrait,
-      Traits\CustomFieldsValuesTrait,
-      LogsActivity,
-      Traits\CacheTrait,
-      Traits\BootEventsTrait;
+        Traits\PostTrait,
+        Traits\TranslatableTrait,
+        Traits\CustomFieldsValuesTrait,
+        LogsActivity,
+        Traits\CacheTrait,
+        Traits\BootEventsTrait;
 
     /**
      * The primary table associated with the model.
@@ -90,11 +90,11 @@ class PostModel extends Model{
      * @var array
      */
     protected $casts = [
-      'title' => 'object',
-      'slug' => 'object',
-      'content' => 'object',
-      'status' => 'object',
-      'customFields' => 'object',
+        'title' => 'object',
+        'slug' => 'object',
+        'content' => 'object',
+        'status' => 'object',
+        'customFields' => 'object',
     ];
 
     // Carbon instance fields
@@ -156,11 +156,11 @@ class PostModel extends Model{
      * @var array
      */
     public static $defaultListColumns = [
-      'postID' => '#ID',
-      'title' => '__accio::base.title',
-      'category' => '__accio::categories.labelSingle',
-      'published_at' => '__accio::post.publishedAt',
-      'author' => '__accio::user.author'
+        'postID' => '#ID',
+        'title' => '__accio::base.title',
+        'category' => '__accio::categories.labelSingle',
+        'published_at' => '__accio::post.publishedAt',
+        'author' => '__accio::user.author'
     ];
 
     /**
@@ -213,7 +213,7 @@ class PostModel extends Model{
         }
 
         return $model->newQuery()->with(
-          is_string($relations) ? func_get_args() : $relations
+            is_string($relations) ? func_get_args() : $relations
         );
     }
 
@@ -235,18 +235,18 @@ class PostModel extends Model{
         $panels =[];
         foreach(PostType::cache()->getItems() as $postType){
             $panels[] = [
-              'label' => $postType->name,
-              'belongsTo' => $postType->slug,
-              'controller' => ($postType->hasCustomController() ? $postType->getCustomController() : 'PostController'),
-              'search' => [
-                'label' => trans('base.search'),
-                'placeholder' => trans('base.searchPlaceholder'),
-                'url' => route('backend.post.menuPanelItems', ['keyword' => "", "postTypeSlug" => $postType->slug])
-              ],
-              'items' => [
-                'label' => trans('base.latest'),
-                'url' => route('backend.post.menuPanelItems', ["postTypeSlug" => $postType->slug])
-              ],
+                'label' => $postType->name,
+                'belongsTo' => $postType->slug,
+                'controller' => ($postType->hasCustomController() ? $postType->getCustomController() : 'PostController'),
+                'search' => [
+                    'label' => trans('base.search'),
+                    'placeholder' => trans('base.searchPlaceholder'),
+                    'url' => route('backend.post.menuPanelItems', ['keyword' => "", "postTypeSlug" => $postType->slug])
+                ],
+                'items' => [
+                    'label' => trans('base.latest'),
+                    'url' => route('backend.post.menuPanelItems', ["postTypeSlug" => $postType->slug])
+                ],
             ];
         }
         return $panels;
@@ -262,10 +262,10 @@ class PostModel extends Model{
         $this->setAutoTranslate(false);
 
         $data = [
-          'postID'        => $this->postID,
-          'postSlug'      => $this->slug,
-          'date'          => date('Y-m-d',strtotime($this->created_at)),
-          'postTypeSlug'  => cleanPostTypeSlug($this->getTable())
+            'postID'        => $this->postID,
+            'postSlug'      => $this->slug,
+            'date'          => date('Y-m-d',strtotime($this->created_at)),
+            'postTypeSlug'  => cleanPostTypeSlug($this->getTable())
         ];
 
         $this->setAutoTranslate($previousAutoTranslate);
@@ -429,8 +429,8 @@ class PostModel extends Model{
      */
     private function refreshPostInPostTypeCache($postObj, string $mode){
         Post::cache($postObj->getTable())
-          ->setTable($postObj->getTable())
-          ->refreshState($postObj, $mode);
+            ->setTable($postObj->getTable())
+            ->refreshState($postObj, $mode);
     }
 
     /**
@@ -497,9 +497,9 @@ class PostModel extends Model{
      */
     private function refreshPostInCacheCategory($postObj,$mode, $category){
         Post::cache("category_posts_".$category->categoryID)
-          ->setTable($postObj->getTable())
-          ->whereCache('categories_relations.categoryID', $category->categoryID)
-          ->refreshState($postObj, $mode);
+            ->setTable($postObj->getTable())
+            ->whereCache('categories_relations.categoryID', $category->categoryID)
+            ->refreshState($postObj, $mode);
     }
 
     /**
@@ -588,8 +588,8 @@ class PostModel extends Model{
             // add post in list
             if(!isset($posts[$this->postID])){
                 $posts[$this->postID] = [
-                  'date' => $publishedDate,
-                  'count' => 0
+                    'date' => $publishedDate,
+                    'count' => 0
                 ];
             }
 
@@ -676,8 +676,8 @@ class PostModel extends Model{
         }
 
         return $query
-          ->where('status->'.$languageSlug, 'published')
-          ->where('published_at', '<=', new DateTime());
+            ->where('status->'.$languageSlug, 'published')
+            ->where('published_at', '<=', new DateTime());
     }
 
     /**
@@ -692,8 +692,8 @@ class PostModel extends Model{
             $languageSlug = App::getLocale();
         }
         return $query
-          ->where('status->' . $languageSlug, '!=', 'published')
-          ->where('published_at', '>=', new DateTime());
+            ->where('status->' . $languageSlug, '!=', 'published')
+            ->where('published_at', '>=', new DateTime());
     }
 
 
@@ -848,21 +848,21 @@ class PostModel extends Model{
      */
     public function metaData(){
         Meta::setTitle($this->title)
-          ->set("description", $this->content())
-          ->set("author", ($this->user ? $this->user->firstName." ".$this->user->lastName : null) )
-          ->set("og:type", "article", "property")
-          ->set("og:title", $this->title, "property")
-          ->set("og:description", $this->content(), "property")
-          ->set("og:url",$this->href, "property")
-          ->setImageOG(($this->hasFeaturedImage() ? $this->featuredImage : null))
-          ->setArticleOG($this)
-          ->setHrefLangData($this)
-          ->setCanonical($this->href)
-          ->setWildcards([
-            '{categoryTitle}'=>($this->hasCategory() ? $this->category->title :  null),
-            '{title}' => $this->title,
-            '{siteTitle}' => settings('siteTitle')
-          ]);
+            ->set("description", $this->content())
+            ->set("author", ($this->user ? $this->user->firstName." ".$this->user->lastName : null) )
+            ->set("og:type", "article", "property")
+            ->set("og:title", $this->title, "property")
+            ->set("og:description", $this->content(), "property")
+            ->set("og:url",$this->href, "property")
+            ->setImageOG(($this->hasFeaturedImage() ? $this->featuredImage : null))
+            ->setArticleOG($this)
+            ->setHrefLangData($this)
+            ->setCanonical($this->href)
+            ->setWildcards([
+                '{categoryTitle}'=>($this->hasCategory() ? $this->category->title :  null),
+                '{title}' => $this->title,
+                '{siteTitle}' => settings('siteTitle')
+            ]);
 
         return;
     }
@@ -1084,8 +1084,7 @@ class PostModel extends Model{
      * Featured video of a post
      * @return HasOne
      */
-    public function featuredVideo()
-    {
+    public function featuredVideo(){
         $this->setConnection("mysql"); //@todo temporary, se po i thirr prje arkives kur posti eshte i arkives
         return $this->hasOne('App\Models\Media','mediaID','featuredVideoID');
     }
@@ -1094,9 +1093,8 @@ class PostModel extends Model{
     /**
      * The users that belong to the role.
      */
-    public function users()
-    {
-        return $this->belongsToMany('App\Models\User');
+    public function users(){
+        return $this->belongsTo('App\Models\User', 'createdByUserID','userID');
     }
 
     /**
@@ -1105,8 +1103,7 @@ class PostModel extends Model{
      * @return HasManyThrough
      * @throws \Exception
      */
-    public function categories()
-    {
+    public function categories(){
         $findPostType = PostType::findBySlug($this->getTable());
         if(!$findPostType){
             throw new \Exception("Categories  relations could not be made because the post type of the post #".$this->postID." could ont be found!");
@@ -1120,8 +1117,7 @@ class PostModel extends Model{
      * @return HasManyThrough
      * @throws \Exception
      */
-    public function tags()
-    {
+    public function tags(){
         $findPostType = PostType::findBySlug($this->getTable());
         if(!$findPostType){
             throw new \Exception("Tag relations could not be made because the post type of the post #".$this->postID." could ont be found!");
