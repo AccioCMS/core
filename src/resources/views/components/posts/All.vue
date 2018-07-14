@@ -54,7 +54,7 @@
                                     {{label}}
                                     <i :class="tableHeaderOrderIcons(key)" aria-hidden="true"></i>
                                 </th>
-                                <th>{{trans.__action}}</th>
+                                <th class="action">{{trans.__action}}</th>
                             </tr>
                             </thead>
 
@@ -71,7 +71,6 @@
                                         <input type="checkbox" :value="item.postID" v-model="bulkDeleteIDs" :id="'ID'+item.postID">
                                     </td>
 
-
                                     <td v-for="(label, key) in getList.inTableColumns">
                                         <template v-if="key !== 'title' && item[key] !== undefined">{{item[key]}}</template>
                                         <template v-if="key === 'title'">
@@ -81,7 +80,7 @@
 
                                     <td>
                                         <div class="btn-group">
-                                            <button type="button" class="btn btn-primary" @click="redirect('post-update', item.postID)" v-if="isOwner(item.createdByUserID, hasUpdatePermission)">
+                                            <button type="button" class="btn btn-primary" @click="redirect('post-update', item.postID, '', $route.query)" v-if="isOwner(item.createdByUserID, hasUpdatePermission)">
                                                 {{trans.__updateBtn}}
                                             </button>
 
@@ -115,6 +114,11 @@
         </div>
     </div>
 </template>
+<style>
+    th.action{
+        width: 125px;
+    }
+</style>
 <script>
     import RelatedButtons from '../menu/RelatedButtons.vue'
     import { globalComputed } from '../../mixins/globalComputed';
@@ -140,7 +144,7 @@
             this.deleteUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/delete/'+this.$route.params.post_type+'/';
             this.bulkDeleteUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/json/posts/bulk-delete';
             this.advancedSearchPostUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type+'?advancedSearch=1';
-            this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type+(this.$route.query.category !== undefined ? '?categoryID='+this.$route.query.category : '');
+            this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type;
         },
         mounted() {
             // permissions
@@ -228,7 +232,7 @@
         watch:{
             // watch for url changes and component doesn't change
             '$route': function(){
-                this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type+(this.$route.query.category !== undefined ? '?categoryID='+this.$route.query.category : '');
+                this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type;
                 this.viewSearchUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/posts/search/'+this.$route.params.post_type+'/';
                 this.dataSearchUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/search/'+this.$route.params.post_type+'/';
                 this.advancedSearchPostUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/posts/get-all/'+this.$route.params.post_type+'?advancedSearch=1';

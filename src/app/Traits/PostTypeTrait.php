@@ -34,9 +34,9 @@ trait PostTypeTrait{
      * @return object Returns requested post type if found, null instead
      * */
     public static function findBySlug($postTypeSlug){
-        if(self::getFromCache()) {
+        if(self::cache()->getItems()) {
             $postTypeSlug = 'post_' . cleanPostTypeSlug($postTypeSlug);
-            $postTypes = self::getFromCache();
+            $postTypes = self::cache()->getItems();
 
             if(!$postTypes){
                 return;
@@ -55,8 +55,8 @@ trait PostTypeTrait{
      * @return bool is this post type being used in menu links
      */
     public static function isInMenuLinks($postTypeID){
-        if(MenuLink::getFromCache()) {
-            $menuLinks = MenuLink::getFromCache()->where('belongsToID', $postTypeID)->where('belongsTo', 'post_type');
+        if(MenuLink::cache()->getItems()) {
+            $menuLinks = MenuLink::cache()->getItems()->getItems()->where('belongsToID', $postTypeID)->where('belongsTo', 'post_type');
             if ($menuLinks->count()) {
                 return true;
             }
@@ -72,8 +72,8 @@ trait PostTypeTrait{
      * @return object Returns requested post type if found, null instead
      * */
     public static function findByID($postTypeID){
-        if(\App\Models\PostType::getFromCache()) {
-            $getPosType = \App\Models\PostType::getFromCache()->where('postTypeID', $postTypeID);
+        if(\App\Models\PostType::cache()) {
+            $getPosType = \App\Models\PostType::cache()->getItems()->where('postTypeID', $postTypeID);
             if ($getPosType) {
                 return $getPosType->first();
             }
@@ -121,7 +121,7 @@ trait PostTypeTrait{
      * @return array
      */
     public static function getFields($post_type){
-        $postType = PostType::getFromCache()->where('slug', $post_type)->first();
+        $postType = PostType::cache()->getItems()->where('slug', $post_type)->first();
 
         if($postType){
             return $postType->fields;

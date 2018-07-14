@@ -2,11 +2,12 @@
 
 namespace Accio\App\Http\Controllers\Backend\Auth;
 
+use Accio\App\Http\Controllers\Backend\MainController;
 use Illuminate\Routing\Controller;
 use Illuminate\Foundation\Auth\ResetsPasswords;
 use Illuminate\Support\Facades\Auth;
 
-class BaseResetPasswordController extends Controller{
+class BaseResetPasswordController extends MainController {
     /*
     |--------------------------------------------------------------------------
     | Password Reset Controller
@@ -27,6 +28,7 @@ class BaseResetPasswordController extends Controller{
      */
     public function __construct(){
         $this->middleware('guest');
+        parent::__construct();
     }
 
     /**

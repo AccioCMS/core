@@ -28,34 +28,45 @@ class Routes{
     {
         //get active theme and theme routes
         new Theme();
-
     }
+
+    /**
+     * Define middleware that routes should pass through.
+     *
+     * @var array
+     */
+    private $middleware = [
+      'backend' => [
+        'application',
+        'backend'
+      ],
+      'frontend' => [
+        'application',
+        'frontend'
+      ]
+    ];
+
 
     /**
      * Define Package Backend routes
      *
      * These routes are taken from package/routes/backend
      *
-     * @return void
+     * @return $this
      */
     public function mapBackendRoutes(){
         $directory = __DIR__.'/../../routes/backend';
         if(is_dir($directory)) {
             $routeFiles = File::files($directory);
-
-//            \Route::group([
-//              'middleware' => ['web','session'],
-//            ], function () use ($routeFiles) {
-
             \Route::group([
-              'middleware' => 'backend',
+              'middleware' => $this->middleware['backend'],
             ], function () use ($routeFiles) {
                 foreach ($routeFiles as $file) {
                     require $file;
                 }
             });
-//            });
         }
+        return $this;
     }
 
     /**
@@ -63,25 +74,27 @@ class Routes{
      *
      * These routes are taken from /routes and are applied across all themes
      *
-     * @return void
+     * @return $this
      */
     public function mapFrontendRoutes(){
         $directory = base_path('routes');
-
         if(is_dir($directory)) {
             $routeFiles = File::files($directory);
 
-            \Route::group([
-              'middleware' => 'frontend',
-            ], function () use ($routeFiles) {
+            $excludeRoutes = ['base.php', 'api.php'];
+
+            Route::group([
+              'middleware' => $this->middleware['frontend'],
+            ], function () use ($routeFiles, $excludeRoutes) {
                 foreach ($routeFiles as $file) {
                     // Base.php is loaded from FrontendBaseRoutes method
-                    if ($file->getFilename() !== 'base.php') {
+                    if (!in_array($file->getFilename(), $excludeRoutes)) {
                         require $file;
                     }
                 }
             });
         }
+        return $this;
     }
 
     /**
@@ -89,16 +102,72 @@ class Routes{
      *
      * These routes are taken from current Theme
      *
-     * @return void
+     * @return $this
      */
     public function mapThemeRoutes(){
         $this->getRoutsFromTheme(Theme::getActiveTheme());
+        return $this;
+    }
+
+    /**
+     * Add Frontend base routes.
+     *
+     * @return $this
+     * @throws \Exception
+     */
+    public function mapFrontendBaseRoutes(){
+        $projectConfig = Config::get('project');
+        $baseFile = base_path('routes/base.php');
+
+        \Route::group([
+          'middleware' => $this->middleware['frontend'],
+        ], function () use($baseFile) {
+            require $baseFile;
+        });
+
+
+        // Find base route
+        // getByName() method is currently not working for any strange reason
+        $baseRoute = null;
+        foreach(Route::getRoutes() as $route){
+            if($route->getName() == 'base.homepage'){
+                $baseRoute = $route;
+                break;
+            }
+        }
+
+        if($baseRoute && $projectConfig['multilanguage']){
+            // Only proced base route that has translate as a middleware
+            // base.homepage routes is handled in a separate method, for language purposes
+            if($baseRoute->getName() == 'base.homepage' && in_array("translate",$baseRoute->middleware())){
+                foreach(Language::cache()->getItems() as $language){
+                    // Create default language routes
+                    $newRoute = Route::get($baseRoute->uri().'/'.$language->slug,$baseRoute->getActionName());
+
+                    //set name
+                    $newRoute->name($baseRoute->getName().'.'.$language->slug);
+
+                    //set wheres
+                    foreach($baseRoute->wheres as $key=>$value){
+                        $newRoute->where($key, $value);
+                    }
+
+                    //set middleware
+                    $newRoute->middleware($baseRoute->middleware());
+
+                }
+            }
+        }
+
+        return $this;
     }
 
     /**
      * Get routes from a specific theme
      *
      * @param string $themeName Directoy Name of theme
+     *
+     * @return $this
      */
     public function getRoutsFromTheme($themeName){
         if(Theme::ifExists($themeName)) {
@@ -116,6 +185,7 @@ class Routes{
 //                });
             }
         }
+        return $this;
     }
 
     /**
@@ -123,14 +193,14 @@ class Routes{
      *
      * It only takes in consideration active plugins
      *
-     * @return void
+     * @return $this
      */
     public function mapPluginsBackendRoutes(){
         foreach(Plugin::activePlugins() as $plugin){
             $backendRoutes = $plugin->backendRoutes();
             if($backendRoutes){
                 \Route::group([
-                  'middleware' => ['auth:admin','backend'],
+                  'middleware' => $this->middleware['backend'],
                   'as' => 'Backend.'.$plugin->namespaceWithDot().".",
                   'namespace' => $plugin->parseNamespace().'\Controllers',
                   'prefix' => Config::get('project')['adminPrefix']."/".$plugin->backendURLPrefix()
@@ -141,7 +211,7 @@ class Routes{
                 });
             }
         }
-        return;
+        return $this;
     }
 
     /**
@@ -149,7 +219,7 @@ class Routes{
      *
      * It only takes in consideration active plugins
      *
-     * @return void
+     * @return $this
      */
     public function mapPluginsFrontendRoutes(){
         foreach(Plugin::activePlugins() as $plugin){
@@ -157,7 +227,7 @@ class Routes{
             $frontendRoutes = $plugin->frontendRoutes();
             if($frontendRoutes){
                 \Route::group([
-                  'middleware' => ['frontend'],
+                  'middleware' => $this->middleware['frontend'],
                   'as' => $plugin->namespaceWithDot().".",
                   'namespace' => $plugin->parseNamespace().'\Controllers',
                 ], function () use($frontendRoutes) {
@@ -167,7 +237,7 @@ class Routes{
                 });
             }
         }
-        return;
+        return $this;
     }
 
     /**
@@ -193,7 +263,6 @@ class Routes{
             return url($language.$link);
         }
     }
-
 
     /**
      * Generate the URL to a controller action, depending if url should contain language slug or not.
@@ -221,60 +290,11 @@ class Routes{
     }
 
     /**
-     *  Add Frontend base routes
-     *
-     * @return void
-     */
-    public function mapFrontendBaseRoutes(){
-        $projectConfig = Config::get('project');
-        $baseFile = base_path('routes/base.php');
-
-        \Route::group([
-          'middleware' => 'frontend',
-        ], function () use($baseFile) {
-            require $baseFile;
-        });
-
-
-        // Find base route
-        // getByName() method is currently not working for any strange reason
-        $baseRoute = null;
-        foreach(Route::getRoutes() as $route){
-            if($route->getName() == 'base.homepage'){
-                $baseRoute = $route;
-                break;
-            }
-        }
-
-        if($baseRoute && $projectConfig['multilanguage']){
-            // Only proced base route that has translate as a middleware
-            // base.homepage routes is handled in a separate method, for language purposes
-            if($baseRoute->getName() == 'base.homepage' && in_array("translate",$baseRoute->middleware())){
-                foreach(Language::getFromCache() as $language){
-                    // Create default language routes
-                    $newRoute = Route::get($baseRoute->uri().'/'.$language->slug,$baseRoute->getActionName());
-
-                    //set name
-                    $newRoute->name($baseRoute->getName().'.'.$language->slug);
-
-                    //set wheres
-                    foreach($baseRoute->wheres as $key=>$value){
-                        $newRoute->where($key, $value);
-                    }
-
-                    //set middleware
-                    $newRoute->middleware($baseRoute->middleware());
-
-                }
-            }
-        }
-
-        return;
-    }
-    /**
      * Add {lang} param to all Frontend routes, if the site is multilanguage
      *
      * Backend routes are excluded
+     *
+     * @return $this
      */
     public  function addLanguagePrefix(){
         $projectConfig = Config::get('project');
@@ -310,6 +330,7 @@ class Routes{
                 }
             }
         }
+        return $this;
     }
 
     /**

@@ -64,7 +64,7 @@ trait MenuLinkTrait{
             // Get active MenuLinks by routeName and params
             $currentMenuLinkIDs = [];
             $isDefaultLanguage = (App::getLocale() == Language::getDefault('slug') ? '.default' : false);
-            foreach (\App\Models\MenuLink::getFromCache() as $menuLink) {
+            foreach (\App\Models\MenuLink::cache()->getItems() as $menuLink) {
                 $menuLinkRoute = Route::getRoutes()->getByName($menuLink->routeName . $isDefaultLanguage);
                 // maybe route doesn't have .default suffix
                 if (!$menuLinkRoute) {
@@ -228,46 +228,16 @@ trait MenuLinkTrait{
     }
 
     /**
-     * Find MenuLink that is defined HomePage
+     * Get menulink by slug.
      *
-     * @return array|string|null Returns column value if column found, null if not found. If column is not given all MenuLink data will be returned
-     */
-    public static function sethomepage(){
-        if(Post::gethomepage('postID')) {
-            $menuLinkHomePage = \App\Models\MenuLink::getFromCache()
-              ->where('belongsToID', Post::gethomepage('postID'))
-              ->where('belongsTo', 'post_pages');
-
-            // The first MenuLink is returned if no HomePage is defined
-            if (!$menuLinkHomePage) {
-                $menuLinkHomePage = $menuLinkHomePage->first();
-            } else {
-                $menuLinkHomePage = Language::translate($menuLinkHomePage->first());
-            }
-
-            self::$homepage = $menuLinkHomePage;
-        }
-    }
-
-    /**
-     * Get MenuLink that is set as Homepage
+     * @param $slug
+     * @param string $languageSlug
      *
-     * @return array|string|null Returns column value if column found, null if not found. If column is not given all MenuLink data will be returned
-     */
-    public static function gethomepage(){
-        return self::$homepage;
-    }
-
-    /**
-     * Get MenuLink by slug
-     *
-     * @param string $slug The slug of MenuLink ex. "about-us"
-     *
-     * @return array|boolean MenuLink data if found, false if not found
-     *
+     * @return bool|mixed
+     * @throws \Exception
      */
     public static function findBySlug($slug,$languageSlug = ""){
-        $getMenuLink = array_where(\App\Models\MenuLink::getFromCache($languageSlug), function ($value)  use($slug){
+        $getMenuLink = array_where(MenuLink::cache($languageSlug)->getItems(), function ($value)  use($slug){
             return ($value['slug'] == $slug);
         });
 
@@ -278,16 +248,15 @@ trait MenuLinkTrait{
     }
 
     /**
-     * Get MenuLink by ID
+     * Get MenuLink by ID.
      *
-     * @param int $menuLinkID The ID of MenuLink.
-     * @param string $languageSlug Slug of lanaguage
-     *
-     * @return object|null MenuLink data if found, null if not found
-     *
+     * @param $menuLinkID
+     * @param string $languageSlug
+     * @return mixed
+     * @throws \Exception
      */
     public static function findByID($menuLinkID,$languageSlug=""){
-        $menuLinks = MenuLink::getFromCache($languageSlug);
+        $menuLinks = MenuLink::cache($languageSlug)->getItems();
         if($menuLinks){
             return $menuLinks->where('menuLinkID',$menuLinkID)->first();
         }
@@ -320,8 +289,8 @@ trait MenuLinkTrait{
     public static function parentID($menuLinkID){
         $parentIDs = [];
         while($menuLinkID != NULL){
-            if(MenuLink::getFromCache()) {
-                $parentObj = MenuLink::getFromCache()->where('menuLinkID', $menuLinkID)->first();
+            if(MenuLink::cache()->getItems()) {
+                $parentObj = MenuLink::cache()->getItems()->where('menuLinkID', $menuLinkID)->first();
                 if ($parentObj) {
                     $menuLinkID = $parentObj->parent;
                     if ($menuLinkID) {
@@ -358,11 +327,6 @@ trait MenuLinkTrait{
                     else if($countPaths == 1 && $explodePath[0]){
                         Redirect::to('/', 301)->send();
                     }
-                }
-
-                //set language
-                if(!Request::route('lang')){
-                    \Request::route()->setParameter('lang', $getLanguage->slug);
                 }
             }
         }
@@ -416,7 +380,7 @@ trait MenuLinkTrait{
                     return route('backend.post.index', [
                       'post_type' => $postType->slug,
                       'view' => 'list',
-                      'category' => $menuLink->belongsToID
+                      'categoryID' => $menuLink->belongsToID
                     ]);
                 }
             }
@@ -431,7 +395,7 @@ trait MenuLinkTrait{
      */
     public static function cmsMenus(){
         $result = [];
-        foreach(\App\Models\Menu::getFromCache() as $menu){
+        foreach(\App\Models\Menu::cache()->getItems() as $menu){
             $result[$menu->slug] = [
               'menuID' => $menu->menuID,
               'title' => $menu->title,
@@ -649,7 +613,7 @@ trait MenuLinkTrait{
           ]
         ];
 
-        foreach (PostType::getFromCache() as $postType){
+        foreach (PostType::cache()->getItems() as $postType){
             if(!$postType->isVisible){
                 continue;
             }
@@ -798,21 +762,21 @@ trait MenuLinkTrait{
         Menu::setMenuLinksByMenu();
 
         //Backend
-        if ($request->is(Config::get('project')['adminPrefix'].'*')){
+        if (isInAdmin()){
             $menuLinkID = (is_numeric(Input::get('menu_link_id')) ? Input::get('menu_link_id') : FALSE);
             if($menuLinkID){
                 self::setCurrent(self::findByID($menuLinkID));
             }
         }else{ // frontend
             Post::sethomepage();
-            self::sethomepage();
 
+            // Set active menulinks
             self::setActiveIDs();
 
             // Set home page MenuLink if home page is requested
             $getCurrentPath = Request::path();
             if($getCurrentPath == '/' || $getCurrentPath == App::getLocale()){
-                self::setCurrent(MenuLink::gethomepage());
+                self::setCurrent(Post::gethomepage());
             }
             //or if any other menulink is active
             else if(self::getActiveIDs()){

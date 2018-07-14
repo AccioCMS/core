@@ -371,6 +371,17 @@
                                             </div>
                                         </div>
 
+                                        <!-- CHANGE AUTHOR -->
+                                        <div class="form-group status" :id="'form-group-author_'+ lang.slug" v-if="isAdmin()">
+                                            <label class="control-label col-md-2 col-sm-2 col-xs-12" for="author">{{trans.__author}}</label>
+                                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                                <select name="status" id="author" v-model="createdByUserID" class="form-control">
+                                                    <option v-for="user in users" :value="user.userID">{{ user.firstName }} {{ user.lastName }}</option>
+                                                </select>
+                                                <div class="alert" v-if="StoreResponse.errors['author_'+lang.slug]" v-for="error in StoreResponse.errors['author_'+lang.slug]">{{ error }}</div>
+                                            </div>
+                                        </div>
+
                                         <hr>
 
                                         <!-- CATEGORIES -->
@@ -473,7 +484,7 @@
                     </div>
 
                     <div class="imageContainer" style="margin-top:15px; margin-left:10px;" id="form-group-featuredImage">
-                        <img v-if="mediaSelectedFiles['featuredImage']" :src="generateUrl(constructUrl(mediaSelectedFiles['featuredImage'][0]))" class="featuredImagePreview">
+                        <img v-if="mediaSelectedFiles['featuredImage']" :src="generateUrl(constructUrl(mediaSelectedFiles['featuredImage'][0]))+'?'+mediaSelectedFiles['featuredImage'][0].updated_at" class="featuredImagePreview">
                         <br>
                         <a class="btn btn-info" v-if="!mediaSelectedFiles['featuredImage']" @click="openMediaForFeatured('featuredImage','image')" id="openMediaChangeFeatureImage">{{trans.__featuredImage}}</a>
                         <a class="btn btn-info" v-if="mediaSelectedFiles['featuredImage']" @click="openMediaForFeatured('featuredImage','image')">{{trans.__change}}</a>
@@ -517,13 +528,18 @@
                         </ul>
                     </div>
 
-                    <button type="button" class="btn btn-info" id="globalCancel" @click="redirect('post-list')">{{trans.__globalCancelBtn}}</button>
+                    <button type="button" class="btn btn-info" id="globalCancel" @click="redirect('post-list', '', '', $route.query)">{{trans.__globalCancelBtn}}</button>
                 </div>
             </div>
 
         </div>
     </div>
 </template>
+<style scoped>
+    .hide{
+        display: none !important;
+    }
+</style>
 <script>
     import Datepicker from 'vuejs-datepicker';
     import VueTimepicker from 'vue2-timepicker';
@@ -545,6 +561,7 @@
                 __createFormTitle: this.__('post.createFormTitle'),
                 __title: this.__('post.add'),
                 __status: this.__('post.status'),
+                __author: this.__('post.author'),
                 __published: this.__('post.published'),
                 __draft: this.__('post.draft'),
                 __pending: this.__('post.pending'),
@@ -612,6 +629,8 @@
                 published_at: {date: '', time: {HH: "",mm: ""}, dateFormatted: ''},
                 savedDropdownMenuVisible: false,
                 filesToBeIgnored: [],
+                users: [],
+                createdByUserID: this.createdByUserID,
             }
         },
         methods: {
@@ -683,6 +702,7 @@
                     selectedTags: this.selectedTags,
                     published_at: this.published_at,
                     redirect: redirectChoice,
+                    createdByUserID: this.createdByUserID
                 };
 
                 this.$store.dispatch('store',{
@@ -692,6 +712,7 @@
                 }).then((resp) => {
                     if(resp.code == 200){
                         this.onStoreBtnClicked('post-',redirectChoice,resp.id);
+                        this.loadCreateInputs();
                         this.$emit('emitStore', {
                             on: "create",
                             response: resp
@@ -763,7 +784,7 @@
                         this.slug[langSlug] = response;
                         $("#slug_"+langSlug).val(response);
                     });
-            }
+            },
         },
         computed: {
             isMediaOpen(){
@@ -783,13 +804,21 @@
             },
             getSubFields(){
                 return this.$store.getters.get_sub_custom_fields;
-            },
+            }
         },
 
         watch:{
             // watch for url changes and component doesn't change
             '$route': function(){
                 this.loadCreateInputs();
+            },
+            areTagsLoading: function(newVal, oldVal) { // watch it
+                // $(".multiselect__content-wrapper")
+                if(newVal){
+                    $(".multiselect__content-wrapper").addClass("hide");
+                }else {
+                    $(".multiselect__content-wrapper").removeClass("hide");
+                }
             }
         }
     }

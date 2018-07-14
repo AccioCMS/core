@@ -269,10 +269,11 @@ class  Meta
         }
         return $this;
     }
+
     /**
      * Set image open graph
      *
-     * @param ojbect $imageObj
+     * @param object $imageObj
      * @return $this
      */
     public function setImageOG($imageObj){

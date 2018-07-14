@@ -16,14 +16,17 @@ use Illuminate\Http\Request;
 use Accio\Support\Facades\Search;
 use App\Models\User;
 use App\Models\Language;
+use Illuminate\Support\Facades\Session;
 use ImageOptimizer;
 
 class MainController extends Controller{
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
     public function __construct(){
-        $this->middleware('auth');
-        $this->middleware('backend');
+        if(App::routesAreCached()) {
+            $this->middleware('application');
+            $this->middleware('backend');
+        }
     }
 
     /**

@@ -233,14 +233,14 @@ trait TranslatableTrait
                 if(is_array($attr)){
                     continue;
                 }
-                if($attr == null || $attr == ""){
+                if($attr == null || $attr == "" || $attr == '[]'){
                     $attr = new \stdClass();
                 }else{
                     if(!is_object($attr)){
                         $attr = json_decode($attr);
                     }
                 }
-                foreach(Language::getFromCache() as $language){
+                foreach(Language::cache()->getItems() as $language){
                     $langSlug = $language->slug;
 
                     if (!isset($attr->$langSlug)){

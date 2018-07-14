@@ -2,6 +2,7 @@
 
 namespace Accio\App\Models;
 
+use App\Models\Post;
 use App\Models\Tag;
 use DB;
 use Illuminate\Database\Eloquent\Model;
@@ -122,6 +123,7 @@ class TagModel extends Model{
     {
         return $this->hasOne('App\Models\Media','mediaID','featuredImageID');
     }
+
 
     /**
      * Define single user's SEO Meta data

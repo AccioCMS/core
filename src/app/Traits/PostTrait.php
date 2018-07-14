@@ -11,6 +11,7 @@ use App\Models\PostType;
 use App\Models\TagRelation;
 use App\Models\Task;
 use App\Models\Theme;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
@@ -36,6 +37,7 @@ trait PostTrait{
     public function getNotyMessages(){
         return $this->notyMessages;
     }
+
     public function noty($type, $message, $key = ""){
         array_push($this->notyMessages,[
           'key' => $key,
@@ -46,11 +48,11 @@ trait PostTrait{
     }
 
     /**
-     * Find a post by slug
+     * Find a post by slug.
      *
      * @param  string  $slug the slug of the post
      * @param  string  $postTypeSlug the name of the post type, ex. post_services
-     * @param  boolean $showUnPublished check if the result should include unpublished posts or not.
+     *
      * @return object|null Returns post as array or null if not found
      **/
     public static function findBySlug($slug, $postTypeSlug = ''){
@@ -58,7 +60,7 @@ trait PostTrait{
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
         // search in cache
-        $cachedPosts = self::getFromCache($postTypeSlug);
+        $cachedPosts = self::cache($postTypeSlug)->getItems();
         if($cachedPosts){
             $post = $cachedPosts->where('slug',$slug)->first();
         }
@@ -66,41 +68,31 @@ trait PostTrait{
         if($post){
             return $post;
         }
-        else { // than search in database
+        else { // when not available in cache, search in database
             $postObj = (new Post())->setTable($postTypeSlug);
             $post = $postObj
               ->where('slug->'.App::getLocale(), $slug)
               ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
               ->first();
 
-            // search in archive if not found in main database
-            if(!$post && env('DB_ARCHIVE')){
-                $postObj->setConnection('mysql_archive');
-                $post = $postObj
-                  ->where('slug->'.App::getLocale(), $slug)
-                  ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
-                  ->first();;
-            }
-
             return $post;
         }
     }
 
     /**
-     * Find a post by ID
+     * Find a post by ID.
      *
      * @param  int     $postID ID of the post
      * @param  string  $postTypeSlug Name of the post type, ex. post_services
-     * @param  boolean $showUnPublished Check if the result should include unpublished posts or not.
      *
      * @return object|null Returns post as array or null if not found
      **/
-    public static function findByID($postID, $postTypeSlug = '', $showUnPublished = false){
+    public static function findByID($postID, $postTypeSlug = ''){
         $post = null;
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
         // search in cache
-        $cachedPosts = self::getFromCache($postTypeSlug);
+        $cachedPosts = self::cache($postTypeSlug)->getItems();
         if($cachedPosts){
             $post = $cachedPosts->where('postID',$postID)->first();
         }
@@ -108,15 +100,13 @@ trait PostTrait{
         if($post){
             return $post;
         }
-        else { // than search in database
+        else { // when not available in cache, search in database
             $postObj = (new Post())->setTable($postTypeSlug);
-            $post = $postObj->where('postID', $postID)->first();
+            $post = $postObj
+              ->where('postID', $postID)
+              ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
+              ->first();
 
-            // search in archive if not found in main database
-            if(!$post && env('DB_ARCHIVE')){
-                $postObj->setConnection('mysql_archive');
-                $post = $postObj->where('postID', $postID)->first();;
-            }
             return $post;
         }
     }
@@ -126,11 +116,9 @@ trait PostTrait{
      *
      * @param $data array of data from request
      * @return array Returns 200 if successful, 500 if any internal error is found
-     * @throws Exception
+     * @throws \Exception
      * */
     public static function store($data){
-        $isInArchive = false;
-
         // return errors if there are any
         $errorMessages = self::validateStore($data);
         if(count($errorMessages)){
@@ -138,7 +126,7 @@ trait PostTrait{
         }
 
         // Set posts table
-        $postObj = new \App\Models\Post();
+        $postObj = new Post();
         $postObj->setTable($data['postType']);
 
         // Remove foreign key check
@@ -147,7 +135,7 @@ trait PostTrait{
         // on create
         if(!isset($data['postID'])){
             $populatedFields = self::populateStoreColumns($postObj, $data);
-            $populatedFields['post']->createdByUserID = Auth::user()->userID;
+            $populatedFields['post']->createdByUserID = (!User::isAdmin() || !isset($data['createdByUserID'])) ? Auth::user()->userID : $data['createdByUserID'];
             $postObj = $populatedFields['post'];
 
             if(!$postObj->save()){
@@ -157,9 +145,10 @@ trait PostTrait{
             $postID = $postObj->postID;
         }else{ // on update
             $postObj = $postObj->where('postID',$data['postID'])->first();
-            // if posts exists in the primary database
+
             if($postObj){
                 $populatedFields = self::populateStoreColumns($postObj, $data);
+                $populatedFields['post']->createdByUserID = (!User::isAdmin() || !isset($data['createdByUserID'])) ? Auth::user()->userID : $data['createdByUserID'];
                 $postObj = $populatedFields['post'];
 
                 if($postObj->save()){
@@ -171,42 +160,22 @@ trait PostTrait{
 
                 $postID = $postObj->postID;
             }else{
-                // if post exists only in the archive database
-                $postObj = new self();
-                $populatedFields = self::populateStoreColumns($postObj, $data);
-                $populatedFields['post']->createdByUserID = Auth::user()->userID;
-                $populatedFields['post']->postID = $data['postID'];
-                $post = $populatedFields['post'];
-
-                // Event fired after post is tasked to be archived
-                Event::fire('post:updated:archiving', [$data, $post]);
-
-                $postObj->noty("success", "Changes will be made after 10 min");
-                // create task
-                Task::create('post', 'update', $post, ['data' => $data]);
-
-                $postID = $data['postID'];
-
-                $isInArchive = true;
+                throw new \Exception("Trying to edit a post that doesn't exist!");
             }
-
         }
-
 
         if($postID){
             // Insert categories
-            self::insertCategories($data['selectedCategories'], $postObj->postID, $data['postType'], $isInArchive);
+            self::insertCategories($data['selectedCategories'], $postObj->postID, $data['postType']);
 
             // Insert tags
-            self::insertTags($data['selectedTags'], $postObj->postID, $data['postType'], $isInArchive);
+            self::insertTags($data['selectedTags'], $postObj->postID, $data['postType']);
 
             // Insert media
             self::insertMedia($data['files'],$postObj->postID, $data['postType'], $data['languages'], $populatedFields['files'], $data['filesToBeIgnored']);
 
-            if(!$isInArchive){
-                // Event fired after post is stored
-                Event::fire('post:stored', [$data, $postObj]);
-            }
+            // Event fired after post is stored
+            Event::fire('post:stored', [$data, $postObj]);
 
             return [
               'error' => false,
@@ -495,7 +464,6 @@ trait PostTrait{
                             $c = 0;
                             foreach ($valuesByLang as $singleValue){
                                 if(isset($singleValue[$primaryKey])) {
-//                                    $tmpArr[$langSlug]['k_' . $c] = $singleValue[$primaryKey];
                                     $tmpArr[$langSlug][] = $singleValue[$primaryKey];
                                     $c++;
                                 }
@@ -513,7 +481,6 @@ trait PostTrait{
                     $c = 0;
                     foreach ($formData['value'] as $singleValue){
                         if(isset($singleValue[$primaryKey])) {
-//                            $tmpArr['k_' . $c] = $singleValue[$primaryKey];
                             $tmpArr[] = $singleValue[$primaryKey];
                             $c++;
                         }
@@ -544,7 +511,7 @@ trait PostTrait{
      *
      * @return array List of inserted categories IDs
      * */
-    public static function insertCategories($selectedCategories, $postID, $postTypeSlug, $isInArchive){
+    public static function insertCategories($selectedCategories, $postID, $postTypeSlug){
         if (count($selectedCategories)){
             $categoriesIDs = [];
             $newCategoryRelation = [];
@@ -560,18 +527,12 @@ trait PostTrait{
             }
 
             // if post is only in the archive
-            if($isInArchive){
+            // if post is in the main database
+            $insertedCategories = DB::table('categories_relations')->insert($newCategoryRelation);
+            if ($insertedCategories){
                 // create task
                 Task::create('categories_relations', 'create', $newCategoryRelation, ['postID' => $postID, 'postType' => $postTypeSlug]);
-            }else{
-                // if post is in the main database
-                $insertedCategories = DB::table('categories_relations')->insert($newCategoryRelation);
-                if ($insertedCategories){
-                    // create task
-                    Task::create('categories_relations', 'create', $newCategoryRelation, ['postID' => $postID, 'postType' => $postTypeSlug]);
-                    return $categoriesIDs;
-                }
-
+                return $categoriesIDs;
             }
         }
         return [];
@@ -587,7 +548,7 @@ trait PostTrait{
      * @return array  List of inserted media files
      * */
 
-    public static function insertTags($selectedTags, $postID, $postTypeSlug, $isInArchive){
+    public static function insertTags($selectedTags, $postID, $postTypeSlug){
         if(count($selectedTags)){
             $tagsIDs = [];
             $postType = PostType::findBySlug($postTypeSlug);
@@ -624,19 +585,14 @@ trait PostTrait{
                     }
                 }
             }
-            // if post is only in the archive
-            if($isInArchive){
+
+            // if post is in the main database
+            $insertedTags = DB::table('tags_relations')->insert($newTagsRelations);
+            if($insertedTags){
                 // create task
                 Task::create('tags_relations', 'create', $newTagsRelations, ['postID' => $postID, 'postType' => $postTypeSlug]);
-            }else{
-                // if post is in the main database
-                $insertedTags = DB::table('tags_relations')->insert($newTagsRelations);
-                if($insertedTags){
-                    // create task
-                    Task::create('tags_relations', 'create', $newTagsRelations, ['postID' => $postID, 'postType' => $postTypeSlug]);
 
-                    return $tagsIDs;
-                }
+                return $tagsIDs;
             }
         }
         return [];
@@ -805,14 +761,22 @@ trait PostTrait{
      *
      * @return string|null Returns url of featured image if found, null instead
      */
-    public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = '', array $options = []){
-        if($this->hasFeaturedImage()){
-            if(!$width && !$height){
-                return url($this->featuredImage->url);
-            }else{
-                return $this->featuredImage->thumb($width, $height, $this->featuredImage, $options);
+    public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = '', array $options = [])
+    {
+        $imageURL = null;
+        if ($this->hasFeaturedImage()) {
+            if (!$width && !$height) {
+                $imageURL = url($this->featuredImage->url) . "?" . strtotime($this->updated_at);
+            } else {
+                $imageURL = $this->featuredImage->thumb($width, $height, $this->featuredImage, $options);
             }
-        }else if($defaultFeaturedImageURL){
+        }
+
+        if ($imageURL){
+            return $imageURL;
+        }
+        else if(!$imageURL && $defaultFeaturedImageURL){
+            // return default image if not image is found
             return $defaultFeaturedImageURL;
         }
 
@@ -877,7 +841,8 @@ trait PostTrait{
      * @return boolean Returns true if found
      */
     public function hasTags(){
-        return (isset($this->tags) && !$this->tags->isEmpty());
+        $postType = getPostType($this->getTable());
+        return ($postType->hasTags && isset($this->tags) && !$this->tags->isEmpty());
     }
 
     /**
@@ -885,7 +850,48 @@ trait PostTrait{
      * @return bool
      */
     public function hasCategory(){
-        return (isset($this->categories) && !$this->categories->isEmpty());
+        $postType = getPostType($this->getTable());
+        return ($postType->hasCategories && isset($this->categories) && !$this->categories->isEmpty());
+    }
+
+    /**
+     * Get posts a tag.
+     * Accepts query parameters: limit, belongsTo
+     *
+     * @param int $limit
+     * @param array $tagIDs
+     *
+     * @return mixed
+     */
+    public function getPostsByTags($limit = 6, $tagIDs = [])
+    {
+        // Validate post type
+        if(!$tagIDs) {
+            $tagIDs = [];
+            foreach ($this->tags as $tag) {
+                $tagIDs[] = $tag->tagID;
+            }
+        }
+
+        if($tagIDs) {
+            $postsObj = new Post();
+            $postsObj->setTable($this->getTable());
+            $posts = $postsObj
+              ->select('postID', 'title', 'featuredImageID', 'slug')
+              ->join('tags_relations', 'tags_relations.belongsToID', $this->getTable() . '.postID')
+              ->where('belongsTo', $this->getTable())
+              ->with('featuredImage')
+              ->published()
+              ->whereIn('tagID', $tagIDs)
+              ->where('postID', "!=",$this->postID)
+              ->orderBy('published_at', 'DESC')
+              ->limit($limit)
+              ->get();
+
+            return $posts;
+        }else{
+            return collect();
+        }
     }
 
     /**

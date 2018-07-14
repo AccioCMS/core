@@ -505,7 +505,11 @@ if (! function_exists('getPostType')) {
      * @param mixed $postTypeSlug without the post_ prefix
      * @return mixed
      */
-    function getPostType($postTypeSlug){
+    function getPostType($postTypeSlug = ''){
+        if(!$postTypeSlug){
+            $postTypeSlug = config('project.default_post_type');
+        }
+
         // find it by slug
         $postType  = \App\Models\PostType::findBySlug($postTypeSlug);
         if($postType){
@@ -563,6 +567,21 @@ if (! function_exists('adminURL')) {
         return url(config('project.adminPrefix'));
     }
 }
+
+if (! function_exists('isInAdmin')) {
+    /**
+     * Check if current request belong to admin interface.
+     *
+     * @return bool
+     */
+    function isInAdmin(){
+        if (request()->is((string) Config::get('project')['adminPrefix'].'*')) {
+            return true;
+        }
+        return false;
+    }
+}
+
 
 if (! function_exists('currentMenuLink')) {
     /**

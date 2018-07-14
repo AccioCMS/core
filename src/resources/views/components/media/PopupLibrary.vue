@@ -55,7 +55,7 @@
 
                     <div v-if="shouldHide(image.type,image.mediaID) && !spinner && !noResults" :class="{'imageWrapper':true, 'active': isFileSelected(image.mediaID)}" v-for="(image, index) in getMediaList" @click="selectFile" :id="image.mediaID" :data-index="index">
                         <div class="singleImgContainer">
-                            <img :src="generateUrl(constructUrl(image))" draggable="false" v-if="image.type == 'image'">
+                            <img :src="generateUrl(constructUrl(image))+'?'+image.updated_at" draggable="false" v-if="image.type == 'image'">
                             <img :src="resourcesUrl(constructUrl(image))" draggable="false" v-else>
                         </div>
                         <p>{{ image.title }}</p>
@@ -70,7 +70,7 @@
                             <h5>{{trans.__details}}</h5>
                             <div class="col-xs-12" :class="{'col-lg-12 col-md-12 col-sm-12': selectedFiles[0].type == 'video', 'col-lg-6 col-md-6 col-sm-6': selectedFiles[0].type != 'video'}">
                                 <template v-if="selectedFiles[0] !== undefined && selectedFiles[0].type != 'video'">
-                                    <img :src="generateUrl(constructUrl(selectedFiles[0]))" id="detailsUrl">
+                                    <img :src="generateUrl(constructUrl(selectedFiles[0]))+'?'+selectedFiles[0].updated_at" id="detailsUrl">
                                 </template>
                                 <template v-else>
                                     <figure width="100%" height="100%">
@@ -539,20 +539,22 @@
             },
 
             selectFile(event){
-                var currentClicked = '';
-                var selectedIndex = '';
-                var removedSelectedIndex = '';
-                var multiFilesSelectedIndexes = []; // when selecting multiple images with shift
+                let currentClicked = '';
+                let selectedIndex = '';
+                let removedSelectedIndex = '';
+                let multiFilesSelectedIndexes = []; // when selecting multiple images with shift
                 this.selectedFileAlbums = [];
 
+                let path = event.path || (event.composedPath && event.composedPath());
+
                 // find wich file is beeing selected
-                for(let i = 0; i < event.path.length; i++){
+                for(let i = 0; i < path.length; i++){
                     // check if image is selected
-                    if(event.path[i].className == "imageWrapper"){
+                    if(path[i].className == "imageWrapper"){
                         // get current clicked media index
-                        currentClicked = event.path[i].dataset.index;
+                        currentClicked = path[i].dataset.index;
                         // get current media file ID (mediaID)
-                        selectedIndex = event.path[i].id;
+                        selectedIndex = path[i].id;
 
                         // if shift key is not pressed
                         if(!event.shiftKey){
@@ -575,7 +577,7 @@
                                         multiFilesSelectedIndexes.push(sCount);
                                     }
                                     multiFilesSelectedIndexes.push(currentClicked);
-                                // if the first selected element has a lower index as the current selected
+                                    // if the first selected element has a lower index as the current selected
                                 }else if(firstChild > currentClicked){
                                     $(".imageWrapper.active").removeClass("active");
                                     for(var sCount = firstChild; sCount > currentClicked; sCount--){
@@ -588,15 +590,15 @@
                             }
                         }
                         // set clicked file to active active class
-                        event.path[i].className = "imageWrapper active";
-                    }else if(event.path[i].className == "imageWrapper active"){ // if clicked media file is active
+                        path[i].className = "imageWrapper active";
+                    }else if(path[i].className == "imageWrapper active"){ // if clicked media file is active
                         if(!event.ctrlKey){ // check if ctrl key is presed and if yes deselect all files
                             this.selectedFiles = [];
                             $(".imageWrapper.active").removeClass("active");
-                            event.path[i].className = "imageWrapper active"; // make clicked media file active
+                            path[i].className = "imageWrapper active"; // make clicked media file active
                         }
-                        removedSelectedIndex = event.path[i].id;
-                        event.path[i].className = "imageWrapper";
+                        removedSelectedIndex = path[i].id;
+                        path[i].className = "imageWrapper";
                     }
                 }
 
@@ -608,8 +610,8 @@
                         this.selectedFiles.push(this.getMediaList[multiFilesSelectedIndexes[k]]);
                     }
 
-                // if there is only a file selected
-                // make selected list
+                    // if there is only a file selected
+                    // make selected list
                 }else{
                     for(var i = 0; i < this.getMediaList.length; i++){
                         // if it is being selected insert it into the selected array
@@ -703,14 +705,14 @@
             },
             // delete the selected media file
             deleteSelected(){
-              // open loading
-              this.$store.dispatch('openLoading');
+                // open loading
+                this.$store.dispatch('openLoading');
 
                 let selectedFiles = this.selectedFiles;
                 this.selectedFiles = [];
 
-              var global = this;
-              this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/delete', selectedFiles)
+                var global = this;
+                this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/delete', selectedFiles)
                     .then((resp) => {
                         if(resp.body == "OK"){
                             this.reset(false);
@@ -742,11 +744,11 @@
                     });
             },
             setWatermark(){
-              // open loading
-              this.$store.dispatch('openLoading');
+                // open loading
+                this.$store.dispatch('openLoading');
 
-              var global = this;
-              this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/assign-watermark', this.selectedFiles)
+                var global = this;
+                this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/assign-watermark', this.selectedFiles)
                     .then((resp) => {
                         // if response is ok - if watermarks are set
                         if(resp.body == "OK"){
@@ -826,56 +828,56 @@
                 var type = "";
                 var text = "";
 
-
                 // if media is open from editor button
                 if(this.mediaOptions.inputName !== undefined){
-                    let inputName = this.mediaOptions.inputName;
-                    if(inputName.indexOf('froala') !== -1){
-                        let editorObject  = $('#'+this.mediaOptions.inputName);
+                    if(this.mediaOptions.froalaInstance !== undefined){
+                        // restore selection
+                        this.mediaOptions.froalaInstance.selection.restore();
+                        let html = "";
 
                         for(let k in this.selectedFiles){
                             if(this.mediaOptions.format == "image"){
-                                let html = "<figure>";
-                                    html += "<img src='"+this.baseURL+'/'+this.selectedFiles[k].url+"' alt='"+this.selectedFiles[k].description+"' title='"+this.selectedFiles[k].title+"' />";
+                                html += "<figure>";
+                                html += "<img src='"+this.baseURL+'/'+this.selectedFiles[k].url+"' alt='"+this.selectedFiles[k].description+"' title='"+this.selectedFiles[k].title+"' />";
 
-                                    if(this.selectedFiles[k].description || this.selectedFiles[k].credit){
-                                        html += "<figcaption>";
-                                        if(this.selectedFiles[k].description){
-                                            html += "<span>"+this.selectedFiles[k].description+"</span>";
-                                        }
-                                        if(this.selectedFiles[k].credit){
-                                            html += "<cite>"+this.selectedFiles[k].credit+"</cite>";
-                                        }
-                                        html += "</figcaption>";
+                                if(this.selectedFiles[k].description || this.selectedFiles[k].credit){
+                                    html += "<figcaption>";
+                                    if(this.selectedFiles[k].description){
+                                        html += "<span>"+this.selectedFiles[k].description+"</span>";
                                     }
+                                    if(this.selectedFiles[k].credit){
+                                        html += "<cite>"+this.selectedFiles[k].credit+"</cite>";
+                                    }
+                                    html += "</figcaption>";
+                                }
 
-                                    html += "</figure> \n";
-
-                                // insert selected images to editor
-                                editorObject.froalaEditor('html.insert', html, false);
+                                html += "</figure> \n";
                             }else if(this.mediaOptions.format == "video") {
-                                let html = "<figure>";
-                                    html += "<video controls>";
-                                    html += "<img src='" + this.baseURL+'/'+  this.selectedFiles[k].url + "' alt='" + this.selectedFiles[k].description + "' title='" + this.selectedFiles[k].title + "' />";
-                                    html += "<source src='" + this.baseURL+'/' + this.selectedFiles[k].url + "' type='video/" + this.selectedFiles[k].extension + "' />";
-                                    html += "</video>\n";
-                                    if(this.selectedFiles[k].description || this.selectedFiles[k].credit){
-                                        html += "<figcaption>";
-                                        if(this.selectedFiles[k].description){
-                                            html += "<span>" + this.selectedFiles[k].description + "</span>";
-                                        }
-                                        if(this.selectedFiles[k].credit){
-                                            html += "<cite>" + this.selectedFiles[k].credit + "</cite>";
-                                        }
-                                        html += "</figcaption>";
+                                html += "<figure>";
+                                html += "<video controls>";
+                                html += "<img src='" + this.baseURL+'/'+  this.selectedFiles[k].url + "' alt='" + this.selectedFiles[k].description + "' title='" + this.selectedFiles[k].title + "' />";
+                                html += "<source src='" + this.baseURL+'/' + this.selectedFiles[k].url + "' type='video/" + this.selectedFiles[k].extension + "' />";
+                                html += "</video>\n";
+                                if(this.selectedFiles[k].description || this.selectedFiles[k].credit){
+                                    html += "<figcaption>";
+                                    if(this.selectedFiles[k].description){
+                                        html += "<span>" + this.selectedFiles[k].description + "</span>";
                                     }
-                                    html += "</figure> \n";
+                                    if(this.selectedFiles[k].credit){
+                                        html += "<cite>" + this.selectedFiles[k].credit + "</cite>";
+                                    }
+                                    html += "</figcaption>";
+                                }
+                                html += "</figure> \n";
+
                                 // insert selected images to editor
-                                editorObject.froalaEditor('html.insert',html, false);
+                                // $('#'+this.mediaOptions.inputName).froalaEditor('codeView.toggle');
+                                // $('#'+this.mediaOptions.inputName).froalaEditor('codeView.toggle');
                             }
-                            $('#'+this.mediaOptions.inputName).froalaEditor('codeView.toggle');
-                            $('#'+this.mediaOptions.inputName).froalaEditor('codeView.toggle');
                         }
+
+                        // Insert images into editor
+                        this.mediaOptions.froalaInstance.html.insert(html, false);
 
                         this.$store.commit('setSelectedAlbumID', 0);
                         this.deleteSavedState();
@@ -953,8 +955,8 @@
                         // add the new sessions selected files to the stack to
                         for(let k in currentSelectedFiles){
                             this.selectedFiles.push(currentSelectedFiles[k]);
-                            }
                         }
+                    }
                 }
             },
             shouldHide(type, id){ // this function hides files if they format is not required
@@ -1012,6 +1014,10 @@
                     return true;
                 }
                 return false;
+            },
+
+            randomNr(){
+
             }
         },
         computed:{

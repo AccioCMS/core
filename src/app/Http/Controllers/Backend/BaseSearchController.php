@@ -6,10 +6,11 @@ use Accio\Support\Facades\Search;
 
 
 class BaseSearchController extends MainController{
-    // Check authentification in the constructor
+    /**
+     * BaseSearchController constructor.
+     */
     public function __construct(){
         parent::__construct();
-        $this->middleware('auth');
     }
 
     public function search($tableName,$searchTerm){

@@ -4,6 +4,7 @@ namespace Accio\App\Models;
 
 use Accio\App\Traits\CacheTrait;
 use App\Models\CategoryRelation;
+use App\Models\Post;
 use App\Models\PostType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -33,30 +34,4 @@ class CategoryRelationModel extends Model
      * @var string
      */
     public static $label = "categories.relations.label";
-
-
-    /**
-     * Default method to handle cache query.
-     *
-     * @return array
-     */
-    public function cache(){
-        $postTypeSlug = $this->cacheAttribute('belongsTo', $this->cacheName);
-        if(!isPostType($postTypeSlug)){
-            throw new \Exception('Post type \''.$postTypeSlug.'\' not found in Cetegory relation\'s cache method!');
-        }
-
-        $data = CategoryRelation::where('belongsTo',$postTypeSlug)->get()->toArray();
-        Cache::forever('categories_relations_'.$postTypeSlug,$data);
-        return $data;
-    }
-
-    /**
-     * Delete post cache by categories
-     *
-     * @param string $postTypeSlug
-     */
-    public static function updateCache($item, $mode){
-        self::manageCacheState('categories_relations_'.$item->belongsTo, ['belongsTo' => $item->belongsTo], $item, $mode);
-    }
 }

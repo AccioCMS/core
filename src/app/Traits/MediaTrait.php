@@ -138,10 +138,10 @@ trait MediaTrait{
                 if($media->save()){
                     if ($request->fromAlbum === "true" || $request->fromAlbum === true){
                         \Illuminate\Support\Facades\DB::table('album_relations')->insert([
-                          'albumID' => $request->albumID,
-                          'mediaID' => $media->mediaID,
-                          "created_at" =>  \Carbon\Carbon::now(),
-                          "updated_at" => \Carbon\Carbon::now(),
+                            'albumID' => $request->albumID,
+                            'mediaID' => $media->mediaID,
+                            "created_at" =>  \Carbon\Carbon::now(),
+                            "updated_at" => \Carbon\Carbon::now(),
                         ]);
                     }
 
@@ -229,12 +229,13 @@ trait MediaTrait{
      * Get thumb by image and size.
      * If requested thumb does not exist, it automatically creates it.
      *
-     * @param object $imageObj A single Image object
-     * @param int $width Width of the image
-     * @param int $height Height of the image
+     * @param $width
+     * @param null $height
+     * @param null $imageObj
      * @param array $options
+     * @return null|string Returns URL of thumb, null if thumb could not found or created
      *
-     * @return string|null Returns URL of thumb, null if thumb could not found or created
+     * @throws \Exception
      */
     public function thumb($width, $height=null, $imageObj = null, array $options = []){
         // get current  object's image in case there is no specific image given
@@ -243,73 +244,94 @@ trait MediaTrait{
         }
         $thumbDirectory =  $width.($height ? 'x'.$height : "");
         $thumbPath = $imageObj->fileDirectory.'/'.$thumbDirectory.'/'.$imageObj->filename;
+        $thumbUrl = null;
+
         if(file_exists(base_path($thumbPath))){
-            return asset($thumbPath);
+            $thumbUrl = asset($thumbPath);
         }else{
             if($this->createThumb($imageObj, $width, $height, $options)){
-                return asset($thumbPath);
+                $thumbUrl = asset($thumbPath);
             }
         }
-        return null;
+
+        return ($thumbUrl) ? $thumbUrl . "?" .strtotime($imageObj->updated_at) : null;
     }
 
     /**
-     * Create thumb from image object
+     * Create thumb from image object.
      *
-     * @param  int $width Width of the image
-     * @param  int $height Height of the image
-     * @param  array $options
-     *
-     * @return object
+     * @param int|null $width
+     * @param int|null $height
+     * @param array $options
+     * @return $this
+     * @throws \Exception
      */
-    public function makeThumb($width, $height=null, array $options = []){
+    public function makeThumb($width = null, $height = null, array $options = []){
         $this->createThumb($this, $width, $height, $options);
         return $this;
     }
 
     /**
-     * Create thumb from image object
+     * Create thumb from image object.
      *
-     * @param  object $imageObj A single Image object
-     * @param  int $width Width of the image
-     * @param  int $height Height of the image
+     * @param object $imageObj
+     * @param int|null$width
+     * @param int|null $height
      * @param array $options
+     * @return bool
      *
-     * @return boolean
+     * @throws \Exception
      */
-    public function createThumb($imageObj, $width, $height=null, array $options = []){
+    public function createThumb($imageObj, $width = null, $height = null, array $options = []){
         $extension = File::extension($imageObj->url);
         $basePath = base_path('/');
 
+        if(!is_numeric($width)){
+            throw new \Exception("Width must be a number");
+        }
+
         if ($this->hasImageExtension($extension)){
+
             //thumb can only be created if original source exist
             if(file_exists($basePath.$imageObj->url) && File::size($basePath.$imageObj->url)) {
+
                 $thumbDir = base_path($imageObj->fileDirectory . "/" . $width.($height ? 'x'.$height : ""));
 
                 if (!File::exists($thumbDir)) {
                     if (!File::makeDirectory($thumbDir, 0700, true)) {
-                        return false;
+                        throw new \Exception("Could not create thumb directory '".$thumbDir."'. Please check permissions.");
                     }
                 }
 
                 //check if paths are writable
                 if (!File::isWritable($thumbDir)){
-                    return false;
+                    throw new \Exception("Thumb could not be created because the directory '".$thumbDir."' is not writable!. Please check permissions.");
                 }
 
                 //create thumb
                 $img = Image::make(base_path($imageObj->url));
-                $resizedHeight = $width * 2;
 
-                if(isset($options['resizeCanvas']) && $options['resizeCanvas'] === true){
-                    $img->resize($width, $height, function ($constraint) {
+                // crop with and height
+                if($width && $height) {
+                    if (isset($options['resizeCanvas']) && $options['resizeCanvas'] === true) {
+                        $img->resize($width, $height, function ($constraint) {
+                            $constraint->aspectRatio();
+                        })->resizeCanvas($width, $height);
+                    } else {
+                        $img->fit($width, $height);
+                    }
+                }elseif($width){ // resize only the width of the image
+                    $img->resize($width, null, function ($constraint) {
                         $constraint->aspectRatio();
-                    })->resizeCanvas($width, $height);
-                }else{
-                    $img->fit($width, $height);
+                    });
+                }
+                elseif($height){ // resize only the height of the image
+                    $img->resize(null, $height, function ($constraint) {
+                        $constraint->aspectRatio();
+                    });
                 }
 
-                if ($img->save($thumbDir . '/' . $imageObj->filename, 60)) {
+                if ($img->save($thumbDir . '/' . $imageObj->filename, config('image-optimizer.default_quality'))){
                     // optimize image
                     $this->optimize($thumbDir . '/' . $imageObj->filename);
                     return true;
@@ -435,10 +457,10 @@ trait MediaTrait{
      */
     public static function allowedExtensions(){
         return array_merge(
-          config('media.image_extensions'),
-          config('media.document_extensions'),
-          config('media.audio_extensions'),
-          config('media.video_extensions')
+            config('media.image_extensions'),
+            config('media.document_extensions'),
+            config('media.audio_extensions'),
+            config('media.video_extensions')
         );
     }
     /**

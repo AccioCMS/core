@@ -85,8 +85,8 @@ trait LanguageTrait
      * */
     public static function setDefault(){
         if(!self::$default){
-            if(\App\Models\Language::getFromCache()) {
-                $getDefault = \App\Models\Language::getFromCache()->where('isDefault',true);
+            if(\App\Models\Language::cache()->getItems()) {
+                $getDefault = \App\Models\Language::cache()->getItems()->where('isDefault',true);
                 if ($getDefault) {
                     self::$default = $getDefault->first();
                     self::$current = self::$default; //current language is the same as default one in this phase
@@ -149,7 +149,7 @@ trait LanguageTrait
      */
     public static function printLanguages($customView = '', $ulClass=''){
         return new HtmlString(view()->make(($customView ? $customView : "vendor.languages.default"), [
-          'languages' => Language::getFromCache(),
+          'languages' => Language::cache()->getItems(),
           'ulClass' => $ulClass,
 
         ])->render());
@@ -226,7 +226,7 @@ trait LanguageTrait
      * @return array|null Returns an array with language's data if found, or null if not found
      * */
     public static function findBySlug(string $slug){
-        $langauge = \App\Models\Language::getFromCache()->where('slug', $slug);
+        $langauge = \App\Models\Language::cache()->getItems()->where('slug', $slug);
         if(!$langauge->isEmpty()){
             return $langauge->first();
         }
@@ -241,7 +241,7 @@ trait LanguageTrait
      * @return boolean Returns true if found, false instead
      * */
     public static function checkBySlug(string $slug){
-        if(!\App\Models\Language::getFromCache()->where('slug', $slug)->isEmpty()){
+        if(!\App\Models\Language::cache()->getItems()->where('slug', $slug)->isEmpty()){
             return true;
         }
         return false;
@@ -458,7 +458,7 @@ trait LanguageTrait
         if(config('project.multilanguage')) {
             // hide slug on default language in frontend
             //backend
-            if (!$request->is(Config::get('project')['adminPrefix'].'*')) {
+            if (!isInAdmin()) {
                 if (config('project.hideDefaultLanguageInURL') && $languageSlug ==  Language::getDefault('slug')) {
                     $languageSlug = '';
                 }

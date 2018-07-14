@@ -10,7 +10,7 @@
                 </div>
 
                 <div class="image-decorator">
-                    <img alt="Image principale" id="imageToBeCropped" :src="generateUrl('/'+selected_image.url)"/>
+                    <img alt="Image principale" id="imageToBeCropped" :src="generateUrl('/'+selected_image.url)+'?'+escapeUrl(selected_image.updated_at)"/>
                 </div>
 
             </div>
@@ -94,7 +94,9 @@
                         ]
                    });
 
-                    var url = global.generateUrl('/'+global.selected_image.url);
+                    let stringExt = escapeUrl(global.selected_image.updated_at);
+                    var url = global.generateUrl('/'+global.selected_image.url+"?"+stringExt);
+                    console.log("url :: ", url)
                     // set image src for preview
                     $("#imagePrev").css("background-image","url("+url+")");
                     // set crop preview
@@ -209,6 +211,15 @@
                 var prevY = (y / globalHeight) * bgSizeHeight;
                 $("#imagePrev").css("background-position-y", "-"+prevY+"px");
             },
+
+            /**
+             * Remove spaces and ':' from string
+             *
+             * @param url
+             */
+            escapeUrl(url){
+                return url.replace(/ /g , "").replace(/:/g , "")
+            }
         },
         data(){
             return{

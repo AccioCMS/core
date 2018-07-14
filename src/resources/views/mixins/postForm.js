@@ -19,6 +19,10 @@ export const postForm = {
             this.languages = '';
             this.defaultLangSlug = '';
             this.dateFormat = 'd MMMM yyyy';
+            this.users = [];
+            this.createdByUserID = 0;
+            this.$store.commit('setMediaSelectedFiles', {});
+
 
             let currentDate = new Date()
             this.published_at = {
@@ -43,6 +47,9 @@ export const postForm = {
                      *  Get and manipulate with languages
                      */
                     this.languages = resp.body.languages;
+                    this.users = resp.body.users;
+                    this.createdByUserID = resp.body.createdByUserID;
+
                     let selectedTags = {};
                     for(let k in this.languages){
                         if(this.languages[k].isDefault){
@@ -90,10 +97,11 @@ export const postForm = {
                         this.categoriesOptions = values
 
                         // if url query category make that category selected
-                        if(Object.keys(this.$route.query).length && this.$route.query.category !== undefined){
+                        if(Object.keys(this.$route.query).length && this.$route.query.categoryID !== undefined){
+
                             for(let k in this.categoriesOptions){
-                                if(this.categoriesOptions[k].categoryID == this.$route.query.category){
-                                    this.selectedCategories[0] = this.categoriesOptions[k];
+                                if(this.categoriesOptions[k].categoryID == this.$route.query.categoryID){
+                                    this.selectedCategories.push(this.categoriesOptions[k]);
                                 }
                             }
                         }
@@ -215,6 +223,7 @@ export const postForm = {
             this.languages = '';
             this.defaultLangSlug = '';
             this.dateFormat = 'd MMMM yyyy';
+            this.users = [];
 
             let currentDate = new Date()
             this.published_at = {
@@ -238,6 +247,7 @@ export const postForm = {
                 .then((resp) => {
                     // get all languages
                     this.languages = resp.body.languages;
+                    this.users = resp.body.users;
                     for(let k in this.languages){
                         if(this.languages[k].isDefault){
                             this.defaultLangSlug = this.languages[k].slug;
@@ -285,7 +295,6 @@ export const postForm = {
                         media = {};
                     }
                     this.$store.commit('setMediaSelectedFiles', media);
-
 
                     this.slug = resp.body.post.slug;
                     this.href = resp.body.post.href;

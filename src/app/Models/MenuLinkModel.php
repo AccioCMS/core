@@ -95,7 +95,9 @@ class MenuLinkModel extends Model{
      * Delete Menulink caches
      */
     public static function deleteCache(){
-        Cache::forget('menuLinks');
+        $explode = explode('\\',get_class());
+        $modelName = str_replace('Model','',end($explode));
+        Cache::forget($modelName);
     }
 
     /**

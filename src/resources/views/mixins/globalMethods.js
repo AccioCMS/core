@@ -10,15 +10,22 @@ export const globalMethods = {
             this.$store.dispatch('checkPermission', {app: app, key: key});
             return this.getHasPermission; // This is causing a loop @todo
         },
-        redirect(name, id = '', params = '', query = ''){
+        redirect(name, id = '', params = '', query = {}){
             if(id === undefined || id == ''){
+
                 this.$router.push({ name: name, query: query });
             }else{
-                this.$router.push({ name: name, params: {id: id}});
+                this.$router.push({ name: name, params: {id: id}, query: query});
             }
         },
 
-
+        isAdmin(){
+            //admin has access into all permissions
+            if(this.getGlobalPermissions.global.admin !== undefined){
+                return true;
+            }
+            return false;
+        },
 
         // used to filter where to redirect depending which store btn is clicked
         onStoreBtnClicked(routeNamePrefix, redirectChoice, id){
@@ -27,7 +34,7 @@ export const globalMethods = {
             }else if(redirectChoice == 'close'){
                 this.redirect(routeNamePrefix+'list');
             }else if(redirectChoice == 'new'){
-                this.redirect(routeNamePrefix+'create');
+                this.redirect(routeNamePrefix+'create', '', '', this.$route.query);
             }else{
                 alert("Some error occurred");
             }
@@ -88,7 +95,6 @@ export const globalMethods = {
         },
         // toggle the action bar in tables (when listing items)
         toggleListActionBar(index){
-            //console.log("index", index);
             if(this.openedItemActionBar === index){
                 this.openedItemActionBar = '';
             }else{
