@@ -7,6 +7,7 @@ use App\Models\Language;
 use App\Models\Settings;
 use App\Models\User;
 use App\Models\UserGroup;
+use Cz\Git\GitRepository;
 use Doctrine\DBAL\Driver\PDOException;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
@@ -215,7 +216,7 @@ class AccioInstall extends Command{
      * @throws \Exception
      */
     private function createDefaultTheme(){
-        $this->info("Creating default theme");
+        $this->info("Creating default theme...");
 
         // create theme if it doesn't exist
         if(!file_exists(base_path('themes/'.config('project.defaultTheme')))) {
@@ -229,6 +230,20 @@ class AccioInstall extends Command{
               'activate' => true,
             ]))->make();
         }
+
+        // Delete default theme, so we later get the latest version from git
+        $defaultThemePath = base_path('themes/'.config('project.defaultTheme'));
+        if(file_exists($defaultThemePath)){
+            File::deleteDirectory($defaultThemePath);
+        }
+
+        // clone theme
+
+        // Recreate an empty directory for theme
+        if(!file_exists($defaultThemePath)) {
+            File::makeDirectory($defaultThemePath);
+        }
+        GitRepository::cloneRepository('https://github.com/AccioCMS/default-theme.git', $defaultThemePath);
 
         $this->advanceBar();
 
@@ -268,7 +283,7 @@ class AccioInstall extends Command{
      */
     private function successfullyInstalled(){
         $this->line('');
-        $this->block('Success! CMS is now installed', 'fg=black;bg=green');
+        $this->block('Success! Accio is now installed', 'fg=black;bg=green');
         $this->line('');
         $this->header('Next steps');
         $this->line('');
@@ -276,6 +291,7 @@ class AccioInstall extends Command{
         $instructions = [
           'Visit your website <options=bold>' . $this->APP_URL . '</>',
           'Visit administration panel <options=bold>' .$this->APP_URL.'/'.config('project.adminPrefix'). '</> & login with the details you provided to get started',
+          'You may need to set write permissions to public directories by executing the following command: "php artisan set:permissions"',
         ];
         foreach ($instructions as $i => $instruction) {
             if ($i !== 0) {
@@ -292,7 +308,7 @@ class AccioInstall extends Command{
      * @return $this
      */
     private function runMigration(){
-        $this->info("Running database migration");
+        $this->info("Running database migration...");
         $this->call('migrate',['--force' => true]);
 
         $this->line('');
@@ -307,7 +323,7 @@ class AccioInstall extends Command{
      */
     private function deleteUploads(){
         if($this->option('deleteUploads')){
-            $this->info("Deleting uploads");
+            $this->info("Deleting uploads...");
             File::deleteDirectory(public_path('uploads'), true);
             $this->advanceBar();
         }
@@ -321,16 +337,16 @@ class AccioInstall extends Command{
      * @throws \Exception
      */
     private function createDummyContent(){
-        $this->info("Creating default roles");
+        $this->info("Creating default roles...");
         UserGroup::createDefaultRoles();
         $this->advanceBar();
 
-        $this->info("Creating admin user");
+        $this->info("Creating admin user...");
         $this->createAdminUser();
         $this->advanceBar();
 
         // Create Default Language
-        $this->info("Creating default language");
+        $this->info("Creating default language...");
         factory(\App\Models\Language::class)->create([
           'name' => $this->PRIMARY_LANGUAGE->name,
           'nativeName' => $this->PRIMARY_LANGUAGE->nativeName,
@@ -339,42 +355,42 @@ class AccioInstall extends Command{
         ]);
         $this->advanceBar();
 
-        $this->info("Creating default post types");
+        $this->info("Creating default post types...");
         (new \DefaultPostTypesDevSeeder())->run();
         $this->advanceBar();
 
-        $this->info("Creating examples media files");
+        $this->info("Creating example media...");
         (new \MediaDevSeeder())->run(20);
         $this->advanceBar();
 
         // Create tags example
-        $this->info("Creating example tags");
+        $this->info("Creating example tags...");
         (new \TagDevSeeder())->run(20, null, true);
         $this->advanceBar();
 
         // Create a category
-        $this->info("Creating an example category");
+        $this->info("Creating an example category...");
         $categoryObj = new \CategoryDevSeeder();
         $categoryObj->exampleTitles = true;
         $categoryObj->run(3, null);
         $this->advanceBar();
 
         // Create default permalinks
-        $this->info("Creating default permalinks");
+        $this->info("Creating default permalinks...");
         (new \PermalinksTableSeeder())->run();
         $this->advanceBar();
 
         // Creating settings
-        $this->info("Saving settings");
+        $this->info("Saving settings...");
         $this->setSettings();
         $this->advanceBar();
 
-        $this->info("Creating example posts");
+        $this->info("Creating example posts...");
         (new \PostDevSeeder())->run(0, 5,'', 0, 0, 0, true);
         $this->advanceBar();
 
         // Create Primary Menu
-        $this->info("Creating primary Menu");
+        $this->info("Creating primary Menu...");
         $menuSeeder = new \MenuSeeder();
         $menu = $menuSeeder->createPrimaryMenu();
         $menuSeeder->addHomepageToPrimaryMenu($menu);
@@ -387,12 +403,13 @@ class AccioInstall extends Command{
 
 
     /**
-     * Save configuration in .env file and in config run time
+     * Save configuration in .env file and in config run time.
      *
      * @return $this
+     * @throws \Exception
      */
     private function saveConfiguration(){
-        $this->info("Writing configuration file");
+        $this->info("Writing configuration file...");
 
         // Save in .env file
         $this->env->setEnv([
@@ -733,5 +750,6 @@ class AccioInstall extends Command{
             throw  new \Exception('Langauge could not be found in ISO 639.1 list!');
         }
     }
+
 
 }
