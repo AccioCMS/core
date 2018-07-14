@@ -231,7 +231,19 @@ class AccioInstall extends Command{
             ]))->make();
         }
 
-        GitRepository::cloneRepository('https://github.com/AccioCMS/default-theme.git', base_path('themes/'.config('project.defaultTheme')));
+        // Delete default theme, so we later get the latest version from git
+        $defaultThemePath = base_path('themes/'.config('project.defaultTheme'));
+        if(file_exists($defaultThemePath)){
+            File::deleteDirectory($defaultThemePath);
+        }
+
+        // clone theme
+
+        // Recreate an empty directory for theme
+        if(!file_exists($defaultThemePath)) {
+            File::makeDirectory($defaultThemePath);
+        }
+        GitRepository::cloneRepository('https://github.com/AccioCMS/default-theme.git', $defaultThemePath);
 
         $this->advanceBar();
 
@@ -271,7 +283,7 @@ class AccioInstall extends Command{
      */
     private function successfullyInstalled(){
         $this->line('');
-        $this->block('Success! CMS is now installed', 'fg=black;bg=green');
+        $this->block('Success! Accio is now installed', 'fg=black;bg=green');
         $this->line('');
         $this->header('Next steps');
         $this->line('');
@@ -279,6 +291,7 @@ class AccioInstall extends Command{
         $instructions = [
           'Visit your website <options=bold>' . $this->APP_URL . '</>',
           'Visit administration panel <options=bold>' .$this->APP_URL.'/'.config('project.adminPrefix'). '</> & login with the details you provided to get started',
+          'You may need to set write permissions to public directories by executing the following command: "php artisan set:permissions"',
         ];
         foreach ($instructions as $i => $instruction) {
             if ($i !== 0) {
