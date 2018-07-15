@@ -314,7 +314,9 @@ class PostModel extends Model{
     private function generateCache(){
         $postType = getPostType($this->getTable());
 
-        $queryObject = $this;
+        $postObj = (new Post())->setTable($this->getTable());
+
+        $queryObject = $postObj;
 
         // Category Inner selection
         if($this->whereCacheValue('categories_relations.categoryID')) {
@@ -356,7 +358,7 @@ class PostModel extends Model{
         }
 
         // Execute query
-        $data = $queryObject->get()->toArray();
+        $data = $queryObject->get();
 
         // Save in cache
         Cache::forever($this->cacheName,$data);
@@ -625,7 +627,7 @@ class PostModel extends Model{
         }
 
         // FeaturedImage
-        $relations[] = 'featuredImage';
+        $relations[] = 'featuredimage';
 
         return $relations;
     }
@@ -1065,7 +1067,7 @@ class PostModel extends Model{
                 return $items;
             } // or search tags in relations
             else {
-                return $this->getRelationValue('featuredImage');
+                return $this->getRelationValue('featuredimage');
             }
         }
     }

@@ -296,7 +296,9 @@ trait CacheTrait
      * @param array $data
      * @return Collection
      */
-    public function setCacheCollection(array $data, string $table = ''){
+    public function setCacheCollection( $data, string $table = ''){
+        return $data;
+
         $modelClass = self::getModel();
         $table = $this->getTable();
 
@@ -310,7 +312,7 @@ trait CacheTrait
         $collection->transform(function ($row) use($modelClass,$table) {
 
             // because cache saves json values are object, we need to encode them so
-            // we laravel does not try to cast tham again
+            // laravel does not try to cast tham again
             $attributes = [];
             foreach($row as $key => $value){
                 $getType = gettype($value);
@@ -535,7 +537,7 @@ trait CacheTrait
         }
 
         // Execute query
-        $data = $queryObject->get()->toArray();
+        $data = $queryObject->get();
 
         // Save in cache
         Cache::forever($this->cacheName,$data);
@@ -583,10 +585,13 @@ trait CacheTrait
             }
 
             return collect($items)->transform(function ($attributes) use ($class) {
-                $modelObj = new $class();
-                foreach ($attributes as $key => $value) {
-                    $modelObj->setAttribute($key, $value);
+                if(!is_Array($attributes)){
+                    dd($attributes);
                 }
+                $modelObj = new $class($attributes);
+//                foreach ($attributes as $key => $value) {
+//                    $modelObj->setAttribute($key, $value);
+//                }
                 return $modelObj;
             });
         }

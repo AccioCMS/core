@@ -243,7 +243,7 @@ class AccioInstall extends Command{
         if(!file_exists($defaultThemePath)) {
 //            File::makeDirectory($defaultThemePath);
         }
-        
+
         GitRepository::cloneRepository('https://github.com/AccioCMS/default-theme.git', $defaultThemePath);
 
         $this->advanceBar();
