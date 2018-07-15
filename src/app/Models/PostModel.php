@@ -146,7 +146,7 @@ class PostModel extends Model{
      * Define default cachelimit
      * @var int
      */
-    public $defaultLimitCache = 1000;
+    public $defaultLimitCache = 500;
 
     /**
      * List of default table columns
