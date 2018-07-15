@@ -155,7 +155,7 @@ trait CacheTrait
      */
     public function refreshState($item, $mode, $callback = null){
         $cachedItems = $this->getItems('', false);
-        $currentItem = $this->hasCacheItem($cachedItems,  $item->getKeyName(), $item->getKey());
+        $currentItemKey = $this->hasCacheItem($cachedItems,  $item->getKeyName(), $item->getKey());
 
         if(!$cachedItems){
             $cachedItems = $this->getItems();
@@ -163,27 +163,29 @@ trait CacheTrait
 
         // DELETE
         if($mode == 'deleted'){
-            if ($currentItem) {
-                unset($cachedItems[key($currentItem)]);
+            if ($currentItemKey) {
+                $cachedItems->forget($currentItemKey);
             }
         }else {
             // UPDATE
-            if ($currentItem) {
-                $cachedItems[key($currentItem)] = $item->toArray();
+            if ($currentItemKey) {
+                $cachedItems->transform(function ($currenItem, $key) use($item, $currentItemKey) {
+                    if($currentItemKey === $key){
+                        return $item;
+                    }
+                    return $currenItem;
+                });
             } else { // ADD
-                // push new item to cache
-                $newCachedItems = [];
-                array_push($newCachedItems, $item->toArray());
 
                 // Let's make sure the latest item is sorted at the end of cachedItems
-                $cachedItems = array_merge($newCachedItems, $cachedItems);
+                $cachedItems->prepend($item);
 
                 // Limit results
                 $limit = (property_exists($this,'defaultLimitCache') ? $this->defaultLimitCache : $this->limitCache);
                 if($limit) {
-                    $countItems = count($cachedItems);
+                    $countItems = $cachedItems->count();
                     if ($countItems > $limit) {
-                        $cachedItems = array_slice($cachedItems, 0, ($limit - $countItems));
+                        $cachedItems = $cachedItems->take($countItems-$limit);
                     }
                 }
             }
@@ -205,16 +207,13 @@ trait CacheTrait
      * @return array
      */
     private function hasCacheItem($array, $keyName, $keyValue){
-        if(!$array || !count($array)){
-            return [];
-        }
-        foreach ($array as $index => $row){
-            if($row[$keyName] ==  $keyValue){
-                return [ $index => $row];
+        $items = $array->where($keyName, $keyValue);
+        if($items){
+            foreach ($items as $key=>$val){
+                return $key;
             }
         }
-
-        return [];
+        return null;
     }
 
     /**
@@ -488,6 +487,8 @@ trait CacheTrait
             }
         }
 
+
+        return $this->cachedItems;
         // Return collection
         if($returnCollection){
             return $this->setCacheCollection($this->cachedItems);
