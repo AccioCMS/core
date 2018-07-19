@@ -166,8 +166,7 @@ class AccioCollection extends Collection
         $pathToClass = self::$_pathToClass;
         $modelTable = self::$_modelTable;
 
-        $this->transform(function ($row) use($pathToClass,$modelTable) {
-
+        $items = $this->map(function ($row) use($pathToClass,$modelTable) {
             // because cache saves json values are object, we need to encode them so
             // laravel does not try to cast tham again
             $attributes = [];
@@ -197,6 +196,6 @@ class AccioCollection extends Collection
             return $modelObj;
         });
 
-        return $this;
+        return $items;
     }
 }

@@ -186,6 +186,7 @@ trait CacheTrait
         return $this;
     }
 
+
     /**
      * Check if a key/value is in cache.
      *
