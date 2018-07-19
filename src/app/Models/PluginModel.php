@@ -13,7 +13,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class PluginModel extends Model{
 
-    use Traits\PluginTrait, LogsActivity, Traits\CacheTrait;
+    use
+      Traits\PluginTrait,
+      LogsActivity,
+      Traits\CacheTrait,
+      Traits\BootEventsTrait,
+      Traits\CollectionTrait;
 
     /**
      * The table associated with the model.
@@ -23,12 +28,19 @@ class PluginModel extends Model{
     protected $table = "plugins";
 
     /**
+     * The primary key of the table
+     *
+     * @var string $primaryKey
+     */
+    protected $primaryKey = "pluginID";
+
+    /**
      * Fields that can be filled in CRUD
      *
      * @var array $fillable
      */
     protected $fillable = [
-        'title', 'namespace', 'organization', 'version', 'isActive'
+      'title', 'namespace', 'organization', 'version', 'isActive'
     ];
 
     /**
@@ -61,45 +73,6 @@ class PluginModel extends Model{
     {
         parent::__construct($attributes);
         Event::fire('plugin:construct', [$this]);
-    }
-
-    /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($plugin){
-            Event::fire('plugin:saving', [$plugin]);
-        });
-
-        self::saved(function($plugin){
-            Event::fire('plugin:saved', [$plugin]);
-        });
-
-        self::creating(function($plugin){
-            Event::fire('plugin:creating', [$plugin]);
-        });
-
-        self::created(function($plugin){
-            Event::fire('plugin:created', [$plugin]);
-        });
-
-        self::updating(function($plugin){
-            Event::fire('plugin:updating', [$plugin]);
-        });
-
-        self::updated(function($plugin){
-            Event::fire('plugin:updated', [$plugin]);
-        });
-
-        self::deleting(function($plugin){
-            Event::fire('plugin:deleting', [$plugin]);
-        });
-
-        self::deleted(function($plugin){
-            Event::fire('plugin:deleted', [$plugin]);
-        });
     }
 
     /**

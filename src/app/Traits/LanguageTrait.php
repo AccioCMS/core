@@ -85,8 +85,9 @@ trait LanguageTrait
      * */
     public static function setDefault(){
         if(!self::$default){
-            if(\App\Models\Language::cache()->getItems()) {
-                $getDefault = \App\Models\Language::cache()->getItems()->where('isDefault',true);
+            $languages = \App\Models\Language::cache()->collect();
+            if($languages) {
+                $getDefault = $languages->where('isDefault',true);
                 if ($getDefault) {
                     self::$default = $getDefault->first();
                     self::$current = self::$default; //current language is the same as default one in this phase
@@ -149,7 +150,7 @@ trait LanguageTrait
      */
     public static function printLanguages($customView = '', $ulClass=''){
         return new HtmlString(view()->make(($customView ? $customView : "vendor.languages.default"), [
-          'languages' => Language::cache()->getItems(),
+          'languages' => Language::cache()->collect(),
           'ulClass' => $ulClass,
 
         ])->render());
@@ -219,14 +220,13 @@ trait LanguageTrait
     }
 
     /**
-     * Get language by Slug
-     *
      * @param  string $slug  The slug of language (ex. en)
      *
      * @return array|null Returns an array with language's data if found, or null if not found
+     * @throws \Exception
      * */
     public static function findBySlug(string $slug){
-        $langauge = \App\Models\Language::cache()->getItems()->where('slug', $slug);
+        $langauge = \App\Models\Language::cache()->collect()->where('slug', $slug);
         if(!$langauge->isEmpty()){
             return $langauge->first();
         }
@@ -234,14 +234,14 @@ trait LanguageTrait
     }
 
     /**
-     * Check if a language exists using "slug"
      *
      * @param string $slug The slug of the language (ex. en)
      *
      * @return boolean Returns true if found, false instead
+     * @throws \Exception
      * */
     public static function checkBySlug(string $slug){
-        if(!\App\Models\Language::cache()->getItems()->where('slug', $slug)->isEmpty()){
+        if(!\App\Models\Language::cache()->collect()->where('slug', $slug)->isEmpty()){
             return true;
         }
         return false;

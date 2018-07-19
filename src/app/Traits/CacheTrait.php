@@ -31,10 +31,6 @@ trait CacheTrait
      */
     protected $cacheInstance;
 
-    /**
-     * @var array
-     */
-    protected $whereCache = [];
 
     /**
      * @var object
@@ -52,26 +48,13 @@ trait CacheTrait
      */
     protected $cachedItems;
 
+    protected $cacheCallback;
+
     /**
      * @var integer|null
      */
     protected $limitCache;
 
-    /**
-     * @var array
-     */
-    protected $joinCache;
-
-
-    /**
-     * @var array
-     */
-    protected $withCache;
-
-    /**
-     * @var array
-     */
-    protected $orderByCache;
 
     /**
      * Boot Cache Trait Events.
@@ -146,48 +129,54 @@ trait CacheTrait
     /**
      * Add, update or remove an item from cache.
      *
-     * @param object $item
-     * @param string $mode created, updated or deleted
-     * @param $callback todo execute callback that generates cache if it doesn't exist
-     * @return $this
-     *
+     * @param $item
+     * @param $mode
+     * @param null $callback
+     * @return CacheTrait
      * @throws \Exception
      */
     public function refreshState($item, $mode, $callback = null){
-        $cachedItems = $this->getItems('', false);
-        $currentItemKey = $this->hasCacheItem($cachedItems,  $item->getKeyName(), $item->getKey());
+        $cachedItems = $this->cachedItems;
 
-        if(!$cachedItems){
-            $cachedItems = $this->getItems();
+        // check if this item exists
+        $currentItemKey = null;
+        if($cachedItems) {
+            $keyName = $item->getKeyName();
+            $keyValue = $item->getKey();
+            foreach ($cachedItems as $index => $row) {
+                if ($row[$keyName] == $keyValue) {
+                    $currentItemKey = [$index => $row];
+                    break;
+                }
+            }
         }
 
         // DELETE
         if($mode == 'deleted'){
             if ($currentItemKey) {
-                $cachedItems->forget($currentItemKey);
+                unset($cachedItems[key($currentItemKey)]);
             }
         }else {
             // UPDATE
             if ($currentItemKey) {
-                $cachedItems->transform(function ($currenItem, $key) use($item, $currentItemKey) {
-                    if($currentItemKey === $key){
-                        return $item;
-                    }
-                    return $currenItem;
-                });
-            } else { // ADD
+                $cachedItems[key($currentItemKey)] = $item->toArray();
 
-                // Let's make sure the latest item is sorted at the end of cachedItems
-                $cachedItems->prepend($item);
+            } else { // ADD
+                // push new item to cache
+                $newCachedItems = [];
+                array_push($newCachedItems, $item->toArray());
+
+                $cachedItems = array_merge($newCachedItems, $cachedItems);
 
                 // Limit results
                 $limit = (property_exists($this,'defaultLimitCache') ? $this->defaultLimitCache : $this->limitCache);
                 if($limit) {
-                    $countItems = $cachedItems->count();
+                    $countItems = count($cachedItems);
                     if ($countItems > $limit) {
-                        $cachedItems = $cachedItems->take($countItems-$limit);
+                        $cachedItems = array_slice($cachedItems, 0, ($limit - $countItems));
                     }
                 }
+
             }
         }
 
@@ -290,59 +279,6 @@ trait CacheTrait
     }
 
     /**
-     * Set cache collection.
-     *
-     * @param array $data
-     * @return Collection
-     */
-    public function setCacheCollection( $data, string $table = ''){
-        return $data;
-
-        $modelClass = self::getModel();
-        $table = $this->getTable();
-
-        // model may have its own collection method
-        if(method_exists($this,'newCollection')){
-            $collection = $this->newCollection($data);
-        }else{
-            $collection = new Collection($data);
-        }
-
-        $collection->transform(function ($row) use($modelClass,$table) {
-
-            // because cache saves json values are object, we need to encode them so
-            // laravel does not try to cast tham again
-            $attributes = [];
-            foreach($row as $key => $value){
-                $getType = gettype($value);
-
-                switch ($getType){
-                    case 'object':
-                    case 'array':
-                        $value = json_encode($value);
-                        break;
-                }
-
-                $attributes[$key] = $value;
-            }
-
-            // initialize model
-            $modelObj = new $modelClass();
-
-            // change table
-            if($table){
-                $modelObj->setTable($table);
-            }
-
-            $modelObj->setRawAttributes($attributes);
-
-            return $modelObj;
-        });
-
-        return $collection;
-    }
-
-    /**
      * Set cache attributes.
      *
      * @param string $cacheName
@@ -361,16 +297,41 @@ trait CacheTrait
      * Cache is generated if not found.
      *
      * @param string $cacheName
-     * @return $this
+     * @param \Closure $callback Callback must always return an executed query with collection output
+     *
+     * @return mixed Returns collection or instance
      */
-    public static function cache($cacheName = ''){
+    public static function cache($cacheName = '', $callback = null, $returnCollection = true){
         if(!$cacheName){
             $cacheName = self::getAutoCacheName();
         }
-        $cacheInstance = self::initializeCache($cacheName);
-        $cacheInstance->cachedItems = Cache::get($cacheInstance->cacheName);
+        $instance = self::initializeCache($cacheName);
+        $instance->cachedItems = Cache::get($instance->cacheName);
 
-        return $cacheInstance;
+        if(!$instance->cachedItems){
+            if ($callback) {
+                if (is_callable($callback)) {
+                    $instance->cachedItems = $cacheCallback($instance);
+                } else {
+                    throw new \Exception("Cache callback must be callable!");
+                }
+            } else {
+                $instance->cachedItems = $instance->generateCache();
+            }
+
+            // convert collection to array if configured so
+            $instance->cachedItems = $instance->cachedItems->toArray();
+
+            // Save in cache
+            Cache::forever($instance->cacheName,$instance->cachedItems);
+        }
+
+        // Return collection
+        if($returnCollection){
+            return $instance->newCollection($instance->cachedItems)->setModel(self::getModel(), $instance->getTable());
+        }
+
+        return $instance;
     }
 
     /**
@@ -392,156 +353,34 @@ trait CacheTrait
         return $this;;
     }
 
-    /**
-     * Where cache.
-     * User to generate cache query.
-     *
-     * @param $key
-     * @param $operator
-     * @param null $value
-     *
-     * @return $this
-     */
-    public function whereCache($key, $operator, $value = null){
-        if (func_num_args() === 2) {
-            $value = $operator;
-            $operator = '=';
-        }
-
-        $this->whereCache[] = [
-          'key' => $key,
-          'operator' => $operator,
-          'value' => $value,
-        ];
-
-        return $this;
-    }
 
     /**
-     * Get where cache value.
+     * Default method to handle cache query..
      *
-     * @param $key
-     * @return null
-     */
-    protected function whereCacheValue($key){
-        foreach($this->whereCache as $where){
-            if($where['key'] === $key){
-                return $where['value'];
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Join cache query.
-     *
-     * @param $table
-     * @param $first
-     * @param null $operator
-     * @param null $second
-     * @param string $type
-     * @param bool $where
-     * @return $this
-     */
-    public function joinCache($table, $first, $operator = null, $second = null, $type = 'inner', $where = false){
-        $this->jsonCache[] = [
-          'table' => $table,
-          'fill' => $first,
-          'operator' => $operator,
-          'second' => $second,
-          'type' => $type,
-          'where' => $where
-        ];
-        return $this;
-    }
-
-
-    /**
-     * Set the relationships that should be eager loaded to cache.
-     *
-     * @param  mixed  $relations
-     * @return $this
-     */
-    public function withCache($relations){
-        $this->withCache = $relations;
-        return $this;
-    }
-
-    /**
-     * Get items from cache.
-     *
-     * @param string $customCacheMethod
-     * @param bool $returnCollection
-     *
-     * @return array|Collection|mixed
+     * @return mixed
      * @throws \Exception
-     */
-    public function getItems($customCacheMethod = '', $returnCollection = true){
-        // Generate cache if it doesn't exist
-        if(!$this->cachedItems){
-            if($customCacheMethod){
-                $this->cachedItems = $this->handleCustomCache($customCacheMethod);
-            }else{
-                $this->cachedItems = $this->generateCache();
-            }
-        }
-
-
-        return $this->cachedItems;
-        // Return collection
-        if($returnCollection){
-            return $this->setCacheCollection($this->cachedItems);
-        }
-
-        return $this->cachedItems;
-    }
-
-    /**
-     * Default method to handle cache query.
-     *
-     * @return array
      */
     public function generateCache(){
         $queryObject = $this;
 
-        // Join
-        if($this->joinCache){
-            foreach($this->joinCache as $join){
-                $queryObject = $queryObject->join($join['table'], $join['first'], $join['operator'], $join['second'], $join['type'], $join['where']);
+        if($this->cacheCallback){
+            $cacheCallback = $this->cacheCallback;
+            if (is_callable($cacheCallback)) {
+                $data = $cacheCallback($this);
+            }else{
+                throw new \Exception("Cache callback must be callable!");
             }
-        }
+        }else {
 
-        // With relations
-        $withRelations = $this->withCache;
-        if($withRelations){
-            $queryObject = $queryObject->with($withRelations);
-        }
-
-        // Where conditions
-        if($this->whereCache){
-            foreach($this->whereCache as $where){
-                $queryObject = $queryObject->where($where['key'], $where['operator'], $where['value']);
+            // Limit
+            $limit = (property_exists($this, 'defaultLimitCache') ? $this->defaultLimitCache : $this->limitCache);
+            if ($limit) {
+                $queryObject = $queryObject->limit($limit);
             }
+
+            // Execute query
+            $data = $queryObject->get();
         }
-
-        // Limit
-        $limit = (property_exists($this,'defaultLimitCache') ? $this->defaultLimitCache : $this->limitCache);
-        if($limit){
-            $queryObject = $queryObject->limit($limit);
-        }
-
-        // Order
-        $orderBy = $this->orderByCache;
-        if($orderBy){
-            $queryObject = $queryObject->orderBy($orderBy['key'],$orderBy['type']);
-        }
-
-        // Execute query
-        $data = $queryObject->get();
-
-        // Save in cache
-        Cache::forever($this->cacheName,$data);
 
         return $data;
     }
@@ -598,4 +437,5 @@ trait CacheTrait
         }
 
     }
+
 }

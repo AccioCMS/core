@@ -32,6 +32,7 @@ class UserModel extends Authenticatable
       Traits\TranslatableTrait,
       Traits\CacheTrait,
       Traits\BootEventsTrait,
+      Traits\CollectionTrait,
       HasApiTokens;
 
     /** @var array $fillable fields that can be filled in CRUD*/
@@ -141,7 +142,6 @@ class UserModel extends Authenticatable
      */
     public function generateCache(){
         $data  = User::with("profileimage")->get();
-        Cache::forever($this->cacheName,$data);
         return $data;
     }
 

@@ -52,17 +52,19 @@ trait PostTrait{
      *
      * @param  string  $slug the slug of the post
      * @param  string  $postTypeSlug the name of the post type, ex. post_services
+     * @param bool $searchInCache true if search first look for the item in cache, false to look for it into db
      *
      * @return object|null Returns post as array or null if not found
      **/
-    public static function findBySlug($slug, $postTypeSlug = ''){
+    public static function findBySlug($slug, $postTypeSlug = '', $searchInCache = true){
         $post = null;
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
-        // search in cache
-        $cachedPosts = self::cache($postTypeSlug)->getItems();
-        if($cachedPosts){
-            $post = $cachedPosts->where('slug',$slug)->first();
+        if($searchInCache) {
+            $cachedPosts = self::cache($postTypeSlug)->collect();
+            if ($cachedPosts) {
+                $post = $cachedPosts->where('slug', $slug)->first();
+            }
         }
 
         if($post){
@@ -84,17 +86,19 @@ trait PostTrait{
      *
      * @param  int     $postID ID of the post
      * @param  string  $postTypeSlug Name of the post type, ex. post_services
+     * @param bool $searchInCache true if search first look for the item in cache, false to look for it into db
      *
      * @return object|null Returns post as array or null if not found
      **/
-    public static function findByID($postID, $postTypeSlug = ''){
+    public static function findByID($postID, $postTypeSlug = '', $searchInCache = true){
         $post = null;
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
-        // search in cache
-        $cachedPosts = self::cache($postTypeSlug)->getItems();
-        if($cachedPosts){
-            $post = $cachedPosts->where('postID',$postID)->first();
+        if($searchInCache) {
+            $cachedPosts = self::cache($postTypeSlug)->collect();
+            if ($cachedPosts) {
+                $post = $cachedPosts->where('postID', $postID)->first();
+            }
         }
 
         if($post){

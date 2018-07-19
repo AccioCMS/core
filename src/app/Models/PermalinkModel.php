@@ -17,7 +17,8 @@ class PermalinkModel extends Model
       Traits\PermalinkTrait,
       LogsActivity,
       Traits\CacheTrait,
-      Traits\BootEventsTrait;
+      Traits\BootEventsTrait,
+      Traits\CollectionTrait;
 
     /**
      * The table associated with the model.

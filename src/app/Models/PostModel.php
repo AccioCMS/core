@@ -47,7 +47,8 @@ class PostModel extends Model{
         Traits\CustomFieldsValuesTrait,
         LogsActivity,
         Traits\CacheTrait,
-        Traits\BootEventsTrait;
+        Traits\BootEventsTrait,
+        Traits\CollectionTrait;
 
     /**
      * The primary table associated with the model.
@@ -174,16 +175,7 @@ class PostModel extends Model{
         }
     }
 
-    /**
-     * Create a new Eloquent Collection instance.
-     *
-     * @param  array  $models
-     * @return PostCollection
-     */
-    public function newCollection(array $models = [])
-    {
-        return new PostCollection($models);
-    }
+
 
     /**
      * Set the table associated with the model.
@@ -233,7 +225,7 @@ class PostModel extends Model{
     protected static function menuLinkPanel(){
         // List one menu panel for each post type
         $panels =[];
-        foreach(PostType::cache()->getItems() as $postType){
+        foreach(PostType::cache()->collect() as $postType){
             $panels[] = [
                 'label' => $postType->name,
                 'belongsTo' => $postType->slug,
@@ -277,31 +269,71 @@ class PostModel extends Model{
      * Cache is generated if not found.
      *
      * @param string $cacheName
+     * @param \Closure $callback
      * @return mixed
      * @throws \Exception
      */
-    public static function cache($cacheName = ''){
+    public static function cache($cacheName = '', $callback = null,$returnCollection = true){
         if(!$cacheName){
             $cacheName = self::getAutoCacheName();
         }
-        $cacheInstance = self::initializeCache($cacheName);
-        $cacheInstance->cachedItems = Cache::get($cacheInstance->cacheName);
+        $instance = self::initializeCache($cacheName);
+        $instance->cachedItems = Cache::get($instance->cacheName);
+
 
         // Validate post type by cache name
-        $postType = getPostType($cacheInstance->cacheName);
+        $postType = getPostType($instance->cacheName);
         if(!$postType){
             // or from table
-            $postType = getPostType($cacheInstance->getTable());
+            $postType = getPostType($instance->getTable());
 
             if(!$postType) {
-                throw new \Exception($cacheInstance->cacheName . ' doest\'t seem like a post type slug.');
+                throw new \Exception($instance->cacheName . ' doest\'t seem like a post type slug.');
             }
         }
 
         // Set table to this post type
-        $cacheInstance->setTable($postType->slug);
+        $instance->setTable($postType->slug);
 
-        return $cacheInstance;
+        if(!$instance->cachedItems){
+            if ($callback) {
+                if (is_callable($callback)) {
+                    $instance->cachedItems = $callback($instance);
+                } else {
+                    throw new \Exception("Cache callback must be callable!");
+                }
+            } else {
+                $instance->cachedItems = $instance->generateCache();
+            }
+
+            // convert collection to array if configured so
+            $instance->cachedItems = $instance->cachedItems->toArray();
+
+            // Save in cache
+            Cache::forever($instance->cacheName,$instance->cachedItems);
+        }
+
+        // Return collection
+        if($returnCollection){
+            return $instance->newCollection($instance->cachedItems)->setModel(self::getModel(), $instance->getTable());
+        }
+
+        return $instance;
+    }
+
+    public function generateCacheByCategory($categoryID){
+        $postType = getPostType($this->getTable());
+        $postObj = (new Post())->setTable($this->getTable());
+
+        $data =  $postObj
+          ->join('categories_relations', 'categories_relations.belongsToID', $postType->slug . '.postID')
+          ->where('categories_relations.categoryID', $categoryID)
+          ->with($postObj->getDefaultRelations($postType))
+          ->limit(($this->defaultLimitCache ? $this->defaultLimitCache : $this->limitCache))
+          ->orderBy('published_at', 'DESC')
+          ->get();
+
+        return $data;
     }
 
     /**
@@ -311,57 +343,15 @@ class PostModel extends Model{
      *
      * @throws \Exception
      **/
-    private function generateCache(){
+    public function generateCache(){
         $postType = getPostType($this->getTable());
-
         $postObj = (new Post())->setTable($this->getTable());
 
-        $queryObject = $postObj;
-
-        // Category Inner selection
-        if($this->whereCacheValue('categories_relations.categoryID')) {
-            $queryObject = $queryObject->join('categories_relations', 'categories_relations.belongsToID', $postType->slug . '.postID');
-        }
-
-        // Join
-        if($this->joinCache){
-            foreach($this->joinCache as $join){
-                $queryObject = $queryObject->join($join['table'], $join['first'], $join['operator'], $join['second'], $join['type'], $join['where']);
-            }
-        }
-
-        // With relations
-        $withRelations = ($this->withCache ? $this->withCache : $this->getDefaultRelations($postType));
-        if($withRelations){
-            $queryObject = $queryObject->with($withRelations);
-        }
-
-        // Where conditions
-        if($this->whereCache){
-            foreach($this->whereCache as $where){
-                $queryObject = $queryObject->where($where['key'], $where['operator'], $where['value']);
-            }
-        }
-
-        // Limit
-        $limit = ($this->defaultLimitCache ? $this->defaultLimitCache : $this->limitCache);
-        if($limit){
-            $queryObject = $queryObject->limit($limit);
-        }
-
-        // Order
-        $orderBy = $this->orderByCache;
-        if($orderBy){
-            $queryObject = $queryObject->orderBy($orderBy['key'],$orderBy['type']);
-        }else{
-            $queryObject = $queryObject->orderBy('published_at','DESC');
-        }
-
-        // Execute query
-        $data = $queryObject->get();
-
-        // Save in cache
-        Cache::forever($this->cacheName,$data);
+        $data =  $postObj
+          ->with($postObj->getDefaultRelations($postType))
+          ->limit(($this->defaultLimitCache ? $this->defaultLimitCache : $this->limitCache))
+          ->orderBy('published_at', 'DESC')
+          ->get();
 
         return $data;
     }
@@ -389,8 +379,8 @@ class PostModel extends Model{
                 break;
 
             default:
-                // Select post with all of its relations
-                $postObj = Post::findByID($postObj->postID, $postObj->getTable());
+                // we will query post after it is stored
+                $postObj = null;
                 break;
         }
 
@@ -416,6 +406,7 @@ class PostModel extends Model{
                 // Post has relations that are saved after a post is saved
                 // therefore we need to fire cache refresh after all relations are saved.
                 Event::listen('post:stored', function ($data, $postObj) use($mode){
+                    $postObj = Post::findByID($postObj->postID, $postObj->getTable(), false);
                     $this->refreshPostInPostTypeCache($postObj, $mode);
                 });
                 break;
@@ -430,9 +421,10 @@ class PostModel extends Model{
      * @throws \Exception
      */
     private function refreshPostInPostTypeCache($postObj, string $mode){
-        Post::cache($postObj->getTable())
-            ->setTable($postObj->getTable())
-            ->refreshState($postObj, $mode);
+        $test = Post::cache($postObj->getTable(), function($query){
+          return $query->setTable($postObj->getTable())->generateCache();
+        }, false)
+          ->refreshState($postObj, $mode);
     }
 
     /**
@@ -456,9 +448,11 @@ class PostModel extends Model{
             case 'created':
             case 'updated':
 
-                // Post has relations that are saved after a post is saved
+            // Post has relations that are saved after a post is saved
                 // therefore we need to fire cache refresh after all relations are saved.
                 Event::listen('post:stored', function ($data, $postObj) use($mode){
+                    $postObj = Post::findByID($postObj->postID, $postObj->getTable(), false);
+
                     if ($postObj->hasCategory()) {
                         foreach ($postObj->categories as $category) {
 
@@ -498,10 +492,11 @@ class PostModel extends Model{
      * @throws \Exception
      */
     private function refreshPostInCacheCategory($postObj,$mode, $category){
-        Post::cache("category_posts_".$category->categoryID)
-            ->setTable($postObj->getTable())
-            ->whereCache('categories_relations.categoryID', $category->categoryID)
-            ->refreshState($postObj, $mode);
+        $posts = Post::cache("category_posts_".$category->categoryID, function($query) use($postObj, $category){
+            return $query
+              ->setTable($postObj->getTable())
+              ->generateCacheByCategory($category->categoryID);
+        }, false)->refreshState($postObj, $mode);
     }
 
     /**
@@ -736,12 +731,12 @@ class PostModel extends Model{
         if(!self::$homepage) {
             $findHomePage = null;
             if (settings('homepageID')) {
-                $findHomePage = Post::cache('post_pages')->getItems()->where('postID', settings('homepageID'))->first();
+                $findHomePage = Post::cache('post_pages')->collect()->where('postID', settings('homepageID'))->first();
             }
 
             // get the first found page if no homepage is defined
             if (!$findHomePage) {
-                $findHomePage = Post::cache('post_pages')->getItems()->first();
+                $findHomePage = Post::cache('post_pages')->collect()->first();
             }
 
             if(!$findHomePage){
@@ -1028,14 +1023,14 @@ class PostModel extends Model{
                 // when Collection is available, we already have the data for this attribute
                 if(!$items instanceof Collection) {
                     if($this->createdByUserID){
-                        $items =  User::cache()->getItems()->where('userID', $this->createdByUserID)->first();
+                        $items =  User::cache()->collect()->where('userID', $this->createdByUserID)->first();
                     }
                 }
 
                 return $items;
             }else{
                 // search in cache
-                $user = User::cache()->getItems()->where('userID', $this->createdByUserID)->first();
+                $user = User::cache()->collect()->where('userID', $this->createdByUserID)->first();
 
                 // search in database
                 if (!$user) {
@@ -1136,7 +1131,7 @@ class PostModel extends Model{
      * @throws \Exception
      */
     public function getFieldRelations(string $fieldSlug){
-        $postType = PostType::cache()->getItems()->where("slug", $this->getTable())->first();
+        $postType = PostType::cache()->collect()->where("slug", $this->getTable())->first();
         if($postType){
             // get the specific field
             $field = $postType->field($fieldSlug);

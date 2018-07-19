@@ -7,8 +7,18 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Str;
 
-class PostCollection extends Collection
+class AccioCollection extends Collection
 {
+
+    /**
+     * @var
+     */
+    private static $_pathToClass;
+
+    /**
+     * @var
+     */
+    private static  $_modelTable;
 
     /**
      * Scope a query to only include published posts..
@@ -105,15 +115,17 @@ class PostCollection extends Collection
                 $key = $explodeKey[1];
             }
 
-            $retrieved = data_get($item, $column);
+            $retrieved = data_get($item, $column.'.'.$key);
 
             $strings = array_filter([$retrieved, $value], function ($value) {
                 return is_string($value) || (is_object($value) && method_exists($value, '__toString'));
             });
 
+
             if (count($strings) < 2 && count(array_filter([$retrieved, $value], 'is_object')) == 1) {
                 return in_array($operator, ['!=', '<>', '!==']);
             }
+
 
             switch ($operator) {
                 default:
@@ -129,5 +141,62 @@ class PostCollection extends Collection
                 case '!==': return $retrieved !== $value;
             }
         };
+    }
+
+    /**
+     * Set model path and table to be appended later on cache items.
+     *
+     * @param $pathToClass
+     * @param $table
+     * @return $this
+     */
+    public function setModel($pathToClass, $table){
+        self::$_pathToClass = $pathToClass;
+        self::$_modelTable = $table;
+
+        return $this;
+    }
+
+    /**
+     * Appends a model to each of cache items.
+     *
+     * @return $this
+     */
+    public function collect(){
+        $pathToClass = self::$_pathToClass;
+        $modelTable = self::$_modelTable;
+
+        $this->transform(function ($row) use($pathToClass,$modelTable) {
+
+            // because cache saves json values are object, we need to encode them so
+            // laravel does not try to cast tham again
+            $attributes = [];
+            foreach($row as $key => $value){
+                $getType = gettype($value);
+
+                switch ($getType){
+                    case 'object':
+                    case 'array':
+                        $value = json_encode($value);
+                        break;
+                }
+
+                $attributes[$key] = $value;
+            }
+
+            // initialize model
+            $modelObj = new $pathToClass();
+
+            // change table
+            if($modelTable){
+                $modelObj->setTable($modelTable);
+            }
+
+            $modelObj->setRawAttributes($attributes);
+
+            return $modelObj;
+        });
+
+        return $this;
     }
 }

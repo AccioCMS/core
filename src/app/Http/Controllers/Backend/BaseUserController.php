@@ -35,7 +35,7 @@ class BaseUserController extends MainController{
      * @params search term
      * */
     public function search($lang, $term){
-        $postTypes = \App\Models\PostType::cache()->getItems();
+        $postTypes = \App\Models\PostType::cache()->collect();
         $adminPrefix = Config::get('project')['adminPrefix'];
         $isSearch = true; // used when generatin language menu (language meu that chenges the locate in backend)
         //$isPostView = true; // used when generating language menu (language meu that chenges the locate in backend)

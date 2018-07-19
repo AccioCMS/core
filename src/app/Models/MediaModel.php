@@ -24,7 +24,8 @@ class MediaModel extends Model{
     use
       Traits\MediaTrait,
       LogsActivity,
-      Traits\BootEventsTrait;
+      Traits\BootEventsTrait,
+      Traits\CollectionTrait;
 
     /**
      * Fields that can be filled in CRUD

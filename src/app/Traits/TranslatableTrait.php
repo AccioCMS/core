@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\App;
 trait TranslatableTrait
 {
 
+    protected static $counti = 0;
     /**
      * Specifies the language that data should be translated when they are called
      * @var
@@ -59,13 +60,13 @@ trait TranslatableTrait
     public function getAttribute($key)
     {
         //set default language
-        if(!$this->getDefaultTranslateLanguage()){
+        if(!$this->_defaultTranslateLanguage){
             $this->setDefaultTranslateLanguage();
         }
 
         // In case we just need the translation for current property
         if(!$this->getTranslateLanguage()){
-            $this->translate($this->getDefaultTranslateLanguage());
+            $this->translate($this->_defaultTranslateLanguage);
         }
 
         //handle custom fields
@@ -95,6 +96,9 @@ trait TranslatableTrait
                 }else {
                     $value = $this->getTranslation($value);
                 }
+
+                // we don't need current language any more, we have the default une
+                $this->resetTranslateLanguage();
             }else{
 
                 // If the given $attribute has a mutator, we push it to $attributes and then call getAttributeValue
@@ -106,9 +110,6 @@ trait TranslatableTrait
                 }
             }
         }
-
-        // we don't need current language any more, we have the default une
-        $this->resetTranslateLanguage();
 
         return $value;
     }
@@ -137,7 +138,7 @@ trait TranslatableTrait
      * @return string
      */
     private function resetTranslateLanguage(){
-        $this->_translateLanguage = $this->getDefaultTranslateLanguage();
+        $this->_translateLanguage = $this->_defaultTranslateLanguage;
     }
 
     /**
@@ -153,16 +154,6 @@ trait TranslatableTrait
         $this->_defaultTranslateLanguage = $languageSlug;
         return $this;
     }
-
-    /**
-     * Get default language
-     * @return string
-     */
-    private function getDefaultTranslateLanguage(){
-        return $this->_defaultTranslateLanguage;
-    }
-
-
 
     /**
      * Gets current language value
@@ -240,7 +231,7 @@ trait TranslatableTrait
                         $attr = json_decode($attr);
                     }
                 }
-                foreach(Language::cache()->getItems() as $language){
+                foreach(Language::cache()->collect() as $language){
                     $langSlug = $language->slug;
 
                     if (!isset($attr->$langSlug)){

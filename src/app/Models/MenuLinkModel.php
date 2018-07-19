@@ -26,7 +26,8 @@ class MenuLinkModel extends Model{
       Traits\MenuLinkTrait,
       Traits\CacheTrait,
       Traits\TranslatableTrait,
-      Traits\BootEventsTrait;
+      Traits\BootEventsTrait,
+      Traits\CollectionTrait;
 
     /**
      * Fields that can be filled in CRUD

@@ -33,7 +33,8 @@ class CategoryModel extends Model{
       Traits\TranslatableTrait,
       LogsActivity,
       Traits\CacheTrait,
-      Traits\BootEventsTrait;
+      Traits\BootEventsTrait,
+      Traits\CollectionTrait;
 
     /**
      * Fields that can be filled in CRUD

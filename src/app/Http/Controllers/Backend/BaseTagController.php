@@ -279,7 +279,7 @@ class BaseTagController extends MainController{
         }
 
         $adminPrefix = Config::get('project')['adminPrefix'];
-        $postTypes = \App\Models\PostType::cache()->getItems(); // get the post types list for the navigation bar from the middleware
+        $postTypes = \App\Models\PostType::cache()->collect(); // get the post types list for the navigation bar from the middleware
 
         $view = 'tagsearch';
         $pagination = 1;

@@ -20,7 +20,8 @@ class TagModel extends Model{
       Traits\TagTrait,
       LogsActivity,
       Traits\CacheTrait,
-      Traits\BootEventsTrait;
+      Traits\BootEventsTrait,
+      Traits\CollectionTrait;
 
     /**
      * Fields that can be filled in CRUD
