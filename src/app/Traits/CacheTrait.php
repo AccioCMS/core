@@ -230,7 +230,7 @@ trait CacheTrait
         Event::fire(lcfirst($model).':cacheUpdated', [$item, $mode]);
 
         // Manage cache state
-        $model::cache($cacheName)->refreshState($item, $mode);
+        $model::cache($cacheName, null, false)->refreshState($item, $mode);
     }
 
     /**
@@ -298,11 +298,12 @@ trait CacheTrait
      * Cache is generated if not found.
      *
      * @param string $cacheName
+     * @param bool $appendModelToCollection
      * @param \Closure $callback Callback must always return an executed query with collection output
      *
      * @return mixed Returns collection or instance
      */
-    public static function cache($cacheName = '', $callback = null, $returnCollection = true){
+    public static function cache($cacheName = '', $callback = null, $appendModelToCollection = true){
         if(!$cacheName){
             $cacheName = self::getAutoCacheName();
         }
@@ -328,7 +329,7 @@ trait CacheTrait
         }
 
         // Return collection
-        if($returnCollection){
+        if($appendModelToCollection){
             return $instance->newCollection($instance->cachedItems)->setModel(self::getModel(), $instance->getTable());
         }
 

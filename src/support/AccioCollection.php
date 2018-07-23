@@ -165,6 +165,9 @@ class AccioCollection extends Collection
     public function collect(){
         $pathToClass = self::$_pathToClass;
         $modelTable = self::$_modelTable;
+        // todo nese ne nje collection query e thirr nje collection tjeter, proprties
+        // nuk barten se where-at e ri-inicializojne klasen me new static
+        // keshtu qe duhet me ja gjet nje zgjidhje. Rasti i select categories me postTypeID
 
         $items = $this->map(function ($row) use($pathToClass,$modelTable) {
             // because cache saves json values are object, we need to encode them so

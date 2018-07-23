@@ -269,11 +269,12 @@ class PostModel extends Model{
      * Cache is generated if not found.
      *
      * @param string $cacheName
+     * @param bool $appendModelToCollection
      * @param \Closure $callback
      * @return mixed
      * @throws \Exception
      */
-    public static function cache($cacheName = '', $callback = null,$returnCollection = true){
+    public static function cache($cacheName = '', $callback = null,$appendModelToCollection = true){
         if(!$cacheName){
             $cacheName = self::getAutoCacheName();
         }
@@ -314,7 +315,7 @@ class PostModel extends Model{
         }
 
         // Return collection
-        if($returnCollection){
+        if($appendModelToCollection){
             return $instance->newCollection($instance->cachedItems)->setModel(self::getModel(), $instance->getTable());
         }
 
@@ -421,7 +422,7 @@ class PostModel extends Model{
      * @throws \Exception
      */
     private function refreshPostInPostTypeCache($postObj, string $mode){
-        $test = Post::cache($postObj->getTable(), function($query){
+        $test = Post::cache($postObj->getTable(), function($query) use($postObj){
           return $query->setTable($postObj->getTable())->generateCache();
         }, false)
           ->refreshState($postObj, $mode);
