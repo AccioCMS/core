@@ -3,6 +3,7 @@
 namespace Accio\App\Models;
 
 use Accio\App\Traits\BootEventsTrait;
+use Accio\App\Traits\CollectionTrait;
 use App\Models\Permission;
 use App\Models\UserGroup;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,8 @@ class UserGroupModel extends Model{
 
     use
       LogsActivity,
-      BootEventsTrait;
+      BootEventsTrait,
+      CollectionTrait;
 
     /** @var array $fillable fields that can be filled in CRUD*/
     protected $fillable = [

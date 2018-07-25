@@ -16,7 +16,9 @@ use Illuminate\Database\Eloquent\Model;
 use Accio\App\Traits;
 
 class ThemeModel extends Model{
-    use Traits\ThemeTrait;
+    use
+      Traits\ThemeTrait,
+      Traits\CollectionTrait;
 
     /**
      * @inheritdoc

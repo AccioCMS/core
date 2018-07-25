@@ -8,12 +8,6 @@ use App\Models\MenuLink;
 
 trait MenuTrait
 {
-    /**
-     * Store MenuLinks by menu
-     *
-     * @var array $menuLinksByMenu
-     * */
-    private static $menuLinksByMenu = [];
 
     /**
      * Stores the ID of primary menu.
@@ -23,56 +17,36 @@ trait MenuTrait
     private  static $primaryMenuID;
 
     /**
-     * Set MenuLinks by menu
+     * Get menu links of a particular menu.
      *
-     * @return object|null;
+     * @param $menuSlug
+     * @return array|\Illuminate\Support\Collection|mixed
+     * @throws \Exception
      */
-    public static function setMenuLinksByMenu(){
-        //firstly, list them by MenuID
-        $menuLinksByMenu = [];
-        foreach (\App\Models\MenuLink::cache()->getItems() as $menuLink) {
-            $menuLinksByMenu[$menuLink->menuID][$menuLink->menuLinkID] = $menuLink;
-        }
-
-        // than go through each Menu and sort their MenuLinks
-        foreach ($menuLinksByMenu as $menuID => $menuList){
-            $sortedMenuLinks = collect($menuList)->sortBy('order');
-            self::$menuLinksByMenu[$menuID] = MenuLink::children($sortedMenuLinks);
-        }
-        return;
-    }
-
-
-    /**
-     * Get menu links of a particular menu
-     *
-     * @param  string $menuSlug The slug of the menu we want to get MenuLinks from
-     * @return object|array  Returns MenuLinks of requested menu if found
-     * */
     public static function getMenuLinks($menuSlug){
         // Set active MenuLinks
         MenuLink::setActiveIDs(true);
 
         $menuData = self::findBySlug($menuSlug);
-        if($menuData && isset(self::$menuLinksByMenu[$menuData['menuID']])){
-            return self::$menuLinksByMenu[$menuData['menuID']];
-        }
+        $menuLinks = MenuLink::cache()->collect()->where('menuID', $menuData->menuID)->sortBy('order');
 
-        return [];
+        if($menuLinks){
+            return MenuLink::children($menuLinks);
+        }
     }
 
     /**
-     * Set the ID of primary menu
+     * Set the ID of primary menu.
      *
-     * @return int|void Returns the ID of primary Menu if found, null instead
-     **/
+     * @throws \Exception
+     */
     public static function setPrimaryMenuID(){
         if(Menu::cache()) {
-            $primaryMenu = Menu::cache()->getItems()->where('isPrimary', 1);
+            $primaryMenu = Menu::cache()->collect()->where('isPrimary', 1);
 
             //if no primary menu is found, get the first one from the list
             if (!$primaryMenu) {
-                $primaryMenu = Menu::cache()->getItems()->first();
+                $primaryMenu = Menu::cache()->collect()->first();
             } else {
                 $primaryMenu = $primaryMenu->first();
             }
@@ -99,7 +73,8 @@ trait MenuTrait
      * @param string $menuSlug Slug of Menu
      * @param string $customView Name of a custom blade.php file to render the template
      * @param string $ulClass Class of ul
-     * @return HtmlString Returns an html navigation of a particular menu
+     * @return HtmlString
+     * @throws \Exception
      */
     public static function printMenu($menuSlug = "primary", $customView = '', $ulClass = ''){
         $menuLinks = self::getMenuLinks($menuSlug);
@@ -114,17 +89,17 @@ trait MenuTrait
     }
 
 
-
     /**
-     * Get Menu by slug
-     *
-     * @param  string $slug  The slug of Menu ex. "primary"
-     * @return object|boolean Menu data if found, null instead
-     *
+     * Get Menu by slug.
+     * 
+     * @param $slug
+     * @return mixed|null
+     * @throws \Exception
      */
     public static function findBySlug($slug){
-        if(\App\Models\Menu::cache()->getItems()) {
-            $getMenuLink = \App\Models\Menu::cache()->getItems()->where('slug', $slug);
+        $menu = Menu::cache()->collect();
+        if($menu) {
+            $getMenuLink = $menu->where('slug', $slug);
 
             if ($getMenuLink) {
                 return $getMenuLink->first();
@@ -134,15 +109,16 @@ trait MenuTrait
     }
 
     /**
-     * Get Menu by ID
+     * Get Menu by ID.
      *
-     * @param  int $menuID The ID of Menu.
-     * @return object|null Menu data if found, null instead
-     *
+     * @param $menuID
+     * @return mixed|null
+     * @throws \Exception
      */
     public static function findByID($menuID){
-        if(\App\Models\Menu::cache()->getItems()) {
-            $getMenuLink = \App\Models\Menu::cache()->getItems()->where('id', $menuID);
+        $menu = Menu::cache()->collect();
+        if($menu) {
+            $getMenuLink = $menu->where('id', $menuID);
 
             if ($getMenuLink) {
                 return $getMenuLink->first();

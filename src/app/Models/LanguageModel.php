@@ -28,7 +28,8 @@ class LanguageModel extends Model{
       Traits\LanguageTrait,
       LogsActivity,
       Traits\CacheTrait,
-      Traits\BootEventsTrait;
+      Traits\BootEventsTrait,
+      Traits\CollectionTrait;
 
     /**
      * Fields that can be filled in CRUD
@@ -127,8 +128,9 @@ class LanguageModel extends Model{
      * @return mixed
      */
     public static function getVisibleList(){
-        if(Language::cache()->getItems()) {
-            return Language::cache()->getItems()->where('isVisible', true);
+        $languages = Language::cache()->collect();
+        if($languages) {
+            return $languages->where('isVisible', true);
         }
         return;
     }

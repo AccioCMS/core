@@ -595,3 +595,29 @@ if (! function_exists('currentMenuLink')) {
         return \App\Models\MenuLink::getCurrent($columnName);
     }
 }
+
+if (! function_exists('isMobile')) {
+    /**
+     * Check if site is access via mobile.
+     *
+     * @return mixed
+     */
+    function isMobile()
+    {
+        // temporary
+        return \Riverskies\Laravel\MobileDetect\Facades\MobileDetect::isMobile();
+    }
+}
+
+if (! function_exists('isTablet')) {
+    /**
+     * Check if site is access via tablet.
+     *
+     * @return mixed
+     */
+    function isTablet()
+    {
+        // temporary
+        return \Riverskies\Laravel\MobileDetect\Facades\MobileDetect::isTablet();
+    }
+}

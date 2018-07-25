@@ -149,8 +149,12 @@ class Requirements
     private function requiredSystemCommands()
     {
 
+        // todo fix command existence in windows os
+        return true;
+
+
         // Programs needed in $PATH
-        $required_commands = ['git', 'scp', 'zip', 'unzip', 'gzip', 'rsync','php', 'composer'];
+        $required_commands = ['git', 'rsync','php', 'composer'];
 
         $missing = [];
         foreach ($required_commands as $command) {
@@ -176,6 +180,8 @@ class Requirements
     private function nodeJsCommand()
     {
 
+        // todo check nodejs exists in windows os
+        return true;
         $found = false;
         foreach (['node', 'nodejs'] as $command) {
             $this->process->setCommandLine('which ' . $command);

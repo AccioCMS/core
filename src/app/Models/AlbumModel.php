@@ -11,6 +11,7 @@
 namespace Accio\App\Models;
 
 use Accio\App\Traits\BootEventsTrait;
+use Accio\App\Traits\CollectionTrait;
 use App\Models\Album;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
@@ -20,7 +21,8 @@ class AlbumModel extends Model{
 
     use
       LogsActivity,
-      BootEventsTrait;
+      BootEventsTrait,
+      CollectionTrait;
 
     /**
      * Fields that can be filled

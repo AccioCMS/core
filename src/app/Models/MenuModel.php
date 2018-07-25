@@ -24,7 +24,8 @@ class MenuModel extends Model{
       Traits\MenuTrait,
       LogsActivity,
       Traits\CacheTrait,
-      Traits\BootEventsTrait;
+      Traits\BootEventsTrait,
+      Traits\CollectionTrait;
 
     /**
      * Fields that can be filled in CRUD

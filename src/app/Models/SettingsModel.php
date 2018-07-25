@@ -4,6 +4,7 @@ namespace Accio\App\Models;
 
 use Accio\App\Traits\BootEventsTrait;
 use Accio\App\Traits\CacheTrait;
+use Accio\App\Traits\CollectionTrait;
 use App\Models\Media;
 use App\Models\Settings;
 use Facebook\GraphNodes\Collection;
@@ -16,7 +17,8 @@ class SettingsModel extends Model{
     use
       LogsActivity,
       CacheTrait,
-      BootEventsTrait;
+      BootEventsTrait,
+      CollectionTrait;
 
     /**
      * Fields that can be filled
@@ -83,7 +85,7 @@ class SettingsModel extends Model{
      * @@return array
      */
     public static function getAllSettings(){
-        $settings = Settings::cache()->getItems();
+        $settings = Settings::cache()->collect();
 
         $settingsList = [];
         foreach($settings as $setting){
@@ -98,7 +100,7 @@ class SettingsModel extends Model{
      * @param string $key
      */
     public static function getSetting($key){
-        $settings = Settings::cache()->getItems();
+        $settings = Settings::cache()->collect();
         if($settings) {
             $setting = $settings->where('settingsKey', $key)->first();
 
