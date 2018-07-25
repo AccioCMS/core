@@ -1035,4 +1035,40 @@ trait PostTrait{
         return $postType->getMultioptionFieldValue($field, $this->{$field});
     }
 
+
+    /**
+     *  This function creates the slug for a row of a model and makes sure that slugs it is not being used from a other post
+     *  @return string unique slug
+     *
+     * */
+    public static function generateSlug($title, $tableName, $primaryKey, $languageSlug = '', $id = 0, $translatable = false, $delimiter = "-"){
+        $count = 0;
+        $found = true;
+        $originalSlug = str_slug($title, $delimiter);
+
+        while($found){
+            if($count != 0){
+                $slug = $originalSlug.$delimiter.$count;
+            }else{
+                $slug = $originalSlug;
+            }
+
+            $countObj = DB::table($tableName);
+            if ($translatable){
+                $countObj->where('slug->'.$languageSlug, $slug);
+            }else{
+                $countObj->where('slug', $slug);
+            }
+            if($id){
+                $countObj->where($primaryKey, '!=' ,$id);
+            }
+            $countPosts = $countObj->count();
+
+            if(!$countPosts){
+                return $slug;
+            }
+            $count++;
+        }
+        return $originalSlug;
+    }
 }
