@@ -100,10 +100,11 @@ class PackageServiceProvider extends ServiceProvider{
      *
      * @throws \Exception
      */
-    protected function mapRoutes(){
-        Route::group(['middleware' => ['web']], function () {
-           // if (!$this->app->routesAreCached()) {
-            // todo me e kontrollu pse e kena cehck routesAreCached dhe aka nevoje me e la a jo
+    protected function mapRoutes()
+    {
+         if (!$this->app->routesAreCached()) {
+            Route::group(['middleware' => ['web']], function () {
+                // todo me e kontrollu pse e kena cehck routesAreCached dhe aka nevoje me e la a jo
                 $routes = new Routes();
 
                 // Backend Routes
@@ -119,9 +120,8 @@ class PackageServiceProvider extends ServiceProvider{
                 // Add Language {lang} prefix
                 $routes->addLanguagePrefix()
                   ->sortRoutes();
-           // }
-        });
-
+            });
+        }
     }
 
     /**
