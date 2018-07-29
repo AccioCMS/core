@@ -157,9 +157,10 @@ trait PluginTrait
      * @return array
      */
     public static function activePlugins(){
+        $plugins = self::cache();
         // Plugin table must exist first
-        if(Cache::has('Plugin')){
-            return self::cache()->where('isActive', true)->collect();
+        if($plugins){
+            return $plugins->where('isActive', true)->collect();
         }
         return [];
     }
