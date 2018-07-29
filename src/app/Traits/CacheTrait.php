@@ -298,8 +298,10 @@ trait CacheTrait
      * Cache is generated if not found.
      *
      * @param string $cacheName
+     * @param null $callback Callback must always return an executed query with collection output
      * @param bool $appendModelToCollection
-     * @param \Closure $callback Callback must always return an executed query with collection output
+     * @return mixed
+     * @throws \Exception
      *
      * @return mixed Returns collection or instance
      */
@@ -313,7 +315,7 @@ trait CacheTrait
         if(!$instance->cachedItems){
             if ($callback) {
                 if (is_callable($callback)) {
-                    $instance->cachedItems = $cacheCallback($instance);
+                    $instance->cachedItems = $callback($instance);
                 } else {
                     throw new \Exception("Cache callback must be callable!");
                 }
