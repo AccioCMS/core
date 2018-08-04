@@ -312,7 +312,7 @@ trait CacheTrait
         $instance = self::initializeCache($cacheName);
         $instance->cachedItems = Cache::get($instance->cacheName);
 
-        if(!$instance->cachedItems){
+        if(!Cache::has($instance->cacheName)){
             if ($callback) {
                 if (is_callable($callback)) {
                     $instance->cachedItems = $callback($instance);
