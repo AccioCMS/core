@@ -6,6 +6,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
 
 class AccioCollection extends Collection
 {
@@ -115,8 +116,7 @@ class AccioCollection extends Collection
                 $key = $explodeKey[1];
             }
 
-            $retrieved = data_get($item, $column.'.'.$key, null, true);
-//            dump("","a e gjete", $retrieved);
+            $retrieved = $this->dataGet($item, $column.'.'.$key, null, true);
 
             $strings = array_filter([$retrieved, $value], function ($value) {
                 return is_string($value) || (is_object($value) && method_exists($value, '__toString'));
@@ -145,6 +145,49 @@ class AccioCollection extends Collection
     }
 
     /**
+     * Get an item from an array or object using "dot" notation.
+     * It is similar to laravel's get_data helper method,
+     * with a bug fix on missing return statems on two conditions
+     *
+     * @param  mixed   $target
+     * @param  string|array  $key
+     * @param  mixed   $default
+     * @return mixed
+     */
+    function dataGet($target, $key, $default = null)
+    {
+        if (is_null($key)) {
+            return $target;
+        }
+
+        $key = is_array($key) ? $key : explode('.', $key);
+
+        while (! is_null($segment = array_shift($key))) {
+            if ($segment === '*') {
+                if ($target instanceof Collection) {
+                    $target = $target->all();
+                } elseif (! is_array($target)) {
+                    return value($default);
+                }
+
+                $result = Arr::pluck($target, $key);
+
+                return in_array('*', $key) ? Arr::collapse($result) : $result;
+            }
+
+            if (Arr::accessible($target) && Arr::exists($target, $segment)) {
+                return $target[$segment];
+            } elseif (is_object($target) && isset($target->{$segment})) {
+                return $target->{$segment};
+            } else {
+                return value($default);
+            }
+        }
+
+        return $target;
+    }
+
+    /**
      * Set model path and table to be appended later on cache items.
      *
      * @param $pathToClass
@@ -164,13 +207,7 @@ class AccioCollection extends Collection
      * @return $this
      */
     public function collect(){
-        $pathToClass = self::$_pathToClass;
-        $modelTable = self::$_modelTable;
-        // todo nese ne nje collection query e thirr nje collection tjeter, proprties
-        // nuk barten se where-at e ri-inicializojne klasen me new static
-        // keshtu qe duhet me ja gjet nje zgjidhje. Rasti i select categories me postTypeID
-
-
+        //todo delete this function
         return $this;
     }
 }
