@@ -470,7 +470,7 @@ class BasePostTypeController extends MainController{
             ]
         ];
         // loop throw post types
-        foreach(App\Models\PostType::cache()->collect() as $postType){
+        foreach(App\Models\PostType::cache() as $postType){
             $tables[0]['options'][] = ['label' => $postType['name'], 'name' => $postType['slug'], 'belongsTo' => 'PostType'];
         }
         return $tables;

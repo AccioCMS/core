@@ -28,7 +28,7 @@ trait MenuTrait
         MenuLink::setActiveIDs(true);
 
         $menuData = self::findBySlug($menuSlug);
-        $menuLinks = MenuLink::cache()->collect()->where('menuID', $menuData->menuID)->sortBy('order');
+        $menuLinks = MenuLink::cache()->where('menuID', $menuData->menuID)->sortBy('order');
 
         if($menuLinks){
             return MenuLink::children($menuLinks);
@@ -42,11 +42,11 @@ trait MenuTrait
      */
     public static function setPrimaryMenuID(){
         if(Menu::cache()) {
-            $primaryMenu = Menu::cache()->collect()->where('isPrimary', 1);
+            $primaryMenu = Menu::cache()->where('isPrimary', 1);
 
             //if no primary menu is found, get the first one from the list
             if (!$primaryMenu) {
-                $primaryMenu = Menu::cache()->collect()->first();
+                $primaryMenu = Menu::cache()->first();
             } else {
                 $primaryMenu = $primaryMenu->first();
             }
@@ -97,7 +97,7 @@ trait MenuTrait
      * @throws \Exception
      */
     public static function findBySlug($slug){
-        $menu = Menu::cache()->collect();
+        $menu = Menu::cache();
         if($menu) {
             $getMenuLink = $menu->where('slug', $slug);
 
@@ -116,7 +116,7 @@ trait MenuTrait
      * @throws \Exception
      */
     public static function findByID($menuID){
-        $menu = Menu::cache()->collect();
+        $menu = Menu::cache();
         if($menu) {
             $getMenuLink = $menu->where('id', $menuID);
 

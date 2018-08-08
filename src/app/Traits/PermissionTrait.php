@@ -45,7 +45,7 @@ trait PermissionTrait{
                     $result[$className]['label'] = trans($object::$label);
                 }
 
-                foreach (\App\Models\PostType::cache()->collect() as $postType){
+                foreach (\App\Models\PostType::cache() as $postType){
                     // Label
                     $result[$postType['slug']]['label'] = $postType['name'];
 

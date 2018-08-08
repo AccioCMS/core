@@ -154,7 +154,7 @@ class PostTypeModel extends Model{
         if(!$field){
             throw new \Exception("No field with slug ".$fieldSlug);
         }
-        $options = explode("\n", $field->multioptionValues);
+        $options = explode(",", $field->multioptionValues);
 
         foreach ($options as $option){
             $optionArr = explode(":", $option);

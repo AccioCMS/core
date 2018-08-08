@@ -53,6 +53,7 @@ class MenuLinkModel extends Model{
      */
     protected $primaryKey = "menuLinkID";
 
+
     /**
      * The table associated with the model.
      *

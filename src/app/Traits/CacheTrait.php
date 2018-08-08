@@ -26,10 +26,6 @@ trait CacheTrait
      */
     protected $cacheAttributes = [];
 
-    /**
-     * @var
-     */
-    protected $cacheInstance;
 
 
     /**
@@ -55,6 +51,11 @@ trait CacheTrait
      */
     protected $limitCache;
 
+    /**
+     * Shall we disable casts.
+     * @var bool
+     */
+    public static $disableCasts = false;
 
     /**
      * Boot Cache Trait Events.
@@ -81,24 +82,6 @@ trait CacheTrait
         self::deleted(function($item) use($test){
             $item->handleUpdateCache($item, "deleted");
         });
-    }
-
-    /**
-     * Set cache instance.
-     *
-     * @param $cacheInstance
-     */
-    private function setCacheInstance($cacheInstance){
-        $this->cacheInstance = $cacheInstance;
-    }
-
-    /**
-     * Get cache instance.
-     *
-     * @return $this Returns cache instance
-     */
-    private function cacheInstance(){
-        return $this->cacheInstance;
     }
 
     /**
@@ -274,7 +257,7 @@ trait CacheTrait
      *
      * @return string
      */
-    private static function getAutoCacheName(){
+    private function getAutoCacheName(){
         $explode = explode('\\',get_class());
         return str_replace('Model','',end($explode));
     }
@@ -285,12 +268,13 @@ trait CacheTrait
      * @param string $cacheName
      * @return mixed
      */
-    public static function initializeCache(string $cacheName){
-        $model = get_class();
-        $instance = new $model();
-        $instance->setCacheName($cacheName);
-        $instance->setCacheInstance($instance);
-        return $instance;
+    public function initializeCache(string $cacheName = ''){
+        if(!$cacheName){
+            $cacheName = $this->getAutoCacheName();
+        }
+        $this->setCacheName($cacheName);
+        $this->cachedItems = Cache::get($this->cacheName);
+        return $this;
     }
 
     /**
@@ -306,13 +290,11 @@ trait CacheTrait
      * @return mixed Returns collection or instance
      */
     public static function cache($cacheName = '', $callback = null, $appendModelToCollection = true){
-        if(!$cacheName){
-            $cacheName = self::getAutoCacheName();
-        }
-        $instance = self::initializeCache($cacheName);
-        $instance->cachedItems = Cache::get($instance->cacheName);
+        $instance = (new static)->initializeCache($cacheName);
 
         if(!Cache::has($instance->cacheName)){
+            //$instance::$disableCasts = true;
+
             if ($callback) {
                 if (is_callable($callback)) {
                     $instance->cachedItems = $callback($instance);
@@ -329,6 +311,15 @@ trait CacheTrait
             // Save in cache
             Cache::forever($instance->cacheName,$instance->cachedItems);
         }
+
+        // initialize model
+        $items = $instance->cachedItems;
+
+        return $instance->newCollection(array_map(function ($item) use ($instance) {
+            $instance::$disableCasts = true;
+            return $instance->newFromBuilder($item);
+        }, $items));
+
 
         // Return collection
         if($appendModelToCollection){
@@ -365,6 +356,7 @@ trait CacheTrait
      * @throws \Exception
      */
     public function generateCache(){
+        // Generte cache
         $queryObject = $this;
 
         if($this->cacheCallback){
@@ -375,7 +367,6 @@ trait CacheTrait
                 throw new \Exception("Cache callback must be callable!");
             }
         }else {
-
             // Limit
             $limit = (property_exists($this, 'defaultLimitCache') ? $this->defaultLimitCache : $this->limitCache);
             if ($limit) {
@@ -388,7 +379,37 @@ trait CacheTrait
 
         return $data;
     }
+    
+    public function newInstance($attributes = [], $exists = false)
+    {
+        // Overridden in order to allow for late table binding.
+        $model = parent::newInstance($attributes, $exists);
+        $model->setTable($this->table);
 
+        // casts are disabled when cache is being generated, this is done to simulate database data structure
+        //$model->disableCasts = self::$disableCasts;
+        return $model;
+    }
+
+    /**
+     * Get the casts array.
+     * When generating cache, we need to save cache data as they currently are in database, without casts.
+     * This is done to allow casts to work just as when they receives data from database.
+     *
+     * @return array
+     */
+    public function getCasts()
+    {
+        if(self::$disableCasts){
+            return [];
+        }
+
+        if ($this->getIncrementing()) {
+            return array_merge([$this->getKeyName() => $this->getKeyType()], $this->casts);
+        }
+
+        return $this->casts;
+    }
 
     /**
      * Check if an attribute is listed in model
@@ -429,9 +450,6 @@ trait CacheTrait
             }
 
             return collect($items)->transform(function ($attributes) use ($class) {
-                if(!is_Array($attributes)){
-                    dd($attributes);
-                }
                 $modelObj = new $class($attributes);
 //                foreach ($attributes as $key => $value) {
 //                    $modelObj->setAttribute($key, $value);

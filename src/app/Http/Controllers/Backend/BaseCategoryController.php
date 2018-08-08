@@ -372,7 +372,7 @@ class BaseCategoryController extends MainController {
         if($menuLinksList->count()){
             foreach ($menuLinksList as $menuLink){
                 $updateLabel = false;
-                foreach (Language::cache()->collect() as $lang){
+                foreach (Language::cache() as $lang){
                     $langSlug = $lang->slug;
                     if(isset($oldTitle->App) && $oldTitle->$langSlug == $menuLink->label->$langSlug){
                         $updateLabel = true;
@@ -427,7 +427,7 @@ class BaseCategoryController extends MainController {
 
             $final = array(
                 'details' => $category,
-                'languages' => Language::cache()->collect(),
+                'languages' => Language::cache(),
                 'media' => $media,
                 'customFieldsValues' => $customFieldOBJ->getCustomFieldValues(),
                 'customFieldsGroups' => $customFieldGroups,

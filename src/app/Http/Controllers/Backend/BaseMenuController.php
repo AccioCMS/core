@@ -383,7 +383,7 @@ class BaseMenuController extends MainController{
         $final = array(
             'list' => $convertedMenuLinks,
             'menu' => $menu,
-            'languages' => Language::cache()->collect()
+            'languages' => Language::cache()
         );
 
         // Fire event
@@ -478,7 +478,7 @@ class BaseMenuController extends MainController{
      * @return array list of the related apps for a specific menu link
      * */
     public function getRelatedApps($lang, $menuLinksID){
-        $postTypes = PostType::cache()->collect();
+        $postTypes = PostType::cache();
         $categories = Category::all();
         $menuLinks = MenuLinkConfig::where('menuLinkID', $menuLinksID)->get();
 

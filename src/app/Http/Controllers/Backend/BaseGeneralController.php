@@ -74,7 +74,7 @@ class BaseGeneralController extends MainController {
         $settings['logo'] = $projectLogoURL;
 
         // User data object
-        $postTypeSlugs = PostType::cache()->collect()->keys();
+        $postTypeSlugs = PostType::cache()->keys();
         $globalData = [
             'post_type_slugs' => $postTypeSlugs,
             'permissions' => $user->getPermissions(),
@@ -84,7 +84,7 @@ class BaseGeneralController extends MainController {
         ];
 
         // all languages
-        $languages = Language::cache()->collect();
+        $languages = Language::cache();
 
         return [
             'languages' => $languages,

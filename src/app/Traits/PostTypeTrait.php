@@ -34,7 +34,7 @@ trait PostTypeTrait{
      * @return object Returns requested post type if found, null instead
      * */
     public static function findBySlug($postTypeSlug){
-        $postTypes = self::cache()->collect();
+        $postTypes = self::cache();
 
         if(!$postTypes){
             return;
@@ -58,7 +58,7 @@ trait PostTypeTrait{
      * @return bool is this post type being used in menu links
      */
     public static function isInMenuLinks($postTypeID){
-        $menulinks = MenuLink::cache()->collect();
+        $menulinks = MenuLink::cache();
         if($menulinks) {
             $menuLinks = $menulinks->where('belongsToID', $postTypeID)->where('belongsTo', 'post_type');
             if ($menuLinks->count()) {
@@ -76,7 +76,7 @@ trait PostTypeTrait{
      * @return object Returns requested post type if found, null instead
      * */
     public static function findByID($postTypeID){
-        $postTypes = \App\Models\PostType::cache()->collect();
+        $postTypes = \App\Models\PostType::cache();
         if($postTypes) {
             $getPosType = $postTypes->where('postTypeID', $postTypeID);
             if ($getPosType) {
@@ -126,7 +126,7 @@ trait PostTypeTrait{
      * @return array
      */
     public static function getFields($post_type){
-        $postType = PostType::cache()->collect()->where('slug', $post_type)->first();
+        $postType = PostType::cache()->where('slug', $post_type)->first();
 
         if($postType){
             return $postType->fields;

@@ -115,7 +115,8 @@ class AccioCollection extends Collection
                 $key = $explodeKey[1];
             }
 
-            $retrieved = data_get($item, $column.'.'.$key);
+            $retrieved = data_get($item, $column.'.'.$key, null, true);
+//            dump("","a e gjete", $retrieved);
 
             $strings = array_filter([$retrieved, $value], function ($value) {
                 return is_string($value) || (is_object($value) && method_exists($value, '__toString'));
@@ -169,36 +170,7 @@ class AccioCollection extends Collection
         // nuk barten se where-at e ri-inicializojne klasen me new static
         // keshtu qe duhet me ja gjet nje zgjidhje. Rasti i select categories me postTypeID
 
-        $items = $this->map(function ($row) use($pathToClass,$modelTable) {
-            // because cache saves json values are object, we need to encode them so
-            // laravel does not try to cast tham again
-            $attributes = [];
-            foreach($row as $key => $value){
-                $getType = gettype($value);
 
-                switch ($getType){
-                    case 'object':
-                    case 'array':
-                        $value = json_encode($value);
-                        break;
-                }
-
-                $attributes[$key] = $value;
-            }
-
-            // initialize model
-            $modelObj = new $pathToClass();
-
-            // change table
-            if($modelTable){
-                $modelObj->setTable($modelTable);
-            }
-
-            $modelObj->setRawAttributes($attributes);
-
-            return $modelObj;
-        });
-
-        return $items;
+        return $this;
     }
 }

@@ -204,17 +204,11 @@ class PostModel extends Model{
             $model->setTable(self::$_tmptable);
         }
 
+//        $model->disableCasts = self::$disableCasts;
+
         return $model->newQuery()->with(
             is_string($relations) ? func_get_args() : $relations
         );
-    }
-
-    public function newInstance($attributes = [], $exists = false)
-    {
-        // Overridden in order to allow for late table binding.
-        $model = parent::newInstance($attributes, $exists);
-        $model->setTable($this->table);
-        return $model;
     }
 
 
@@ -225,7 +219,7 @@ class PostModel extends Model{
     protected static function menuLinkPanel(){
         // List one menu panel for each post type
         $panels =[];
-        foreach(PostType::cache()->collect() as $postType){
+        foreach(PostType::cache() as $postType){
             $panels[] = [
                 'label' => $postType->name,
                 'belongsTo' => $postType->slug,
@@ -275,12 +269,7 @@ class PostModel extends Model{
      * @throws \Exception
      */
     public static function cache($cacheName = '', $callback = null,$appendModelToCollection = true){
-        if(!$cacheName){
-            $cacheName = self::getAutoCacheName();
-        }
-        $instance = self::initializeCache($cacheName);
-        $instance->cachedItems = Cache::get($instance->cacheName);
-
+        $instance = (new static)->initializeCache($cacheName);
 
         // Validate post type by cache name
         $postType = getPostType($instance->cacheName);
@@ -297,6 +286,8 @@ class PostModel extends Model{
         $instance->setTable($postType->slug);
 
         if(!$instance->cachedItems){
+//            $instance::$disableCasts = true;
+
             if ($callback) {
                 if (is_callable($callback)) {
                     $instance->cachedItems = $callback($instance);
@@ -314,6 +305,14 @@ class PostModel extends Model{
             Cache::forever($instance->cacheName,$instance->cachedItems);
         }
 
+        // initialize model
+        $items = $instance->cachedItems;
+
+        return $instance->newCollection(array_map(function ($item) use ($instance) {
+            $instance::$disableCasts = true;
+            return $instance->newFromBuilder($item);
+        }, $items));
+
         // Return collection
         if($appendModelToCollection){
             return $instance->newCollection($instance->cachedItems)->setModel(self::getModel(), $instance->getTable());
@@ -322,9 +321,12 @@ class PostModel extends Model{
         return $instance;
     }
 
+    public function testim(){
+        print "haha";
+    }
     public function generateCacheByCategory($categoryID){
         $postType = getPostType($this->getTable());
-        $postObj = (new Post())->setTable($this->getTable());
+        $postObj = $this->newInstance();
 
         $data =  $postObj
           ->join('categories_relations', 'categories_relations.belongsToID', $postType->slug . '.postID')
@@ -346,7 +348,7 @@ class PostModel extends Model{
      **/
     public function generateCache(){
         $postType = getPostType($this->getTable());
-        $postObj = (new Post())->setTable($this->getTable());
+        $postObj = $this->newInstance();
 
         $data =  $postObj
           ->with($postObj->getDefaultRelations($postType))
@@ -732,12 +734,12 @@ class PostModel extends Model{
         if(!self::$homepage) {
             $findHomePage = null;
             if (settings('homepageID')) {
-                $findHomePage = Post::cache('post_pages')->collect()->where('postID', settings('homepageID'))->first();
+                $findHomePage = Post::cache('post_pages')->where('postID', settings('homepageID'))->first();
             }
 
             // get the first found page if no homepage is defined
             if (!$findHomePage) {
-                $findHomePage = Post::cache('post_pages')->collect()->first();
+                $findHomePage = Post::cache('post_pages')->first();
             }
 
             if(!$findHomePage){
@@ -1024,14 +1026,14 @@ class PostModel extends Model{
                 // when Collection is available, we already have the data for this attribute
                 if(!$items instanceof Collection) {
                     if($this->createdByUserID){
-                        $items =  User::cache()->collect()->where('userID', $this->createdByUserID)->first();
+                        $items =  User::cache()->where('userID', $this->createdByUserID)->first();
                     }
                 }
 
                 return $items;
             }else{
                 // search in cache
-                $user = User::cache()->collect()->where('userID', $this->createdByUserID)->first();
+                $user = User::cache()->where('userID', $this->createdByUserID)->first();
 
                 // search in database
                 if (!$user) {
@@ -1132,7 +1134,7 @@ class PostModel extends Model{
      * @throws \Exception
      */
     public function getFieldRelations(string $fieldSlug){
-        $postType = PostType::cache()->collect()->where("slug", $this->getTable())->first();
+        $postType = PostType::cache()->where("slug", $this->getTable())->first();
         if($postType){
             // get the specific field
             $field = $postType->field($fieldSlug);

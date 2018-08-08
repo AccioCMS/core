@@ -61,7 +61,7 @@ trait PostTrait{
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
         if($searchInCache) {
-            $cachedPosts = self::cache($postTypeSlug)->collect();
+            $cachedPosts = self::cache($postTypeSlug);
             if ($cachedPosts) {
                 $post = $cachedPosts->where('slug', $slug)->first();
             }
@@ -95,7 +95,7 @@ trait PostTrait{
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
         if($searchInCache) {
-            $cachedPosts = self::cache($postTypeSlug)->collect();
+            $cachedPosts = self::cache($postTypeSlug);
             if ($cachedPosts) {
                 $post = $cachedPosts->where('postID', $postID)->first();
             }

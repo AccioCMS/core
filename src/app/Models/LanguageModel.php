@@ -128,7 +128,7 @@ class LanguageModel extends Model{
      * @return mixed
      */
     public static function getVisibleList(){
-        $languages = Language::cache()->collect();
+        $languages = Language::cache();
         if($languages) {
             return $languages->where('isVisible', true);
         }

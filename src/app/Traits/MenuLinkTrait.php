@@ -65,7 +65,7 @@ trait MenuLinkTrait{
             // Get active MenuLinks by routeName and params
             $currentMenuLinkIDs = [];
             $isDefaultLanguage = (App::getLocale() == Language::getDefault('slug') ? '.default' : false);
-            foreach (\App\Models\MenuLink::cache()->collect() as $menuLink) {
+            foreach (\App\Models\MenuLink::cache() as $menuLink) {
                 $menuLinkRoute = Route::getRoutes()->getByName($menuLink->routeName . $isDefaultLanguage);
                 // maybe route doesn't have .default suffix
                 if (!$menuLinkRoute) {
@@ -238,7 +238,7 @@ trait MenuLinkTrait{
      * @throws \Exception
      */
     public static function findBySlug($slug,$languageSlug = ""){
-        $getMenuLink = array_where(MenuLink::cache($languageSlug)->collect(), function ($value)  use($slug){
+        $getMenuLink = array_where(MenuLink::cache($languageSlug), function ($value)  use($slug){
             return ($value['slug'] == $slug);
         });
 
@@ -257,7 +257,7 @@ trait MenuLinkTrait{
      * @throws \Exception
      */
     public static function findByID($menuLinkID,$languageSlug=""){
-        $menuLinks = MenuLink::cache($languageSlug)->collect();
+        $menuLinks = MenuLink::cache($languageSlug);
         if($menuLinks){
             return $menuLinks->where('menuLinkID',$menuLinkID)->first();
         }
@@ -290,7 +290,7 @@ trait MenuLinkTrait{
     public static function parentID($menuLinkID){
         $parentIDs = [];
         while($menuLinkID != NULL){
-            $menuLinks = MenuLink::cache()->collect();
+            $menuLinks = MenuLink::cache();
             if($menuLinks) {
                 $parentObj = $menuLinks->where('menuLinkID', $menuLinkID)->first();
                 if ($parentObj) {
@@ -397,7 +397,7 @@ trait MenuLinkTrait{
      */
     public static function cmsMenus(){
         $result = [];
-        foreach(\App\Models\Menu::cache()->collect() as $menu){
+        foreach(\App\Models\Menu::cache() as $menu){
             $result[$menu->slug] = [
               'menuID' => $menu->menuID,
               'title' => $menu->title,
@@ -615,7 +615,7 @@ trait MenuLinkTrait{
           ]
         ];
 
-        foreach (PostType::cache()->collect() as $postType){
+        foreach (PostType::cache() as $postType){
             if(!$postType->isVisible){
                 continue;
             }

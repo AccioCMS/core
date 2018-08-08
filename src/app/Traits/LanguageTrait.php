@@ -85,7 +85,7 @@ trait LanguageTrait
      * */
     public static function setDefault(){
         if(!self::$default){
-            $languages = \App\Models\Language::cache()->collect();
+            $languages = \App\Models\Language::cache();
             if($languages) {
                 $getDefault = $languages->where('isDefault',true);
                 if ($getDefault) {
@@ -150,7 +150,7 @@ trait LanguageTrait
      */
     public static function printLanguages($customView = '', $ulClass=''){
         return new HtmlString(view()->make(($customView ? $customView : "vendor.languages.default"), [
-          'languages' => Language::cache()->collect(),
+          'languages' => Language::cache(),
           'ulClass' => $ulClass,
 
         ])->render());
@@ -226,7 +226,7 @@ trait LanguageTrait
      * @throws \Exception
      * */
     public static function findBySlug(string $slug){
-        $langauge = \App\Models\Language::cache()->collect()->where('slug', $slug);
+        $langauge = \App\Models\Language::cache()->where('slug', $slug);
         if(!$langauge->isEmpty()){
             return $langauge->first();
         }
@@ -241,7 +241,7 @@ trait LanguageTrait
      * @throws \Exception
      * */
     public static function checkBySlug(string $slug){
-        if(!\App\Models\Language::cache()->collect()->where('slug', $slug)->isEmpty()){
+        if(!\App\Models\Language::cache()->where('slug', $slug)->isEmpty()){
             return true;
         }
         return false;
