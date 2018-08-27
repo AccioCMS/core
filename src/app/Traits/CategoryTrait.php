@@ -1,6 +1,7 @@
 <?php
 namespace Accio\App\Traits;
 
+use App;
 use App\Models\Language;
 use App\Models\MenuLink;
 use Illuminate\Support\Facades\Cache;
@@ -30,7 +31,7 @@ trait CategoryTrait{
     public static function findByID($categoryID){
         $categories = \App\Models\Category::cache();
         if($categories){
-            return $categories->where('categoryID',$categoryID)->first();
+            return $categories->where('categoryID',$categoryID)->getItems()->first();
         }
         return;
     }
@@ -46,7 +47,7 @@ trait CategoryTrait{
     public static function findBySlug($categorySlug){
         $categories = \App\Models\Category::cache();
         if($categories){
-            return $categories->where('slug',$categorySlug)->first();
+            return $categories->whereJson('slug->'.App::getLocale(),$categorySlug)->getItems()->first();
         }
         return;
     }
@@ -64,7 +65,7 @@ trait CategoryTrait{
         if($postType){
             $categories = self::cache();
             if($categories){
-                return $categories->where('postTypeID',$postType->postTypeID);
+                return $categories->where('postTypeID',$postType->postTypeID)->getItems();
             }
         }
         return;

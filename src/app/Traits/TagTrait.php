@@ -20,7 +20,7 @@ trait TagTrait{
         if($getPostTypeTags) {
             $tag = $getPostTypeTags->where('slug',$tagSlug);
             if($tag){
-                return $tag->first();
+                return $tag->getItems()->first();
             }
         }
         return null;
@@ -33,7 +33,7 @@ trait TagTrait{
      * @return object|null Returns an object with tag's data if found, or null if not found
      * */
     public static function findByID($tagID){
-        $getTags = self::cache();
+        $getTags = self::cache()->getItems();
 
         if(isset($getTags->$tagID)){
             return $getTags->$tagID;

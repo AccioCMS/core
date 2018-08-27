@@ -262,6 +262,7 @@ if(!function_exists('metaTags')) {
 
         $currentMenuLink =  \App\Models\MenuLink::getActive();
 
+
         // Set model data
         if($modelData) {
             \Accio\Support\Facades\Meta::setModelData($modelData);
@@ -301,6 +302,7 @@ if(!function_exists('metaTags')) {
         }
 
         // Get meta data from events
+
         event('meta:add', [$modelData]);
 
         \Accio\Support\Facades\Meta::printMetaTags();

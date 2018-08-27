@@ -63,9 +63,10 @@ trait PostTrait{
         if($searchInCache) {
             $cachedPosts = self::cache($postTypeSlug);
             if ($cachedPosts) {
-                $post = $cachedPosts->where('slug', $slug)->first();
+                $post = $cachedPosts->whereJson('slug->'.App::getLocale(), $slug)->getItems()->first();
             }
         }
+
 
         if($post){
             return $post;
@@ -97,7 +98,7 @@ trait PostTrait{
         if($searchInCache) {
             $cachedPosts = self::cache($postTypeSlug);
             if ($cachedPosts) {
-                $post = $cachedPosts->where('postID', $postID)->first();
+                $post = $cachedPosts->where('postID', $postID)->getItems()->first();
             }
         }
 

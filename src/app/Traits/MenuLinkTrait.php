@@ -65,7 +65,7 @@ trait MenuLinkTrait{
             // Get active MenuLinks by routeName and params
             $currentMenuLinkIDs = [];
             $isDefaultLanguage = (App::getLocale() == Language::getDefault('slug') ? '.default' : false);
-            foreach (\App\Models\MenuLink::cache() as $menuLink) {
+            foreach (\App\Models\MenuLink::cache()->getItems() as $menuLink) {
                 $menuLinkRoute = Route::getRoutes()->getByName($menuLink->routeName . $isDefaultLanguage);
                 // maybe route doesn't have .default suffix
                 if (!$menuLinkRoute) {
@@ -259,7 +259,7 @@ trait MenuLinkTrait{
     public static function findByID($menuLinkID,$languageSlug=""){
         $menuLinks = MenuLink::cache($languageSlug);
         if($menuLinks){
-            return $menuLinks->where('menuLinkID',$menuLinkID)->first();
+            return $menuLinks->where('menuLinkID',$menuLinkID)->getItems()->first();
         }
     }
 
@@ -292,7 +292,7 @@ trait MenuLinkTrait{
         while($menuLinkID != NULL){
             $menuLinks = MenuLink::cache();
             if($menuLinks) {
-                $parentObj = $menuLinks->where('menuLinkID', $menuLinkID)->first();
+                $parentObj = $menuLinks->where('menuLinkID', $menuLinkID)->getItems()->first();
                 if ($parentObj) {
                     $menuLinkID = $parentObj->parent;
                     if ($menuLinkID) {
@@ -397,7 +397,7 @@ trait MenuLinkTrait{
      */
     public static function cmsMenus(){
         $result = [];
-        foreach(\App\Models\Menu::cache() as $menu){
+        foreach(\App\Models\Menu::cache()->getItems() as $menu){
             $result[$menu->slug] = [
               'menuID' => $menu->menuID,
               'title' => $menu->title,
@@ -615,7 +615,7 @@ trait MenuLinkTrait{
           ]
         ];
 
-        foreach (PostType::cache() as $postType){
+        foreach (PostType::cache()->getItems() as $postType){
             if(!$postType->isVisible){
                 continue;
             }
@@ -785,7 +785,7 @@ trait MenuLinkTrait{
             }
 
             // Front page should not have duplicate urls
-            if(Request::route('postSlug') == Post::gethomepage()->slug){
+            if(Request::route('postSlug') && Request::route('postSlug') == Post::gethomepage()->slug){
                 Redirect::to('/', 301)->send();
             }
         }

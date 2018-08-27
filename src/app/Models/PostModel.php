@@ -204,7 +204,8 @@ class PostModel extends Model{
             $model->setTable(self::$_tmptable);
         }
 
-//        $model->disableCasts = self::$disableCasts;
+        $model->disableCasts = self::$tmpDisableCasts;
+        $model::$tmpDisableCasts = self::$tmpDisableCasts;
 
         return $model->newQuery()->with(
             is_string($relations) ? func_get_args() : $relations
@@ -219,7 +220,7 @@ class PostModel extends Model{
     protected static function menuLinkPanel(){
         // List one menu panel for each post type
         $panels =[];
-        foreach(PostType::cache() as $postType){
+        foreach(PostType::cache()->getItems() as $postType){
             $panels[] = [
                 'label' => $postType->name,
                 'belongsTo' => $postType->slug,
@@ -286,8 +287,6 @@ class PostModel extends Model{
         $instance->setTable($postType->slug);
 
         if(!$instance->cachedItems){
-//            $instance::$disableCasts = true;
-
             if ($callback) {
                 if (is_callable($callback)) {
                     $instance->cachedItems = $callback($instance);
@@ -305,24 +304,15 @@ class PostModel extends Model{
             Cache::forever($instance->cacheName,$instance->cachedItems);
         }
 
-        // initialize model
-        $items = $instance->cachedItems;
-
-        return $instance->newCollection(array_map(function ($item) use ($instance) {
-            $instance::$disableCasts = true;
-            return $instance->newFromBuilder($item);
-        }, $items));
-
-        // Return collection
-        if($appendModelToCollection){
-            return $instance->newCollection($instance->cachedItems)->setModel(self::getModel(), $instance->getTable());
-        }
-
-        return $instance;
+        return $instance->newCollection($instance->cachedItems,get_class(), $instance->getTable());
     }
 
     public function testim(){
-        print "haha";
+        $instance = $this;
+        return $this->newCollection(array_map(function ($item) use ($instance) {
+            $instance->disableCasts = true;
+            return $instance->newFromBuilder($item);
+        }, $items->all()));
     }
     public function generateCacheByCategory($categoryID){
         $postType = getPostType($this->getTable());
@@ -734,18 +724,22 @@ class PostModel extends Model{
         if(!self::$homepage) {
             $findHomePage = null;
             if (settings('homepageID')) {
-                $findHomePage = Post::cache('post_pages')->where('postID', settings('homepageID'))->first();
+                $findHomePage = Post::cache('post_pages')
+                  ->where('postID', settings('homepageID'))
+                  ->getItems(PostModel::class, 'post_pages')
+                  ->first();
             }
 
             // get the first found page if no homepage is defined
             if (!$findHomePage) {
-                $findHomePage = Post::cache('post_pages')->first();
+                $findHomePage = Post::cache('post_pages');
             }
 
             if(!$findHomePage){
                 throw new \Exception("No homepage found. Please add a page post!");
             }
             self::$homepage = $findHomePage;
+
         }
 
         return self::$homepage;
@@ -1026,14 +1020,14 @@ class PostModel extends Model{
                 // when Collection is available, we already have the data for this attribute
                 if(!$items instanceof Collection) {
                     if($this->createdByUserID){
-                        $items =  User::cache()->where('userID', $this->createdByUserID)->first();
+                        $items =  User::cache()->where('userID', $this->createdByUserID)->getItems()->first();
                     }
                 }
 
                 return $items;
             }else{
                 // search in cache
-                $user = User::cache()->where('userID', $this->createdByUserID)->first();
+                $user = User::cache()->where('userID', $this->createdByUserID)->getItems()->first();
 
                 // search in database
                 if (!$user) {
@@ -1134,7 +1128,7 @@ class PostModel extends Model{
      * @throws \Exception
      */
     public function getFieldRelations(string $fieldSlug){
-        $postType = PostType::cache()->where("slug", $this->getTable())->first();
+        $postType = PostType::cache()->where("slug", $this->getTable())->getItems()->first();
         if($postType){
             // get the specific field
             $field = $postType->field($fieldSlug);

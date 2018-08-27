@@ -16,6 +16,7 @@ class AccioCollection extends Collection
      */
     private static $_pathToClass;
 
+    public  $testim = 1;
     /**
      * @var
      */
@@ -116,7 +117,7 @@ class AccioCollection extends Collection
                 $key = $explodeKey[1];
             }
 
-            $retrieved = $this->dataGet($item, $column.'.'.$key, null, true);
+            $retrieved = data_get($item, $column.'.'.$key, null, true);
 
             $strings = array_filter([$retrieved, $value], function ($value) {
                 return is_string($value) || (is_object($value) && method_exists($value, '__toString'));
@@ -194,8 +195,8 @@ class AccioCollection extends Collection
      * @param $table
      * @return $this
      */
-    public function setModel($pathToClass, $table){
-        self::$_pathToClass = $pathToClass;
+    public function setModel($eloquent, $table){
+        self::$_pathToClass = $eloquent;
         self::$_modelTable = $table;
 
         return $this;
@@ -206,8 +207,26 @@ class AccioCollection extends Collection
      *
      * @return $this
      */
-    public function collect(){
-        //todo delete this function
-        return $this;
+    public function getItems($pathToClass = null, $table = null){
+        if(!$pathToClass){
+            $pathToClass = self::$_pathToClass;
+        }
+        if(!$table){
+            $table = self::$_modelTable;
+        }
+        // todo nese ne nje collection query e thirr nje collection tjeter, proprties
+        // nuk barten se where-at e ri-inicializojne klasen me new static
+        // keshtu qe duhet me ja gjet nje zgjidhje. Rasti i select categories me postTypeID
+
+
+        $backtrace = debug_backtrace();
+        return $this->map(function ($item) use($pathToClass,$table) {
+            $modelInstance = (new $pathToClass())->setTable($table);
+            $modelInstance->disableCasts = true;
+            return $modelInstance->newFromBuilder($item);
+        });
+
+        return $items;
+
     }
 }

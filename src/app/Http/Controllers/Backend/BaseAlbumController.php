@@ -62,7 +62,7 @@ class BaseAlbumController extends MainController{
      * @return array with album data for each language and list of images
      * */
     public function details($lang, $albumID){
-        $languages = Language::cache();
+        $languages = Language::cache()->getItems();
         $mediaList = [];
         /* if album id is not 0*/
         if($albumID){

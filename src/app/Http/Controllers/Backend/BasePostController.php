@@ -39,19 +39,19 @@ class BasePostController extends MainController {
         $customFieldsGroups = CustomFieldGroup::findGroups('post-type', 'create', 0, $postTypeSlug);
 
         // post type
-        $postType = PostType::cache()->where('slug', $postTypeSlug)->first();
+        $postType = PostType::cache()->where('slug', $postTypeSlug)->getItems()->first();
 
         // Categories (options to select)
         $categories = array_values(App\Models\Category::cache()->where("postTypeID", $postType->postTypeID)->toArray());
 
         return[
             'postType' => $postType,
-            'languages' => Language::cache(),
+            'languages' => Language::cache()->getItems(),
             'categories' => $categories,
             'customFieldsGroups' => $customFieldsGroups,
             'inTableColumns' => $this->getInTableColumns($postTypeSlug),
             'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug),
-            'users' => User::cache(),
+            'users' => User::cache()->getItems(),
             'createdByUserID' => Auth::user()->userID,
         ];
     }
@@ -224,7 +224,7 @@ class BasePostController extends MainController {
      */
     public function getPostTypeFieldsValues(string $postType, $post = ""){
         $fields = App\Models\PostType::getFields($postType);
-        $languages = Language::cache();
+        $languages = Language::cache()->getItems();
         $values = [];
 
         foreach ($fields as $field){
@@ -932,7 +932,7 @@ class BasePostController extends MainController {
             $selectedTags[$tagsRelation->language][] = $tagsRelation;
         }
 
-        $users = User::cache();
+        $users = User::cache()->getItems();
 
         $response = array(
             'post' => [
@@ -957,7 +957,7 @@ class BasePostController extends MainController {
             'customFieldsGroups' => $customFieldGroups,
             'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug, $post),
             'categories' => $categories,
-            'languages' => Language::cache(),
+            'languages' => Language::cache()->getItems(),
             'users' => $users,
         );
 

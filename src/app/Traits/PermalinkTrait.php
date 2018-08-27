@@ -31,7 +31,7 @@ trait PermalinkTrait
         $singlePermalink = false;
 
         if ($permalinks) {
-            $singlePermalink = $permalinks->where('belongsTo', $belongsTo)->where("name", $name)->first();
+            $singlePermalink = $permalinks->where('belongsTo', $belongsTo)->where("name", $name)->getItems()->first();
             if ($singlePermalink && $singlePermalink->custom_url) {
                 return $singlePermalink->custom_url;
             }

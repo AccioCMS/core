@@ -55,7 +55,8 @@ trait CacheTrait
      * Shall we disable casts.
      * @var bool
      */
-    public static $disableCasts = false;
+    public $disableCasts = false;
+    public static $tmpDisableCasts = false;
 
     /**
      * Boot Cache Trait Events.
@@ -293,8 +294,6 @@ trait CacheTrait
         $instance = (new static)->initializeCache($cacheName);
 
         if(!Cache::has($instance->cacheName)){
-            //$instance::$disableCasts = true;
-
             if ($callback) {
                 if (is_callable($callback)) {
                     $instance->cachedItems = $callback($instance);
@@ -312,21 +311,7 @@ trait CacheTrait
             Cache::forever($instance->cacheName,$instance->cachedItems);
         }
 
-        // initialize model
-        $items = $instance->cachedItems;
-
-        return $instance->newCollection(array_map(function ($item) use ($instance) {
-            $instance::$disableCasts = true;
-            return $instance->newFromBuilder($item);
-        }, $items));
-
-
-        // Return collection
-        if($appendModelToCollection){
-            return $instance->newCollection($instance->cachedItems)->setModel(self::getModel(), $instance->getTable());
-        }
-
-        return $instance;
+        return $instance->newCollection($instance->cachedItems,get_class(), $instance->getTable());
     }
 
     /**
@@ -387,7 +372,8 @@ trait CacheTrait
         $model->setTable($this->table);
 
         // casts are disabled when cache is being generated, this is done to simulate database data structure
-        //$model->disableCasts = self::$disableCasts;
+        $model->disableCasts = $this->disableCasts;
+        $model::$tmpDisableCasts = $this->disableCasts;
         return $model;
     }
 
@@ -400,7 +386,7 @@ trait CacheTrait
      */
     public function getCasts()
     {
-        if(self::$disableCasts){
+        if($this->disableCasts){
             return [];
         }
 

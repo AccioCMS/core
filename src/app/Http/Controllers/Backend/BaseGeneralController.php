@@ -74,6 +74,7 @@ class BaseGeneralController extends MainController {
         $settings['logo'] = $projectLogoURL;
 
         // User data object
+        //todo qetu eshte nje bug se query nuk bahet me keyby
         $postTypeSlugs = PostType::cache()->keys();
         $globalData = [
             'post_type_slugs' => $postTypeSlugs,
@@ -84,7 +85,7 @@ class BaseGeneralController extends MainController {
         ];
 
         // all languages
-        $languages = Language::cache();
+        $languages = Language::cache()->getItems();
 
         return [
             'languages' => $languages,

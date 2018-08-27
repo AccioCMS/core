@@ -2,6 +2,7 @@
 
 namespace Accio\App\Traits;
 
+use App;
 use App\Models\Menu;
 use Illuminate\Support\HtmlString;
 use App\Models\MenuLink;
@@ -28,7 +29,7 @@ trait MenuTrait
         MenuLink::setActiveIDs(true);
 
         $menuData = self::findBySlug($menuSlug);
-        $menuLinks = MenuLink::cache()->where('menuID', $menuData->menuID)->sortBy('order');
+        $menuLinks = MenuLink::cache()->where('menuID', $menuData->menuID)->sortBy('order')->getItems();
 
         if($menuLinks){
             return MenuLink::children($menuLinks);
@@ -41,14 +42,15 @@ trait MenuTrait
      * @throws \Exception
      */
     public static function setPrimaryMenuID(){
-        if(Menu::cache()) {
-            $primaryMenu = Menu::cache()->where('isPrimary', 1);
+        $menu = Menu::cache();
+        if($menu) {
+            $primaryMenu = $menu->where('isPrimary', 1);
 
             //if no primary menu is found, get the first one from the list
             if (!$primaryMenu) {
-                $primaryMenu = Menu::cache()->first();
+                $primaryMenu = $menu->getItems()->first();
             } else {
-                $primaryMenu = $primaryMenu->first();
+                $primaryMenu = $primaryMenu->getItems()->first();
             }
 
             if (isset($primaryMenu->menuID)) {
@@ -102,7 +104,7 @@ trait MenuTrait
             $getMenuLink = $menu->where('slug', $slug);
 
             if ($getMenuLink) {
-                return $getMenuLink->first();
+                return $getMenuLink->getItems()->first();
             }
         }
         return null;
@@ -121,7 +123,7 @@ trait MenuTrait
             $getMenuLink = $menu->where('id', $menuID);
 
             if ($getMenuLink) {
-                return $getMenuLink->first();
+                return $getMenuLink->getItems()->first();
             }
         }
         return null;

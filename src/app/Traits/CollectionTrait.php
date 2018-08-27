@@ -12,8 +12,8 @@ trait CollectionTrait
      * @param  array  $models
      * @return PostCollection
      */
-    public function newCollection(array $models = [])
+    public function newCollection(array $models = [], string $eloquent = null, string $table = null)
     {
-        return new AccioCollection($models);
+        return (new AccioCollection($models))->setModel($eloquent, $table);
     }
 }

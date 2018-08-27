@@ -2,6 +2,7 @@
 
 namespace Accio\App\Traits;
 
+use App;
 use App\Models\MenuLink;
 use App\Models\PostType;
 use Illuminate\Support\Facades\DB;
@@ -47,7 +48,7 @@ trait PostTypeTrait{
             $getPosType = $postTypes->where('slug', $postTypeSlug);
 
             if ($getPosType) {
-                return $getPosType->first();
+                return $getPosType->getItems()->first();
             }
         }
         return;
@@ -80,7 +81,7 @@ trait PostTypeTrait{
         if($postTypes) {
             $getPosType = $postTypes->where('postTypeID', $postTypeID);
             if ($getPosType) {
-                return $getPosType->first();
+                return $getPosType->getItems()->first();
             }
         }
         return;
@@ -126,7 +127,7 @@ trait PostTypeTrait{
      * @return array
      */
     public static function getFields($post_type){
-        $postType = PostType::cache()->where('slug', $post_type)->first();
+        $postType = PostType::cache()->where('slug', $post_type)->getItems()->first();
 
         if($postType){
             return $postType->fields;

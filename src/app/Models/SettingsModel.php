@@ -85,7 +85,7 @@ class SettingsModel extends Model{
      * @@return array
      */
     public static function getAllSettings(){
-        $settings = Settings::cache();
+        $settings = Settings::cache()->getItems();
 
         $settingsList = [];
         foreach($settings as $setting){
@@ -102,7 +102,7 @@ class SettingsModel extends Model{
     public static function getSetting($key){
         $settings = Settings::cache();
         if($settings) {
-            $setting = $settings->where('settingsKey', $key)->first();
+            $setting = $settings->where('settingsKey', $key)->getItems()->first();
 
             if ($setting) {
                 return $setting->value;

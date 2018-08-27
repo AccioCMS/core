@@ -40,15 +40,16 @@ class Post extends MainController
             if($post->hasCategory()){
                 $latestPosts = \App\Models\Post::cache('category_posts_'.$post->category->categoryID)
                   ->whereCache('categories_relations.categoryID',$post->category->categoryID)
-
                   ->published()
-                  ->orderBy('published_at','DESC');
+                  ->orderBy('published_at','DESC')
+                  ->getItems();
             }else{
                 $latestPosts = \App\Models\Post::cache()
 
                   ->whereNotIn("postID", array_keys($relatedPosts))
                   ->published()
-                  ->orderBy('published_at','DESC');
+                  ->orderBy('published_at','DESC')
+                  ->getItems();
             }
 
             if($latestPosts->count() >= $limitTags) {
