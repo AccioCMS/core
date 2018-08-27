@@ -417,7 +417,7 @@ class PostModel extends Model{
         $test = Post::cache($postObj->getTable(), function($query) use($postObj){
           return $query->setTable($postObj->getTable())->generateCache();
         }, false)
-          ->refreshState($postObj, $mode);
+          ->refreshState($postObj->getTable(), $postObj, $mode);
     }
 
     /**
@@ -489,7 +489,7 @@ class PostModel extends Model{
             return $query
               ->setTable($postObj->getTable())
               ->generateCacheByCategory($category->categoryID);
-        }, false)->refreshState($postObj, $mode);
+        }, false)->refreshState("category_posts_".$category->categoryID, $postObj, $mode);
     }
 
     /**

@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
 
@@ -228,5 +229,64 @@ class AccioCollection extends Collection
 
         return $items;
 
+    }
+    /**
+     * Add, update or remove an item from cache.
+     *
+     * @param $item
+     * @param $mode
+     * @param null $callback
+     * @return CacheTrait
+     * @throws \Exception
+     */
+    public function refreshState($cacheName, $item, $mode, $callback = null){
+        $cachedItems = $this->all();
+
+        // check if this item exists
+        $currentItemKey = null;
+        if($cachedItems) {
+            $keyName = $item->getKeyName();
+            $keyValue = $item->getKey();
+            foreach ($cachedItems as $index => $row) {
+                if ($row[$keyName] == $keyValue) {
+                    $currentItemKey = [$index => $row];
+                    break;
+                }
+            }
+        }
+
+        // DELETE
+        if($mode == 'deleted'){
+            if ($currentItemKey) {
+                unset($cachedItems[key($currentItemKey)]);
+            }
+        }else {
+            // UPDATE
+            if ($currentItemKey) {
+                $cachedItems[key($currentItemKey)] = $item->toArray();
+
+            } else { // ADD
+                // push new item to cache
+                $newCachedItems = [];
+                array_push($newCachedItems, $item->toArray());
+
+                $cachedItems = array_merge($newCachedItems, $cachedItems);
+
+                // Limit results
+                $limit = (property_exists($this,'defaultLimitCache') ? $this->defaultLimitCache : $this->limitCache);
+                if($limit) {
+                    $countItems = count($cachedItems);
+                    if ($countItems > $limit) {
+                        $cachedItems = array_slice($cachedItems, 0, ($limit - $countItems));
+                    }
+                }
+
+            }
+        }
+
+        // Save cache
+        Cache::forever($cacheName,$cachedItems);
+
+        return $this;
     }
 }

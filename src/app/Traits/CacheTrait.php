@@ -110,65 +110,7 @@ trait CacheTrait
         }
     }
 
-    /**
-     * Add, update or remove an item from cache.
-     *
-     * @param $item
-     * @param $mode
-     * @param null $callback
-     * @return CacheTrait
-     * @throws \Exception
-     */
-    public function refreshState($item, $mode, $callback = null){
-        $cachedItems = $this->cachedItems;
-
-        // check if this item exists
-        $currentItemKey = null;
-        if($cachedItems) {
-            $keyName = $item->getKeyName();
-            $keyValue = $item->getKey();
-            foreach ($cachedItems as $index => $row) {
-                if ($row[$keyName] == $keyValue) {
-                    $currentItemKey = [$index => $row];
-                    break;
-                }
-            }
-        }
-
-        // DELETE
-        if($mode == 'deleted'){
-            if ($currentItemKey) {
-                unset($cachedItems[key($currentItemKey)]);
-            }
-        }else {
-            // UPDATE
-            if ($currentItemKey) {
-                $cachedItems[key($currentItemKey)] = $item->toArray();
-
-            } else { // ADD
-                // push new item to cache
-                $newCachedItems = [];
-                array_push($newCachedItems, $item->toArray());
-
-                $cachedItems = array_merge($newCachedItems, $cachedItems);
-
-                // Limit results
-                $limit = (property_exists($this,'defaultLimitCache') ? $this->defaultLimitCache : $this->limitCache);
-                if($limit) {
-                    $countItems = count($cachedItems);
-                    if ($countItems > $limit) {
-                        $cachedItems = array_slice($cachedItems, 0, ($limit - $countItems));
-                    }
-                }
-
-            }
-        }
-
-        // Save cache
-        Cache::forever($this->cacheName,$cachedItems);
-
-        return $this;
-    }
+   
 
 
     /**
@@ -214,7 +156,7 @@ trait CacheTrait
         Event::fire(lcfirst($model).':cacheUpdated', [$item, $mode]);
 
         // Manage cache state
-        $model::cache($cacheName, null, false)->refreshState($item, $mode);
+        $model::cache($cacheName, null, false)->refreshState($cacheName, $item, $mode);
     }
 
     /**
