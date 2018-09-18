@@ -215,7 +215,9 @@ class PostModel extends Model{
 
     /**
      * Define menu panel
+     *
      * @return array
+     * @throws \Exception
      */
     protected static function menuLinkPanel(){
         // List one menu panel for each post type
@@ -269,7 +271,7 @@ class PostModel extends Model{
      * @return mixed
      * @throws \Exception
      */
-    public static function cache($cacheName = '', $callback = null,$appendModelToCollection = true){
+    public static function cache($cacheName = '', $callback = null, $appendModelToCollection = true){
         $instance = (new static)->initializeCache($cacheName);
 
         // Validate post type by cache name
@@ -307,13 +309,12 @@ class PostModel extends Model{
         return $instance->newCollection($instance->cachedItems,get_class(), $instance->getTable());
     }
 
-    public function testim(){
-        $instance = $this;
-        return $this->newCollection(array_map(function ($item) use ($instance) {
-            $instance->disableCasts = true;
-            return $instance->newFromBuilder($item);
-        }, $items->all()));
-    }
+    /**
+     * Make query to get posts with their categories
+     *
+     * @param $categoryID
+     * @return mixed
+     */
     public function generateCacheByCategory($categoryID){
         $postType = getPostType($this->getTable());
         $postObj = $this->newInstance();
@@ -417,7 +418,7 @@ class PostModel extends Model{
         $test = Post::cache($postObj->getTable(), function($query) use($postObj){
           return $query->setTable($postObj->getTable())->generateCache();
         }, false)
-          ->refreshState($postObj->getTable(), $postObj, $mode);
+          ->refreshState($postObj->getTable(), $postObj, $mode, $this->defaultLimitCache);
     }
 
     /**
@@ -489,7 +490,7 @@ class PostModel extends Model{
             return $query
               ->setTable($postObj->getTable())
               ->generateCacheByCategory($category->categoryID);
-        }, false)->refreshState("category_posts_".$category->categoryID, $postObj, $mode);
+        }, false)->refreshState("category_posts_".$category->categoryID, $postObj, $mode, $this->defaultLimitCache);
     }
 
     /**

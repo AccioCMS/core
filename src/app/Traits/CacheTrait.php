@@ -156,7 +156,8 @@ trait CacheTrait
         Event::fire(lcfirst($model).':cacheUpdated', [$item, $mode]);
 
         // Manage cache state
-        $model::cache($cacheName, null, false)->refreshState($cacheName, $item, $mode);
+        $limit = (property_exists($this, 'defaultLimitCache') ? $this->defaultLimitCache : $this->limitCache);
+        $model::cache($cacheName, null, false)->refreshState($cacheName, $item, $mode, $limit);
     }
 
     /**

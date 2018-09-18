@@ -9,15 +9,13 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
 
-class AccioCollection extends Collection
-{
+class AccioCollection extends Collection {
 
     /**
      * @var
      */
     private static $_pathToClass;
 
-    public  $testim = 1;
     /**
      * @var
      */
@@ -36,7 +34,7 @@ class AccioCollection extends Collection
 
     /**
      * Scope a query to only include unpublished posts..
-     *
+     * 
      * @return PostCollection
      */
     public function unpublished(){
@@ -54,10 +52,9 @@ class AccioCollection extends Collection
      * @param null $setPath
      * @return LengthAwarePaginator
      */
-    public function paginate($perPage = 15, $page = null, $options = [], $setPath = null)
-    {
+    public function paginate($perPage = 15, $page = null, $options = [], $setPath = null){
         $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
-        $items = ($this instanceof Collection || $this instanceof PostCollection)? $this : Collection::make($items);
+        $items = ($this instanceof Collection || $this instanceof PostCollection) ? $this : Collection::make($this);
         $paginator = new LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, $options);
 
         // Set Path
@@ -80,7 +77,6 @@ class AccioCollection extends Collection
      */
     public function orderBy($key, $mode = 'ASC', $options = SORT_REGULAR){
         return $this->sortBy($key, $options, ($mode === 'DESC' ? true : false));
-
     }
 
     /**
@@ -124,11 +120,9 @@ class AccioCollection extends Collection
                 return is_string($value) || (is_object($value) && method_exists($value, '__toString'));
             });
 
-
             if (count($strings) < 2 && count(array_filter([$retrieved, $value], 'is_object')) == 1) {
                 return in_array($operator, ['!=', '<>', '!==']);
             }
-
 
             switch ($operator) {
                 default:
@@ -235,11 +229,11 @@ class AccioCollection extends Collection
      *
      * @param $item
      * @param $mode
-     * @param null $callback
+     * @param $limitCache
      * @return CacheTrait
      * @throws \Exception
      */
-    public function refreshState($cacheName, $item, $mode, $callback = null){
+    public function refreshState($cacheName, $item, $mode, $limitCache){
         $cachedItems = $this->all();
 
         // check if this item exists
@@ -273,11 +267,10 @@ class AccioCollection extends Collection
                 $cachedItems = array_merge($newCachedItems, $cachedItems);
 
                 // Limit results
-                $limit = (property_exists($this,'defaultLimitCache') ? $this->defaultLimitCache : $this->limitCache);
-                if($limit) {
+                if($limitCache) {
                     $countItems = count($cachedItems);
-                    if ($countItems > $limit) {
-                        $cachedItems = array_slice($cachedItems, 0, ($limit - $countItems));
+                    if ($countItems > $limitCache) {
+                        $cachedItems = array_slice($cachedItems, 0, ($limitCache - $countItems));
                     }
                 }
 
