@@ -60,18 +60,16 @@ trait PostTrait{
         $post = null;
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
-        if($searchInCache) {
+        if($searchInCache){
             $cachedPosts = self::cache($postTypeSlug);
             if ($cachedPosts) {
                 $post = $cachedPosts->whereJson('slug->'.App::getLocale(), $slug)->getItems()->first();
             }
         }
 
-
         if($post){
             return $post;
-        }
-        else { // when not available in cache, search in database
+        }else{ // when not available in cache, search in database
             $postObj = (new Post())->setTable($postTypeSlug);
             $post = $postObj
               ->where('slug->'.App::getLocale(), $slug)

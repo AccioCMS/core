@@ -38,16 +38,16 @@ export const globalComputed = {
             return this.$store.getters.get_languages;
         },
         // get the max pagination number from $store
-        getMaxPag(){
-            return this.$store.getters.get_maxPaginationNr;
-        },
+        // getMaxPag(){
+        //     return this.$store.getters.get_maxPaginationNr;
+        // },
         // get the order type
-        getPage(){
-            if(this.$route.query.pagination !== undefined && this.$route.query.pagination != ''){
-                return this.$route.query.pagination;
-            }
-            return 1;
-        },
+        // getPage(){
+        //     if(this.$route.query.pagination !== undefined && this.$route.query.pagination != ''){
+        //         return this.$route.query.pagination;
+        //     }
+        //     return 1;
+        // },
         // get advanced_search_form_data
         advancedSearchFormData(){
             return this.$store.getters.get_advanced_search_form_data;
@@ -96,9 +96,9 @@ export const globalComputed = {
         // get query parameters automatic
         getQueryParamsAsString(){
             // get all url query params as a string
-            var queryPath = "?";
-            var count = 1;
-            var length = Object.keys(this.$route.query).length;
+            let queryPath = "?";
+            let count = 1;
+            let length = Object.keys(this.$route.query).length;
             for(let k in this.$route.query){
                 queryPath += k+"="+this.$route.query[k];
                 if(count < length){

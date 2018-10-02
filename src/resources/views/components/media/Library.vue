@@ -55,7 +55,7 @@
 
                     <div v-if="!spinner && !noResults" :class="{'imageWrapper':true, 'active': isFileSelected(image.mediaID)}" v-for="(image, index) in getMediaList" @click="selectFile" :id="image.mediaID" :data-index="index">
                         <div class="singleImgContainer">
-                            <img :src="generateUrl(constructUrl(image))" draggable="false" v-if="image.type == 'image'">
+                            <img :src="constructMediaUrl(image)" draggable="false" v-if="image.type == 'image'">
                             <img :src="resourcesUrl(constructUrl(image))" draggable="false" v-else>
                         </div>
                         <p>{{ image.title }}</p>
@@ -71,12 +71,12 @@
                             <h5>{{trans.__details}}</h5>
                             <div class="col-xs-12" :class="{'col-lg-12 col-md-12 col-sm-12': selectedFiles[0].type == 'video', 'col-lg-6 col-md-6 col-sm-6': selectedFiles[0].type != 'video'}">
                                 <template v-if="selectedFiles[0] !== undefined && selectedFiles[0].type != 'video'">
-                                    <img :src="generateUrl(constructUrl(selectedFiles[0]))" id="detailsUrl">
+                                    <img :src="constructMediaUrl(selectedFiles[0])" id="detailsUrl">
                                 </template>
                                 <template v-else>
                                     <figure width="100%" height="100%">
                                         <video  width="100%" height="100%" controls>
-                                            <source :src="generateUrl(constructUrl(selectedFiles[0], true))" :type="'video/'+selectedFiles[0].extension" width="100%" height="100%" />
+                                            <source :src="constructMediaUrl(selectedFiles[0], true)" :type="'video/'+selectedFiles[0].extension" width="100%" height="100%" />
                                         </video>
                                     </figure>
 

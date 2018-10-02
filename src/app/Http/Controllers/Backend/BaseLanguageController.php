@@ -20,6 +20,18 @@ class BaseLanguageController extends MainController{
     }
 
     /**
+     * Returns language list from cache
+     * Overwrites getAll method form MainController
+     *
+     * @param string $lang
+     * @return array|\Illuminate\Contracts\Pagination\Paginator
+     * @throws \Exception
+     */
+    public function getAll($lang = ""){
+        return ['data' => Language::cache('language')->getItems()];
+    }
+
+    /**
      * Delete a language
      * */
     public function delete($lang, $id){

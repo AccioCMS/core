@@ -48,7 +48,7 @@
 
                         <div class="imageSingleThumb" v-if="mediaSelectedFiles['logo']">
                             <i class="fa fa-close closeBtnForPrevImages" @click="deleteSelectedMediaFile('logo', 0)"></i>
-                            <img :src="generateUrl(constructUrl(mediaSelectedFiles['logo'][0]))">
+                            <img :src="constructMediaUrl(mediaSelectedFiles['logo'][0])">
                         </div>
 
                         <div class="clearfix"></div>
@@ -68,7 +68,7 @@
 
                         <div class="imageSingleThumb" v-if="mediaSelectedFiles['watermark']">
                             <i class="fa fa-close closeBtnForPrevImages" @click="deleteSelectedMediaFile('watermark', 0)"></i>
-                            <img :src="generateUrl(constructUrl(mediaSelectedFiles['watermark'][0]))">
+                            <img :src="constructMediaUrl(mediaSelectedFiles['watermark'][0])">
                         </div>
 
                         <div class="clearfix"></div>
@@ -168,7 +168,6 @@
     }
 </style>
 <script>
-    import PopupMedia from '../media/Popup.vue'
     import { globalComputed } from '../../mixins/globalComputed';
     import { globalData } from '../../mixins/globalData';
     import { globalUpdated } from '../../mixins/globalUpdated';
@@ -176,7 +175,6 @@
 
     export default{
         mixins: [globalComputed, globalMethods, globalData, globalUpdated],
-        components:{'popup-media':PopupMedia},
         data(){
             return {
                 userRoles: [],

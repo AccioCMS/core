@@ -217,20 +217,16 @@ trait UserTrait{
         return (isset(self::$permissions['global']['author']) ? self::$permissions['global']['author'] : false);
     }
 
-
-
-
     /**
      * Get permissions of the user
      *
      * @return array
      */
     public function getPermissions(){
-        // return permissoins if they have already been requested
+        // return permissions if they have already been requested
         if(self::$permissions) {
             return self::$permissions;
         }
-
 
         $groupIDs = [];
         foreach (Auth::user()->roles as $group) {
@@ -241,6 +237,8 @@ trait UserTrait{
         }
 
         $permissions = Permission::whereIn("groupID", $groupIDs)->get();
+
+        dd(Permission::cache('permissions')->getItems());
 
         // save values in keys & values for easy access
         foreach ($permissions as $permission) {

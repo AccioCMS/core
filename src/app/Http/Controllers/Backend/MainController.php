@@ -45,7 +45,10 @@ class MainController extends Controller{
 
     /**
      * Returns the list of specific model
-     * */
+     *
+     * @param string $lang
+     * @return \Illuminate\Contracts\Pagination\Paginator
+     */
     public function getAll($lang = ""){
         $classNameArr = explode("\\", get_class($this));
         $className = "App\\Models\\".str_replace("Controller","",$classNameArr[4]);

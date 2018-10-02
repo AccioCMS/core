@@ -150,8 +150,7 @@ class AccioCollection extends Collection {
      * @param  mixed   $default
      * @return mixed
      */
-    function dataGet($target, $key, $default = null)
-    {
+    public function dataGet($target, $key, $default = null){
         if (is_null($key)) {
             return $target;
         }
@@ -200,7 +199,9 @@ class AccioCollection extends Collection {
     /**
      * Appends a model to each of cache items.
      *
-     * @return $this
+     * @param null $pathToClass
+     * @param null $table
+     * @return AccioCollection|\Illuminate\Support\Collection
      */
     public function getItems($pathToClass = null, $table = null){
         if(!$pathToClass){
@@ -209,10 +210,9 @@ class AccioCollection extends Collection {
         if(!$table){
             $table = self::$_modelTable;
         }
-        // todo nese ne nje collection query e thirr nje collection tjeter, proprties
+        // TODO nese ne nje collection query e thirr nje collection tjeter, proprties
         // nuk barten se where-at e ri-inicializojne klasen me new static
         // keshtu qe duhet me ja gjet nje zgjidhje. Rasti i select categories me postTypeID
-
 
         $backtrace = debug_backtrace();
         return $this->map(function ($item) use($pathToClass,$table) {
@@ -220,18 +220,16 @@ class AccioCollection extends Collection {
             $modelInstance->disableCasts = true;
             return $modelInstance->newFromBuilder($item);
         });
-
-        return $items;
-
     }
+
     /**
      * Add, update or remove an item from cache.
      *
+     * @param $cacheName
      * @param $item
      * @param $mode
      * @param $limitCache
-     * @return CacheTrait
-     * @throws \Exception
+     * @return $this
      */
     public function refreshState($cacheName, $item, $mode, $limitCache){
         $cachedItems = $this->all();

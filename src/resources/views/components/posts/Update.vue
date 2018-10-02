@@ -134,7 +134,7 @@
 
                                                     <div class="imageSingleThumb" v-for="(file, count) in mediaSelectedFiles[value.slug+'__lang__'+lang.slug]" :key="count">
                                                         <i class="fa fa-close closeBtnForPrevImages" @click="deleteSelectedMediaFile(value.slug+'__lang__'+lang.slug, file.mediaID)"></i>
-                                                        <img :src="generateUrl(constructUrl(file))">
+                                                        <img :src="constructMediaUrl(file)">
                                                     </div>
 
                                                     <div class="clearfix"></div>
@@ -153,7 +153,7 @@
                                                 <div class="imagePrevContainer col-md-10 col-sm-10 col-xs-12" v-if="!value.translatable">
                                                     <div class="imageSingleThumb" v-for="(file, count) in mediaSelectedFiles[value.slug]" :key="count">
                                                         <i class="fa fa-close closeBtnForPrevImages" @click="deleteSelectedMediaFile(value.slug, file.mediaID)"></i>
-                                                        <img :src="generateUrl(constructUrl(file))">
+                                                        <img :src="constructMediaUrl(file)">
                                                     </div>
 
                                                     <div class="clearfix"></div>
@@ -499,7 +499,7 @@
                     </div>
 
                     <div class="imageContainer" style="margin-top:15px; margin-left:10px;" id="form-group-featuredImage">
-                        <img v-if="mediaSelectedFiles['featuredImage']" :src="generateUrl(constructUrl(mediaSelectedFiles['featuredImage'][0]))+'?'+mediaSelectedFiles['featuredImage'][0].updated_at" class="featuredImagePreview">
+                        <img v-if="mediaSelectedFiles['featuredImage']" :src="constructMediaUrl(mediaSelectedFiles['featuredImage'][0])+'?'+mediaSelectedFiles['featuredImage'][0].updated_at" class="featuredImagePreview">
                         <br>
                         <a class="btn btn-info" v-if="!mediaSelectedFiles['featuredImage']" @click="openMediaForFeatured('featuredImage','image')" id="openMediaChangeFeatureImage">{{trans.__featuredImage}}</a>
                         <a class="btn btn-info" v-if="mediaSelectedFiles['featuredImage']" @click="openMediaForFeatured('featuredImage','image')">{{trans.__change}}</a>
@@ -562,7 +562,6 @@
 <script>
     import Datepicker from 'vuejs-datepicker';
     import VueTimepicker from 'vue2-timepicker';
-    import PopupMedia from '../media/Popup.vue';
     import RelatedButtons from '../menu/RelatedButtons.vue';
     import CustomFieldGroup from '../vendor/CustomFieldGroup.vue';
     import { globalComputed } from '../../mixins/globalComputed';
@@ -574,7 +573,7 @@
 
     export default{
         mixins: [globalComputed, globalMethods, globalData, globalUpdated, postForm, customFields],
-        components: { 'popup-media':PopupMedia, Datepicker, VueTimepicker, 'related-buttons':RelatedButtons, CustomFieldGroup },
+        components: { Datepicker, VueTimepicker, 'related-buttons':RelatedButtons, CustomFieldGroup },
         created() {
             // translations
             this.trans = {
