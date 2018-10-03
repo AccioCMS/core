@@ -60,6 +60,7 @@ trait CacheTrait
 
     /**
      * Boot Cache Trait Events.
+     * TODO : spe shoh ku po perdoret
      *
      * @return void
      */
@@ -146,9 +147,9 @@ trait CacheTrait
      * Default method to update cache.
      *
      * @param $item
-     * @return void
+     * @param $mode
      */
-    public function updateCache($item, string $mode){
+    public function updateCache($item, $mode){
         $model =  self::getModel();
         $cacheName = self::getAutoCacheName();
 
@@ -255,6 +256,13 @@ trait CacheTrait
         }
 
         return $instance->newCollection($instance->cachedItems,get_class(), $instance->getTable());
+    }
+
+    public static function removeCache($cacheName = ''){
+        $instance = (new static)->initializeCache($cacheName);
+        if(Cache::has($instance->cacheName)){
+            Cache::forget($instance->cacheName);
+        }
     }
 
     /**

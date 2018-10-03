@@ -11,6 +11,7 @@ return [
     */
 
     'title' => 'Title',
+    'titleAdmin' => 'Accio Admin Panel',
     'about' => 'About',
     'content' => 'Content',
     'visible' => 'Visible',
@@ -55,6 +56,7 @@ return [
     'failed' => 'Failed',
     'mostRecent' => 'Most recent',
     'info' => 'Info',
+    'parentID' => 'Parent ID',
     'properties' => 'Properties',
     'select' => 'Select',
     'class' => 'Class',

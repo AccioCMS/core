@@ -81,15 +81,17 @@ trait LanguageTrait
      * Set default language.
      * It fills out the $route property of MenuLinks
      *
-     * @return void
-     * */
+     * @throws \Exception
+     */
     public static function setDefault(){
         if(!self::$default){
-            $languages = \App\Models\Language::cache();
+            $languages = Language::cache()->getItems();
             if($languages) {
                 $getDefault = $languages->where('isDefault',true);
+//                dd($getDefault, $languages);
+
                 if ($getDefault) {
-                    self::$default = $getDefault->getItems()->first();
+                    self::$default = $getDefault->first();
                     self::$current = self::$default; //current language is the same as default one in this phase
 
                     App::setLocale(self::$default->slug);

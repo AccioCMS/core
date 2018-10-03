@@ -26,7 +26,6 @@
                             <a id="deleteList" class="btn btn-danger" :class="{'disabled':!Object.keys(bulkDeleteIDs).length}" v-if="hasDeletePermission" @click="deleteList()">{{trans.__deleteBtn}}</a>
                         </div>
 
-
                         <table id="datatable-checkbox" class="table table-striped table-bordered bulk_action">
                             <thead>
                             <tr class="tableHeader">

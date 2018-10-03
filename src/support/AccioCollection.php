@@ -219,7 +219,7 @@ class AccioCollection extends Collection {
             $modelInstance = (new $pathToClass())->setTable($table);
             $modelInstance->disableCasts = true;
             return $modelInstance->newFromBuilder($item);
-        });
+        })->values();
     }
 
     /**

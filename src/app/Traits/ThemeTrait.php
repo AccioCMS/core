@@ -492,6 +492,7 @@ trait ThemeTrait
      * Gets configs of all themes
      *
      * @return array
+     * @throws \Exception
      */
     public static function configs(){
         $files = File::allFiles(base_path().'/themes');

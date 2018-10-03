@@ -162,7 +162,7 @@
                 this.form.redirect = redirectChoice;
                 this.$store.dispatch('store',{
                     data: this.form,
-                    url: this.basePath+'/'+this.getAdminPrefix+"/json/language/storeUpdate",
+                    url: this.basePath+'/'+this.getAdminPrefix+"/json/language/store",
                     error: "Language could not be updated. Please try again later."
                 }).then((resp) => {
                     if(resp.code == 200){

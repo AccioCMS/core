@@ -238,8 +238,6 @@ trait UserTrait{
 
         $permissions = Permission::whereIn("groupID", $groupIDs)->get();
 
-        dd(Permission::cache('permissions')->getItems());
-
         // save values in keys & values for easy access
         foreach ($permissions as $permission) {
             self::$permissions[$permission->app][$permission->key] = [

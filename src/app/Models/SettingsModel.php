@@ -102,10 +102,10 @@ class SettingsModel extends Model{
     public static function getSetting($key){
         $settings = Settings::cache();
         if($settings) {
-            $setting = $settings->where('settingsKey', $key)->getItems()->first();
+            $setting = $settings->where('settingsKey', $key)->getItems();
 
             if ($setting) {
-                return $setting->value;
+                return $setting->first()->value;
             }
         }
         return;
