@@ -307,7 +307,12 @@
                 }
             },
             store(){
-                var request = {
+                if(this.name === ""){
+                    this.$store.commit("setStoreResponse", { errors: { name: ["Name is required"] } });
+                    return;
+                }
+
+                let request = {
                     id: this.$route.params.id,
                     name: this.name,
                     globalPermissions: this.globalPermissions,

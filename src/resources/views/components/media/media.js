@@ -12,8 +12,7 @@ export default {
         popUpActiveMediaView: '',
         openMediaOptions: { format : '', inputName: '', langSlug: '' },
         mediaSelectedFiles: {},
-        selectedAlbumID: 0,
-        // saved state for the library of all media files and files of a album
+        // saved state for the library of all media files
         librarySavedState: {
             library: {
                 searchTerm: '',
@@ -22,17 +21,6 @@ export default {
                 to: '',
                 filtered: false,
                 selectedFiles: [],
-            },
-            album: {
-                searchTerm: '',
-                type: 'false',
-                from: '',
-                to: '',
-                filtered: false,
-                selectedFiles: [],
-            },
-            upload: {
-                fromAlbum: false,
             }
         },
     },
@@ -48,9 +36,6 @@ export default {
         },
         get_media_selected_files(state){
             return state.mediaSelectedFiles;
-        },
-        get_selected_album_ID(state){
-            return state.selectedAlbumID;
         },
         get_library_saved_state(state){
             return state.librarySavedState;
@@ -75,17 +60,11 @@ export default {
         setMediaSelectedFiles(state, mediaSelectedFiles){
             state.mediaSelectedFiles = mediaSelectedFiles;
         },
-        setSelectedAlbumID(state, selectedAlbumID){
-            state.selectedAlbumID = selectedAlbumID;
-        },
         setLibrarySavedState(state, librarySavedState){
             state.librarySavedState = librarySavedState;
         },
         setLibrarySavedStateForLibrary(state, savedState){
             state.librarySavedState.library = savedState;
-        },
-        setLibrarySavedStateForAlbum(state, savedState){
-            state.librarySavedState.album = savedState;
         },
         setLibrarySavedStateForUpload(state, savedState){
             state.librarySavedState.upload = savedState;

@@ -22,8 +22,9 @@ class BasePermissionController extends MainController{
     /**
      * Get the permission options for each module (Cms app) from their models
      *
-     * @param string $lang language slug
-     * @return array of permission options
+     * @param string $lang
+     * @return array
+     * @throws \Exception
      */
     public function getAllPermissionsOptions($lang = ""){
         if(!User::hasAccess('permissions','read')){
@@ -34,7 +35,9 @@ class BasePermissionController extends MainController{
 
 
     /**
-     * @return array all users group
+     * All users group
+     *
+     * @return array
      * */
     public function getUserGroups($lang = ""){
         // check if user has permissions to access this link
@@ -45,8 +48,12 @@ class BasePermissionController extends MainController{
     }
 
     /**
-     *  Delete a group and it's permissions by it's ID
-     * */
+     * Delete a group and it's permissions by it's ID
+     *
+     * @param $lang
+     * @param $id
+     * @return array
+     */
     public function delete($lang, $id){
         // check if user has permissions to access this link
         if(!User::hasAccess('Permissions','delete')){
@@ -65,8 +72,11 @@ class BasePermissionController extends MainController{
     }
 
     /**
-     *  Creates or Updates group and his permission
-     * */
+     * Creates or Updates group and permissions
+     *
+     * @param Request $request
+     * @return array
+     */
     public function store(Request $request){
         // check if user has permissions to access this link
         if(!User::hasAccess('Permissions','create')){
@@ -102,105 +112,12 @@ class BasePermissionController extends MainController{
             ]);
             $id = $group->groupID;
         }else{
-            $post = DB::table('permissions')->where('groupID',$id)->delete();
+            $postDeletion = DB::table('permissions')->where('groupID', $id)->delete();
         }
 
-        $query = [];
+        $query = Permission::createGlobalPermissions($globalPermissions, $id);
+        $query = array_merge($query, Permission::createPermissions($permissions, $id));
 
-        // Create global permissions
-        foreach ($globalPermissions as $globalPermissionKey => $globalPermissionValue){
-            if($globalPermissionValue){
-                $query[] = array(
-                    'groupID' => $id,
-                    'app' => 'global',
-                    'key' => $globalPermissionKey,
-                    'value' => true,
-                    'ids' => NULL,
-                    'hasAll' => false,
-                );
-            }
-        }
-
-        // create other permissions
-        foreach($permissions as $appName => $app){
-            foreach ($app as $permissionType => $permission){
-                if($permissionType == 'defaultPermissionsValues'){
-                    foreach ($permission as $key){
-                        $query[] = array(
-                            'groupID' => $id,
-                            'app' => $appName,
-                            'key' => $key,
-                            'value' => true,
-                            'ids' => NULL,
-                            'hasAll' => false,
-                        );
-                    }
-                }else if ($permissionType == 'customPermissionsValues'){
-                    foreach($permission as $key => $object){
-                        if (is_array($object)){
-
-                            if(count($object)){
-                                $IDs = array();
-                                $c = 0;
-                                foreach($object as $value){
-                                    $class = "App\\Models\\".$appName;
-                                    $model = new $class();
-                                    $IDs['ID'.$c] = $value[$model->getKeyName()];
-                                    $c++;
-                                }
-                                $query[] = array(
-                                    'groupID' => $id,
-                                    'app' => $appName,
-                                    'key' => $key,
-                                    'value' => true,
-                                    'ids' => json_encode($IDs),
-                                    'hasAll' => false,
-                                );
-                            }
-                        }else{
-                            if ($object){
-                                $query[] = array(
-                                    'groupID' => $id,
-                                    'app' => $appName,
-                                    'key' => $key,
-                                    'value' => true,
-                                    'ids' => NULL,
-                                    'hasAll' => false,
-                                );
-                            }
-                        }
-                    }
-                }else if ($permissionType == 'categoriesValues'){
-                    if ($app['hasAll']){
-                        $query[] = array(
-                            'groupID' => $id,
-                            'app' => $appName,
-                            'key' => 'categories',
-                            'value' => true,
-                            'ids' => NULL,
-                            'hasAll' => true,
-                        );
-                    }else{
-                        $IDs = array();
-                        $c=0;
-                        foreach ($permission as $category){
-                            $IDs['ID'.$c] = $category['categoryID'];
-                            $c++;
-                        }
-                        if (count($IDs)){
-                            $query[] = array(
-                                'groupID' => $id,
-                                'app' => $appName,
-                                'key' => 'categories',
-                                'value' => true,
-                                'ids' => json_encode($IDs),
-                                'hasAll' => false,
-                            );
-                        }
-                    }
-                }
-            }
-        }
         // make query
         if (count($query)){
             $permission = Permission::insert($query);
@@ -211,10 +128,12 @@ class BasePermissionController extends MainController{
     }
 
     /**
-     *  Bulk Delete groups and permissions
-     *  Delete many groups
-     *  @params array of group IDs
-     **/
+     * Bulk Delete groups and permissions
+     * Delete many groups
+     *
+     * @param Request $request
+     * @return array
+     */
     public function bulkDelete(Request $request){
         // check if user has permissions to access this link
         if(!User::hasAccess('Permissions','delete')){
@@ -238,9 +157,12 @@ class BasePermissionController extends MainController{
     }
 
     /**
-     *  USED to get list of models for custom permissions
-     *  @returns array list from DB with primary key as array key and selected columns as value
-     * */
+     * USED to get list of models for custom permissions
+     * Returns array list from DB with primary key as array key and selected columns as value
+     *
+     * @param Request $request
+     * @return array
+     */
     public function getList(Request $request){
         // check if user has permissions to access this link
         if(!User::hasAccess('permissions','read')){
@@ -298,14 +220,17 @@ class BasePermissionController extends MainController{
 
 
     /**
-     * @return array permission with values and group name
-     * */
+     * Return all permission and values structured for frontend
+     *
+     * @param Request $request
+     * @return array
+     */
     public function getListValues(Request $request){
         // check if user has permissions to access this link
         if(!User::hasAccess('permissions','read')){
             return $this->noPermission();
         }
-        $pemissionsValues = Permission::where('groupID', $request->ID)->get();
+        $permissionsValues = Permission::where('groupID', $request->ID)->get();
         $groupName = \App\Models\UserGroup::findOrFail($request->ID)->name;
         $permissions = $request->permissions;
         $permissionResult = array();
@@ -330,7 +255,7 @@ class BasePermissionController extends MainController{
             // loop throw the permissions of a app
             foreach ($app as $permissionType => $permission){
                 // all permission rows taken from DB of a app
-                foreach ($pemissionsValues as $pemissionsValue) {
+                foreach ($permissionsValues as $pemissionsValue) {
                     // get selected menu links ids
                     if($appName == 'MenuLinks' && $pemissionsValue->app == 'MenuLinks' && $pemissionsValue->key == 'id'){
                         $app['selectedMenuLinks'] = json_decode($pemissionsValue->ids);
@@ -433,10 +358,4 @@ class BasePermissionController extends MainController{
         return array('permissions' => $permissionResult, 'name' => $groupName, 'globalPermissions' => $globalPermissions);
     }
 
-    /**
-     * Check specific post type if it hasAll categories
-     * */
-    public function hasAllCategories($lang, $postTypeSlug, $groupID){
-        return Permission::where('groupID', $groupID)->where('app',$postTypeSlug)->where('key','categories')->first()->hasAll;
-    }
 }

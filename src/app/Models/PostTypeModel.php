@@ -125,6 +125,7 @@ class PostTypeModel extends Model{
 
     /**
      * Get a field by using it's slug
+     *
      * @param string $fieldSlug
      * @return mixed
      */
@@ -135,6 +136,7 @@ class PostTypeModel extends Model{
                 return $field;
             }
         }
+        return null;
     }
 
     /**
@@ -147,7 +149,7 @@ class PostTypeModel extends Model{
      */
     public function getMultioptionFieldValue(string $fieldSlug, $key){
         if(is_null($key)){
-            return;
+            return null;
         }
 
         $field = $this->field($fieldSlug);
@@ -172,6 +174,7 @@ class PostTypeModel extends Model{
 
     /**
      * Define menu panel
+     *
      * @return array
      */
     protected static function menuLinkPanel(){
@@ -256,6 +259,8 @@ class PostTypeModel extends Model{
 
 
     /**
+     * Create table and his columns when post type is created
+     *
      * @param $postTypeSlug
      * @param $fields
      * @return array
@@ -266,6 +271,7 @@ class PostTypeModel extends Model{
         if(!Schema::connection($connection)->hasTable($postTypeSlug)) {
             // create new table for the posts of the post type
             Schema::connection($connection)->create($postTypeSlug, function ($table) use ($fields) {
+                // create general fields
                 $table->bigIncrements("postID");
                 $table->integer("createdByUserID")->nullable();
                 $table->json("title")->nullable();
@@ -293,30 +299,8 @@ class PostTypeModel extends Model{
                     $field['slug'] = $slug;
                     array_push(self::$customFieldsArray, $field);
 
-                    // if field is translatable make field json
-                    if($field['translatable']){
-                        $table->json($slug)->nullable();
-                        continue;
-                    }
-
-                    // for non translatable field create for each type
-                    if($field['type']['inputType'] == "text" || $field['type']['inputType'] == "email" || $field['type']['inputType'] == "checkbox" || $field['type']['inputType'] == "radio") {
-                        $table->string($slug)->nullable();
-                    }else if ($field['type']['inputType'] == "textarea" || $field['type']['inputType'] == "dropdown" || $field['type']['inputType'] == "editor") {
-                        $table->text($slug)->nullable();
-                    }else if ($field['type']['inputType'] == "number") {
-                        $table->integer($slug)->nullable();
-                    }else if ($field['type']['inputType'] == "date") {
-                        $table->dateTime($slug)->nullable();
-                    }else if ($field['type']['inputType'] == "boolean") {
-                        $table->tinyInteger($slug)->nullable();
-                    }else if ($field['type']['inputType'] == "db") {
-                        if($field['isMultiple']){
-                            $table->json($field['dbTable']['name'])->nullable();
-                        }else {
-                            $table->integer($field['dbTable']['name'])->nullable();
-                        }
-                    }
+                    // create other fields
+                    self::createDatabaseFields($table, $field, $slug);
                 }
                 $table->timestamps();
             });
@@ -330,6 +314,8 @@ class PostTypeModel extends Model{
     }
 
     /**
+     * Update post type table and add new columns
+     *
      * @param $postTypeSlug
      * @param $fields
      * @return array
@@ -353,31 +339,7 @@ class PostTypeModel extends Model{
 
                 $field['slug'] = $slug;
 
-                // insert column only if it is not already in the DB
-                if (isset($field['canBeRemoved']) && $field['canBeRemoved'] == true){
-                    // if field is translatable
-                    if($field['translatable']){
-                        $table->json($slug)->nullable();
-                    }else{
-                        if($field['type']['inputType'] == "text" || $field['type']['inputType'] == "email" || $field['type']['inputType'] == "checkbox" || $field['type']['inputType'] == "radio"){
-                            $table->string($slug)->nullable();
-                        }else if ($field['type']['inputType'] == "textarea" || $field['type']['inputType'] == "dropdown" || $field['type']['inputType'] == "editor"){
-                            $table->text($slug)->nullable();
-                        }else if ($field['type']['inputType'] == "number"){
-                            $table->integer($slug)->nullable();
-                        }else if ($field['type']['inputType'] == "date"){
-                            $table->dateTime($slug)->nullable();
-                        }else if ($field['type']['inputType'] == "boolean"){
-                            $table->tinyInteger($slug)->nullable();
-                        }else if ($field['type']['inputType'] == "db"){
-                            if($field['isMultiple']){
-                                $table->json($slug)->nullable();
-                            }else{
-                                $table->integer($slug)->nullable();
-                            }
-                        }
-                    }
-                }
+                self::createDatabaseFields($table, $field, $slug);
 
                 // unset the canBeRemoved from array
                 if(isset($field['canBeRemoved']) && $field['canBeRemoved'] == true){
@@ -392,7 +354,43 @@ class PostTypeModel extends Model{
     }
 
     /**
-     * Creates rout file for new post types
+     * Create fields of post type table
+     *
+     * @param $table
+     * @param $field
+     * @param $slug
+     */
+    private static function createDatabaseFields($table, $field, $slug){
+        // insert column only if it is not already in the DB
+        if (isset($field['canBeRemoved']) && $field['canBeRemoved'] == true){
+            // if field is translatable
+            if($field['translatable']){
+                $table->json($slug)->nullable();
+            }else{
+                if($field['type']['inputType'] == "text" || $field['type']['inputType'] == "email" || $field['type']['inputType'] == "checkbox" || $field['type']['inputType'] == "radio"){
+                    $table->string($slug)->nullable();
+                }else if ($field['type']['inputType'] == "textarea" || $field['type']['inputType'] == "dropdown" || $field['type']['inputType'] == "editor"){
+                    $table->text($slug)->nullable();
+                }else if ($field['type']['inputType'] == "number"){
+                    $table->integer($slug)->nullable();
+                }else if ($field['type']['inputType'] == "date"){
+                    $table->dateTime($slug)->nullable();
+                }else if ($field['type']['inputType'] == "boolean"){
+                    $table->tinyInteger($slug)->nullable();
+                }else if ($field['type']['inputType'] == "db"){
+                    if($field['isMultiple']){
+                        $table->json($slug)->nullable();
+                    }else{
+                        $table->integer($slug)->nullable();
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Creates route file for new post types
+     *
      * @param string $slug
      * @return mixed
      */

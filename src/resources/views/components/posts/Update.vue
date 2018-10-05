@@ -17,9 +17,6 @@
                 <div class="x_panel">
                     <div class="x_title">
                         <h2>{{trans.__updateFormTitle}}</h2>
-                        <!-- RELATED BUTTONS COMPONENT USED IN CMS NAVIGATION -->
-                        <related-buttons v-if="$route.query.menu_link_id"></related-buttons>
-
                         <div class="clearfix"></div>
                     </div>
 
@@ -562,7 +559,6 @@
 <script>
     import Datepicker from 'vuejs-datepicker';
     import VueTimepicker from 'vue2-timepicker';
-    import RelatedButtons from '../menu/RelatedButtons.vue';
     import CustomFieldGroup from '../vendor/CustomFieldGroup.vue';
     import { globalComputed } from '../../mixins/globalComputed';
     import { globalMethods } from '../../mixins/globalMethods';
@@ -573,7 +569,7 @@
 
     export default{
         mixins: [globalComputed, globalMethods, globalData, globalUpdated, postForm, customFields],
-        components: { Datepicker, VueTimepicker, 'related-buttons':RelatedButtons, CustomFieldGroup },
+        components: { Datepicker, VueTimepicker, CustomFieldGroup },
         created() {
             // translations
             this.trans = {

@@ -29,7 +29,6 @@ class BaseCustomFieldController extends MainController{
      * Used to get the list of custom field groups
      *
      * @param string $lang language slug
-     *
      * @return array
      */
     public function getAll($lang = ""){
@@ -42,7 +41,6 @@ class BaseCustomFieldController extends MainController{
      * Use to store the custom field groups and custom fields in the database
      *
      * @param Request $request object with multi-dimensional array with values of custom fields
-     *
      * @return array ErrorHandler response
      */
     public function store(Request $request){
@@ -127,7 +125,6 @@ class BaseCustomFieldController extends MainController{
      *
      * @param array $fields list of custom fields
      * @param integer $groupID id of custom fields group
-     *
      * @return array
      */
     public function prepareCustomFieldArray($fields, $groupID){
@@ -275,9 +272,12 @@ class BaseCustomFieldController extends MainController{
     }
 
     /**
-     * return JSON object with details for a specific custom field
-     * @params custom field ID
-     * */
+     * JSON object with all details for a specific custom field
+     *
+     * @param $lang
+     * @param $id
+     * @return array
+     */
     public function detailsJSON($lang, $id){
         // check if user has permissions to access this link
         if(!User::hasAccess('CustomField','read')){
@@ -293,6 +293,12 @@ class BaseCustomFieldController extends MainController{
     }
 
 
+    /**
+     * Get all data of a table (for custom field purposes in front-end)
+     *
+     * @param Request $request
+     * @return array
+     */
     public function getTableData(Request $request){
         $table = $request->all()['name'];
         return Language::filterRows(DB::table($table)->get(), false);
@@ -325,14 +331,12 @@ class BaseCustomFieldController extends MainController{
 
 
     /**
-     * This function creates the slug/key for a custom field
+     * This function generates the slug/key for a custom field by using a chosen value
      *
      * @param string $lang language slug
      * @param string $key text to be made slug
      * @param integer $id id of the current custom field
-     *
      * @return string generated key
-     *
      */
     public function generateFieldSlug($lang, $key, $id, $keys){
         $count = 1;
@@ -364,6 +368,8 @@ class BaseCustomFieldController extends MainController{
     }
 
     /**
+     * Return all custom fields of a app/module
+     *
      * @param string $module module/app
      * @param string $formType (create, update)
      * @param int $id (optional) id of the item

@@ -3,7 +3,6 @@
 namespace Accio\App\Http\Controllers\Backend;
 
 use App;
-use function foo\func;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use App\Models\Language;
@@ -18,21 +17,22 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Media;
 use App\Models\CustomField;
+use App\Models\Category;
 use App\Models\CustomFieldGroup;
-use Illuminate\Support\Facades\Schema;
-use function PHPSTORM_META\map;
 
 class BasePostController extends MainController {
-    // Check authentification in the constructor
+    // Check authentication in the constructor
     public function __construct(){
         parent::__construct();
     }
 
     /**
      * Get all data needed in the post create form
-     * @param $lang: language
+     *
+     * @param $lang
      * @param $postTypeSlug
      * @return array
+     * @throws \Exception
      */
     public function getDataForCreate($lang, $postTypeSlug){
         // Custom field groups
@@ -42,9 +42,9 @@ class BasePostController extends MainController {
         $postType = PostType::cache()->where('slug', $postTypeSlug)->getItems()->first();
 
         // Categories (options to select)
-        $categories = array_values(App\Models\Category::cache()->where("postTypeID", $postType->postTypeID)->toArray());
+        $categories = array_values(Category::cache()->where("postTypeID", $postType->postTypeID)->toArray());
 
-        return[
+        return [
             'postType' => $postType,
             'languages' => Language::cache()->getItems(),
             'categories' => $categories,
@@ -333,7 +333,6 @@ class BasePostController extends MainController {
         $orderType = (Input::get('type')) ? Input::get('type') : 'DESC';
         $advancedSearch = (Input::get('advancedSearch')) ? Input::get('advancedSearch') : false;
         $categoryID = (Input::get('categoryID')) ? Input::get('categoryID') : null;
-        $menuLinkID = Input::get('menu_link_id');
 
         // get field type in db
         try{
@@ -354,45 +353,19 @@ class BasePostController extends MainController {
             $queryObject = $queryObject->with("categories");
         }
 
+        // Advanced Search
+        if($advancedSearch){
+            $queryObject = $this->advancedSearch($queryObject, request(), $postType);
+        }else if($categoryID){
+        // select based on categories
+            $queryObject = $this->selectByCategory($queryObject, $categoryID, $postType);
+        }
 
-        // if the posts are filtered by menu link ID // it means we are searching only for related posts
-        if($menuLinkID && isset($_GET['related']) && !$categoryID){
-            if(!isPostType($postType)){
-                return $this->response("This post type doesn't exist", 403);
-            }else{
-                // get relation throw the post type ID
-                $menuRelation = App\Models\MenuLinkConfig::where('menuLinkID', $menuLinkID)->where('belongsToID', $currentPostType->postTypeID)->first();
-
-                // return the list of all posts if there are no postIDs
-                if ($menuRelation->postIDs === NULL) {
-                    $queryObject = $queryObject->orderBy($orderBy, $orderType);
-                } else{ // if there are post IDs return only those posts
-                    $postIDs = [];
-                    $decodePostIDs = json_decode($menuRelation->postIDs);
-                    if(is_array($decodePostIDs) || is_object($decodePostIDs)){
-                        foreach ($decodePostIDs as $selectedPostID){
-                            array_push($postIDs,$selectedPostID);
-                        }
-                    }
-                    $queryObject = $queryObject->whereIn('postID', $postIDs)->orderBy($orderBy, $orderType);
-                }
-            }
+        // json langauge fields needs to be filtered by their langauge
+        if($orderColumnType == "json"){
+            $queryObject = $queryObject->orderBy($orderBy."->".App::getLocale(), $orderType);
         }else{
-            // Advanced Search
-            if($advancedSearch){
-                $queryObject = $this->advancedSearch($queryObject, request(), $postType);
-            }
-            // select based on categories
-            else if($categoryID){
-                $queryObject = $this->selectByCategory($queryObject, $categoryID, $postType);
-            }
-
-            // json langauge fields needs to be filtered by their langauge
-            if($orderColumnType == "json"){
-                $queryObject = $queryObject->orderBy($orderBy."->".App::getLocale(), $orderType);
-            }else{
-                $queryObject = $queryObject->orderBy($orderBy, $orderType);
-            }
+            $queryObject = $queryObject->orderBy($orderBy, $orderType);
         }
 
         // paginate
@@ -404,7 +377,6 @@ class BasePostController extends MainController {
             ->toArray();
 
         $response['inTableColumns'] = $this->getInTableColumns($postType);
-
 
         $lang = App::getLocale();
         // set category title and author name

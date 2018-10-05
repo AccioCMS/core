@@ -5,9 +5,7 @@ namespace Accio\App\Http\Controllers\Backend;
 use Accio\App\Models\RoleRelationsModel;
 use App;
 
-use App\Models\Media;
 use Hash;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -32,8 +30,11 @@ class BaseUserController extends MainController{
     /**
      * Return views for search component
      *
-     * @params search term
-     * */
+     * @param $lang
+     * @param $term
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @throws \Exception
+     */
     public function search($lang, $term){
         $postTypes = \App\Models\PostType::cache()->getItems();
         $adminPrefix = Config::get('project')['adminPrefix'];
@@ -51,7 +52,10 @@ class BaseUserController extends MainController{
 
     /**
      * Make simple search with a search term
-     * */
+     *
+     * @param $term
+     * @return array
+     */
     public function makeSearch($term){
         // check if user has permissions to access this link
         if(!User::hasAccess('User','read')){
@@ -92,14 +96,17 @@ class BaseUserController extends MainController{
         $orderType = (isset($_GET['type'])) ? $orderType = $_GET['type'] : 'DESC';
 
         return DB::table('users')
-          ->leftJoin('media', 'users.profileImageID', '=', 'media.mediaID')
-          ->orderBy($orderBy, $orderType)
-          ->paginate(User::$rowsPerPage);
+            ->leftJoin('media', 'users.profileImageID', '=', 'media.mediaID')
+            ->select("users.userID", "users.email", "users.firstName", "users.lastName", "users.slug", "users.gravatar", "media.url", "media.filename", "media.fileDirectory")
+            ->orderBy($orderBy, $orderType)
+            ->paginate(User::$rowsPerPage);
     }
 
     /**
-     *  Me kthy json listen e grupeve te userave
-     * */
+     * Get all User Groups
+     *
+     * @return UserGroup[]|array|\Illuminate\Database\Eloquent\Collection
+     */
     public function getGroups(){
         // check if user has permissions to access this link
         if(!User::hasAccess('User','read')){
@@ -109,28 +116,50 @@ class BaseUserController extends MainController{
     }
 
     /**
+     * Store user in Database
+     *
      * @param Request $request
      * @return array
      */
     public function store(Request $request){
         // check if user has permissions to access this link
-        if(!User::hasAccess('user','create')){
+        if(!User::hasAccess('user',(isset($request->user['id'])) ? 'update' : 'create')){
             return $this->noPermission();
         }
         // custom messages for validation
         $messages = array(
-          'email.required'=>'Hello You cant leave Email field empty',
-          'firstName.required'=>'Hello You cant leave name field empty',
+          'email.required'=>'You cant leave Email field empty',
+          'firstName.required'=>'You cant leave name field empty',
         );
 
+        $validatorFields = [
+            'firstName' => 'required',
+            'lastName' => 'required',
+            'email' => 'required|unique:users',
+            'groups' => 'required',
+        ];
+
+        if(isset($request->user['id'])){
+            // update user
+            $user = App\Models\User::findOrFail($request->user['id']);
+            $user->isActive = $request->user['isActive'];
+            $currentID = $request->user['id'];
+            if($user->email == $request->user['email']){
+                unset($validatorFields['email']);
+            }
+        }else{
+            // Create user
+            $user = new User();
+            $user->createdByUserID = Auth::user()->userID;
+            $user->password = Hash::make($request->user['password']);
+            $user->isActive = 1;
+            $currentID = 0;
+
+            $validatorFields['password'] = 'required|same:confpassword';
+        }
+
         // validation
-        $validator = Validator::make($request->user, [
-          'firstName' => 'required',
-          'lastName' => 'required',
-          'password' => 'required|same:confpassword',
-          'email' => 'required|unique:users',
-          'groups' => 'required',
-        ], $messages);
+        $validator = Validator::make($request->user, $validatorFields, $messages);
 
         // if validation fails return json response
         if($validator->fails()){
@@ -144,37 +173,38 @@ class BaseUserController extends MainController{
             $profileImageID = $request->user['profileImageID'];
         }
 
-        // Create user
-        $user = new User();
+        // Store data
         $user->email = $request->user['email'];
         $user->firstName = $request->user['firstName'];
         $user->lastName = $request->user['lastName'];
         $user->phone = $request->user['phone'];
         $user->street = $request->user['street'];
         $user->country = $request->user['country'];
-        $user->password = Hash::make($request->user['password']);
-        $user->isActive = 1;
-        $user->slug = parent::generateSlug($request->user['firstName']." ".$request->user['lastName'], 'users', 'userID', '', 0, false);;
+        $user->slug = parent::generateSlug($request->user['firstName']." ".$request->user['lastName'], 'users', 'userID', '', $currentID, false);
         $user->about = $request->user['about'];
         $user->profileImageID = $profileImageID;
         $user->gravatar = User::getGravatarFromEmail($request->user['email']);
-        $user->createdByUserID = Auth::user()->userID;
 
-        if ($user->save()){
+        if($user->save()){
             // Add roles permissions
             $user->assignRoles($request->user['groups']);
 
             $redirectParams = parent::redirectParams($request->redirect, 'user', $user->userID);
-            $result = $this->response( 'User is created', 200, $user->userID, $redirectParams['view'], $redirectParams['redirectUrl']);
+            $result = $this->response( 'User stored successfully', 200, $user->userID, $redirectParams['view'], $redirectParams['redirectUrl']);
+            $result['data'] = $user;
         }else{
-            $result = $this->response( 'Internal server error. Please try again later', 500);
+            $result = $this->response( 'User could not be stored. Internal server error. Please try again later', 500);
         }
         return $result;
     }
 
+
     /**
-     * Store profile image
-     * */
+     * Change users profile image
+     *
+     * @param Request $request
+     * @return array|false|string
+     */
     public function storeProfileImage(Request $request){
         // check if user has permissions to access this link
         if(!User::hasAccess('user','update')){
@@ -184,25 +214,41 @@ class BaseUserController extends MainController{
     }
 
     /**
-     * Delete a user.
+     * Delete user
      *
      * @param $lang
      * @param $id
      * @return array
      */
     public function delete($lang, $id){
+        if ($this->deleteUser($id)){
+            $result = $this->response('User is deleted');
+        }else{
+            $result = $this->response( 'Internal server error. Please try again later', 500);
+        }
+        return $result;
+    }
+
+    /**
+     * Deletes user,
+     * called from bulkDelete and delete functions
+     *
+     * @param $id
+     * @return array|bool
+     */
+    private function deleteUser($id){
         // check if user has permissions to access this link
         if(!User::hasAccess('user','delete')){
             return $this->noPermission();
         }
 
         $user = User::find($id);
+        // user can't be deleted if it has related data to him, like posts, categories ect
         if($user->hasRelatedData()){
             $user->isActive = false;
             if($user->save()){
-                return $this->response('User is deleted');;
+                return true;
             }
-            return $this->response( 'Internal server error. Please try again later', 500);
         }
 
         // Delete all roles relations
@@ -212,100 +258,27 @@ class BaseUserController extends MainController{
         }
 
         if ($user && $user->delete()){
-            $result = $this->response('User is deleted');
-        }else{
-            $result = $this->response( 'Internal server error. Please try again later', 500);
+            return true;
         }
-        return $result;
+
+        return false;
     }
 
     /**
-     *  Bulk Delete users
-     *  Delete many users
+     * Bulk Delete users
+     * Delete many users
      *
-     *  @params array of user IDs
+     * @params array of user IDs
      * */
     public function bulkDelete(Request $request){
-        // check if user has permissions to access this link
-        if(!User::hasAccess('user','delete')){
-            return $this->noPermission();
-        }
         foreach ($request->all() as $id){
-            $user = App\Models\User::find($id)->delete();
-            if (!$user) {
+            if (!$this->deleteUser($id)) {
                 return $this->response('Internal server error. Please try again later', 500 );
             }
         }
         return $this->response( 'Users are deleted');
     }
 
-    /**
-     * Change users data
-     *
-     * @params $request all users data comming from the form
-     * @return array
-     * */
-    public function storeUpdate(Request $request){
-        // check if user has permissions to access this link
-        if(\Illuminate\Support\Facades\Auth::user()->userID != $request->user['id']) {
-            if (!User::hasAccess('user', 'update')) {
-                return $this->noPermission();
-            }
-        }
-
-        // Validate
-        $messages = array(
-          'email.required'=>'Hello You cant leave Email field empty',
-          'firstName.required'=>'Hello You cant leave name field empty',
-          'firstName.min'=>'Hello The field has to be :min chars long',
-        );
-
-        // validation
-        $validator = Validator::make($request->user, [
-          'firstName' => 'required',
-          'lastName' => 'required',
-          'email' => 'required',
-          'groups' => 'required',
-        ], $messages);
-
-        // if validation fails return json response
-        if ($validator->fails()) {
-            return $this->response("Please check all required fields!", 400, null, false, false, true, $validator->errors());
-        }
-
-        // if image is not set make it 0
-        if (!isset($request->user['profileImageID']) || $request->user['profileImageID'] == ""){
-            $profileImageID = null;
-        }else{
-            $profileImageID = $request->user['profileImageID'];
-        }
-
-        // Update user
-        $user = App\Models\User::findOrFail($request->user['id']);
-        $user->email = $request->user['email'];
-        $user->firstName = $request->user['firstName'];
-        $user->lastName = $request->user['lastName'];
-        $user->phone= $request->user['phone'];
-        $user->street = $request->user['street'];
-        $user->country = $request->user['country'];
-        $user->isActive = $request->user['isActive'];
-        $user->slug = parent::generateSlug($request->user['firstName']." ".$request->user['lastName'], 'users', 'userID', '', $request->user['id'], false);;
-        $user->profileImageID = $profileImageID;
-        $user->about = $request->user['about'];
-        $user->gravatar = User::getGravatarFromEmail($request->user['email']);
-
-        if ($user->save()){
-            // Add roles permissions
-            $user->assignRoles($request->user['groups']);
-
-            $redirectParams = parent::redirectParams($request->redirect, 'user', $request->user['id']);
-            $result = $this->response( 'User updated!', 200, $request->user['id'], $redirectParams['view'], $redirectParams['redirectUrl'] );
-            $result['data'] = $user;
-        }else{
-            $result = $this->response( 'Internal server error. Please try again later', 500);
-        }
-        return $result;
-    }
 
     /**
      * JSON object with details for a specific user.
@@ -323,7 +296,6 @@ class BaseUserController extends MainController{
         }
 
         $user = App\Models\User::with('roles','profileImage')->find($id)->appendLanguageKeys();
-
         $final = [
           'details' => $user,
           'allGroups' => UserGroup::all()
@@ -331,15 +303,14 @@ class BaseUserController extends MainController{
 
         // Fire event
         $final['events'] = Event::fire('user:pre_update', [$final]);
-
         return $final;
     }
 
     /**
-     *  return success or error
+     * Reset users password
      *
-     *  method to reset users password
-     *  @params user ID AND new password
+     * method to reset users password
+     * @params user ID AND new password
      * */
     public function resetPassword(Request $request){
         // check if user has permissions to access this link
@@ -372,10 +343,9 @@ class BaseUserController extends MainController{
     /**
      * Get the array of fields for advanced search
      *
-     * I kthen fildat qe i perdorim per search te detajum
-     * @return json fildat
-     *
-     * */
+     * @param string $lang
+     * @return array
+     */
     public function getAdvancedSearchFields($lang = ""){
         // check if user has permissions to access this link
         if(!User::hasAccess('User','read')){
@@ -385,12 +355,11 @@ class BaseUserController extends MainController{
     }
 
     /**
-     *  Get the result of advanced search
-     *  I kthen rezultatet e searchit te advancum
+     * Get the result of advanced search
      *
-     *  @params
-     *  @return json fildat
-     * */
+     * @param Request $request
+     * @return array
+     */
     public function getAdvancedSearchFieldsResults(Request $request){
         // check if user has permissions to access this link
         if(!User::hasAccess('User','read')){
@@ -410,11 +379,11 @@ class BaseUserController extends MainController{
     }
 
     /**
-     *  When the page is refreshed in while advanced search is done
+     * When the page is refreshed in while advanced search is done
      *
-     *  @params only GET prarams and paginations
-     *  @return view of the advanced search
-     * */
+     * @param $lang
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
     public function searchAdvanced($lang){
         // check if user has permissions to access this link
         if(!User::hasAccess('User','read')){
@@ -423,11 +392,7 @@ class BaseUserController extends MainController{
 
         $adminPrefix = Config::get('project')['adminPrefix'];
 
-        if(isset($_GET['pagination']) && $_GET['pagination'] != ''){
-            $pagination = $_GET['pagination'];
-        }else{
-            $pagination = 1;
-        }
+        $pagination = (isset($_GET['pagination']) && $_GET['pagination'] != '') ? $pagination = $_GET['pagination'] : $pagination = 1;
 
         $orderBy = '';
         $orderType = '';
@@ -469,17 +434,4 @@ class BaseUserController extends MainController{
 
         return view(User::$backendPathToView.'all', compact('lang','view','hasAdvancedSearchData','advancedSearchData','pagination', 'fields', 'adminPrefix'));
     }
-
-    /**
-     * @param Request $request
-     * @return array
-     */
-    public function mediaStore(Request $request){
-        // check if user has permissions to access this link
-        if(!User::hasAccess('user','create')){
-            return $this->noPermission();
-        }
-        return (new Media())->upload($request, 'users');
-    }
-
 }

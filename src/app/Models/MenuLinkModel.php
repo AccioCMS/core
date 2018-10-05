@@ -47,7 +47,7 @@ class MenuLinkModel extends Model{
     ];
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
@@ -62,13 +62,14 @@ class MenuLinkModel extends Model{
     public $table = "menu_links";
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "MenuLink.label";
 
     /**
-     * Default permissions that will be listed in settings of permissions
+     * Default permissions that will be listed in settings of permissions.
      *
      * @var array $defaultPermissions
      */
@@ -87,8 +88,7 @@ class MenuLinkModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = [])
-    {
+    public function __construct(array $attributes = []){
         parent::__construct($attributes);
         Event::fire('menuLink:construct', [$this]);
     }
@@ -105,8 +105,7 @@ class MenuLinkModel extends Model{
     /**
      * Destruct model instance
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('menuLink:destruct', [$this]);
     }
 }

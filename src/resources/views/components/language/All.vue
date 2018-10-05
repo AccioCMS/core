@@ -115,7 +115,6 @@
 
             // get the table data
             this.getListData();
-
         },
         props:[],
         data(){

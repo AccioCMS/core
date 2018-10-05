@@ -33,7 +33,6 @@ import PermissionsEdit from '../../views/components/permissions/Edit.vue';
 
 import Menu from '../../views/components/menu/Base.vue';
 import MenuAll from '../../views/components/menu/All.vue';
-import MenuRelated from '../../views/components/menu/Related.vue';
 
 import Post from '../../views/components/posts/Base.vue';
 import PostAll from '../../views/components/posts/All.vue';
@@ -92,7 +91,6 @@ export var routes = [
 
     { path: globalProjectDirectory+'/:adminPrefix/:lang/menu', component: Menu, children: [
         { path: 'list/:id', component: MenuAll, name: 'menu-list', meta: { module: 'menu' } } ,
-        { path: 'related', component: MenuRelated, name: 'menu-related', meta: { module: 'menu' } },
     ]},
 
     { path: globalProjectDirectory+'/:adminPrefix/:lang/posts', component: Post, children: [

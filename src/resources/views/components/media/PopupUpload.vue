@@ -94,10 +94,6 @@
                     }
                 },100);
 
-                // append in form data the album id and the formAlbum boolean variable that tells if we are making the upload from the album
-                form.append('albumID', this.getAlbumID);
-                form.append('fromAlbum', this.getLibrarySavedState.upload.fromAlbum);
-
                 var result = [];
                 this.$http.post(this.basePath+'/'+this.getAdminPrefix+'/media/json/store', form)
                     .then((resp) => {
@@ -119,15 +115,10 @@
                             this.countUploadedImages++;
                         }
 
-                        // change view to library or album
+                        // change view to library
                         setTimeout(function(e){
                             if(!global.hasUploadErrors){
-                                if(global.getLibrarySavedState.upload.fromAlbum){
-                                    global.$store.commit('setPopUpActiveMediaView', 'albums');
-                                    global.$store.commit('setLibrarySavedStateForUpload', { fromAlbum: false });
-                                }else{
-                                    global.$store.commit('setPopUpActiveMediaView', 'library');
-                                }
+                                global.$store.commit('setPopUpActiveMediaView', 'library');
                             }
                         }, 1000);
                     }, response => {
@@ -158,9 +149,6 @@
             }
         },
         computed: {
-            getAlbumID(){
-                return this.$store.getters.get_selected_album_ID;
-            },
             getLibrarySavedState(){
                 return this.$store.getters.get_library_saved_state;
             },

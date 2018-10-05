@@ -316,7 +316,7 @@
                         user: this.user,
                         redirect: redirectChoice,
                     },
-                    url: this.basePath+'/'+this.getAdminPrefix+"/json/user/storeUpdate",
+                    url: this.basePath+'/'+this.getAdminPrefix+"/json/user/store",
                     error: "User could not be updated. Please try again later"
                 }).then((resp) => {
                     if(resp.code == 200){

@@ -31,17 +31,27 @@ class BasePostTypeController extends MainController{
     }
 
     /**
-     * Gets post type with relations
+     * Gets post type with his category
      *
      * @param string $lang
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     * @return array|\Illuminate\Contracts\Pagination\Paginator
+     * @throws \Exception
      */
     public function getAll($lang = ""){
-        return PostType::with('categories')->paginate(Post::$rowsPerPage);
+        $result = [];
+        $postType = PostType::cache()->getItems()->sortBy('postTypeID');
+        foreach ($postType as $postType){
+            $postType->categories = Category::cache()->getItems()->where("postTypeID", $postType->postTypeID);
+            $result[] = $postType;
+        }
+
+        return ['data' => $result];
+
     }
 
     /**
      * Get all post types
+     *
      * @param string $lang
      * @return object
      * */
@@ -77,34 +87,13 @@ class BasePostTypeController extends MainController{
     }
 
     /**
-     *  Get all post types including their posts
-     * */
-    public function getAllIncludingPost($lang = ""){
-        // check if user has permissions to access this link
-        if(!User::hasAccess('PostType','read')){
-            return $this->noPermission();
-        }
-        $orderBy = (isset($_GET['order'])) ? $_GET['order'] : 'postTypeID';
-        $orderType = (isset($_GET['type'])) ? $_GET['type'] : 'DESC';
-
-        $postTypes = DB::table('post_type')->orderBy($orderBy, $orderType)->offset(0)->limit(3000)->get();
-        foreach ($postTypes as $postType){
-            $posts = Pagination::make($postType->slug, Post::$rowsPerPage,'','','','');
-            $posts = Language::filterRows($posts)['list'];
-            $postType->posts = $posts;
-            $postType->fields = json_decode($postType->fields);
-        }
-        return $postTypes;
-    }
-
-    /**
      * Get post type by ID
      *
      * @param integer $id post type id
      * @return object post type data
      */
     public static function findByID($lang, $id){
-        return App\Models\PostType::findOrFail($id);
+        return PostType::where("postTypeID", $id)->select("postTypeID", "name", "slug", "isVisible")->first();
     }
 
     /**
@@ -119,32 +108,15 @@ class BasePostTypeController extends MainController{
         if(!User::hasAccess('PostType','delete')){
             return $this->noPermission();
         }
-        $postType = PostType::find($id);
 
-        // Check if this post type has posts
-        // Post type should not be able to be deleted if it has posts
-        if(PostType::hasPosts($postType->slug) || PostType::isInMenuLinks($id)){
-            return $this->response( "You can't delete this Post Type. There could be posts associated with it or it is part of a menu", 403);
+        if($this->deletePostType($id)){
+            return $this->response( 'Post Type is successfully deleted');
         }
-
-        if($this->deleteRelatedTagsAndCategory($id) && $postType->delete()){
-            Schema::drop($postType->slug);
-
-            // delete route file
-            if(file_exists(base_path().'/routes/'.$postType->slug.'.php')) {
-                unlink(base_path() . '/routes/' . $postType->slug . '.php');
-            }
-
-            $result = $this->response( 'Post Type is successfully deleted');
-        }else{
-            $result = $this->response( 'Post Type could not be deleted. Please try again later or contact your Administrator!', 500);
-        }
-        return $result;
+        return $this->response( 'Post Type could not be deleted. Please try again later or contact your Administrator!', 500);
     }
 
 
     /**
-     *
      * Bulk Delete post type
      * Delete many post type in the same time
      *
@@ -160,34 +132,46 @@ class BasePostTypeController extends MainController{
         if (count($request->all()) <= 0) {
             return $this->response( 'Please select items to be deleted', 500);
         }
-        $data = $request->all();
-        if(isset($data['postTypes'])){
-            unset($data['postTypes']);
-        }
 
         // loop throw the item array (ids) and delete them
-        foreach($data as $id){
-            $postType = PostType::find($id);
-            if(!$postType){
-                continue;
-            }
-
-            if(PostType::hasPosts($postType->slug) && PostType::isInMenuLinks($id)){
-                return $this->response( "You can't delete this Post Type because there are posts associated with it.", 403);
-            }
-
-            if(!$this->deleteRelatedTagsAndCategory($id) || !$postType->delete()){
-                return $this->response( 'Post types could not be deleted. Please try again later or contact your Administrator!', 500);
-            }
-
-            Schema::drop($postType->slug);
-            $filename = ucfirst(camel_case($postType->slug));
-            $path = base_path().'/routes/'.$filename.'.php';
-            if(File::exists($path)){
-                unlink($path);
+        foreach($request->all() as $id){
+            if(!$this->deletePostType($id)){
+                return $this->response( 'Post Type could not be deleted. Please try again later or contact your Administrator!', 500);
             }
         }
         return $this->response('Selected post types are successfully deleted', 200);
+    }
+
+    /**
+     * Delete post type by using ID
+     * Used in bulkDelete and delete functions
+     *
+     * @param $id
+     * @return array|bool
+     */
+    private function deletePostType($id){
+        $postType = PostType::find($id);
+        if(!$postType){
+            return false;
+        }
+
+        // Check if this post type has posts
+        // Post type should not be able to be deleted if it has posts
+        if(PostType::hasPosts($postType->slug) || PostType::isInMenuLinks($id)){
+            return $this->response( "You can't delete this Post Type. There could be posts associated with it or it is part of a menu", 403);
+        }
+
+        if($this->deleteRelatedTagsAndCategory($id) && $postType->delete()){
+            Schema::drop($postType->slug);
+
+            // delete route file
+            if(file_exists(base_path().'/routes/'.$postType->slug.'.php')) {
+                unlink(base_path() . '/routes/' . $postType->slug . '.php');
+            }
+            return true;
+        }else{
+            return false;
+        }
     }
 
     /**
@@ -234,7 +218,8 @@ class BasePostTypeController extends MainController{
 
     /**
      *  Store a new Post Type in database
-     *  @param Request $request all post type data comming from the form
+     *
+     *  @param Request $request all post type data coming from the form
      *  @return array ErrorHandler
      * */
     public function store(Request $request){
@@ -257,22 +242,28 @@ class BasePostTypeController extends MainController{
             return $this->response( "Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
-        $slug = $request->slug;
-        if(isset($slug) && empty($slug)){
-            $slug = self::generateSlug($request->name, 'post_type', 'postTypeID', App::getLocale(), 0);
+
+        if(isset($request->id)){
+            $postType = App\Models\PostType::findOrFail($request->id);
+            $customFieldsArray = PostType::updateTable($request->slug, $request->fields);
         }else{
-            $slug = self::generateSlug($request->slug, 'post_type', 'postTypeID', App::getLocale(), 0);
+            $slug = $request->slug;
+            if(isset($slug) && empty($slug)){
+                $slug = self::generateSlug($request->name, 'post_type', 'postTypeID', App::getLocale(), 0);
+            }else{
+                $slug = self::generateSlug($request->slug, 'post_type', 'postTypeID', App::getLocale(), 0);
+            }
+            // create new table for the posts of the post type
+            $customFieldsArray = PostType::createTable($slug, $request->fields);
+
+            // Create post type
+            $postType = new PostType();
+            $postType->createdByUserID  = Auth::user()->userID;
+            $postType->slug = $slug;
         }
 
-        // create new table for the posts of the post type
-        $customFieldsArray = PostType::createTable($slug, $request->fields);
-
-        // Create post type
-        $postType = new PostType();
-        $postType->createdByUserID  = Auth::user()->userID;
         $postType->name             = $request->name;
         $postType->isVisible        = $request->isVisible;
-        $postType->slug             = $slug;
         $postType->fields           = $customFieldsArray;
         $postType->hasCategories    = $request->hasCategories;
         $postType->isCategoryRequired = $request->isCategoryRequired;
@@ -285,73 +276,28 @@ class BasePostTypeController extends MainController{
 
         // return results
         if ($postType->save()){
-            $redirectParams = parent::redirectParams($request->redirect, 'post-type', $postType->postTypeID);
-            return $this->response('Post type is created', 200, $postType->postTypeID, $redirectParams['view'], $redirectParams['redirectUrl']);
-        }else{
-            return $this->response( 'Post Type is not created. Please try again later', 500);
-        }
-    }
-
-    /**
-     *  Update the post type data
-     *  @param Request $request all post type data comming from the form
-     *  @return object ErrorHandler
-     * */
-    public function storeUpdate(Request $request){
-        // check if user has permissions to access this link
-        if(!User::hasAccess('PostType','update')){
-            return $this->noPermission();
-        }
-        // custom messages for validation
-        $messages = array(
-            'name.required'=>'Post type name is required',
-        );
-        // validation
-        $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'isVisible' => 'required',
-        ], $messages);
-
-        // if validation fails return json response
-        if ($validator->fails()) {
-            return $this->response( "Please fill all required fields", 400, null, false, false, true, $validator->errors());
-        }
-
-        // create new table for the posts of the post type
-        $customFieldsArray = PostType::updateTable($request->slug, $request->fields);
-
-        // update post type query
-        $postType = App\Models\PostType::findOrFail($request->id);
-        $postType->name             = $request->name;
-        $postType->isVisible        = $request->isVisible;
-        $postType->fields           = $customFieldsArray;
-        $postType->hasCategories    = $request->hasCategories;
-        $postType->isCategoryRequired = $request->isCategoryRequired;
-        $postType->hasTags          = $request->hasTags;
-        $postType->isTagRequired    = $request->isTagRequired;
-        $postType->hasFeaturedImage = $request->hasFeaturedImage;
-        $postType->isFeaturedImageRequired = $request->isFeaturedImageRequired;
-        $postType->hasFeaturedVideo = $request->hasFeaturedVideo;
-        $postType->isFeaturedVideoRequired = $request->isFeaturedVideoRequired;
-
-        if($postType->save()){
-            // delete fields
-            foreach($request->deletedFieldsSlugs as $fieldsSlug){
-                $this->deleteField($postType->slug, $fieldsSlug);
+            if(isset($request->id)){
+                // delete fields
+                foreach($request->deletedFieldsSlugs as $fieldsSlug){
+                    $this->deleteField($postType->slug, $fieldsSlug);
+                }
             }
 
-            $redirectParams = parent::redirectParams($request->redirect, 'post-type', $request->id);
-            $result = $this->response('Post type is updated', 200, $request->id, $redirectParams['view'], $redirectParams['redirectUrl']);
+            $redirectParams = parent::redirectParams($request->redirect, 'post-type', $postType->postTypeID);
+            return $this->response('Post type stored', 200, $postType->postTypeID, $redirectParams['view'], $redirectParams['redirectUrl']);
         }else{
-            $result = $this->response('Post Type is not updated. Please try again later', 500);
+            return $this->response( 'Post Type is not stored. Internal sever error', 500);
         }
-        return $result;
     }
 
     /**
-     * @return array with details for a specific post type
-     * @params post type ID
-     * */
+     * Get post type with all details - (Categories, fields etc)
+     *
+     * @param $lang
+     * @param $id
+     * @return array
+     * @throws \Exception
+     */
     public function detailsJSON($lang, $id){
         // check if user has permissions to access this link
         if(!User::hasAccess('PostType','read')){
@@ -361,7 +307,7 @@ class BasePostTypeController extends MainController{
 
         $categories = [];
         if($postType){
-            //has access into all categories
+            // has access into all categories
             if(User::hasAccess($postType->slug,'categories','hasAll')){
                 $categories = DB::table('categories')
                     ->join('post_type', 'post_type.postTypeID', 'categories.postTypeID')
@@ -371,7 +317,7 @@ class BasePostTypeController extends MainController{
                         'categories.description','categories.created_at','categories.updated_at','post_type.name')
                     ->get();
             }else if(User::getPermission($postType->slug,'categories')){
-                //has access into some categories
+                // has access into some categories
                 $allowedCategories = User::getPermission()[$postType]['categories']['value'];
                 $categories = DB::table('categories')
                     ->join('post_type', 'post_type.postTypeID', 'categories.postTypeID')
@@ -395,8 +341,12 @@ class BasePostTypeController extends MainController{
     }
 
     /**
-     *  This function creates the slug for a post type and makes sure that slugs it is not being used from a other post type
-     * */
+     * This function creates the slug for a post type and makes sure that slugs it is not being used from a other post type
+     *
+     * @param $lang
+     * @param $slug
+     * @return mixed|string
+     */
     public function getSlug($lang, $slug){
         return self::generateSlug($slug, 'post_type', 'postTypeID', $lang, 0);
     }
@@ -454,8 +404,10 @@ class BasePostTypeController extends MainController{
 
     /**
      * Generates a list of tables that can be used as data for custom field drop down
-     * @return array of table names
-     * */
+     *
+     * @return array
+     * @throws \Exception
+     */
     public function getTables(){
         $tables = [
             0 => [

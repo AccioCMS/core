@@ -91,19 +91,6 @@ class BaseMediaController extends MainController{
         $media->credit = $request->credit;
 
         if ($media->save()){
-            // delete previous relation
-            DB::table('album_relations')->where('mediaID',$request->mediaID)->delete();
-
-            // add relations
-            foreach ($request->selectedFileAlbums as $album){
-                DB::table('album_relations')->insert([
-                    'mediaID' => $request->mediaID,
-                    'albumID' => $album['albumID'],
-                    "created_at" =>  \Carbon\Carbon::now(),
-                    "updated_at" => \Carbon\Carbon::now(),
-                ]);
-            }
-
             return "OK";
         }
         return "ERR";
@@ -124,12 +111,6 @@ class BaseMediaController extends MainController{
                 return $this->noPermission();
             }
 
-            // delete from album relations
-            $relationDeletePass = true;
-            $albumRelations = DB::table("album_relations")->where('mediaID', $file['mediaID']);
-            if($albumRelations->count() && !$albumRelations->delete()){
-                $relationDeletePass = false;
-            }
 
             // get file info from database
             $media = \App\Models\Media::find($file['mediaID']);

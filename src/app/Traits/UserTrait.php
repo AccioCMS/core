@@ -10,10 +10,13 @@
  */
 namespace Accio\App\Traits;
 
+use App\Models\Language;
 use App\Models\Permission;
+use App\Models\PostType;
 use App\Models\RoleRelation;
 use App\Models\User;
 use App\Models\UserGroup;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +32,6 @@ trait UserTrait{
      *
      * @param  string  $app The name of the app. Ex: "post_service"
      * @param  integer $ownershipPostID The ID of the post we are checking for ownership
-     *
      * @return boolean
      * */
     public static function hasOwnership($app,$ownershipPostID){
@@ -224,6 +226,11 @@ trait UserTrait{
      */
     public function getPermissions(){
         // return permissions if they have already been requested
+        if(Session::get("usersPermission")) {
+            self::$permissions = Session::get("usersPermission");
+            return Session::get("usersPermission");
+        }
+        // return permissions if they have already been requested
         if(self::$permissions) {
             return self::$permissions;
         }
@@ -245,7 +252,7 @@ trait UserTrait{
               'hasAll' => $permission['hasAll']
             ];
         }
-
+        Session::put("usersPermission", self::$permissions);
         return self::$permissions;
     }
 
@@ -336,11 +343,11 @@ trait UserTrait{
     /**
      * Get user by Slug (Name-Surname)
      *
-     * @param  string $slug The slug of the User
-     * @param string $columnName Column name
-     *
-     * @return object
-     * */
+     * @param $slug
+     * @param string $columnName
+     * @return mixed
+     * @throws \Exception
+     */
 
     public static function findBySlug($slug, $columnName = ''){
         $userObj = \App\Models\User::cache()->whereJson('slug->'.App::getLocale(), $slug)->getItems()->first();
@@ -356,11 +363,11 @@ trait UserTrait{
     /**
      * Get user by ID
      *
-     * @param  int $userID
-     * @param string $columnName Column name
-     *
-     * @return object|null Returns requested user if found, null instead
-     * */
+     * @param $userID
+     * @param string $columnName
+     * @return mixed
+     * @throws \Exception
+     */
     public static function findByID($userID, $columnName = ''){
         $userObj = \App\Models\User::cache()->where('userID', $userID)->getItems()->first();
 
@@ -372,26 +379,11 @@ trait UserTrait{
         return $userObj;
     }
 
-
     /**
-     * @param bool $includForgotPaswordLink
-     */
-    public static function getLoginForm($includForgotPaswordLink = false){
-
-    }
-
-    public static function getRegisterForm(){
-
-    }
-
-    public static function getResetPasswordForm(){
-
-    }
-    /**
-     *  Get user's avatar from gravatar.com by using email address
+     * Get user's avatar from gravatar.com by using email address
      *
      * @param  string $email The email address of the user we want to get the avatar
-     * @param  int    $width The width of image
+     * @param  int $width The width of image
      *
      * @return string The Gravatar image url of the given email
      * */
@@ -529,7 +521,6 @@ trait UserTrait{
         if(RoleRelation::insert($roles)){
             return true;
         }
-
         return false;
     }
 
@@ -537,6 +528,7 @@ trait UserTrait{
      * Return if users ID is beeing used somewhere in the database
      *
      * @return bool
+     * @throws \Exception
      */
     public function hasRelatedData(){
         if(!$this->hasDataInDefaultApps() && !$this->hasDataInPostsType()){
@@ -568,6 +560,7 @@ trait UserTrait{
      * Check if the current user has any post or is related to any post (in post fields "dropdown from db")
      *
      * @return bool
+     * @throws \Exception
      */
     private function hasDataInPostsType(){
         $postTypes = PostType::cache()->getItems();
@@ -606,17 +599,5 @@ trait UserTrait{
 
         }
         return false;
-    }
-
-    /**
-     * TODO : Me kry qekun neper custom field values neper tabela
-     */
-    private function hasDataInCustomFields(){
-        $customFields = CustomField::with("group")->where("type", "db")->get();
-        $customFieldsSlugs = [];
-        foreach ($customFields as $customField){
-            $customFieldsSlugs[] = $customField->group->slug . "__" . $customField->slug;
-        }
-        return $customFieldsSlugs;
     }
 }

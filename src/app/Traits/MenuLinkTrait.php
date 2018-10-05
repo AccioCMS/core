@@ -5,10 +5,7 @@ namespace Accio\App\Traits;
 use App\Models\MenuLink;
 use App\Models\Plugin;
 use App\Models\Post;
-use App\Models\Settings;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
@@ -26,7 +23,6 @@ use Mockery\Exception;
 
 trait MenuLinkTrait{
 
-    protected static $contMen = 0;
     /**
      * Current MenuLink data
      *
@@ -54,8 +50,8 @@ trait MenuLinkTrait{
      * While the same MenuLink can be linked to different Menus and they have the same params and routeName,
      * there is currently no way to identify which of them is active, therefore all of their IDs are returned
      *
-     * @param boolean $reset If active ids should be reset
-     * @return array
+     * @param bool $reset
+     * @throws \Exception
      */
     public static function setActiveIDs($reset = false){
         if(!self::$activeIDs || $reset){
@@ -171,6 +167,9 @@ trait MenuLinkTrait{
 
     /**
      * Get first active menulink
+     *
+     * @return mixed|void
+     * @throws \Exception
      */
     public static function getActive(){
         self::setActiveIDs();
@@ -182,6 +181,8 @@ trait MenuLinkTrait{
 
     /**
      * Get parent IDs of current MenuLink
+     *
+     * @return array
      */
     public static function getActiveIDs(){
         return self::$activeIDs;
@@ -200,7 +201,6 @@ trait MenuLinkTrait{
      * Get current MenuLink ID
      *
      * @param string $columnName Column of page to be returned
-     *
      * @return int|null Returns MenuLinkID if found, null instead
      */
     public static function getCurrent($columnName = ''){
@@ -286,6 +286,7 @@ trait MenuLinkTrait{
      *
      * @param $menuLinkID
      * @return array
+     * @throws \Exception
      */
     public static function parentID($menuLinkID){
         $parentIDs = [];
@@ -308,8 +309,10 @@ trait MenuLinkTrait{
     }
 
     /**
-     * Redirect url to default language if default language slug is given
-     * */
+     * Redirect url to default language if default language slug is given.
+     *
+     * @throws \Exception
+     */
     public static function redirectToDefaultLanguage(){
         $getCurrentPath = Request::path();
         $explodePath = explode('/',$getCurrentPath);
@@ -335,7 +338,7 @@ trait MenuLinkTrait{
     }
 
     /**
-     * Generate action of a link and its params, as defined in Routes
+     * Generate action of a link and its params, as defined in Routes.
      *
      * @param object $menuLink A single specific Menu Link object
      *
@@ -351,7 +354,6 @@ trait MenuLinkTrait{
         }
         // posts
         else if(substr($menuLink->belongsTo, 0, 5) == "post_" && $menuLink->belongsTo != "post_type"){
-
             //handle single post
             if(isset($menuLink->params->postSlug)){
                 return route('backend.post.single', [
@@ -393,11 +395,12 @@ trait MenuLinkTrait{
     /**
      * Use to get all menus and the menu links of each of them
      *
-     * @return array of menus and menu links
+     * @return array
+     * @throws \Exception
      */
     public static function cmsMenus(){
         $result = [];
-        foreach(\App\Models\Menu::cache()->getItems() as $menu){
+        foreach(Menu::cache()->getItems() as $menu){
             $result[$menu->slug] = [
               'menuID' => $menu->menuID,
               'title' => $menu->title,
@@ -449,6 +452,7 @@ trait MenuLinkTrait{
 
     /**
      * Translate menulinks params to a single dimensional array and returns only current language params
+     *
      * @param string $params
      * @return array
      */
@@ -456,7 +460,7 @@ trait MenuLinkTrait{
         if(!$params){
             return [];
         }
-        $paramsArrayList = json_decode(json_encode($params), true);
+        $paramsArrayList = json_decode(json_encode($params),true);
         $decodedParams = [];
         foreach($paramsArrayList as $paramKey=>$paramValue){
             if(is_array($paramValue)){
@@ -501,7 +505,8 @@ trait MenuLinkTrait{
     /**
      * Used to get the array of menu links for the application sites, and the list of post types
      *
-     * @return array of application menu links
+     * @return array
+     * @throws \Exception
      */
     public static function applicationMenuLinks(){
         $applicationMenuLinks = [
@@ -734,10 +739,10 @@ trait MenuLinkTrait{
 
 
     /**
-     * Generate the URL to a MenuLink
+     * Generate the URL to a MenuLink.
      *
      * @return string
-     * @throws Exception
+     * @throws \Exception
      */
     public function getHrefAttribute(){
         if(Route::getRoutes()->getByName($this->routeName)){
@@ -755,7 +760,8 @@ trait MenuLinkTrait{
     }
 
     /**
-     * Initialize menulinks
+     * Initialize MenuLink.
+     *
      * @param $request
      * @throws \Exception
      */
@@ -778,9 +784,8 @@ trait MenuLinkTrait{
             $getCurrentPath = Request::path();
             if($getCurrentPath == '/' || $getCurrentPath == App::getLocale()){
                 self::setCurrent(Post::gethomepage());
-            }
+            }else if(self::getActiveIDs()){
             //or if any other menulink is active
-            else if(self::getActiveIDs()){
                 self::setCurrent(self::findByID(array_first(self::getActiveIDs())));
             }
 

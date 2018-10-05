@@ -11,7 +11,7 @@ export const globalMethods = {
             return this.getHasPermission; // This is causing a loop @todo
         },
         redirect(name, id = '', params = '', query = {}){
-            if(id === undefined || id == ''){
+            if(id === undefined || id === ''){
                 this.$router.push({ name: name, query: query });
             }else{
                 this.$router.push({ name: name, params: {id: id}, query: query});

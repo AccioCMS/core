@@ -314,6 +314,7 @@ export const store = new Vuex.Store({
             let appPermission = false;
             let hasSinglePermission = false;
 
+
             // handle global permissions (ex. Editor, Author)
             if(permissions.global !== undefined){
 
@@ -350,6 +351,7 @@ export const store = new Vuex.Store({
 
             //check author
             if(permissions.global !== undefined && permissions.global.author !== undefined){
+
                 if(!appPermission && !hasSinglePermission){
                     context.commit('setHasPermission', false);
                     return false;
@@ -360,7 +362,7 @@ export const store = new Vuex.Store({
                     context.commit('setHasPermission', true);
                     return true;
                 }
-            }else if(permissions.global.author !== undefined && permissions.global.editor !== undefined){
+            }else if(permissions.global !== undefined && permissions.global.author !== undefined && permissions.global.editor !== undefined){
                 //check editor
                 if(appPermission || hasSinglePermission){
                     context.commit('setHasPermission', true);

@@ -2,19 +2,14 @@
 
 namespace Accio\App\Models;
 
-use App\Models\CustomField;
-use App\Models\CustomFieldGroup;
 use App\Models\Language;
 use App\Models\Media;
-use App\Models\PostType;
 use App\Models\User;
 use App\Notifications\UserAdded;
 use Faker\Test\Provider\Collection;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Accio\App\Traits;
@@ -39,7 +34,6 @@ class UserModel extends Authenticatable
     protected $fillable = [
         'firstName','lastName','email', 'password','phone','address','country','isActive','profileImageID','about','slug','gravatar'
     ];
-    //TODO me ja shtu "slug" userave (emri-mbiemri) sepse po na duhet ne front-end
 
     /** @var array $fillable Hidden fields that can be seen in CRUD*/
     protected $hidden = [
@@ -129,8 +123,7 @@ class UserModel extends Authenticatable
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = [])
-    {
+    public function __construct(array $attributes = []){
         parent::__construct($attributes);
         Event::fire('user:construct', [$this]);
     }
@@ -148,7 +141,7 @@ class UserModel extends Authenticatable
 
     /**
      * Handle callback of insert, update, delete
-     * */
+     */
     protected static function boot(){
         parent::boot();
 
@@ -165,8 +158,8 @@ class UserModel extends Authenticatable
     /**
      * Generate the URL to a user.
      *
-     *
      * @return string
+     * @throws \Exception
      */
     public function getHrefAttribute(){
         return $this->href();
@@ -174,10 +167,11 @@ class UserModel extends Authenticatable
 
     /**
      * Generate a custom URL to a user
+     *
      * @param string $routeName
      * @param array $customAttributes
-     *
      * @return string
+     * @throws \Exception
      */
     public function href($routeName = '', $customAttributes = []){
         if(!$routeName){
@@ -227,7 +221,6 @@ class UserModel extends Authenticatable
      * Full name of the user
      *
      * @return string
-     *
      */
     public function getFullNameAttribute(){
         return $this->firstName." ".$this->lastName;
@@ -251,7 +244,8 @@ class UserModel extends Authenticatable
 
     /**
      * Get user roles
-     * @return HasManyThrough
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
     public function roles()
     {
@@ -267,10 +261,11 @@ class UserModel extends Authenticatable
 
     /**
      * Get Profile Image that belong to a user
-     * @return HasOne
+     *
+     * @return mixed
+     * @throws \Exception
      */
-    public function getProfileImageAttribute()
-    {
+    public function getProfileImageAttribute(){
         if($this->profileImageID) {
             // when attribute is available, weo don't ned to re-run relation
             if ($this->attributeExists('profileimage')) {
@@ -290,6 +285,7 @@ class UserModel extends Authenticatable
 
     /**
      * Get profile image
+     *
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function profileImage(){
