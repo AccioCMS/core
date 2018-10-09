@@ -26,8 +26,87 @@ class BasePostController extends MainController {
         parent::__construct();
     }
 
+
+    /**
+     * Get all post of a post type
+     *
+     * TODO: me shti ne funksion ElasticSearch
+     *
+     * @param string $lang language slug
+     * @param string $postType post type slug
+     * @return array post data
+     */
+    public function getAllPosts($lang, $postType){
+        // check if user has permissions to access this link
+        if(!User::hasAccess($postType,'read')){
+            return $this->noPermission();
+        }
+
+        $defaultOrderBy = 'postID';
+        $orderBy = (Input::get('order') ) ? Input::get('order') : $defaultOrderBy;
+        $orderType = (Input::get('type')) ? Input::get('type') : 'DESC';
+        $advancedSearch = (Input::get('advancedSearch')) ? Input::get('advancedSearch') : false;
+        $categoryID = (Input::get('categoryID')) ? Input::get('categoryID') : null;
+
+        // get field type in db
+        try{
+            $orderColumnType = DB::connection()->getDoctrineColumn($postType, $orderBy)->getType()->getName();
+        }catch (\Exception $e){
+            $orderColumnType = false;
+            $orderBy = $defaultOrderBy;
+        }
+
+        // make the query
+        $queryObject =  (new Post())->setTable($postType);
+        // get user relation
+        $queryObject = $queryObject->with("users");
+
+        // get categories relations (if post type has categories)
+        $postTypeOBJ = getPostType($postType);
+        if($postTypeOBJ->hasCategories){
+            $queryObject = $queryObject->with("categories");
+        }
+
+        // Advanced Search
+        if($advancedSearch){
+            $queryObject = $this->advancedSearch($queryObject, request(), $postType);
+        }else if($categoryID){
+            // select based on categories
+            $queryObject = $this->selectByCategory($queryObject, $categoryID, $postType);
+        }
+
+        // json langauge fields needs to be filtered by their langauge
+        if($orderColumnType == "json"){
+            $queryObject = $queryObject->orderBy($orderBy."->".App::getLocale(), $orderType);
+        }else{
+            $queryObject = $queryObject->orderBy($orderBy, $orderType);
+        }
+
+        // paginate
+        $paginationResult = $queryObject->paginate(Post::$rowsPerPage);
+
+        $response = $this
+            ->appendListColumnsFromEvents($postType)
+            ->appendListRowsFromEvents($paginationResult, $postType)
+            ->toArray();
+
+        $response['inTableColumns'] = $this->getInTableColumns($postType);
+
+        $lang = App::getLocale();
+        // set category title and author name
+        foreach ($response['data'] as $key => $item){
+            if(isset($item['categories']) && count($item['categories'])){
+                array_set($response, "data.$key.category",$item['categories'][0]['title']->$lang);
+            }
+            array_set($response, "data.$key.author",$item['users']['firstName'] . " ". $item['users']['lastName']);
+        }
+
+        return $response;
+    }
+
     /**
      * Get all data needed in the post create form
+     * Fields, Custom Fields, Categories, Languages
      *
      * @param $lang
      * @param $postTypeSlug
@@ -49,7 +128,6 @@ class BasePostController extends MainController {
             'languages' => Language::cache()->getItems(),
             'categories' => $categories,
             'customFieldsGroups' => $customFieldsGroups,
-            'inTableColumns' => $this->getInTableColumns($postTypeSlug),
             'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug),
             'users' => User::cache()->getItems(),
             'createdByUserID' => Auth::user()->userID,
@@ -57,70 +135,23 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Get posts to be displayed in menu panel
+     * Return view (list, create) and check permissions
      *
-     * @param string $lang
-     * @param string $postType Slug of post type
-     * @return array
-     * */
-    public function menuPanelItems($lang = "", $postType){
-        // check if user has permissions to access this link
-        if(!User::hasAccess('PostType','read')){
-            return $this->noPermission();
-        }
-
-        // Find posts
-        $postsObj = new Post();
-        $postsObj->setTable($postType);
-        $postsObj = $postsObj->published();
-        if(Input::input('keyword')){
-            $postsObj->where('title->'.App::getLocale(), 'like', '%'.Input::input('keyword').'%');
-        }
-        $postsObj->orderBy('created_at', 'DESC');
-        $posts = $postsObj->paginate(25);
-
-        // Append menuLink Parameters
-        foreach($posts->all() as $post){
-            $post->setAutoTranslate(false);
-            $post->belongsTo = $postType;
-            $post->belongsToID = $post->postID;
-            $post->label = $post->title;
-            $post->menuLinkParameters = $post->menuLinkParameters();
-        }
-
-        // Append columns
-        $results = $posts->toArray();
-        $results['columns']= [
-            'postID' => trans('id'),
-            'title' => trans('base.title'),
-        ];
-
-        return $results;
-    }
-
-    /**
      * @param $lang
      * @param $postTypeSlug
      * @param $view
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\Response|\Illuminate\View\View
      */
     public function postsIndex($lang, $postTypeSlug, $view){
-        // get the post type information
-        $adminPrefix = Config::get('project')['adminPrefix'];
-
         $postType = PostType::findBySlug($postTypeSlug);
         if(!$postType){
             return response()->view('errors.404', ['message' => "This post type does not exist!"], 404);
         }
 
-        $id = $postType->postTypeID;
-
-        $isPostView = true; // used when generate language menu (language meu that changes the locate in backend)
-
         // check if user has permissions to access this link
         $key = ($view == 'list') ? 'read' : $view;
         if(!User::hasAccess($postTypeSlug,$key)){
-            return view('errors.permissions', compact('lang','view','id','post_type','isPostView','isSinglePostView','adminPrefix'));
+            return view('errors.permissions');
         }
 
         return view('content');
@@ -136,14 +167,10 @@ class BasePostController extends MainController {
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function postsSingle($lang, $postTypeSlug, $view, $id){
-        $adminPrefix = Config::get('project')['adminPrefix'];
-        $isPostView = true; // used when generate language menu (language menu that changes the locate in backend)
-        $isSinglePostView = true; // used when generate language menu (language meu that chenges the locate in backend)
-
         // check if user has permissions to access this link
         if(!User::hasAccess($postTypeSlug,$view, $id, true)){
             $message = "You can't edit this post because you don't own it!";
-            return view('errors.permissions', compact('message','lang','view','id','post_type','isPostView','isSinglePostView','adminPrefix'));
+            return view('errors.permissions', compact('message'));
         }
         return view('content');
     }
@@ -152,7 +179,6 @@ class BasePostController extends MainController {
      * Prepare values for each field.
      * used when this function is called in detailsJson (update form of the post)
      *
-     * @param $lang
      * @param $postType
      * @return array
      */
@@ -179,13 +205,14 @@ class BasePostController extends MainController {
 
     /**
      * Get columns list that will be used only in post list table
+     * Used to add extra columns in post list table
      *
      * @param $postType
      * @return array
      */
     public function getInTableColumns($postType){
         $inTableColumnsSlugs = [];
-        $fields = App\Models\PostType::getFields($postType);
+        $fields = PostType::getFields($postType);
 
         // default columns
         foreach(Post::$defaultListColumns as $key => $label){
@@ -217,13 +244,15 @@ class BasePostController extends MainController {
 
     /**
      * Handel values for post type fields needed in Create and Update form
+     * Get values of every post field (custom post field)
      *
      * @param string $postType
-     * @param string $post
+     * @param $post
      * @return array
+     * @throws \Exception
      */
     public function getPostTypeFieldsValues(string $postType, $post = ""){
-        $fields = App\Models\PostType::getFields($postType);
+        $fields = PostType::getFields($postType);
         $languages = Language::cache()->getItems();
         $values = [];
 
@@ -314,82 +343,14 @@ class BasePostController extends MainController {
         return $values;
     }
 
-
     /**
-     * Get all post of a post type
+     * Joins post with category and selects only ones that have the specific category
      *
-     * @param string $lang language slug
-     * @param string $postType post type slug
-     * @return array post data
+     * @param $queryObject
+     * @param $categoryID
+     * @param $postTypeSlug
+     * @return mixed
      */
-    public function getAllPosts($lang, $postType){
-        // check if user has permissions to access this link
-        if(!User::hasAccess($postType,'read')){
-            return $this->noPermission();
-        }
-
-        $defaultOrderBy = 'postID';
-        $orderBy = (Input::get('order') ) ? Input::get('order') : $defaultOrderBy;
-        $orderType = (Input::get('type')) ? Input::get('type') : 'DESC';
-        $advancedSearch = (Input::get('advancedSearch')) ? Input::get('advancedSearch') : false;
-        $categoryID = (Input::get('categoryID')) ? Input::get('categoryID') : null;
-
-        // get field type in db
-        try{
-            $orderColumnType = DB::connection()->getDoctrineColumn($postType, $orderBy)->getType()->getName();
-        }catch (\Exception $e){
-            $orderColumnType = false;
-            $orderBy = $defaultOrderBy;
-        }
-
-        // make the query
-        $queryObject =  (new Post())->setTable($postType);
-        // get user relation
-        $queryObject = $queryObject->with("users");
-
-        // get categories relations (if post type has categories)
-        $postTypeOBJ = getPostType($postType);
-        if($postTypeOBJ->hasCategories){
-            $queryObject = $queryObject->with("categories");
-        }
-
-        // Advanced Search
-        if($advancedSearch){
-            $queryObject = $this->advancedSearch($queryObject, request(), $postType);
-        }else if($categoryID){
-        // select based on categories
-            $queryObject = $this->selectByCategory($queryObject, $categoryID, $postType);
-        }
-
-        // json langauge fields needs to be filtered by their langauge
-        if($orderColumnType == "json"){
-            $queryObject = $queryObject->orderBy($orderBy."->".App::getLocale(), $orderType);
-        }else{
-            $queryObject = $queryObject->orderBy($orderBy, $orderType);
-        }
-
-        // paginate
-        $paginationResult = $queryObject->paginate(Post::$rowsPerPage);
-
-        $response = $this
-            ->appendListColumnsFromEvents($postType)
-            ->appendListRowsFromEvents($paginationResult, $postType)
-            ->toArray();
-
-        $response['inTableColumns'] = $this->getInTableColumns($postType);
-
-        $lang = App::getLocale();
-        // set category title and author name
-        foreach ($response['data'] as $key => $item){
-            if(isset($item['categories']) && count($item['categories'])){
-                array_set($response, "data.$key.category",$item['categories'][0]['title']->$lang);
-            }
-            array_set($response, "data.$key.author",$item['users']['firstName'] . " ". $item['users']['lastName']);
-        }
-
-        return $response;
-    }
-
     private function selectByCategory($queryObject, $categoryID, $postTypeSlug){
         return $queryObject->join('categories_relations','categories_relations.belongsToID',$postTypeSlug.'.postID')
             ->where('categories_relations.categoryID', '=', $categoryID);
@@ -397,8 +358,9 @@ class BasePostController extends MainController {
 
     /**
      * Advanced search for posts
+     * TODO use ElasticSearch
      *
-     * @param object $ibj
+     * @param object $obj
      * @param $data object data for the search (table name, title, userID, categoryID, from, to)
      * @param string $postTypeSlug
      * @return object result
@@ -432,7 +394,9 @@ class BasePostController extends MainController {
     }
 
     /**
-     * addDefaultListColumns
+     * Create event 'table_list_rows' to manipulate with data elsewhere
+     *
+     * @param string $postType
      * @return $this
      */
     private function appendListColumnsFromEvents(string $postType){
@@ -442,8 +406,6 @@ class BasePostController extends MainController {
             $inTableColumns = $this->getInTableColumns($postType);
 
             foreach($results as $key => $item){
-                $post = $item;
-
                 // title
                 if(array_key_exists('title', $inTableColumns)){
                     $rows[$key]['title'] = $item->title;
@@ -463,9 +425,10 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Appen event rows in table list
+     * Appends event rows in table list
+     * Manipulate with post data using: 'table_list_rows' event
      *
-     * @param object $paginationResult
+     * @param $paginationResult
      * @param string $postType
      * @return mixed
      */
@@ -496,14 +459,13 @@ class BasePostController extends MainController {
      * @param integer $categoryID selected category ID
      *
      * @return array data of posts of a specific category
-     *
      */
     public function getAllPostsOfCategory($lang, $postType, $categoryID){
         // check if user has permissions to access this link
         if(!User::hasAccess($postType,'read')){
             return $this->noPermission();
         }
-
+        // order info
         $orderBy = (isset($_GET['order'])) ? $_GET['order'] : 'postID';
         $orderType = (isset($_GET['type'])) ? $_GET['type'] : 'DESC';
 
@@ -519,16 +481,60 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Delete a Post
+     * Delete a Post (if it isn't being used)
      *
      * @param string $lang current language
      * @param string $postType slug of the post type of this post
      * @param integer $id of the post that is being deleted
-     *
      * @return array ErrorHandler
-     *
      * */
     public function delete($lang, $postType, $id){
+        $deleteResult = $this->deletePost($id, $postType);
+        if(gettype($deleteResult) == "boolean"){
+            if($deleteResult){
+                return $this->response('Post is deleted successfully');
+            }
+            return $this->response( 'Post could not be deleted. Please try again later or contact administrator', 500);
+        }
+        return $deleteResult;
+    }
+
+    /**
+     * Bulk Delete posts (Delete many posts)
+     *
+     * @param Request $request array of posts IDs
+     * @return array
+     * */
+    public function bulkDelete(Request $request){
+        $postType = $request->all()[0];
+        $ids = $request->all()[1];
+
+        // if there are no item selected
+        if (count($ids) <= 0) {
+            return $this->response( 'Please select items to be deleted', 500);
+        }
+        // loop throw the item array (ids) and delete them
+        foreach($ids as $id) {
+            $deleteResult = $this->deletePost($id, $postType);
+            if(gettype($deleteResult) == "boolean"){
+                if(!$deleteResult){
+                    return $this->response( 'Post could not be deleted. Please try again later or contact administrator', 500);
+                }
+            }else{
+                return $deleteResult;
+            }
+        }
+        return $this->response('Posts are deleted successfully');
+    }
+
+    /**
+     * Delete a single post and all his relation data (related tags and categories)
+     *
+     * @param $id
+     * @param $postType
+     * @return array|bool
+     */
+    private function deletePost($id, $postType){
         // check if user has permissions to access this link
         if(!User::hasAccess($postType,'delete', $id, true)){
             return $this->noPermission();
@@ -537,7 +543,7 @@ class BasePostController extends MainController {
         // Check if this post type has posts
         // Post type should not be able to be deleted if it has posts
         if(Post::isInMenuLinks($id, $postType)){
-            return $this->response( "You can't delete this Post becauase It is being used in menu links", 403);
+            return $this->response( "You can't delete this Post because It is being used in menu links", 403);
         }
 
         $post = (new Post())->setTable($postType);
@@ -551,67 +557,12 @@ class BasePostController extends MainController {
 
         if ($post->delete()){
             // Delete categories relations of this post
-            DB::table('categories_relations')->where('belongsTo',$postType)->where('belongsToID',$id)->delete();
-
+            DB::table('categories_relations')->where('belongsTo', $postType)->where('belongsToID',$id)->delete();
             // Delete tags relations of this post
-            DB::table('tags_relations')->where('belongsTo',$postType)->where('belongsToID',$id)->delete();
-
-            $result = $this->response( 'Post is successfully deleted');
-
-        }else{
-            $result = $this->response( 'Post not deleted. Please try again later or contact administrator', 500);
+            DB::table('tags_relations')->where('belongsTo', $postType)->where('belongsToID',$id)->delete();
+            return true;
         }
-        return $result;
-    }
-
-    /**
-     * Bulk Delete posts
-     * Delete many posts
-     *
-     * @param Request $request array of posts IDs
-     *
-     * @return array
-     *
-     * */
-    public function bulkDelete(Request $request){
-        $postType = $request->all()[0];
-        $ids = $request->all()[1];
-
-        // if there are no item selected
-        if (count($ids) <= 0) {
-            return $this->response( 'Please select items to be deleted', 500);
-        }
-        // loop throw the item array (ids) and delete them
-        foreach($ids as $id) {
-            // check if user has permissions to access this link
-            if(!User::hasAccess($postType,'delete', $id, true)){
-                return $this->noPermission();
-            }
-
-            // Check if this post type has posts
-            // Post type should not be able to be deleted if it has posts
-            if(Post::isInMenuLinks($id, $postType)){
-                return $this->response( "You can't delete this Post. It is being used in menu links", 403);
-            }
-
-            $postObj = (new Post())->setTable($postType);
-            $post = $postObj->find($id);
-            $deletePost = $post->delete();
-
-            if (!$deletePost) {
-                // create delete task
-                Task::create('post','delete', $post, ['postType' => $postType]);
-            }else{
-                // get categories IDs to delete posts from cache
-                $categoryIDs = DB::table('categories_relations')->where('belongsTo',$postType)->where('belongsToID',$id)->select('categoryID')->get()->toArray();
-                // delete categories relations of this post
-                DB::table('categories_relations')->where('belongsTo',$postType)->where('belongsToID',$id)->delete();
-                // delete tags relations of this post
-                DB::table('tags_relations')->where('belongsTo',$postType)->where('belongsToID',$id)->delete();
-
-            }
-        }
-        return $this->response('Post Types are deleted successfully');
+        return false;
     }
 
     /**
@@ -623,13 +574,9 @@ class BasePostController extends MainController {
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View view to search component
      */
     public function search($lang, $postTypeSlug, $term){
-        $adminPrefix = Config::get('project')['adminPrefix'];
-        $isPostView = true; // used when generatin language menu (language meu that changes the locate in backend)
-        $view = 'search';
-
         // check if user has permissions to access this link
         if(!User::hasAccess($postTypeSlug,'read')){
-            return view('errors.permissions', compact('lang','view','id','post_type','isPostView','isSinglePostView','adminPrefix'));
+            return view('errors.permissions');
         }
 
         return view('content');
@@ -638,6 +585,7 @@ class BasePostController extends MainController {
     /**
      *
      * Make simple search with a search term
+     * TODO: use ElasticSearch
      *
      * @param string $lang language slug
      * @param string $postTypeSlug post type slug
@@ -674,10 +622,10 @@ class BasePostController extends MainController {
     }
 
     /**
-     *  This function is used to store the post in the database
-     *  Is used to store the media relations too
+     * This function is used to store the post in the database
+     * Is used to store the media relations too
      *
-     *  @param Request $request post Request object with all data from the custom fields :
+     * Request $request (parameter) post Request object with all data from the custom fields:
      *      files - files array used to store the media relations (the files or images of a post)
      *      formData - All custom fields with their values
      *      languages - array with all languages where are the schedule date and time is stored
@@ -685,9 +633,9 @@ class BasePostController extends MainController {
      *      postType - in which post type we are posting on
      *      ID (Only in update) - used when we are updating a post not storing a new one
      *
-     *  @return array
-     *
-     * */
+     * @param Request $request
+     * @return array
+     */
     public function store(Request $request){
         $data = $request->all();
 
@@ -735,6 +683,9 @@ class BasePostController extends MainController {
     }
 
     /**
+     * If title is sent empty in different languages (in store request) use the default -
+     *      language title to fill the other ones
+     *
      * @param $data array of post data
      * @return array post data with modified title and default language title
      */
@@ -763,6 +714,9 @@ class BasePostController extends MainController {
     }
 
     /**
+     * Slug shouldn't be empty
+     * Fills slug from default language to all other languages slugs
+     *
      * @param $slugList array list of slugs for each language
      * @param $postType string post type
      * @param $defaultSlug string if slugs are empty use default slug
@@ -783,11 +737,13 @@ class BasePostController extends MainController {
     }
 
     /**
+     * All required data for post update form
+     *
      * @param $lang
      * @param $postTypeSlug
      * @param $id
-     *
-     * @return array JSON object with details for a specific post type
+     * @return array
+     * @throws \Exception
      */
     public function detailsJSON($lang, $postTypeSlug, $id){
         // check if user has permissions to access this link
@@ -797,77 +753,23 @@ class BasePostController extends MainController {
 
         // post type
         $currentPostType = PostType::findBySlug($postTypeSlug);
+        // get post
+        $post = (new Post())->setTable($postTypeSlug)->find($id);
 
-        // Get post
-        $mysqlConnection = DB::connection('mysql');
-
-        $post = new Post();
-        $post->setTable($postTypeSlug);
-        $post = $post->find($id);
-
-        // serach in archive database
         if(!$post){
-            $mysqlConnection = DB::connection('mysql_archive');
-            $post = new Post();
-            $post->setConnection('mysql_archive');
-            $post = $post->find($id);
-            if(!$post){
-                return $this->response("There is no post with ID: " . $id, 404);
-            }
-
+            return $this->response("There is no post with ID: " . $id, 404);
         }
-
-        // request the url of the post
+        // posts url
         $href = $post->href;
 
         // we need fields non-translated so we can play around with them in vuejs
         $post->setAutoTranslate(false);
 
-        $translatableFields = $this->getTranslatableFields($postTypeSlug);  // the fields that are translatable
+        // the fields that are translatable
+        $translatableFields = $this->getTranslatableFields($postTypeSlug);
 
-        // get the media relation joining the media table and the post
-        $mediaRelationsResults = DB::table('media_relations')
-            ->where("belongsTo", $postTypeSlug)
-            ->join('media','media_relations.mediaID','media.mediaID')
-            ->join($postTypeSlug,'media_relations.belongsToID',$postTypeSlug.'.postID')
-            ->where("belongsToID", $id)
-            ->select('media.title as title', 'media.mediaID', 'media_relations.mediaRelationID', 'media_relations.belongsTo', 'media_relations.belongsToID', 'media_relations.language',
-                'media.description', 'media.credit', 'media.type', 'media.extension',
-                'media.url', 'media.filename', 'media.fileDirectory', 'media.filesize', 'media.dimensions', 'media_relations.field')
-            ->get();
-
-        $media = array(); // the object media used for the media custom fields in the front end
-        if ($post->featuredImageID){
-            $featuredImage = Media::find($post->featuredImageID);
-            // set feature image if it exist
-            if($featuredImage){
-                $media["featuredImage"][] = $featuredImage;
-            }
-        }
-        if ($post->featuredVideoID){
-            $featuredVideo = Media::find($post->featuredVideoID);
-            $media["featuredVideo"][] = $featuredVideo;
-        }
-
-        foreach ($mediaRelationsResults as $relation){ // loop throw the media relation and construct the $media object
-            if(in_array($relation->field, $translatableFields)){
-                $langArr = json_decode($relation->language);
-                foreach ($langArr as $langKey => $lang){
-                    if(!isset($media[$relation->field."__lang__".$langKey])){
-                        $media[$relation->field."__lang__".$langKey] = array();
-                    }
-                    if ($lang){
-                        array_push($media[$relation->field."__lang__".$langKey], $relation);
-                    }
-                }
-
-            }else{
-                if(!isset($media[$relation->field])){
-                    $media[$relation->field] = array();
-                }
-                array_push($media[$relation->field], $relation);
-            }
-        }
+        // get all related media and structure them for the post
+        $media = $this->getPostRelatedMedia($id, $post, $postTypeSlug, $translatableFields);
 
         // handle custom fields
         $customFieldGroups = CustomFieldGroup::findGroups('post-type', 'update', $id, $postTypeSlug);
@@ -878,33 +780,13 @@ class BasePostController extends MainController {
         }
 
         // Categories (options to select)
-        $categories = array_values(App\Models\Category::cache()->where("postTypeID", $currentPostType->postTypeID)->toArray());
+        $categories = array_values(Category::cache()->where("postTypeID", $currentPostType->postTypeID)->toArray());
 
-        // get the selected categories from the DB table categories_relations
-        $selectedCategories = $mysqlConnection->table('categories_relations')
-            ->leftJoin('categories','categories_relations.categoryID','categories.categoryID')
-            ->where('categories_relations.belongsTo',$postTypeSlug)
-            ->where('categories_relations.belongsToID',$id)
-            ->get();
+        // selected categories of this post
+        $selectedCategories = $this->getPostSelectedCategories($id, $postTypeSlug);
 
-        $selectedCategories = Language::filterRows($selectedCategories, false);
-
-        // get selected tags from the DB table tags_relations
-        $selectedTags = [];
-        $tagsRelations = $mysqlConnection->table('tags_relations')
-            ->leftJoin('tags','tags_relations.tagID','tags.tagID')
-            ->where('tags_relations.belongsTo',$postTypeSlug)
-            ->where('tags_relations.belongsToID',$id)
-            ->get();
-
-        foreach ($tagsRelations as $tagsRelation){
-            if(!isset($selectedTags[$tagsRelation->language])){
-                $selectedTags[$tagsRelation->language] = [];
-            }
-            $selectedTags[$tagsRelation->language][] = $tagsRelation;
-        }
-
-        $users = User::cache()->getItems();
+        // selected tags of this post
+        $selectedTags = $this->getPostSelectedTags($id, $postTypeSlug);
 
         $response = array(
             'post' => [
@@ -930,7 +812,7 @@ class BasePostController extends MainController {
             'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug, $post),
             'categories' => $categories,
             'languages' => Language::cache()->getItems(),
-            'users' => $users,
+            'users' => User::cache()->getItems(),
         );
 
         // Fire event
@@ -940,21 +822,122 @@ class BasePostController extends MainController {
     }
 
     /**
+     * Get all media related to a single post
+     *
+     * @param $id
+     * @param $post
+     * @param $postTypeSlug
+     * @param $translatableFields
+     * @return array
+     */
+    private function getPostRelatedMedia($id, $post, $postTypeSlug, $translatableFields){
+        $media = array();
+
+        // get the media relation joining the media table and the post
+        $mediaRelationsResults = DB::table('media_relations')
+            ->where("belongsTo", $postTypeSlug)
+            ->join('media','media_relations.mediaID','media.mediaID')
+            ->join($postTypeSlug,'media_relations.belongsToID',$postTypeSlug.'.postID')
+            ->where("belongsToID", $id)
+            ->select('media.title as title', 'media.mediaID', 'media_relations.mediaRelationID', 'media_relations.belongsTo', 'media_relations.belongsToID', 'media_relations.language',
+                'media.description', 'media.credit', 'media.type', 'media.extension',
+                'media.url', 'media.filename', 'media.fileDirectory', 'media.filesize', 'media.dimensions', 'media_relations.field')
+            ->get();
+
+
+        // the object media used for the media custom fields in the front end
+        if ($post->featuredImageID){
+            $featuredImage = Media::find($post->featuredImageID);
+            // set feature image if it exist
+            if($featuredImage){
+                $media["featuredImage"][] = $featuredImage;
+            }
+        }
+        if ($post->featuredVideoID){
+            $featuredVideo = Media::find($post->featuredVideoID);
+            $media["featuredVideo"][] = $featuredVideo;
+        }
+
+        // loop throw the media relation and construct the $media object
+        foreach ($mediaRelationsResults as $relation){
+            if(in_array($relation->field, $translatableFields)){
+                $langArr = json_decode($relation->language);
+                foreach ($langArr as $langKey => $lang){
+                    if(!isset($media[$relation->field."__lang__".$langKey])){
+                        $media[$relation->field."__lang__".$langKey] = array();
+                    }
+                    if ($lang){
+                        array_push($media[$relation->field."__lang__".$langKey], $relation);
+                    }
+                }
+            }else{
+                if(!isset($media[$relation->field])){
+                    $media[$relation->field] = array();
+                }
+                array_push($media[$relation->field], $relation);
+            }
+        }
+
+        return $media;
+    }
+
+    /**
+     * Get selected categories of a single post
+     *
+     * @param $id
+     * @param $postTypeSlug
+     * @return array
+     */
+    private function getPostSelectedCategories($id, $postTypeSlug){
+        // get the selected categories from the DB table categories_relations
+        $selectedCategories = DB::table('categories_relations')
+            ->leftJoin('categories','categories_relations.categoryID','categories.categoryID')
+            ->where('categories_relations.belongsTo', $postTypeSlug)
+            ->where('categories_relations.belongsToID', $id)
+            ->select("categories.categoryID", "categories.postTypeID", "categories.title", "categories.slug")
+            ->get();
+
+        return Language::filterRows($selectedCategories, false);
+    }
+
+    /**
+     * Get selected tags of a single post
+     *
+     * @param $id
+     * @param $postTypeSlug
+     * @return array
+     */
+    private function getPostSelectedTags($id, $postTypeSlug){
+        // get selected tags from the DB table tags_relations
+        $selectedTags = [];
+        $tagsRelations = DB::table('tags_relations')
+            ->leftJoin('tags','tags_relations.tagID','tags.tagID')
+            ->where('tags_relations.belongsTo', $postTypeSlug)
+            ->where('tags_relations.belongsToID', $id)
+            ->select("tags.tagID", "tags_relations.language", "tags.title", "tags.slug")
+            ->get();
+
+        foreach($tagsRelations as $tagsRelation){
+            if(!isset($selectedTags[$tagsRelation->language])){
+                $selectedTags[$tagsRelation->language] = [];
+            }
+            $selectedTags[$tagsRelation->language][] = $tagsRelation;
+        }
+
+        return $selectedTags;
+    }
+
+
+    /**
+     * Get fields for advanced search
      *
      * @param string $lang language slug
      * @param string $postTypeSlug post type slug
      *
      * @return array fields that are used to make advanced search for a model
-     *
      */
     public function getAdvancedSearchFields($lang, $postTypeSlug){
         return Post::getAdvancedSearchFields($postTypeSlug);
-    }
-
-
-    public function getAllPostsWithoutPagination($lang = "", $postType){
-        $posts = DB::table($postType)->get();
-        return Language::filterRows($posts, false);
     }
 
     /**
@@ -965,7 +948,6 @@ class BasePostController extends MainController {
      * @param string $slug text to be made slug
      *
      * @return string generated slug
-     *
      */
     public function getSlug($lang, $postType, $slug){
         return parent::generateSlug($slug, $postType, 'postID', $lang, 0, true);
@@ -990,4 +972,45 @@ class BasePostController extends MainController {
         return array('redirectUrl' => $redirectUrl, 'view' => $view);
     }
 
+
+    /**
+     * Get posts to be displayed in menu panel
+     *
+     * @param string $lang
+     * @param string $postType Slug of post type
+     * @return array
+     * */
+    public function menuPanelItems($lang = "", $postType){
+        // check if user has permissions to access this link
+        if(!User::hasAccess('PostType','read')){
+            return $this->noPermission();
+        }
+
+        // Find posts
+        $postsObj = (new Post())->setTable($postType);
+        $postsObj = $postsObj->published();
+        if(Input::input('keyword')){
+            $postsObj->where('title->'.App::getLocale(), 'like', '%'.Input::input('keyword').'%');
+        }
+        $postsObj->orderBy('created_at', 'DESC');
+        $posts = $postsObj->paginate(25);
+
+        // Append menuLink Parameters
+        foreach($posts->all() as $post){
+            $post->setAutoTranslate(false);
+            $post->belongsTo = $postType;
+            $post->belongsToID = $post->postID;
+            $post->label = $post->title;
+            $post->menuLinkParameters = $post->menuLinkParameters();
+        }
+
+        // Append columns
+        $results = $posts->toArray();
+        $results['columns']= [
+            'postID' => trans('id'),
+            'title' => trans('base.title'),
+        ];
+
+        return $results;
+    }
 }

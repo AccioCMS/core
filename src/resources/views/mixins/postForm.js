@@ -44,7 +44,7 @@ export const postForm = {
             this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.currentLanguage+'/post/json/get-data-for-create/'+this.$route.params.post_type)
                 .then((resp) => {
                     /**
-                     *  Get and manipulate with languages
+                     * Get and manipulate with languages
                      */
                     this.languages = resp.body.languages;
                     this.users = resp.body.users;

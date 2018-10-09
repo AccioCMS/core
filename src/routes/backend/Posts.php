@@ -14,13 +14,13 @@ Route::group(['middleware' => ['auth:admin'],  'as' => 'backend.post.', 'namespa
     Route::get('/{lang}/json/posts/get-all/{post_type}', 'PostController@getAllPosts')->name('getAllPosts');
     Route::get('/{lang}/json/posts/delete/{post_type}/{id}', 'PostController@delete')->name('delete');
     Route::get('/{lang}/json/posts/advancedSearch/{post_type}', 'PostController@getAdvancedSearchFields')->name('getAdvancedSearchFields');
-    Route::get('/{lang}/json/posts/get-all-posts-without-pagination/{post_type}', 'PostController@getAllPostsWithoutPagination')->name('getAllPostsWithoutPagination');
     Route::get('/{lang}/posts/search/{post_type}/{term}', 'PostController@search')->name('search');
     Route::get('/{lang}/json/posts/check-slug/{postType}/{slug}', 'PostController@getSlug')->name('getSlug');
     Route::get('/{lang}/json/posts/search/{post_type}/{term}', 'PostController@makeSearch')->name('makeSearch');
     Route::get('/{lang}/search-advanced/posts/{post_type}/{id}', 'PostController@searchAdvanced')->name('searchAdvanced');
     Route::get('/{lang}/post/json/menuPanelItems/{postTypeSlug}', 'PostController@menuPanelItems')->name('menuPanelItems');
     Route::get('/{lang}/post/json/get-data-for-create/{postTypeSlug}', 'PostController@getDataForCreate')->name('getDataForCreate');
+
     /**
      * POST
      */
