@@ -1,49 +1,40 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: sopa
- * Date: 18/09/2017
- * Time: 10:32 AM
- */
 
 namespace Accio\App\Traits;
 
 use App\Models\Plugin;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\ServiceProvider;
-use League\Flysystem\Directory;
 use Mockery\Exception;
 
-trait PluginTrait
-{
+trait PluginTrait{
 
     /**
-     * Registered Plugins
+     * Registered Plugins.
+     *
      * @var array
      */
     protected $registeredPlugins = [];
 
     /**
-     * Booted Plugins
+     * Booted Plugins.
+     *
      * @var array
      */
     protected $bootedPlugins = [];
 
     /**
-     * Plugin data
+     * Plugin data.
+     *
      * @var object $plugin
      */
     protected static $pluginData;
 
     /**
-     * Get plugin data
+     * Get plugin data.
+     *
      * @param null $namespace
      * @return PluginTrait|null|object
      * @throws Exception
@@ -71,8 +62,8 @@ trait PluginTrait
                         return null;
                     }
                 }
-            } // Return a requested plugin
-            else {
+            }else {
+                // Return a requested plugin
                 self::$pluginData = $this->getByNamespace($namespace);
             }
         }
@@ -85,7 +76,7 @@ trait PluginTrait
     }
 
     /**
-     * Get base path of the plugin
+     * Get base path of the plugin.
      *
      * @return string
      */
@@ -94,7 +85,7 @@ trait PluginTrait
     }
 
     /**
-     * Get resources path of the plugin
+     * Get resources path of the plugin.
      *
      * @return string
      */
@@ -103,7 +94,7 @@ trait PluginTrait
     }
 
     /**
-     * Get translation path of the plugin
+     * Get translation path of the plugin.
      *
      * @return string
      */
@@ -112,7 +103,7 @@ trait PluginTrait
     }
 
     /**
-     * Get resources path of the plugin
+     * Get resources path of the plugin.
      *
      * @param string $path
      * @return string
@@ -123,7 +114,7 @@ trait PluginTrait
     }
 
     /**
-     * Get assets path of the plugin
+     * Get assets path of the plugin.
      *
      * @return string
      */
@@ -134,8 +125,9 @@ trait PluginTrait
     /**
      * Get config of a plugin
      *
-     * @param string $namespace
-     * @return array
+     * @param $namespace
+     * @return mixed
+     * @throws \Exception
      */
     public static function config($namespace){
         $configPath = pluginsPath($namespace.'/config.json');
@@ -145,12 +137,17 @@ trait PluginTrait
         throw  new \Exception("No config.json file found for plugin ".$configPath);
     }
 
+    /**
+     * Plugins namespace
+     *
+     * @return string
+     */
     public function parseNamespace(){
         return "Plugins\\".str_replace("/","\\",$this->namespace);
     }
 
     /**
-     * Get All plugins from plugins directory
+     * Get All plugins from plugins directory.
      *
      * Plugins are listed by author
      *
@@ -166,7 +163,8 @@ trait PluginTrait
     }
 
     /**
-     * Get Route name prefix of a plugin
+     * Get Route name prefix of a plugin.
+     *
      * @return string
      */
     public function namespaceWithDot(){
@@ -174,7 +172,8 @@ trait PluginTrait
     }
 
     /**
-     * Get Plugin's names pace and replace slashes with underlnes
+     * Get Plugin's names pace and replace slashes with underlnes.
+     *
      * @return string
      */
     public function namespaceWithUnderline(){
@@ -182,23 +181,28 @@ trait PluginTrait
     }
 
     /**
-     * Full backend URL
-     * @return string
+     * Full backend URL.
+     *
+     * @return \Illuminate\Contracts\Routing\UrlGenerator|string
+     * @throws \Exception
      */
     public function fullBackendUrl(){
         return url(Config::get('project')['adminPrefix'].'/'.App::getLocale()."/plugins/".str_replace("\\","/",self::config($this->namespace)->baseURL));
     }
 
     /**
-     * Get backend url prefix
+     * Get backend url prefix.
+     *
      * @return string
+     * @throws \Exception
      */
     public function backendURLPrefix(){
         return "{lang}/plugins/".str_replace("\\","/",self::config($this->namespace)->baseURL);
     }
 
     /**
-     * Get routes of a plugin
+     * Get routes of a plugin.
+     *
      * @return array
      */
     public function backendRoutes(){
@@ -210,7 +214,8 @@ trait PluginTrait
     }
 
     /**
-     * Get routes of a plugin
+     * Get routes of a plugin.
+     *
      * @return array
      */
     public function frontendRoutes(){
@@ -222,7 +227,8 @@ trait PluginTrait
     }
 
     /**
-     * Autoload all active plugins
+     * Autoload all active plugins.
+     *
      * @return void
      */
     public function autoloadPlugins(){
@@ -240,7 +246,7 @@ trait PluginTrait
     }
 
     /**
-     * Register all active plugins
+     * Register all active plugins.
      *
      * @return void
      */
@@ -259,7 +265,7 @@ trait PluginTrait
     }
 
     /**
-     * Boot all active plugins
+     * Boot all active plugins.
      *
      * @return void
      */
@@ -278,7 +284,7 @@ trait PluginTrait
     }
 
     /**
-     * Get all registered plugins
+     * Get all registered plugins.
      *
      * @return array
      */
@@ -287,7 +293,7 @@ trait PluginTrait
     }
 
     /**
-     * Get all registered plugins
+     * Get all registered plugins.
      *
      * @return array
      */
@@ -296,7 +302,7 @@ trait PluginTrait
     }
 
     /**
-     * Gets the config.php file of each plugins and returns their values as multidimensional array
+     * Gets the config.php file of each plugins and returns their values as multidimensional array.
      *
      * @return array of file config
      */
@@ -312,7 +318,8 @@ trait PluginTrait
     }
 
     /**
-     * Get plugin's panel data from Request/Form
+     * Get plugin's panel data from Request/Form.
+     *
      * @param string $panelKey Name of the panel where dhe data should be requested from
      * @param string $field
      * @return mixed
@@ -335,7 +342,8 @@ trait PluginTrait
     }
 
     /**
-     * Get all plugins'
+     * Get all plugins.
+     *
      * @return array
      */
     public static function getAllLabels(){
@@ -368,8 +376,10 @@ trait PluginTrait
 
     /**
      * Get a plugin namespace
-     * @param $namespace
-     * @return object|null
+     *
+     * @param string $namespace
+     * @return null
+     * @throws \Exception
      */
     public static function getByNamespace($namespace){
         $cachedPlugin = Plugin::cache()->where('namespace', $namespace)->getItems()->first();
@@ -378,11 +388,13 @@ trait PluginTrait
         }
         return null;
     }
+
     /**
      * Check if a plugin is installed
      *
-     * @param $namespace
+     * @param string $namespace
      * @return bool
+     * @throws \Exception
      */
     public static function isInstalled($namespace){
 
@@ -403,6 +415,7 @@ trait PluginTrait
      * Check if a plugin is active
      *
      * @return bool
+     * @throws \Exception
      */
     public function isActive(){
         // wee need a namespace first
@@ -422,7 +435,8 @@ trait PluginTrait
     }
 
     /**
-     * Add plugins views paths so they are accessible via views("Author.PluginName::viewName")
+     * Add plugins views paths so they are accessible via views("Author.PluginName::viewName").
+     *
      * return void
      */
     public function addViewsPaths(){

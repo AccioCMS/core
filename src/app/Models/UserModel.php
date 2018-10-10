@@ -30,26 +30,44 @@ class UserModel extends Authenticatable
       Traits\CollectionTrait,
       HasApiTokens;
 
-    /** @var array $fillable fields that can be filled in CRUD*/
+    /**
+     * fields that can be filled in CRUD.
+     *
+     * @var array
+     */
     protected $fillable = [
         'firstName','lastName','email', 'password','phone','address','country','isActive','profileImageID','about','slug','gravatar'
     ];
 
-    /** @var array $fillable Hidden fields that can be seen in CRUD*/
+    /**
+     * Hidden fields that can be seen in CRUD.
+     *
+     * @var array
+     */
     protected $hidden = [
         'password', 'remember_token',
     ];
-    /** @var array column data-types **/
+    /**
+     * column data-types.
+     *
+     * @var array
+     */
     protected $casts = [
         'about' => 'object'
     ];
 
-    /** @var array translatable json columns **/
+    /**
+     * json columns
+     *
+     * @var array
+     */
     protected $translatableColumns = [
         'about' => "string"
     ];
 
-    /** @var string $primaryKey the primary key */
+    /**
+     * @var string
+     */
     public $primaryKey = "userID";
 
     /**
@@ -60,18 +78,31 @@ class UserModel extends Authenticatable
     public $table = "users";
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "User.label";
 
-    /** @var array $defaultPermissions default permissions that will be listed in settings of permissions*/
+    /**
+     * default permissions that will be listed in settings of permissions.
+     *
+     * @var array
+     */
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
 
-    /** @var integer $rowsPerPage how many rows to show in the pagination*/
+    /**
+     * how many rows to show in the pagination
+     * 
+     * @var int
+     */
     public static $rowsPerPage = 15;
 
-    /** @var array $advancedSearchFields Which fields are searchable By "advanced search" in admin area  */
+    /**
+     * Which fields are searchable By "advanced search" in admin area.
+     *
+     * @var array
+     */
     public static $advancedSearchFields = [
         [
             'name'      => 'Name',
@@ -140,7 +171,7 @@ class UserModel extends Authenticatable
 
 
     /**
-     * Handle callback of insert, update, delete
+     * Handle callback of insert, update, delete.
      */
     protected static function boot(){
         parent::boot();
@@ -166,7 +197,7 @@ class UserModel extends Authenticatable
     }
 
     /**
-     * Generate a custom URL to a user
+     * Generate a custom URL to a user.
      *
      * @param string $routeName
      * @param array $customAttributes
@@ -218,7 +249,7 @@ class UserModel extends Authenticatable
     }
 
     /**
-     * Full name of the user
+     * Full name of the user.
      *
      * @return string
      */
@@ -227,28 +258,25 @@ class UserModel extends Authenticatable
     }
 
     /**
-     * Destruct model instance
+     * Destruct model instance.
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('user:destruct', [$this]);
     }
 
     /**
      * Get posts of users
      */
-    public function posts()
-    {
+    public function posts(){
         return $this->hasMany('App\Models\Post', 'createdByUserID');
     }
 
     /**
-     * Get user roles
+     * Get user roles.
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function roles()
-    {
+    public function roles(){
         return $this->hasManyThrough(
           'App\Models\UserGroup',
           'App\Models\RoleRelation',
@@ -260,7 +288,7 @@ class UserModel extends Authenticatable
 
 
     /**
-     * Get Profile Image that belong to a user
+     * Get Profile Image that belong to a user.
      *
      * @return mixed
      * @throws \Exception
@@ -284,7 +312,7 @@ class UserModel extends Authenticatable
     }
 
     /**
-     * Get profile image
+     * Get profile image.
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
@@ -293,7 +321,7 @@ class UserModel extends Authenticatable
     }
 
     /**
-     * Define single user's SEO Meta data
+     * Define single user's SEO Meta data.
      *
      * @return array
      */

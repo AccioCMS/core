@@ -102,7 +102,7 @@ trait PermissionTrait{
     }
 
     /**
-     * Checks if a permission exists
+     * Checks if a permission exists.
      *
      * @param string $app
      * @param string $key
@@ -114,8 +114,8 @@ trait PermissionTrait{
 
 
     /**
-     * Prepare global permission array to be stored on database
-     * Gets input from the front-end and customizes object to be stored as JSON in DB
+     * Prepare global permission array to be stored on database.
+     * Gets input from the front-end and customizes object to be stored as JSON in DB.
      *
      * @param $globalPermissions
      * @param $id
@@ -143,11 +143,11 @@ trait PermissionTrait{
     }
 
     /**
-     * Prepare custom and default permission array to be stored on database
-     * Gets input from the front-end and customizes object to be stored as JSON in DB
+     * Prepare custom and default permission array to be stored on database.
+     * Gets input from the front-end and customizes object to be stored as JSON in DB.
      *
-     * @param $permissions
-     * @param $id
+     * @param array $permissions
+     * @param int $id
      * @return array
      */
     public static function createPermissions($permissions, $id){

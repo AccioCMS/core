@@ -24,21 +24,21 @@ class TagModel extends Model{
       Traits\CollectionTrait;
 
     /**
-     * Fields that can be filled in CRUD
+     * Fields that can be filled in CRUD.
      *
      * @var array $fillable
      */
     protected $fillable = ['postTypeID','title','slug','description','featuredImageID', 'createdByUserID'];
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     protected $primaryKey = "tagID";
 
     /**
-     * Default number of rows per page to be shown in admin panel
+     * Default number of rows per page to be shown in admin panel.
      *
      * @var integer $rowsPerPage
      */
@@ -52,13 +52,14 @@ class TagModel extends Model{
     public $table = "tags";
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "tags.label";
 
     /**
-     * Default permission that will be listed in settings of permissions
+     * Default permission that will be listed in settings of permissions.
      *
      * @var array $defaultPermissions
      */
@@ -77,19 +78,17 @@ class TagModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = [])
-    {
+    public function __construct(array $attributes = []){
         parent::__construct($attributes);
         Event::fire('tags:construct', [$this]);
     }
 
     /**
-     * Declare columns that should be saved in MenuLinks table as 'attributes', to enable navigation in front-end
+     * Declare columns that should be saved in MenuLinks table as 'attributes', to enable navigation in front-end.
      *
      * @return array
      */
-    public function menuLinkParameters()
-    {
+    public function menuLinkParameters(){
         $previousAutoTranslate = $this->getAutoTranslate();
         $this->setAutoTranslate(false);
         $postType = PostType::findByID($this->postTypeID);
@@ -105,7 +104,7 @@ class TagModel extends Model{
     }
 
     /**
-     * Check if a post has featured image
+     * Check if a post has featured image.
      *
      * @return boolean Returns true if found
      */
@@ -117,17 +116,16 @@ class TagModel extends Model{
     }
 
     /**
-     * Featured image of a tag
+     * Featured image of a tag.
      * @return HasOne
      */
-    public function featuredImage()
-    {
+    public function featuredImage(){
         return $this->hasOne('App\Models\Media','mediaID','featuredImageID');
     }
 
 
     /**
-     * Define single user's SEO Meta data
+     * Define single user's SEO Meta data.
      *
      * @return array
      */
@@ -147,8 +145,7 @@ class TagModel extends Model{
     }
 
     /**
-     * Generate the URL to a tag
-     *
+     * Generate the URL to a tag.
      *
      * @return string
      */
@@ -158,7 +155,7 @@ class TagModel extends Model{
 
 
     /**
-     * Generate a custom URL to a tag
+     * Generate a custom URL to a tag.
      *
      * @param string $routeName
      * @param array $customAttributes
@@ -176,8 +173,7 @@ class TagModel extends Model{
     /**
      * Destruct model instance
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('tag:destruct', [$this]);
     }
 }

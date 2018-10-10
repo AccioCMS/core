@@ -2,14 +2,13 @@
 
 namespace Accio\App\Traits;
 
-
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 
 trait TagTrait{
 
     /**
-     * Get tag by Slug
+     * Get tag by Slug.
      *
      * @param  string $tagSlug  Slug of tag
      * @return object|null Returns an object with post type's data if found, or nullnull if not found
@@ -27,7 +26,7 @@ trait TagTrait{
     }
 
     /**
-     * Get tag by ID
+     * Get tag by ID.
      *
      * @param  int $tagID  ID of Tag
      * @return object|null Returns an object with tag's data if found, or null if not found
@@ -42,7 +41,7 @@ trait TagTrait{
     }
 
     /**
-     * Check if there is any post related to a tag
+     * Check if there is any post related to a tag.
      *
      * @param  int     $tagID  ID of tag
      * @param  string  $postTypeSlug Slug of post type
@@ -64,7 +63,7 @@ trait TagTrait{
 
 
     /**
-     * Check if a tag has featured image
+     * Check if a tag has featured image.
      *
      * @return boolean Returns true if found
      */
@@ -76,7 +75,7 @@ trait TagTrait{
     }
 
     /**
-     * Get URL of a tag's featured image
+     * Get URL of a tag's featured image.
      *
      * @param  int $width
      * @param  int $height
@@ -99,7 +98,7 @@ trait TagTrait{
     }
 
     /**
-     * Renders featured image of a tag
+     * Renders featured image of a tag.
      *
      * @param  int $width
      * @param  int $height

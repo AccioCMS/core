@@ -7,8 +7,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 
-trait BootEventsTrait
-{
+trait BootEventsTrait{
 
     /**
      * Default boot events.

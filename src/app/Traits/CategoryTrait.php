@@ -4,7 +4,6 @@ namespace Accio\App\Traits;
 use App;
 use App\Models\Language;
 use App\Models\MenuLink;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use \App\Models\Menu;
 
@@ -21,12 +20,10 @@ trait CategoryTrait{
     public $categoryList = [];
 
     /**
-     * Find by ID
+     * Find category by ID
      *
-     * @param int $categoryID ID of Category
-     *
-     * @return array|null Category data if found, false if not found
-     *
+     * @param $categoryID
+     * @throws \Exception
      */
     public static function findByID($categoryID){
         $categories = \App\Models\Category::cache();
@@ -37,12 +34,10 @@ trait CategoryTrait{
     }
 
     /**
-     * Find by ID
+     * Find by category by slug
      *
-     * @param string $categorySlug ID of Category
-     *
-     * @return object|boolean Category data if found, false if not found
-     *
+     * @param $categorySlug
+     * @throws \Exception
      */
     public static function findBySlug($categorySlug){
         $categories = \App\Models\Category::cache();
@@ -53,12 +48,11 @@ trait CategoryTrait{
     }
 
     /**
-     * Find by Post Type
+     * Find category by Post Type.
      *
      * @param string $postTypeSlug
      *
      * @return object|boolean Category data if found, false if not found
-     *
      */
     public static function findByPostType($postTypeSlug){
         $postType = PostType::findBySlug($postTypeSlug);
@@ -73,13 +67,12 @@ trait CategoryTrait{
 
 
     /**
-     * Check if a category has posts
+     * Check if a category has posts.
      *
      * @param string $postType slug of post type
      * @param string $categoriesID selected category ID
      *
      * @return bool
-     *
      */
     public static function hasPosts($postType, $categoriesID){
         if(DB::table('categories_relations')
@@ -93,7 +86,7 @@ trait CategoryTrait{
     }
 
     /**
-     * Checks if a category is part of a menulink
+     * Checks if a category is part of a menulink.
      *
      * @param int $categoriesID
      * @return bool
@@ -108,7 +101,8 @@ trait CategoryTrait{
     }
 
     /**
-     * Add a category to a Menu
+     * Add a category to a Menu.
+     *
      * @param Menu $menu
      * @return object
      */
@@ -134,9 +128,10 @@ trait CategoryTrait{
     }
 
     /**
-     * Update category paremeters in MenuLink
-     * @param object $category
-     * @return void
+     * Update category paremeters in MenuLink.
+     *
+     * @param $category
+     * @throws \Exception
      */
     public static function updateMenulink($category){
         if(self::isInMenuLinks($category->categoryID)){
@@ -149,9 +144,10 @@ trait CategoryTrait{
     }
 
     /**
-     * Make parent child tree
-     * (every category has a children array that contains his children)
-     * @param $list
+     * Make parent child tree.
+     * (every category has a children array that contains his children).
+     *
+     * @param $categories
      * @return array
      */
     public function makeChildrenTree($categories){
@@ -174,7 +170,7 @@ trait CategoryTrait{
     }
 
     /**
-     * Get children of a category
+     * Get children of a category.
      *
      * @param $parentID
      * @return array
@@ -191,7 +187,8 @@ trait CategoryTrait{
     }
 
     /**
-     * Get all children tree of a parent
+     * Get all children tree of a parent.
+     *
      * @param $parentID
      */
     public function getAllChildren($parentID){
@@ -203,7 +200,8 @@ trait CategoryTrait{
     }
 
     /**
-     * Delete List of children
+     * Delete List of children.
+     *
      * @param int $parentID
      * @param int $postTypeID
      * @return mixed

@@ -15,17 +15,15 @@ use Mockery\Exception;
 trait PermalinkTrait
 {
     /**
-     * Get a permalink by name
+     * Get a permalink by name.
      *
-     * @param string $belongsTo App name
-     * @param string $name Represents route name ex. login
+     * @param string $belongsTo
+     * @param string $name
      * @param string $defaultURL
-     *
-     * @return string Returns custom url if found, null instead
-     *
+     * @return string
+     * @throws \Exception
      */
-    public static function getByName($belongsTo, $name, $defaultURL = '')
-    {
+    public static function getByName($belongsTo, $name, $defaultURL = ''){
         //find by full name
         $permalinks = Permalink::cache();
         $singlePermalink = false;

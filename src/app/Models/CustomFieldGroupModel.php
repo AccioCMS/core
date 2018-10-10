@@ -6,14 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class CustomFieldGroupModel extends Model{
     /**
-     * Fields that can be filled in CRUD
+     * Fields that can be filled in CRUD.
      *
      * @var array $fillable
      */
     protected $fillable = ['customFieldGroupID','title','description','belongsTo','isActive','conditions','created_at','updated_at'];
 
     /**
-     * Type of the columns
+     * Type of the columns.
+     *
      * @var array
      */
     protected $casts = [
@@ -21,14 +22,14 @@ class CustomFieldGroupModel extends Model{
     ];
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     protected $primaryKey = "customFieldGroupID";
 
     /**
-     * Default number of rows per page to be shown in admin panel
+     * Default number of rows per page to be shown in admin panel.
      *
      * @var integer $rowsPerPage
      */
@@ -42,20 +43,21 @@ class CustomFieldGroupModel extends Model{
     public $table = "custom_fields_groups";
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "CustomFields.groupLabel";
 
     /**
-     * Default permissions that will be listed in settings of permissions
+     * Default permissions that will be listed in settings of permissions.
      *
      * @var array $defaultPermissions
      */
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
 
     /**
-     * Relationship of the custom field group with the custom fields (Group has many fields)
+     * Relationship of the custom field group with the custom fields (Group has many fields).
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
@@ -64,7 +66,7 @@ class CustomFieldGroupModel extends Model{
     }
 
     /**
-     * Returns custom fields by group of a specific module/app
+     * Returns custom fields by group of a specific module/app.
      *
      * @param string $module
      * @param string $formType

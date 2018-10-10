@@ -59,14 +59,15 @@ class PostModel extends Model{
 
     /**
      * The temporary table is associated with the "with" method of laravel
-     * as it creates a new instance of model, and as a result the $table property has its default value
+     * as it creates a new instance of model, and as a result the $table property has its default value.
      *
      * @var string $table
      */
     public static $_tmptable;
 
     /**
-     * Media field to select with media relations
+     * Media field to select with media relations.
+     *
      * @var string $mediaField
      */
     protected $mediaField;
@@ -102,14 +103,15 @@ class PostModel extends Model{
     protected $dates = ['created_at', 'updated_at', 'published_at'];
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     public $primaryKey = "postID";
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "posts.label";
@@ -122,7 +124,7 @@ class PostModel extends Model{
     public static $postsAllowedInTable = 12;
 
     /**
-     * Default number of rows per page to be shown in admin panel
+     * Default number of rows per page to be shown in admin panel.
      *
      * @var integer $rowsPerPage
      */
@@ -144,15 +146,16 @@ class PostModel extends Model{
     public $autoCacheRelations = [];
 
     /**
-     * Define default cachelimit
+     * Define default cachelimit.
+     *
      * @var int
      */
     public $defaultLimitCache = 500;
 
     /**
-     * List of default table columns
+     * List of default table columns.
      *
-     * NOTE: translations shall be referred via __ prefix
+     * NOTE: translations shall be referred via __ prefix.
      *
      * @var array
      */
@@ -183,8 +186,7 @@ class PostModel extends Model{
      * @param  string  $table
      * @return $this
      */
-    public function setTable($table)
-    {
+    public function setTable($table){
         $this->table = 'post_'.cleanPostTypeSlug($table);
         self::$_tmptable = $this->table;
         return $this;
@@ -196,8 +198,7 @@ class PostModel extends Model{
      * @param  array|string  $relations
      * @return \Illuminate\Database\Eloquent\Builder|static
      */
-    public static function with($relations)
-    {
+    public static function with($relations){
         $model = (new static);
 
         if(self::$_tmptable){
@@ -214,7 +215,7 @@ class PostModel extends Model{
 
 
     /**
-     * Define menu panel
+     * Define menu panel.
      *
      * @return array
      * @throws \Exception
@@ -242,7 +243,7 @@ class PostModel extends Model{
     }
 
     /**
-     * Declare columns that should be saved in MenuLinks table as 'attributes', to enable navigation in front-end
+     * Declare columns that should be saved in MenuLinks table as 'attributes', to enable navigation in front-end.
      *
      * @return array
      */
@@ -310,9 +311,9 @@ class PostModel extends Model{
     }
 
     /**
-     * Make query to get posts with their categories
+     * Make query to get posts with their categories.
      *
-     * @param $categoryID
+     * @param int $categoryID
      * @return mixed
      */
     public function generateCacheByCategory($categoryID){
@@ -385,7 +386,7 @@ class PostModel extends Model{
     /**
      * Update cache in post types.
      *
-     * @param $postObj
+     * @param object $postObj
      * @param string $mode
      * @throws \Exception
      */
@@ -410,7 +411,7 @@ class PostModel extends Model{
     /**
      * Update post in post type cache.
      *
-     * @param $postObj
+     * @param object $postObj
      * @param string $mode
      * @throws \Exception
      */
@@ -479,13 +480,13 @@ class PostModel extends Model{
     /**
      * Update post in cache category.
      *
-     * @param $postObj
-     * @param $mode
-     * @param $category
+     * @param object $postObj
+     * @param string $mode
+     * @param object $category
      *
      * @throws \Exception
      */
-    private function refreshPostInCacheCategory($postObj,$mode, $category){
+    private function refreshPostInCacheCategory($postObj, $mode, $category){
         $posts = Post::cache("category_posts_".$category->categoryID, function($query) use($postObj, $category){
             return $query
               ->setTable($postObj->getTable())
@@ -549,6 +550,7 @@ class PostModel extends Model{
 
     /**
      * Get most read posts from cache
+     *
      * @return array
      */
     public static function getMostReadCache(){
@@ -560,7 +562,7 @@ class PostModel extends Model{
     }
 
     /**
-     * @param PostModel $post
+     * @param int $days
      */
     public function markAsReadCache($days = 2){
         if(!Cache::has("most_read_articles_ids")){
@@ -622,7 +624,7 @@ class PostModel extends Model{
     }
 
     /**
-     * Handle callback of insert, update, delete
+     * Handle callback of insert, update, delete.
      * */
     protected static function boot(){
         parent::boot();
@@ -677,8 +679,7 @@ class PostModel extends Model{
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeUnpublished($query, $languageSlug = '')
-    {
+    public function scopeUnpublished($query, $languageSlug = ''){
         if (!$languageSlug) {
             $languageSlug = App::getLocale();
         }
@@ -971,8 +972,7 @@ class PostModel extends Model{
      * @return array|Collection|mixed
      * @throws \Exception
      */
-    public function getCategoriesAttribute()
-    {
+    public function getCategoriesAttribute(){
         // Request category only if post type uses categories
         $getPostType = getPostType($this->getTable());
 
@@ -992,12 +992,11 @@ class PostModel extends Model{
     }
 
     /**
-     * Get Primary Cached category
+     * Get Primary Cached category.
      *
      * @return string
      */
-    public function getCategoryAttribute()
-    {
+    public function getCategoryAttribute(){
         if(!is_null($this->categories)){
             return $this->categories->first();
         }
@@ -1011,8 +1010,7 @@ class PostModel extends Model{
      * @return mixed|null
      * @throws \Exception
      */
-    public function getUserAttribute()
-    {
+    public function getUserAttribute(){
 
         if($this->createdByUserID){
             // when attribute is available, weo don't ned to re-run relation
@@ -1046,8 +1044,7 @@ class PostModel extends Model{
      * @return mixed
      * @throws \Exception
      */
-    public function getFeaturedImageAttribute()
-    {
+    public function getFeaturedImageAttribute(){
         if($this->featuredImageID) {
             // when attribute is available, weo don't ned to re-run relation
             if ($this->attributeExists('featuredimage')) {
@@ -1067,16 +1064,17 @@ class PostModel extends Model{
 
     /**
      * Featured image of a post
+     *
      * @return HasOne
      */
-    public function featuredImage()
-    {
+    public function featuredImage(){
         $this->setConnection("mysql"); //@todo temporary, se po i thirr prje arkives kur posti eshte i arkives
         return $this->hasOne('App\Models\Media','mediaID','featuredImageID');
     }
 
     /**
      * Featured video of a post
+     *
      * @return HasOne
      */
     public function featuredVideo(){
@@ -1170,8 +1168,7 @@ class PostModel extends Model{
     /**
      * Destruct model instance
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('post:destruct', [$this]);
     }
 }

@@ -30,7 +30,7 @@ class MenuLinkModel extends Model{
       Traits\CollectionTrait;
 
     /**
-     * Fields that can be filled in CRUD
+     * Fields that can be filled in CRUD.
      *
      * @var array $fillable
      */
@@ -94,7 +94,7 @@ class MenuLinkModel extends Model{
     }
 
     /**
-     * Delete Menulink caches
+     * Delete Menulink caches.
      */
     public static function deleteCache(){
         $explode = explode('\\',get_class());
@@ -103,7 +103,7 @@ class MenuLinkModel extends Model{
     }
 
     /**
-     * Destruct model instance
+     * Destruct model instance.
      */
     public function __destruct(){
         Event::fire('menuLink:destruct', [$this]);

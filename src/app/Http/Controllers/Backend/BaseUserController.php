@@ -377,46 +377,6 @@ class BaseUserController extends MainController{
         if(!User::hasAccess('User','read')){
             return view('errors.permissions', compact('lang','view','adminPrefix'));
         }
-
-        $adminPrefix = Config::get('project')['adminPrefix'];
-
-        $pagination = (isset($_GET['pagination']) && $_GET['pagination'] != '') ? $pagination = $_GET['pagination'] : $pagination = 1;
-
-        $request = array();
-        // loop throw all get parameters
-        foreach ($_GET as $key => $field){
-            if($key == 'pagination'){
-                continue;
-            }
-
-            if ($key == 'order'){   // get order from get request
-                $orderBy = $field;
-                array_push($request, ['orderBy' => $orderBy]);
-            }else if ($key == 'type'){ // get order type from get request
-                $orderType = $field;
-                array_push($request, ['orderType' => $orderType]);
-            }else{ // get search fields from get request
-                $requestValues = explode(',',$field);
-                $boolean = ($requestValues[3] == "null") ? '' : $requestValues[3];
-                array_push($request, ['type' => ['db-column' => $requestValues[0]], 'operator' => $requestValues[1], 'value' => $requestValues[2], 'boolean' => $boolean]);
-            }
-        }
-
-        // join parameters for the query
-        // we are left joinin the the media table
-        $joins = array(
-          [
-            'table' => 'media',
-            'type' => 'left',
-            'whereTable1' => "profileImageID",
-            'whereTable2' => "mediaID",
-          ]
-        );
-        $advancedSearchData = json_encode(Search::advanced('users',$request, User::$rowsPerPage,$pagination,$joins));
-        $view = 'list'; // the view parameter used in Vuejs to tell which component should be loaded
-        $hasAdvancedSearchData = true;
-        $fields = json_encode($request);
-
-        return view(User::$backendPathToView.'all', compact('lang','view','hasAdvancedSearchData','advancedSearchData','pagination', 'fields', 'adminPrefix'));
+        return view('content');
     }
 }

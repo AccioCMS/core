@@ -2,14 +2,12 @@
 
 namespace Accio\App\Traits;
 
-
 use Accio\Support\PostCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 
-trait CacheTrait
-{
+trait CacheTrait{
 
     /**
      * @var
@@ -39,8 +37,7 @@ trait CacheTrait
     protected static $updatingItem;
 
     /**
-     *
-     * @var array =
+     * @var array
      */
     protected $cachedItems;
 
@@ -56,11 +53,14 @@ trait CacheTrait
      * @var bool
      */
     public $disableCasts = false;
+
+    /**
+     * @var bool
+     */
     public static $tmpDisableCasts = false;
 
     /**
      * Boot Cache Trait Events.
-     * TODO : spe shoh ku po perdoret
      *
      * @return void
      */
@@ -97,7 +97,7 @@ trait CacheTrait
 
 
     /**
-     * @param string $methodName Method name
+     * @param string $methodName Method name.
      *
      * @return mixed
      *
@@ -111,15 +111,12 @@ trait CacheTrait
         }
     }
 
-   
-
-
     /**
      * Check if a key/value is in cache.
      *
-     * @param $array
-     * @param $keyName
-     * @param $keyValue
+     * @param array $array
+     * @param string $keyName
+     * @param string $keyValue
      *
      * @return array
      */
@@ -146,8 +143,8 @@ trait CacheTrait
     /**
      * Default method to update cache.
      *
-     * @param $item
-     * @param $mode
+     * @param mixed $item
+     * @param string $mode
      */
     public function updateCache($item, $mode){
         $model =  self::getModel();
@@ -181,7 +178,7 @@ trait CacheTrait
 
     /**
      * Get parent class.
-     * It removes Accio namespace in order to use project's own model
+     * It removes Accio namespace in order to use project's own model.
      *
      * @return string
      */
@@ -228,7 +225,7 @@ trait CacheTrait
      *
      * @param string $cacheName
      * @param null $callback Callback must always return an executed query with collection output
-     * @param bool $appendModelToCollection
+     * @param bool|callable $appendModelToCollection
      * @return mixed
      * @throws \Exception
      *
@@ -258,6 +255,11 @@ trait CacheTrait
         return $instance->newCollection($instance->cachedItems,get_class(), $instance->getTable());
     }
 
+    /**
+     * Deletes cache.
+     *
+     * @param string $cacheName
+     */
     public static function removeCache($cacheName = ''){
         $instance = (new static)->initializeCache($cacheName);
         if(Cache::has($instance->cacheName)){
@@ -274,8 +276,7 @@ trait CacheTrait
      *
      * @return $this This QueryBuilder instance.
      */
-    public function orderByCache($sort, $order = null)
-    {
+    public function orderByCache($sort, $order = null){
         $this->orderByCache = [
           'sort' => $sort,
           'order' => (! $order ? 'ASC' : $order)
@@ -286,7 +287,7 @@ trait CacheTrait
 
 
     /**
-     * Default method to handle cache query..
+     * Default method to handle cache query.
      *
      * @return mixed
      * @throws \Exception
@@ -315,9 +316,15 @@ trait CacheTrait
 
         return $data;
     }
-    
-    public function newInstance($attributes = [], $exists = false)
-    {
+
+    /**
+     * Creates a new instance of the model that is calling the cache
+     *
+     * @param array $attributes
+     * @param bool $exists
+     * @return mixed
+     */
+    public function newInstance($attributes = [], $exists = false){
         // Overridden in order to allow for late table binding.
         $model = parent::newInstance($attributes, $exists);
         $model->setTable($this->table);
@@ -330,13 +337,13 @@ trait CacheTrait
 
     /**
      * Get the casts array.
+     *
      * When generating cache, we need to save cache data as they currently are in database, without casts.
      * This is done to allow casts to work just as when they receives data from database.
      *
      * @return array
      */
-    public function getCasts()
-    {
+    public function getCasts(){
         if($this->disableCasts){
             return [];
         }
@@ -349,7 +356,8 @@ trait CacheTrait
     }
 
     /**
-     * Check if an attribute is listed in model
+     * Check if an attribute is listed in model.
+     *
      * @param $key
      * @return null
      */
@@ -364,8 +372,8 @@ trait CacheTrait
     /**
      * Fill cache attributes.
      *
-     * @param $class
-     * @param $items
+     * @param string $class
+     * @param array|object $items
      * @return Collection
      * @throws \Exception
      */
@@ -388,9 +396,6 @@ trait CacheTrait
 
             return collect($items)->transform(function ($attributes) use ($class) {
                 $modelObj = new $class($attributes);
-//                foreach ($attributes as $key => $value) {
-//                    $modelObj->setAttribute($key, $value);
-//                }
                 return $modelObj;
             });
         }

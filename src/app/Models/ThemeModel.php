@@ -33,7 +33,7 @@ class ThemeModel extends Model{
     }
 
     /**
-     * Handle callback of insert, update, delete
+     * Handle callback of insert, update, delete.
      * */
     protected static function boot(){
         parent::boot();
@@ -74,8 +74,7 @@ class ThemeModel extends Model{
     /**
      * Destruct model instance
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('theme:destruct', [$this]);
     }
 }

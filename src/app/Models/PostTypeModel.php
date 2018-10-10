@@ -33,7 +33,7 @@ class PostTypeModel extends Model{
       Traits\CollectionTrait;
 
     /**
-     * Fields that can be filled in CRUD
+     * Fields that can be filled in CRUD.
      *
      * @var array $fillable
      */
@@ -49,27 +49,28 @@ class PostTypeModel extends Model{
     public $table = "post_type";
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     public $primaryKey = "postTypeID";
 
     /**
-     * The path to back-end view directory
+     * The path to back-end view directory.
      *
      * @var string $backendPathToView
      */
     public static $backendPathToView = "backend.post_types.";
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "PostTypes.label";
 
     /**
-     * Default permissions that will be listed in settings of permissions
+     * Default permissions that will be listed in settings of permissions.
      *
      * @var array $defaultPermissions
      */
@@ -96,13 +97,15 @@ class PostTypeModel extends Model{
 
 
     /**
-     * Default number of rows per page to be shown in admin panel
+     * Default number of rows per page to be shown in admin panel.
      *
      * @var integer $rowsPerPage
      */
     public static $rowsPerPage = 100; // how many rows to appear in the pagination
 
-
+    /**
+     * @var array
+     */
     private static $customFieldsArray = [];
 
     /**
@@ -124,7 +127,7 @@ class PostTypeModel extends Model{
     }
 
     /**
-     * Get a field by using it's slug
+     * Get a field by using it's slug.
      *
      * @param string $fieldSlug
      * @return mixed
@@ -140,7 +143,7 @@ class PostTypeModel extends Model{
     }
 
     /**
-     * Get Value of a multioptions field by using it's key
+     * Get Value of a multioptions field by using it's key.
      *
      * @param string $fieldSlug
      * @param string $key
@@ -173,7 +176,7 @@ class PostTypeModel extends Model{
     }
 
     /**
-     * Define menu panel
+     * Define menu panel.
      *
      * @return array
      */
@@ -195,7 +198,7 @@ class PostTypeModel extends Model{
     }
 
     /**
-     * Declare columns that should be saved in MenuLinks table as 'attributes', to enable navigation in front-end
+     * Declare columns that should be saved in MenuLinks table as 'attributes', to enable navigation in front-end.
      *
      * @return array
      */
@@ -213,7 +216,7 @@ class PostTypeModel extends Model{
         return $this->hasMany('App\Models\Category', 'postTypeID');
     }
 
-    /** Validate a post type from url
+    /** Validate a post type from url.
      *
      * @param string $postTypeSlug
      * @return bool
@@ -226,7 +229,7 @@ class PostTypeModel extends Model{
     }
 
     /**
-     * Destruct model instance
+     * Destruct model instance.
      */
     public function __destruct(){
         Event::fire('postType:destruct', [$this]);
@@ -259,7 +262,7 @@ class PostTypeModel extends Model{
 
 
     /**
-     * Create table and his columns when post type is created
+     * Create table and his columns when post type is created.
      *
      * @param $postTypeSlug
      * @param $fields
@@ -314,7 +317,7 @@ class PostTypeModel extends Model{
     }
 
     /**
-     * Update post type table and add new columns
+     * Update post type table and add new columns.
      *
      * @param $postTypeSlug
      * @param $fields
@@ -354,7 +357,7 @@ class PostTypeModel extends Model{
     }
 
     /**
-     * Create fields of post type table
+     * Create fields of post type table.
      *
      * @param $table
      * @param $field
@@ -389,7 +392,7 @@ class PostTypeModel extends Model{
     }
 
     /**
-     * Creates route file for new post types
+     * Creates route file for new post types.
      *
      * @param string $slug
      * @return mixed

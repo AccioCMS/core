@@ -25,26 +25,25 @@ use Illuminate\Support\Facades\DB;
 trait ThemeTrait
 {
     /**
-     * Stores Theme configurations for each config file found in current theme
+     * Stores Theme configurations for each config file found in current theme.
      *
      * @var array $config
      */
-
     private  static $config = array();
 
     /**
-     * Active theme name
+     * Active theme name.
      *
      * @var string self::getActiveTheme()
      */
     protected static $activeTheme;
 
     /**
-     * Get active theme
+     * Get active theme.
      *
-     * @param string Name of theme directory
-     * @return string Returns name of the active theme
-     * */
+     * @param string $themeName
+     * @throws \Exception
+     */
     public function setActiveTheme($themeName = ''){
         Event::fire('theme.before_is_set', [$this]);
 
@@ -84,11 +83,11 @@ trait ThemeTrait
     }
 
     /**
-     * Get theme configuration
+     * Get theme configuration.
      *
      * @param string $themeDirectory
-     *
-     * @return array
+     * @return array|mixed
+     * @throws \Exception
      */
     public static function getConfig($themeDirectory){
         $getConfigValues = [];
@@ -111,14 +110,15 @@ trait ThemeTrait
     }
 
     /**
-     * Get theme configuration
+     * Get theme configuration.
      */
     public function setConfig(){
         self::$config = self::getConfig(self::getActiveTheme());
     }
 
     /**
-     * Get a config value from theme
+     * Get a config value from theme.
+     *
      * @param  string $name Config key
      *
      * @return mixed Returns value of requested config if found, and null if its fine.
@@ -130,7 +130,7 @@ trait ThemeTrait
     }
 
     /**
-     * Get base path of active theme
+     * Get base path of active theme.
      *
      * @return string
      */
@@ -139,7 +139,7 @@ trait ThemeTrait
     }
 
     /**
-     * Get base path of a specifc theme
+     * Get base path of a specific theme.
      *
      * @param string $themeNamespace
      * @return string
@@ -149,14 +149,14 @@ trait ThemeTrait
     }
 
     /**
-     *
+     * get theme views path.
      */
     public static function getViewsPath(){
         return self::getPath().'/views/';
     }
 
     /**
-     * Get HTTP url of theme
+     * Get HTTP url of theme.
      *
      * @return \Illuminate\Contracts\Routing\UrlGenerator|string
      */
@@ -165,7 +165,7 @@ trait ThemeTrait
     }
 
     /**
-     * Get namespace of active theme
+     * Get namespace of active theme.
      *
      * @return string
      */
@@ -174,7 +174,7 @@ trait ThemeTrait
     }
 
     /**
-     * Get namespace of active theme
+     * Get namespace of active theme.
      *
      * @return string
      */
@@ -183,10 +183,11 @@ trait ThemeTrait
     }
 
     /**
-     * Get namespace of a specific theme
+     * Get namespace of a specific theme.
      *
-     * @param string $themeDirectoryName Theme directory Name
-     * @return string|null
+     * @param string $themeDirectoryName
+     * @return null|string
+     * @throws \Exception
      */
     public static function getNamespaceOf($themeDirectoryName){
         if(self::ifExists($themeDirectoryName)) {
@@ -199,7 +200,7 @@ trait ThemeTrait
     }
 
     /**
-     * Check if a theme exist
+     * Check if a theme exist.
      *
      * It checks file structure
      *
@@ -212,7 +213,7 @@ trait ThemeTrait
 
     /**
      * Get url of a css.
-     * If no $filename is given, css url will be returned
+     * If no $filename is given, css url will be returned.
      *
      * @param string $fileName
      * @return \Illuminate\Contracts\Routing\UrlGenerator|string
@@ -223,7 +224,7 @@ trait ThemeTrait
 
     /**
      * Get path of a css.
-     * If no $filename is given, css url will be returned
+     * If no $filename is given, css url will be returned.
      *
      * @param string $fileName
      * @return \Illuminate\Contracts\Routing\UrlGenerator|string
@@ -234,7 +235,7 @@ trait ThemeTrait
 
     /**
      * Get url of a js.
-     * If no $filename is given, js url will be returned
+     * If no $filename is given, js url will be returned.
      *
      * @param string $fileName
      * @return \Illuminate\Contracts\Routing\UrlGenerator|string
@@ -245,7 +246,7 @@ trait ThemeTrait
 
     /**
      * Get path of a js.
-     * If no $filename is given, js url will be returned
+     * If no $filename is given, js url will be returned.
      *
      * @param string $fileName
      * @return \Illuminate\Contracts\Routing\UrlGenerator|string
@@ -256,7 +257,7 @@ trait ThemeTrait
 
     /**
      * Get url of a image.
-     * If no $filename is given, images url will be returned
+     * If no $filename is given, images url will be returned.
      *
      * @param string $fileName
      * @return \Illuminate\Contracts\Routing\UrlGenerator|string
@@ -267,7 +268,7 @@ trait ThemeTrait
 
     /**
      * Get url of a font.
-     * If no $filename is given, fonts url will be returned
+     * If no $filename is given, fonts url will be returned.
      *
      * @param string $fileName
      * @return \Illuminate\Contracts\Routing\UrlGenerator|string
@@ -277,7 +278,8 @@ trait ThemeTrait
     }
 
     /**
-     * Check if a view exist in current theme
+     * Check if a view exist in current theme.
+     *
      * @param $view
      * @return boolean
      */
@@ -286,7 +288,7 @@ trait ThemeTrait
     }
 
     /**
-     * Get template view
+     * Get template view.
      *
      * @param string $view The name of view file
      * @param object $itemID Extra ID to perform additional check of view. ex {template}-{ID}
@@ -342,7 +344,8 @@ trait ThemeTrait
     }
 
     /**
-     * Print Theme css as configured on /public/{YOUR THEME NAME}/config/theme.php
+     * Print Theme css as configured on /public/{YOUR THEME NAME}/config/theme.php.
+     *
      * @param true $header where we are printing header or footer css
      * @param array $files List of css files to be printed
      * @param array $defaultAttributes Default attribute to be assigned to all js files.
@@ -412,7 +415,7 @@ trait ThemeTrait
     }
 
     /**
-     * Check whether a css or js should be printed as inline
+     * Check whether a css or js should be printed as inline.
      *
      * @param array $file
      * @return boolean
@@ -425,7 +428,7 @@ trait ThemeTrait
     }
 
     /**
-     * Print Theme javascripts as configured on /public/{YOUR THEME NAME}/config/theme.php
+     * Print Theme javascripts as configured on /public/{YOUR THEME NAME}/config/theme.php.
      *
      * @param true $header where we are printing header or footer js
      * @param array $defaultAttributes Default attribute to be assigned to all js files.
@@ -489,7 +492,7 @@ trait ThemeTrait
 
 
     /**
-     * Gets configs of all themes
+     * Gets configs of all themes.
      *
      * @return array
      * @throws \Exception

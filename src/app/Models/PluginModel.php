@@ -28,14 +28,14 @@ class PluginModel extends Model{
     protected $table = "plugins";
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     protected $primaryKey = "pluginID";
 
     /**
-     * Fields that can be filled in CRUD
+     * Fields that can be filled in CRUD.
      *
      * @var array $fillable
      */
@@ -44,13 +44,14 @@ class PluginModel extends Model{
     ];
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "Plugin.label";
 
     /**
-     * Default permissions that will be listed in settings of permissions
+     * Default permissions that will be listed in settings of permissions.
      *
      * @var array $defaultPermissions
      */
@@ -76,7 +77,7 @@ class PluginModel extends Model{
     }
 
     /**
-     * Destruct model instance
+     * Destruct model instance.
      */
     public function __destruct(){
         Event::fire('plugin:destruct', [$this]);

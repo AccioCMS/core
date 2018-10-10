@@ -28,14 +28,14 @@ class PermalinkModel extends Model
     protected $table = 'permalinks';
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     public $primaryKey = "permalinkID";
 
     /**
-     * Fields that can be filled in CRUD
+     * Fields that can be filled in CRUD.
      *
      * @var array $fillable
      */
@@ -68,10 +68,9 @@ class PermalinkModel extends Model
     }
 
     /**
-     * Destruct model instance
+     * Destruct model instance.
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('permalink:destruct', [$this]);
     }
 }

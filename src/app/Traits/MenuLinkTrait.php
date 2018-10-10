@@ -24,23 +24,24 @@ use Mockery\Exception;
 trait MenuLinkTrait{
 
     /**
-     * Current MenuLink data
+     * Current MenuLink data.
      *
      * @var array|null $currentMenuLink
      * */
     private static $currentMenuLink;
 
     /**
-     * Active MenuLinks IDs, including their parents
+     * Active MenuLinks IDs, including their parents.
      *
      * @var array $activeIDs
      */
     private  static $activeIDs = [];
 
     /**
-     * The MenuLink to which the HomePage is linked
+     * The MenuLink to which the HomePage is linked.
      *
-     * @var array $homepage .*/
+     * @var array $homepage
+     * */
     private static $homepage;
 
     /**
@@ -48,7 +49,7 @@ trait MenuLinkTrait{
      *
      * We use routeName and params to match active MenuLinks.
      * While the same MenuLink can be linked to different Menus and they have the same params and routeName,
-     * there is currently no way to identify which of them is active, therefore all of their IDs are returned
+     * there is currently no way to identify which of them is active, therefore all of their IDs are returned.
      *
      * @param bool $reset
      * @throws \Exception
@@ -87,8 +88,9 @@ trait MenuLinkTrait{
      * @param object $menuLink
      * @param object $currentRoute
      * @param object $menuLinkRoute
+     * @throws \Exception
      */
-    private static function matchRoute(&$currentMenuLinkIDs, $menuLink,$currentRoute, $menuLinkRoute){
+    private static function matchRoute(&$currentMenuLinkIDs, $menuLink, $currentRoute, $menuLinkRoute){
         $menuLinksParams = self::decodeParams($menuLink->params);
 
         //add language parameter on non-default languages
@@ -142,7 +144,8 @@ trait MenuLinkTrait{
      * Check if the menulink has a category linked to currrent Meta model data
      *
      * @param array $currentMenuLinkIDs
-     * @param object $menuLink
+     * @param $menuLink
+     * @throws \Exception
      */
     private static function checkCategoryMatch(&$currentMenuLinkIDs, $menuLink){
         // check for category match
@@ -266,7 +269,7 @@ trait MenuLinkTrait{
     /**
      * Checks if a given MenuLinkID is currently active in navigation
      *
-     * @params tring $class
+     * @params string $class
      * @return bool|string Returns true, false or the given class name
      */
     public function isActive($class = ''){
@@ -284,7 +287,7 @@ trait MenuLinkTrait{
     /**
      * Get all parents IDs of a MenuLink
      *
-     * @param $menuLinkID
+     * @param int $menuLinkID
      * @return array
      * @throws \Exception
      */
@@ -340,10 +343,10 @@ trait MenuLinkTrait{
     /**
      * Generate action of a link and its params, as defined in Routes.
      *
-     * @param object $menuLink A single specific Menu Link object
-     *
-     * @return array Returns controller and params of a method
-     * */
+     * @param object $menuLink
+     * @return string|void
+     * @throws \Exception
+     */
     public static function getActionOfLink($menuLink){
         //post type
         if($menuLink->belongsTo == "post_type"){
@@ -413,8 +416,9 @@ trait MenuLinkTrait{
     /**
      * Get MenuLinks to be shown in Admin Panel
      *
-     * @param array $menuLinks list of menu links
-     * @return array all menu links in parent child relation
+     * @param array $menuLinks
+     * @return array
+     * @throws \Exception
      */
     public static function cmsMenuLinks($menuLinks = []){
         $links = [];
@@ -699,7 +703,7 @@ trait MenuLinkTrait{
     }
 
     /**
-     * Get children of a menu link
+     * Get children of a menu link.
      *
      * @param  array $menuLinks the list of menuLinks of a Menu
      * @param  INT   $parentID the ID of menuLinkID that serves as a parentID to its children

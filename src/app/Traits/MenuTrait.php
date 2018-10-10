@@ -20,7 +20,7 @@ trait MenuTrait
     /**
      * Get menu links of a particular menu.
      *
-     * @param $menuSlug
+     * @param string $menuSlug
      * @return array|\Illuminate\Support\Collection|mixed
      * @throws \Exception
      */
@@ -61,7 +61,7 @@ trait MenuTrait
     }
 
     /**
-     * Get the ID of primary menu
+     * Get the ID of primary menu.
      *
      * @return int|null Returns the ID of primary Menu if found, null instead
      **/
@@ -70,7 +70,7 @@ trait MenuTrait
     }
 
     /**
-     * Prints MenuLinks of a menu
+     * Prints MenuLinks of a menu.
      *
      * @param string $menuSlug Slug of Menu
      * @param string $customView Name of a custom blade.php file to render the template
@@ -90,11 +90,10 @@ trait MenuTrait
         }
     }
 
-
     /**
      * Get Menu by slug.
      * 
-     * @param $slug
+     * @param string $slug
      * @return mixed|null
      * @throws \Exception
      */
@@ -113,7 +112,7 @@ trait MenuTrait
     /**
      * Get Menu by ID.
      *
-     * @param $menuID
+     * @param int $menuID
      * @return mixed|null
      * @throws \Exception
      */

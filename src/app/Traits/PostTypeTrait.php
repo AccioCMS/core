@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Request;
 
 trait PostTypeTrait{
     /**
-     * Check if a post type has posts
+     * Check if a post type has posts.
      *
      * @param  string  $postTypeSlug  The name of the post type. ex. service
      * @return boolean Returns true if there is any post
@@ -28,7 +28,7 @@ trait PostTypeTrait{
     }
 
     /**
-     * Get post type by slug
+     * Get post type by slug.
      *
      * @param  string $postTypeSlug  The slug of Post Type
      *
@@ -55,8 +55,11 @@ trait PostTypeTrait{
     }
 
     /**
-     * @param integer $postTypeID ID of the post type
-     * @return bool is this post type being used in menu links
+     * Check if post type is being used as menulink
+     *
+     * @param int $postTypeID
+     * @return bool
+     * @throws \Exception
      */
     public static function isInMenuLinks($postTypeID){
         $menulinks = MenuLink::cache();
@@ -70,12 +73,11 @@ trait PostTypeTrait{
     }
 
     /**
-     * Get post type by ID
+     * Get post type by ID.
      *
-     * @param  string $postTypeID  ID of Post Type
-     *
-     * @return object Returns requested post type if found, null instead
-     * */
+     * @param int $postTypeID
+     * @throws \Exception
+     */
     public static function findByID($postTypeID){
         $postTypes = \App\Models\PostType::cache();
         if($postTypes) {
@@ -88,7 +90,7 @@ trait PostTypeTrait{
     }
 
     /**
-     * Get current post type slug
+     * Get current post type slug.
      *
      * @param bool $removePrefix It revmoes "post_" from slug
      * @return \Illuminate\Config\Repository|mixed
@@ -122,9 +124,11 @@ trait PostTypeTrait{
     }
 
     /**
-     * Get fields of a post type
-     * @param $post_type
+     * Get fields of a post type.
+     *
+     * @param string $post_type
      * @return array
+     * @throws \Exception
      */
     public static function getFields($post_type){
         $postType = PostType::cache()->where('slug', $post_type)->getItems()->first();
@@ -138,7 +142,8 @@ trait PostTypeTrait{
 
 
     /**
-     * Check if a post type has a custom controller
+     * Check if a post type has a custom controller.
+     *
      * @return bool
      */
     public function hasCustomController(){
@@ -150,7 +155,8 @@ trait PostTypeTrait{
     }
 
     /**
-     * Get Post type's custom controller
+     * Get Post type's custom controller.
+     *
      * @return string
      */
     public function getCustomController(){

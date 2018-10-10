@@ -28,14 +28,14 @@ class MediaModel extends Model{
       Traits\CollectionTrait;
 
     /**
-     * Fields that can be filled in CRUD
+     * Fields that can be filled in CRUD.
      *
      * @var array $fillable
      */
     protected $fillable = ['title', 'description', 'credit', 'type', 'extension', 'url', 'filename', 'fileDirectory', 'filesize', 'dimensions'];
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
@@ -49,27 +49,21 @@ class MediaModel extends Model{
     public $table = "media";
 
     /**
-     * The path to back end view directory
+     * Lang key that points to the multi language label in translate file.
      *
-     * @var string $backendPathToView
-     */
-    public static $backendPathToView = "backend.media.";
-
-    /**
-     * Lang key that points to the multi language label in translate file
      * @var string
      */
     public static $label = "Media.label";
 
     /**
-     * Default permissions that will be listed in settings of permissions
+     * Default permissions that will be listed in settings of permissions.
      *
      * @var array $defaultPermissions
      */
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
 
     /**
-     * The number of media files to show while scrolling in the library list
+     * The number of media files to show while scrolling in the library list.
      *
      * @var int $infinitPaginationShow
      */
@@ -94,16 +88,17 @@ class MediaModel extends Model{
     }
 
     /**
-     * Get all relations of a media
+     * Get all relations of a media.
+     *
      * @return HasMany
      */
-    public function relations()
-    {
+    public function relations(){
         return $this->hasMany('App\Models\MediaRelation','mediaID','mediaID');
     }
 
     /**
-     * Scope a query to only include images
+     * Scope a query to only include images.
+     *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
@@ -113,7 +108,8 @@ class MediaModel extends Model{
 
 
     /**
-     * Scope a query to only include videos
+     * Scope a query to only include videos.
+     *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
@@ -122,7 +118,8 @@ class MediaModel extends Model{
     }
 
     /**
-     * Scope a query to only include audio
+     * Scope a query to only include audio.
+     *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
@@ -131,7 +128,8 @@ class MediaModel extends Model{
     }
 
     /**
-     * Scope a query to only include documents
+     * Scope a query to only include documents.
+     *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
@@ -142,8 +140,7 @@ class MediaModel extends Model{
     /**
      * Destruct model instance
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('media:destruct', [$this]);
     }
 }

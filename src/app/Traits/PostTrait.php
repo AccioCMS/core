@@ -2,25 +2,17 @@
 
 namespace Accio\App\Traits;
 
-use App\Models\CategoryRelation;
-use App\Models\CustomField;
-use App\Models\Media;
 use App\Models\MenuLink;
 use App\Models\Post;
 use App\Models\PostType;
-use App\Models\TagRelation;
 use App\Models\Task;
 use App\Models\Theme;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Mockery\Exception;
 use Validator;
 use Carbon\Carbon;
 use Datetime;
@@ -29,7 +21,8 @@ trait PostTrait{
 
 
     /**
-     * Noty message
+     * Noty message.
+     *
      * @var array $notyList
      */
     protected $notyMessages = [];
@@ -38,6 +31,14 @@ trait PostTrait{
         return $this->notyMessages;
     }
 
+    /**
+     * Noty messages.
+     * retrun nory messages array structure.
+     *
+     * @param string $type
+     * @param string $message
+     * @param string $key
+     */
     public function noty($type, $message, $key = ""){
         array_push($this->notyMessages,[
           'key' => $key,
@@ -83,8 +84,8 @@ trait PostTrait{
     /**
      * Find a post by ID.
      *
-     * @param  int     $postID ID of the post
-     * @param  string  $postTypeSlug Name of the post type, ex. post_services
+     * @param int $postID ID of the post
+     * @param string $postTypeSlug Name of the post type, ex. post_services
      * @param bool $searchInCache true if search first look for the item in cache, false to look for it into db
      *
      * @return object|null Returns post as array or null if not found
@@ -115,7 +116,7 @@ trait PostTrait{
     }
 
     /**
-     *  Store (Create or Update) the post and its related data (ex. media, categories, tags) in the database
+     * Store (Create or Update) the post and its related data (ex. media, categories, tags) in the database
      *
      * @param $data array of data from request
      * @return array Returns 200 if successful, 500 if any internal error is found
@@ -196,7 +197,7 @@ trait PostTrait{
     }
 
     /**
-     * Prepares an array with object to be used from the Laravel Validator class and validates the inputs
+     * Prepares an array with object to be used from the Laravel Validator class and validates the inputs.
      *
      * @param array $data all data from the store request
      *
@@ -352,11 +353,12 @@ trait PostTrait{
     }
 
     /**
-     * @param $postObj
+     * Prepares a array to be stored in the database.
+     *
+     * @param object $postObj
      * @param array $data all data from the store request
      * @return array with post object prepared to be inserted to DB and array of file slugs
      * @throws \Exception
-     *
      */
     private static function populateStoreColumns($postObj, $data){
         $files = array();
@@ -434,6 +436,8 @@ trait PostTrait{
     }
 
     /**
+     * Handles post type field values.
+     *
      * @param array $formData data of a custom field
      * @param boolean $translatable if this field is translatable
      * @param array $languages list of languages data
@@ -506,7 +510,7 @@ trait PostTrait{
     }
 
     /**
-     * Insert Post Categories
+     * Insert Post Categories.
      *
      * @param array  $selectedCategories  The list of selected categories
      * @param int    $postID ID of the Post
@@ -542,11 +546,11 @@ trait PostTrait{
     }
 
     /**
-     * Insert Post tags
+     * Insert Post tags.
      *
-     * @param  array  $selectedTags The list of selected tags
-     * @param  int    $postID ID of the Post
-     * @param  string $postTypeSlug The slug of post type
+     * @param array $selectedTags The list of selected tags
+     * @param int $postID ID of the Post
+     * @param string $postTypeSlug The slug of post type
      *
      * @return array  List of inserted media files
      * */
@@ -602,7 +606,7 @@ trait PostTrait{
     }
 
     /**
-     * Insert Post media files
+     * Insert Post media files.
      *
      * @param  array  $mediaFiles  The list of media files from Post Request
      * @param  int    $postID ID of the Post
@@ -672,7 +676,7 @@ trait PostTrait{
     }
 
     /**
-     * Setup advanced search fields to be used in Posts advanced search
+     * Setup advanced search fields to be used in Posts advanced search.
      *
      * @param  string $postType  Slug of Post Type (ex. post_services)
      *
@@ -709,7 +713,7 @@ trait PostTrait{
     }
 
     /**
-     *  Get a custom vuejs template for a particular default function
+     *  Get a custom vuejs template for a particular default function.
      *
      * @param  string $baseTemplateName The base name of Custom template (ex. 'Create' or 'Update')
      * @param  string $postType The slug of Post Type (ex. post_service)
@@ -731,7 +735,7 @@ trait PostTrait{
     }
 
     /**
-     * Check if a post has featured image
+     * Check if a post has featured image.
      *
      * @return boolean Returns true if found
      */
@@ -743,7 +747,7 @@ trait PostTrait{
     }
 
     /**
-     * Check if a post has featured video
+     * Check if a post has featured video.
      *
      * @return boolean Returns true if found
      */
@@ -755,7 +759,7 @@ trait PostTrait{
     }
 
     /**
-     * Get URL of post's featured image
+     * Get URL of post's featured image.
      *
      * @param  int $width
      * @param  int $height
@@ -764,8 +768,7 @@ trait PostTrait{
      *
      * @return string|null Returns url of featured image if found, null instead
      */
-    public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = '', array $options = [])
-    {
+    public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = '', array $options = []){
         $imageURL = null;
         if ($this->hasFeaturedImage()) {
             if (!$width && !$height) {
@@ -787,7 +790,7 @@ trait PostTrait{
     }
 
     /**
-     * Renders featured image of a post
+     * Renders featured image of a post.
      *
      * @param  int $width
      * @param  int $height
@@ -804,7 +807,7 @@ trait PostTrait{
     }
 
     /**
-     * Renders featured image of a post
+     * Renders featured image of a post.
      *
      * @param  string $coverImage Absolute path of cover image
      * @return HtmlString Returns featured image html
@@ -820,7 +823,7 @@ trait PostTrait{
 
 
     /**
-     * Render Tags of a post
+     * Render Tags of a post.
      *
      * @param string $customView Name of a custom blade.php file to render the template
      * @param string $ulClass
@@ -839,7 +842,7 @@ trait PostTrait{
     }
 
     /**
-     * Check if a post has tags
+     * Check if a post has tags.
      *
      * @return boolean Returns true if found
      */
@@ -849,7 +852,8 @@ trait PostTrait{
     }
 
     /**
-     * Check if a post has a primary category
+     * Check if a post has a primary category.
+     *
      * @return bool
      */
     public function hasCategory(){
@@ -859,15 +863,14 @@ trait PostTrait{
 
     /**
      * Get posts a tag.
-     * Accepts query parameters: limit, belongsTo
+     * Accepts query parameters: limit, belongsTo.
      *
      * @param int $limit
      * @param array $tagIDs
      *
      * @return mixed
      */
-    public function getPostsByTags($limit = 6, $tagIDs = [])
-    {
+    public function getPostsByTags($limit = 6, $tagIDs = []){
         // Validate post type
         if(!$tagIDs) {
             $tagIDs = [];
@@ -898,7 +901,8 @@ trait PostTrait{
     }
 
     /**
-     * Handle post's content
+     * Handle post's content.
+     *
      * @return mixed
      */
     public function content(){
@@ -916,6 +920,8 @@ trait PostTrait{
     }
 
     /**
+     * Check if post is being used as menu link.
+     *
      * @param integer $postID ID of the post
      * @return bool is this post being used in menu links
      */
@@ -928,7 +934,8 @@ trait PostTrait{
     }
 
     /**
-     * Update post parameters in MenuLink
+     * Update post parameters in MenuLink.
+     *
      * @param object $post
      * @return void
      */
@@ -943,7 +950,7 @@ trait PostTrait{
     }
 
     /**
-     * Fire before content events
+     * Fire before content events.
      */
     public function beforeContentEvents(){
         event('theme:post:before_content', [$this]);
@@ -951,7 +958,7 @@ trait PostTrait{
     }
 
     /**
-     * Fire after content events
+     * Fire after content events.
      */
     public function afterContentEvents(){
         Event::fire('theme:post:after_content', [$this]);
@@ -959,7 +966,7 @@ trait PostTrait{
     }
 
     /**
-     * Fire before content events
+     * Fire before content events.
      */
     public function beforeListEvents(){
         Event::fire('theme:post:before_list', [$this]);
@@ -967,7 +974,7 @@ trait PostTrait{
     }
 
     /**
-     * Fire after content events
+     * Fire after content events.
      */
     public function afterListEvents(){
         Event::fire('theme:post:after_list', [$this]);
@@ -975,7 +982,7 @@ trait PostTrait{
     }
 
     /**
-     * Check if a post type has its on Controller (check made by patter {slug}Controller.php
+     * Check if a post type has its on Controller (check made by patter {slug}Controller.php.
      *
      * @param $postTypeSlug
      * @return bool
@@ -992,7 +999,7 @@ trait PostTrait{
     }
 
     /**
-     * Get Default routes for post types that do not have their own Controller
+     * Get Default routes for post types that do not have their own Controller.
      *
      * @param object $postType
      * @return array
@@ -1009,7 +1016,7 @@ trait PostTrait{
     }
 
     /**
-     * Get default routes for a post type
+     * Get default routes for a post type.
      *
      * @param object $postType
      * @return array
@@ -1026,23 +1033,26 @@ trait PostTrait{
     }
 
     /**
-     * Get option value
-     * @param $field
+     * Get option value.
+     *
+     * @param string $field
      * @return mixed
+     * @throws \Exception
      */
     public function getOptionValue($field){
         $postType = getPostType($this->getTable());
         if(!$postType){
             throw new \Exception("Post type ".$this->getTable()."' does not exists!");
         }
-        return $postType->getMultioptionFieldValue($field, $this->{$field});
+        return $postType->getMultioptionFieldValue($field, $this->$field);
     }
 
 
     /**
-     *  This function creates the slug for a row of a model and makes sure that slugs it is not being used from a other post
-     *  @return string unique slug
+     * This function creates the slug for a row of a model and makes sure that
+     * slugs it is not being used from a other post.
      *
+     *  @return string unique slug
      * */
     public static function generateSlug($title, $tableName, $primaryKey, $languageSlug = '', $id = 0, $translatable = false, $delimiter = "-"){
         $count = 0;

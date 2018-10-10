@@ -1,41 +1,37 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: sopa
- * Date: 19/10/2017
- * Time: 10:34 PM
- */
 
 namespace Accio\App\Traits;
-
 
 use App\Models\Language;
 use Illuminate\Support\Facades\App;
 
-trait TranslatableTrait
-{
+trait TranslatableTrait{
 
     protected static $counti = 0;
     /**
-     * Specifies the language that data should be translated when they are called
-     * @var
+     * Specifies the language that data should be translated when they are called.
+     *
+     * @var bool
      */
     protected $_translateLanguage;
 
     /**
-     * Specifies the default translate language that data should be translated when they are called
-     * @var
+     * Specifies the default translate language that data should be translated when they are called.
+     *
+     * @var string
      */
     protected $_defaultTranslateLanguage;
 
     /**
-     * Defines if translatable attributes should be auto translate when called
+     * Defines if translatable attributes should be auto translate when called.
+     *
      * @var bool
      */
     protected $autoTranslate = true;
 
     /**
-     * Set auto translate
+     * Set auto translate.
+     *
      * @param boolean $autoTranslate
      * @return $this
      */
@@ -45,14 +41,15 @@ trait TranslatableTrait
     }
 
     /**
-     * Get auto translate
+     * Get auto translate.
      */
     public function getAutoTranslate(){
         return $this->autoTranslate;
     }
 
     /**
-     * Get class attributes
+     * Get class attributes.
+     *
      * @param string $key
      *
      * @return mixed
@@ -69,7 +66,6 @@ trait TranslatableTrait
             $this->translate($this->_defaultTranslateLanguage);
         }
 
-        //handle custom fields
         if(method_exists($this,'isCustomField') && $this->isCustomField($key)) {
             $value = $this->customFieldValue($key);
 
@@ -80,9 +76,8 @@ trait TranslatableTrait
                 $this->attributes[$key] = $value;
                 $value = $this->getAttributeValue($key);
             }
-        }
-        //is translatable value
-        else{
+        }else{
+            //is translatable value
             $value = parent::getAttribute($key);
 
             if ($this->autoTranslate && $this->isTranslatable($value, $key)) {
@@ -110,13 +105,14 @@ trait TranslatableTrait
                 }
             }
         }
+        //handle custom fields
 
         return $value;
     }
 
 
     /**
-     * Translate an object into a specific language
+     * Translate an object into a specific language.
      *
      * @param $languageSlug
      * @return $this
@@ -126,7 +122,7 @@ trait TranslatableTrait
         return $this;
     }
     /**
-     * Get current translating language
+     * Get current translating language.
      * @return string
      */
     private function getTranslateLanguage(){
@@ -134,7 +130,8 @@ trait TranslatableTrait
     }
 
     /**
-     * Get current translating language
+     * Get current translating language.
+     *
      * @return string
      */
     private function resetTranslateLanguage(){
@@ -142,7 +139,7 @@ trait TranslatableTrait
     }
 
     /**
-     * Set default language
+     * Set default language.
      *
      * @param string $languageSlug
      * @return $this
@@ -156,7 +153,7 @@ trait TranslatableTrait
     }
 
     /**
-     * Gets current language value
+     * Gets current language value.
      *
      * @param  array|object|string $value The rows to be translated
      *
@@ -185,7 +182,8 @@ trait TranslatableTrait
     }
 
     /**
-     * Check if a value has language keys
+     * Check if a value has language keys.
+     *
      * @param string $value
      * @return bool
      */
@@ -213,9 +211,10 @@ trait TranslatableTrait
 
 
     /**
-     * Add language keys in translatable json columns where a key doesn't exits
+     * Add language keys in translatable json columns where a key doesn't exits.
      *
      * @return $this
+     * @throws \Exception
      */
     public function appendLanguageKeys(){
         $attributes = $this->getAttributes();

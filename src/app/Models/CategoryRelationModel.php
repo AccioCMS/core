@@ -23,14 +23,15 @@ class CategoryRelationModel extends Model
     protected $table = "categories_relations";
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     protected $primaryKey = "categoryRelationID";
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "categories.relations.label";

@@ -42,34 +42,35 @@ class MenuModel extends Model{
     public $table = "menus";
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     protected $primaryKey = "menuID";
 
     /**
-     * The path to back end view directory
+     * The path to back end view directory.
      *
      * @var string $backendPathToView
      */
     public static $backendPathToView = "backend.menu.";
 
     /**
-     * Show how many rows to show in the pagination
+     * Show how many rows to show in the pagination.
      *
      * @var integer $paginationTo
      */
     public static $rowsPerPage = 100;
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "Menu.label";
 
     /**
-     * Default permissions that will be listed in settings of permissions
+     * Default permissions that will be listed in settings of permissions.
      *
      * @var array $defaultPermissions
      */
@@ -88,14 +89,14 @@ class MenuModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = [])
-    {
+    public function __construct(array $attributes = []){
         parent::__construct($attributes);
         Event::fire('menu:construct', [$this]);
     }
 
     /**
-     * Create primary menu (if it doesn't exist
+     * Create primary menu (if it doesn't exist.
+     *
      * @return bool
      */
     public static function createPrimaryMenu(){
@@ -116,10 +117,9 @@ class MenuModel extends Model{
     }
     
     /**
-     * Destruct model instance
+     * Destruct model instance.
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('menu:destruct', [$this]);
     }
 }

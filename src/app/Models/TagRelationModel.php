@@ -18,7 +18,7 @@ class TagRelationModel extends Model
     protected $table = "tags_relations";
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */

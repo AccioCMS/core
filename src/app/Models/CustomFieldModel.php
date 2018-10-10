@@ -23,7 +23,7 @@ class CustomFieldModel extends Model{
     public static $snakeAttributes = false;
 
     /**
-     * Fields that can be filled in CRUD
+     * Fields that can be filled in CRUD.
      *
      * @var array $fillable
      */
@@ -32,7 +32,8 @@ class CustomFieldModel extends Model{
         'typeAttributes','layout','created_at','updated_at'];
 
     /**
-     * Type of the columns
+     * Type of the columns.
+     * 
      * @var array
      */
     protected $casts = [
@@ -47,14 +48,14 @@ class CustomFieldModel extends Model{
     ];
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     public $primaryKey = "customFieldID";
 
     /**
-     * Default number of rows per page to be shown in admin panel
+     * Default number of rows per page to be shown in admin panel.
      *
      * @var integer $rowsPerPage
      */
@@ -68,13 +69,14 @@ class CustomFieldModel extends Model{
     public $table = "custom_fields";
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "CustomFields.label";
 
     /**
-     * Default permissions that will be listed in settings of permissions
+     * Default permissions that will be listed in settings of permissions.
      *
      * @var array $defaultPermissions
      */
@@ -82,13 +84,17 @@ class CustomFieldModel extends Model{
 
 
     /**
-     * @var array used to return the media as it required in the frontend (VUE.js) for each custom field and sub field
+     * used to return the media as it required in the frontend (VUE.js) for each custom field and sub field.
+     *
+     * @var array
      */
     private $media = [];
 
 
     /**
-     * @var array returns the values of the custom field
+     * returns the values of the custom field.
+     *
+     * @var array
      */
     private $customFieldValues = [];
 
@@ -102,8 +108,8 @@ class CustomFieldModel extends Model{
     }
 
     /**
-     * Relation
-     * Custom Field has a parent Custom Field Group
+     * Relation.
+     * Custom Field has a parent Custom Field Group.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -125,27 +131,10 @@ class CustomFieldModel extends Model{
         return $this->customFieldValues;
     }
 
-    public function getOptionsValuesAttribute($value){
-        $valArr = explode(',',$value);
-        $result = [];
-        $result['string'] = $value;
-        if(is_array($valArr)){
-            foreach($valArr as $item){
-                $tmpArr = explode(':',trim($item));
-                if(isset($tmpArr[0]) && isset($tmpArr[1])){
-                    $result['object'][trim($tmpArr[0])] = trim($tmpArr[1]);
-                }
-            }
-        }
-        return $result;
-    }
-
-
     /**
      * Destruct model instance
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('customField:destruct', [$this]);
     }
 }

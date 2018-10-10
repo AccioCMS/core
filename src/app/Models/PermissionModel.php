@@ -17,7 +17,7 @@ class PermissionModel extends Model{
     use Traits\PermissionTrait;
 
     /**
-     * Fields that can be filled in CRUD
+     * Fields that can be filled in CRUD.
      *
      * @var array $fillable
      */
@@ -31,20 +31,22 @@ class PermissionModel extends Model{
     public $table = "permissions";
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     protected $primaryKey = "permissionID";
 
     /**
-     * The path to back-end view directory
+     * The path to back-end view directory.
      *
      * @var string $backendPathToView
      */
     public static $backendPathToView = "backend.permission.";
 
     /**
+     * Sets permission to a role (User Group).
+     *
      * @param int $groupID
      * @param array $permission
      * @return boolean

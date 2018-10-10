@@ -1,38 +1,21 @@
 <?php
 
-/**
- * Languages Library
- *
- * Language library contains helpers that helps developers to create certain features of sites by ready-to-use functions
- *
- * @author Faton Sopa <faton.sopa@manaferra.com>
- * @version 1.0
- */
 namespace Accio\App\Traits;
-
 
 use App\Models\Language;
 use App\Models\Plugin;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Lang;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\App as AppFacade;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Input;
-use Accio\Support\Facades\Routes;
 use Mockery\Exception;
 
 
-trait LanguageTrait
-{
+trait LanguageTrait{
 
     /**
      * Stores current language data
@@ -50,7 +33,7 @@ trait LanguageTrait
 
 
     /**
-     * Get data of the default language
+     * Get data of the default language.
      *
      * @param string $column Column Name of language
      * @return object|string|null
@@ -88,7 +71,6 @@ trait LanguageTrait
             $languages = Language::cache()->getItems();
             if($languages) {
                 $getDefault = $languages->where('isDefault',true);
-//                dd($getDefault, $languages);
 
                 if ($getDefault) {
                     self::$default = $getDefault->first();
@@ -107,10 +89,10 @@ trait LanguageTrait
 
 
     /**
-     * Set current language across all the environment
+     * Set current language across all the environment.
      *
      * @param string $languageSlug
-     * @throws Exception if language does not exist
+     * @throws \Exception
      */
     public static function setCurrent(string $languageSlug){
         $languageData  = self::findBySlug($languageSlug);
@@ -125,7 +107,7 @@ trait LanguageTrait
     }
 
     /**
-     * Detect language form url and set it as route parameter
+     * Detect language form url and set it as route parameter.
      *
      * @param  \Illuminate\Http\Request $request
      * @return string|null
@@ -143,12 +125,12 @@ trait LanguageTrait
     }
 
     /**
-     * Print list of languages
+     * Print list of languages.
      *
-     * @param string $customView Name of a custom blade file to render the template
-     * @param string $ulClass Class of ul
-     *
+     * @param string $customView
+     * @param string $ulClass
      * @return HtmlString
+     * @throws \Exception
      */
     public static function printLanguages($customView = '', $ulClass=''){
         return new HtmlString(view()->make(($customView ? $customView : "vendor.languages.default"), [
@@ -159,45 +141,7 @@ trait LanguageTrait
     }
 
     /**
-     * Gets current URL and gives the respective url in a given language
-     * TODO: me e ndreq translate url me route te reja
-     * @param string $languageSlug Slug of a language
-     * @return string
-     */
-    public static function translateURL($languageSlug){
-//        $currentRoute = \Request::route();
-//        $routeName = str_replace('.default','',$currentRoute->getName());
-//        route($routeName);
-
-        return url($languageSlug);
-        $domain = Request::root();
-        $requestURL = Request::getRequestUri();
-
-        //remove language
-        $explodeRequest = explode('/',$requestURL);
-
-        //get menu link in case of default language
-        if(App::getLocale() == self::getDefault("slug")){
-            $menuLinkToChange = (isset($explodeRequest[1]) ? $explodeRequest[1] : false);
-        }else{
-            $menuLinkToChange = (isset($explodeRequest[2]) ? $explodeRequest[2] : false);
-        }
-
-        $newMenuLinkSlug = '';
-        if($menuLinkToChange){
-            $getMenuLink = MenuLink::findBySlug($menuLinkToChange);
-            if($getMenuLink){
-                //add requested menu link slug
-                $getNewMenuLink = MenuLink::findByID($getMenuLink['menuLinkID'],$languageSlug);
-                $newMenuLinkSlug = "/".$getNewMenuLink['slug'];
-            }
-        }
-
-        //remove section
-        return $domain.($languageSlug !== self::getDefault("slug") ? "/".$languageSlug : "").$newMenuLinkSlug;
-    }
-    /**
-     * Get all the labels of the current language and store them in array by directory name
+     * Get all the labels of the current language and store them in array by directory name.
      *
      * @return array Returns all labels from current language
      * */
@@ -222,13 +166,14 @@ trait LanguageTrait
     }
 
     /**
-     * @param  string $slug  The slug of language (ex. en)
+     * Find language by slug.
      *
+     * @param  string $slug  The slug of language (ex. en)
      * @return array|null Returns an array with language's data if found, or null if not found
      * @throws \Exception
      * */
     public static function findBySlug(string $slug){
-        $langauge = \App\Models\Language::cache()->whereJson('slug->'.App::getLocale(), $slug);
+        $langauge = Language::cache()->whereJson('slug->'.App::getLocale(), $slug);
         if(!$langauge->isEmpty()){
             return $langauge->getItems()->first();
         }
@@ -236,6 +181,7 @@ trait LanguageTrait
     }
 
     /**
+     * Checks if language exists by using slug as search.
      *
      * @param string $slug The slug of the language (ex. en)
      *
@@ -243,17 +189,20 @@ trait LanguageTrait
      * @throws \Exception
      * */
     public static function checkBySlug(string $slug){
-        if(!\App\Models\Language::cache()->where('slug', $slug)->isEmpty()){
+        if(!Language::cache()->where('slug', $slug)->isEmpty()){
             return true;
         }
         return false;
     }
 
     /**
-     *
      * Filter json arrays by current language.
-     * Due to the fact that language values are stored in JSON using mysql 5.7 (ex. {"en":"Name","fr":"Prénom"}), this function filters rows and returns only values of the current language
-     * This function is only supposed to be used in Administration area, as it offers a wide list of options for different scenarios
+     *
+     * Due to the fact that language values are stored in JSON using mysql 5.7 (ex. {"en":"Name","fr":"Prénom"}),
+     * this function filters rows and returns only values of the current language.
+     *
+     * This function is only supposed to be used in Administration area, as it offers a wide list of options
+     * for different scenarios.
      *
      * @param  array   $rows The result of the query, the rows from database
      * @param  boolean $justForInTable If it should filters columns for use in tables
@@ -330,7 +279,7 @@ trait LanguageTrait
     }
 
     /**
-     * Translate language fields from a list of objects
+     * Translate language fields from a list of objects.
      *
      * @param  object $items The rows to be translated
      * @param  string $languageSlug slug of language
@@ -364,7 +313,7 @@ trait LanguageTrait
     }
 
     /**
-     * Gets current language value
+     * Gets current language value.
      *
      * @param  array|object|string $value The rows to be translated
      * @param  string $languageSlug   The slug of the language to be translated to. Default is taken from current menu link
@@ -421,8 +370,10 @@ trait LanguageTrait
 
     /**
      * Detect language slug from a request
-     * @param $request Request
-     * @return string|boolean
+     *
+     * @param Request $request
+     * @return bool
+     * @throws \Exception
      */
     public static function detectLanguageFromRequest(Request $request){
         $splitURL = explode("/",$request->path());
@@ -436,7 +387,7 @@ trait LanguageTrait
     }
 
     /**
-     * Generate the URL to a Language
+     * Generate the URL to a Language.
      *
      * @return string
      */
@@ -445,7 +396,8 @@ trait LanguageTrait
     }
 
     /**
-     * Set route lang attribute to all route request
+     * Set route lang attribute to all route request.
+     *
      * @param Request $request
      * @return void
      */
@@ -473,7 +425,8 @@ trait LanguageTrait
     }
 
     /**
-     * Get list of languages based on ISO 639.1 standard
+     * Get list of languages based on ISO 639.1 standard.
+     *
      * @return object
      */
     public static function ISOlist(){
@@ -482,7 +435,7 @@ trait LanguageTrait
     }
 
     /**
-     * Get a ISO language by it slug
+     * Get a ISO language by it slug.
      *
      * @param string $slug
      * @return object|null
@@ -493,7 +446,7 @@ trait LanguageTrait
     }
 
     /**
-     * Get a ISO language by it name
+     * Get a ISO language by it name.
      *
      * @param string $name
      * @return object|null
