@@ -4,6 +4,7 @@ namespace Accio\App\Http\Controllers\Backend;
 
 use Illuminate\Routing\Controller;
 use App;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -22,6 +23,7 @@ class MainController extends Controller{
         if(App::routesAreCached()) {
             $this->middleware('application');
             $this->middleware('backend');
+
         }
     }
 
