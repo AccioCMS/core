@@ -95,11 +95,12 @@ trait CategoryTrait{
     /**
      * Checks if a category is part of a menulink
      *
-     * @param integer $categoriesID ID of the post type
-     * @return bool True is the category is being used in menu links, false instead
+     * @param int $categoriesID
+     * @return bool
+     * @throws \Exception
      */
     public static function isInMenuLinks($categoriesID){
-        $isInMenulinks = MenuLink::where('belongsToID', $categoriesID)->where('belongsTo', 'category')->count();
+        $isInMenulinks = MenuLink::cache()->getItems()->where('belongsToID', $categoriesID)->where('belongsTo', 'category')->count();
         if ($isInMenulinks){
             return true;
         }

@@ -29,13 +29,8 @@ class BaseMenuController extends MainController{
     private $order = 0;
     private $allMenuLinkRoutes = [];
 
-    // Check authentification in the constructor
-    public function __construct(){
-        parent::__construct();
-    }
-
     /**
-     * Stores or updates the menu and his menu links.
+     * Save (Create or updates) the menu and his menu links.
      *
      * @param Request $request
      * @return array response for frontend
@@ -148,7 +143,7 @@ class BaseMenuController extends MainController{
     }
 
     /**
-     * encode a list of object or arrays as json
+     * encode a list of object or arrays as json.
      *
      * @param array $objectArray list of data
      * @return array encoded data
@@ -190,9 +185,9 @@ class BaseMenuController extends MainController{
      * Prepares two arrays of new menu links to store in database ($this->newMenuLinks class instance)
      * and existing menu links to be updated ($this->existingMenuLinks class instance).
      *
-     * @param $orderedLinkList
-     * @param $unOrderedLinkList
-     * @param $menuID
+     * @param array|object $orderedLinkList
+     * @param array|object $unOrderedLinkList
+     * @param int $menuID
      * @param int $parent
      * @throws \Exception
      */
@@ -225,8 +220,8 @@ class BaseMenuController extends MainController{
     /**
      * Search menu link using it's ID.
      *
-     * @param $list
-     * @param $id
+     * @param array|object $list
+     * @param int $id
      * @return mixed
      * @throws \Exception
      */
@@ -241,7 +236,7 @@ class BaseMenuController extends MainController{
 
     /**
      * Used to replace the parent of menu links that exists in DB but have parent a new menu link.
-     * So after inserting the new menu links in database we get their ID and use them if their are parents of existing menu links
+     * So after inserting the new menu links in database we get their ID and use them if their are parents of existing menu links.
      *
      * @param array $newMenuLinksID ids of new menu links inserted in database
      * @return array Returns menu links that exist in db with updated parents
@@ -356,7 +351,7 @@ class BaseMenuController extends MainController{
     /**
      * Get menu Link Routes by post type or return default ones.
      *
-     * @param $controller
+     * @param string $controller
      * @param string $belongsTo
      * @return array|mixed
      * @throws \Exception
@@ -377,8 +372,8 @@ class BaseMenuController extends MainController{
     /**
      * Create a menu link parent child relation array.
      *
-     * @param $lang
-     * @param $id
+     * @param string $lang
+     * @param int $id
      * @return array
      * @throws \Exception
      */
@@ -411,7 +406,7 @@ class BaseMenuController extends MainController{
      * Converts the one dimensional array of menu links to multidimensional array where each parent link has a object with
      * key 'children' where his children are stored.
      *
-     * @param $menuLinks
+     * @param array|object $menuLinks
      * @return array
      * @throws \Exception
      */
@@ -464,7 +459,7 @@ class BaseMenuController extends MainController{
     /**
      * Get all children of a menu link.
      *
-     * @param $parentID
+     * @param int $parentID
      * @return array
      */
     private function getChildren($parentID){
@@ -480,9 +475,9 @@ class BaseMenuController extends MainController{
     }
 
     /**
-     * Remove children links from first dimension of array
+     * Remove children links from first dimension of array.
      *
-     * @param $menuLinks
+     * @param array|object $menuLinks
      * @return array
      */
     private function filterParents($menuLinks){
@@ -497,10 +492,10 @@ class BaseMenuController extends MainController{
 
 
     /**
-     * Delete menu with his menu links
+     * Delete menu with his menu links.
      *
-     * @param $lang
-     * @param $menuID
+     * @param string $lang
+     * @param int $menuID
      * @return array
      */
     public function deleteMenu($lang, $menuID){

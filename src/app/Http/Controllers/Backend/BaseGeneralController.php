@@ -22,17 +22,9 @@ class BaseGeneralController extends MainController {
     }
 
     /**
-     *  Dashboard
-     * */
-    public function index($lang = '', $view = ''){
-        if($lang == ""){
-            return redirect(route('backend.base.index.lang',['lang' => Language::getDefault()->slug])."?mode=menu");
-        }
-        return view('content', compact('lang','postTypes'));
-    }
-
-    /**
-     * Route to logout user
+     * Route to logout user.
+     *
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
     public function logoutUser(){
         Auth::logout();
@@ -40,9 +32,10 @@ class BaseGeneralController extends MainController {
     }
 
     /**
-     * Get Base data for Vue start
+     * Get Base data for Vue start.
      *
      * @return array
+     * @throws \Exception
      */
     public function getBaseData(){
         // menu links for the application part
@@ -52,7 +45,7 @@ class BaseGeneralController extends MainController {
         $cmsMenus = MenuLink::cmsMenus();
 
         // user data
-        $user = \Illuminate\Support\Facades\Auth::user();
+        $user = Auth::user();
         $user->avatar = $user->avatar(200,200,true);
 
         // Get Labels
@@ -75,7 +68,9 @@ class BaseGeneralController extends MainController {
 
         // User data object
         //todo qetu eshte nje bug se query nuk bahet me keyby
-        $postTypeSlugs = PostType::cache()->keys();
+        $postTypeSlugs = PostType::cache()->getItems()->toArray();
+        $postTypeSlugs = array_pluck($postTypeSlugs, "slug");
+
         $globalData = [
             'post_type_slugs' => $postTypeSlugs,
             'permissions' => $user->getPermissions(),

@@ -66,11 +66,11 @@ class CustomFieldGroupModel extends Model{
     /**
      * Returns custom fields by group of a specific module/app
      *
-     * @param string $module module/app
-     * @param string $formType (create, update)
-     * @param int $id (optional) id of the item
-     *
-     * @return array of custom fields by group
+     * @param string $module
+     * @param string $formType
+     * @param int $id
+     * @param string $postType
+     * @return array
      */
     public static function findGroups($module, $formType, $id = 0, $postType = ''){
         $customFieldGroups = self::with('fields')->get();
@@ -154,7 +154,6 @@ class CustomFieldGroupModel extends Model{
             }
         }
 
-        //return $conditionResult;
         return $result;
 
     }

@@ -202,7 +202,7 @@
                         formData: this.form,
                         pluginsData: this.pluginsData
                     },
-                    url: this.basePath+'/'+this.getAdminPrefix+"/json/tags/storeUpdate",
+                    url: this.basePath+'/'+this.getAdminPrefix+"/json/tags/store",
                     error: "Tag could not be updated. Please try again later."
                 }).then((resp) => {
                     if(resp.code == 200){

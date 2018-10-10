@@ -2,13 +2,11 @@
 
 namespace Accio\App\Http\Controllers\Backend;
 
-use App\Models\Settings;
+use App\Models\MediaRelation;
 use App\Models\User;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Image;
 use App\Models\Media;
@@ -17,14 +15,12 @@ use Accio\Support\Facades\Search;
 
 
 class BaseMediaController extends MainController{
-
-    public function __construct(){
-        parent::__construct();
-    }
-
     /**
-     * This function uses upload function that is defined in Media model that uploads files
-     * */
+     * This function uses upload function that is defined in Media model that uploads files.
+     *
+     * @param Request $request
+     * @return array
+     */
     public function store(Request $request){
         // check if user has permissions to access this link
         if(!User::hasAccess('Media','create')){
@@ -34,9 +30,12 @@ class BaseMediaController extends MainController{
     }
 
     /**
-     * Get the list of media files
-     * @show 100
-     * */
+     * Get the list of media files.
+     *
+     * @param string $lang
+     * @param int $pagination
+     * @return array
+     */
     public function getList($lang, $pagination){
         // check if user has permissions to access this link
         if(!User::hasAccess('Media','read')){
@@ -62,24 +61,38 @@ class BaseMediaController extends MainController{
     }
 
     /**
-     *  Search media (simple search)
-     * */
+     * Search media (simple search).
+     *
+     * @param string $term
+     * @param int $pagination
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
     public function search($term, $pagination){
         $view = 'search';
         // check if user has permissions to access this link
         if(!User::hasAccess('Media','create')){
             return view('errors.permissions', compact('view','term','pagination'));
         }
-        return view(Media::$backendPathToView.'all', compact('view','term','pagination'));
+        return view('content');
     }
 
+    /**
+     * Perform search in media.
+     * TODO Use elastic search
+     *
+     * @param Request $request
+     * @return mixed
+     */
     public function searchMedia(Request $request){
         return Search::media($request->term, $request->from, $request->to, $request->type, "created_at", "DESC", $request->page);
     }
 
     /**
-     * Edit a specific media file information
-     * */
+     * Edit a specific media file information.
+     *
+     * @param Request $request
+     * @return array|string
+     */
     public function edit(Request $request){
         // check if user has permissions to access this link
         if(!User::hasAccess('Media','update')){
@@ -97,8 +110,11 @@ class BaseMediaController extends MainController{
     }
 
     /**
-     * Delete media file
-     * */
+     * Delete media file.
+     *
+     * @param Request $request
+     * @return array|string
+     */
     public function delete(Request $request){
         $isOk = "OK";
         // loop throw file array
@@ -106,25 +122,20 @@ class BaseMediaController extends MainController{
             if ($key === "postTypes"){
                 continue;
             }
+
             // check if user has permissions to access this link
             if(!User::hasAccess('Media','delete',$file['mediaID'], true)){
                 return $this->noPermission();
             }
 
-
             // get file info from database
-            $media = \App\Models\Media::find($file['mediaID']);
-            if ($relationDeletePass && $media->delete()){ // delete from database
-
+            $media = Media::find($file['mediaID']);
+            MediaRelation::where("mediaID", $file['mediaID'])->delete();
+            if ($media->delete()){ // delete from database
                 if(file_exists($media->url)) {
                     unlink($media->url); // delete original file
                 }
-
                 $media->deleteThumbs();
-
-                // delete cache
-                Cache::flush();
-
             }else{
                 $isOk =  "ERR";
             }
@@ -133,7 +144,8 @@ class BaseMediaController extends MainController{
     }
 
     /**
-     * Verify if a watermak exists
+     * Get watermark.
+     *
      * @return array
      */
     private function getWatermak(){
@@ -155,9 +167,14 @@ class BaseMediaController extends MainController{
 
         return $watermarImage;
     }
+
     /**
-     *  Assign watermark to media images
-     * */
+     * Assign watermark to media images.
+     *
+     * @param Request $request
+     * @return array|string
+     * @throws \Exception
+     */
     public function assignWatermark(Request $request){
         $getWatermak = $this->getWatermak();
 
@@ -221,8 +238,11 @@ class BaseMediaController extends MainController{
 
 
     /**
-     *  Crop the image with the specific dimensions
-     * */
+     * Crop the image with the specific dimensions.
+     *
+     * @param Request $request
+     * @return string
+     */
     public function cropImage(Request $request){
         // check if user has permissions to access this link
         if(!User::hasAccess('Media','update')){
@@ -281,9 +301,6 @@ class BaseMediaController extends MainController{
 
         $media->deleteThumbs();
         $media->createDefaultThumbs(null, $app);
-
-        // delete cache
-        Cache::flush();
 
         return "OK";
     }

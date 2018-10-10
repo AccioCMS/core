@@ -57,9 +57,9 @@ trait TagTrait{
 
         if($queryObject->count() > 0){
             return true;
-        }else{
-            return false;
         }
+
+        return false;
     }
 
 

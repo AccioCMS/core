@@ -17,41 +17,30 @@ use Input;
 use Route;
 use \App\Models\UserGroup;
 use App\Models\User;
+use App\Models\PostType;
 use Illuminate\Http\Request;
 
 class BaseUserController extends MainController{
-    /**
-     * BaseUserController constructor.
-     */
-    public function __construct(){
-        parent::__construct();
-    }
 
     /**
-     * Return views for search component
+     * Return views for search component.
      *
-     * @param $lang
-     * @param $term
+     * @param string $lang
+     * @param string $term
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      * @throws \Exception
      */
     public function search($lang, $term){
-        $postTypes = \App\Models\PostType::cache()->getItems();
-        $adminPrefix = Config::get('project')['adminPrefix'];
-        $isSearch = true; // used when generatin language menu (language meu that chenges the locate in backend)
-        //$isPostView = true; // used when generating language menu (language meu that chenges the locate in backend)
-
         // check if user has permissions to access this link
         if(!User::hasAccess('User','read')){
-            return view('errors.permissions', compact('lang','view','term','isSearch','isPostView','adminPrefix'));
+            return view('errors.permissions');
         }
 
-        $view = 'search';
-        return view('content', compact('lang','view','term','postTypes','isSearch','isPostView', 'adminPrefix'));
+        return view('content');
     }
 
     /**
-     * Make simple search with a search term
+     * Make simple search with a search term.
      *
      * @param $term
      * @return array
@@ -81,7 +70,7 @@ class BaseUserController extends MainController{
     }
 
     /**
-     * Get the list of all users
+     * Get the list of all users.
      *
      * @param string $lang Language slug (ex. en)
      * @return array
@@ -103,7 +92,7 @@ class BaseUserController extends MainController{
     }
 
     /**
-     * Get all User Groups
+     * Get all User Groups.
      *
      * @return UserGroup[]|array|\Illuminate\Database\Eloquent\Collection
      */
@@ -116,7 +105,7 @@ class BaseUserController extends MainController{
     }
 
     /**
-     * Store user in Database
+     * Store user in Database.
      *
      * @param Request $request
      * @return array
@@ -200,7 +189,7 @@ class BaseUserController extends MainController{
 
 
     /**
-     * Change users profile image
+     * Change users profile image.
      *
      * @param Request $request
      * @return array|false|string
@@ -214,10 +203,10 @@ class BaseUserController extends MainController{
     }
 
     /**
-     * Delete user
+     * Delete user.
      *
-     * @param $lang
-     * @param $id
+     * @param string $lang
+     * @param int $id
      * @return array
      */
     public function delete($lang, $id){
@@ -231,9 +220,9 @@ class BaseUserController extends MainController{
 
     /**
      * Deletes user,
-     * called from bulkDelete and delete functions
+     * called from bulkDelete and delete functions.
      *
-     * @param $id
+     * @param int $id
      * @return array|bool
      */
     private function deleteUser($id){
@@ -265,8 +254,7 @@ class BaseUserController extends MainController{
     }
 
     /**
-     * Bulk Delete users
-     * Delete many users
+     * Bulk Delete users. Delete many users with on requests
      *
      * @params array of user IDs
      * */
@@ -283,8 +271,8 @@ class BaseUserController extends MainController{
     /**
      * JSON object with details for a specific user.
      *
-     * @param $lang
-     * @param $id
+     * @param string $lang
+     * @param int $id
      * @return array
      */
     public function detailsJSON($lang, $id){
@@ -307,11 +295,11 @@ class BaseUserController extends MainController{
     }
 
     /**
-     * Reset users password
+     * Reset users password.
      *
-     * method to reset users password
-     * @params user ID AND new password
-     * */
+     * @param Request $request
+     * @return array
+     */
     public function resetPassword(Request $request){
         // check if user has permissions to access this link
         if(!User::hasAccess('user','update')){
@@ -341,7 +329,7 @@ class BaseUserController extends MainController{
     }
 
     /**
-     * Get the array of fields for advanced search
+     * Get the array of fields for advanced search.
      *
      * @param string $lang
      * @return array
@@ -355,7 +343,7 @@ class BaseUserController extends MainController{
     }
 
     /**
-     * Get the result of advanced search
+     * Get the result of advanced search.
      *
      * @param Request $request
      * @return array
@@ -379,9 +367,9 @@ class BaseUserController extends MainController{
     }
 
     /**
-     * When the page is refreshed in while advanced search is done
+     * When the page is refreshed in while advanced search is done.
      *
-     * @param $lang
+     * @param string $lang
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function searchAdvanced($lang){
@@ -393,9 +381,6 @@ class BaseUserController extends MainController{
         $adminPrefix = Config::get('project')['adminPrefix'];
 
         $pagination = (isset($_GET['pagination']) && $_GET['pagination'] != '') ? $pagination = $_GET['pagination'] : $pagination = 1;
-
-        $orderBy = '';
-        $orderType = '';
 
         $request = array();
         // loop throw all get parameters

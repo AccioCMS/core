@@ -51,9 +51,9 @@ class BaseSettingsController extends MainController{
     }
 
     /**
-     * API -- Used to take theme configs
+     * API -- Used to take theme configs.
      *
-     * @param $lang
+     * @param string $lang
      * @return array
      * @throws \Exception
      */
@@ -62,7 +62,7 @@ class BaseSettingsController extends MainController{
     }
 
     /**
-     * Store all settings in the database
+     * Store all settings in the database.
      *
      * @param Request $request
      * @return array
@@ -101,7 +101,7 @@ class BaseSettingsController extends MainController{
 
 
     /**
-     * Get list of all permalinks
+     * Get list of all permalinks.
      *
      * @param $lang
      * @return mixed
@@ -112,7 +112,7 @@ class BaseSettingsController extends MainController{
     }
 
     /**
-     * Store permalinks in database
+     * Store permalinks in database.
      *
      * @param Request $request
      * @return array

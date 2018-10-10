@@ -6,17 +6,12 @@ use App;
 use App\Models\Language;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Input;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Validator;
-use Accio\Support\Facades\Pagination;
 use App\Models\PostType;
-use App\Models\Post;
 use App\Models\Category;
 use App\Models\Tag;
 
@@ -26,12 +21,8 @@ class BasePostTypeController extends MainController{
     // request in post to be able to use it in inner functions
     public $req;
 
-    public function __construct(){
-        parent::__construct();
-    }
-
     /**
-     * Gets post type with his category
+     * Gets post type with his category.
      *
      * @param string $lang
      * @return array|\Illuminate\Contracts\Pagination\Paginator
@@ -46,15 +37,14 @@ class BasePostTypeController extends MainController{
         }
 
         return ['data' => $result];
-
     }
 
     /**
-     * Get all post types
+     * Get all post types for menu panel.
      *
      * @param string $lang
-     * @return object
-     * */
+     * @return array
+     */
     public function menuPanelItems($lang = ""){
         // check if user has permissions to access this link
         if(!User::hasAccess('PostType','read')){
@@ -87,7 +77,7 @@ class BasePostTypeController extends MainController{
     }
 
     /**
-     * Get post type by ID
+     * Get post type by ID.
      *
      * @param integer $id post type id
      * @return object post type data
@@ -97,10 +87,10 @@ class BasePostTypeController extends MainController{
     }
 
     /**
-     * Delete a Post Type by using it's ID
+     * Delete a Post Type by using it's ID.
      *
-     * @param $lang
-     * @param $id
+     * @param string $lang
+     * @param int $id
      * @return array
      */
     public function delete($lang, $id){
@@ -117,8 +107,8 @@ class BasePostTypeController extends MainController{
 
 
     /**
-     * Bulk Delete post type
-     * Delete many post type in the same time
+     * Bulk Delete post type.
+     * Delete many post type in the same time.
      *
      * @param Request $request array of post type IDs
      * @return array
@@ -143,10 +133,10 @@ class BasePostTypeController extends MainController{
     }
 
     /**
-     * Delete post type by using ID
-     * Used in bulkDelete and delete functions
+     * Delete post type by using ID.
+     * Used in bulkDelete and delete functions.
      *
-     * @param $id
+     * @param int $id
      * @return array|bool
      */
     private function deletePostType($id){
@@ -175,7 +165,7 @@ class BasePostTypeController extends MainController{
     }
 
     /**
-     * Delete categories and tags with the relations for a post type
+     * Delete categories and tags with the relations for a post type.
      *
      * @param int $postTypeID
      * @return bool
@@ -201,7 +191,7 @@ class BasePostTypeController extends MainController{
     }
 
     /**
-     * Delete column from DB
+     * Delete column from DB.
      *
      * @param string $postTypeSlug
      * @param string $fieldSlug
@@ -217,7 +207,7 @@ class BasePostTypeController extends MainController{
     }
 
     /**
-     *  Store a new Post Type in database
+     *  Save Post Type in database.
      *
      *  @param Request $request all post type data coming from the form
      *  @return array ErrorHandler
@@ -291,10 +281,10 @@ class BasePostTypeController extends MainController{
     }
 
     /**
-     * Get post type with all details - (Categories, fields etc)
+     * Get post type with all details - (Categories, fields etc).
      *
-     * @param $lang
-     * @param $id
+     * @param string $lang
+     * @param int $id
      * @return array
      * @throws \Exception
      */
@@ -341,10 +331,11 @@ class BasePostTypeController extends MainController{
     }
 
     /**
-     * This function creates the slug for a post type and makes sure that slugs it is not being used from a other post type
+     * This function creates the slug for a post type and makes sure that slugs it is not being used
+     * from a other post type.
      *
-     * @param $lang
-     * @param $slug
+     * @param string $lang
+     * @param string $slug
      * @return mixed|string
      */
     public function getSlug($lang, $slug){
@@ -352,10 +343,10 @@ class BasePostTypeController extends MainController{
     }
 
     /**
-     * Get post type by slug
+     * Get post type by slug.
      *
-     * @param $lang language slug
-     * @param $slug post type slug
+     * @param string $lang language slug
+     * @param string $slug post type slug
      * @return array post type
      */
     public function getBySlug($lang, $slug){
@@ -403,7 +394,7 @@ class BasePostTypeController extends MainController{
     }
 
     /**
-     * Generates a list of tables that can be used as data for custom field drop down
+     * Generates a list of tables that can be used as data for custom field drop down.
      *
      * @return array
      * @throws \Exception

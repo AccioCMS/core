@@ -12,15 +12,9 @@ use App\Models\Language;
 use App\Models\Permission;
 
 class BasePermissionController extends MainController{
-    /**
-     * BasePermissionController constructor.
-     */
-    public function __construct(){
-        parent::__construct();
-    }
 
     /**
-     * Get the permission options for each module (Cms app) from their models
+     * Get the permission options for each module (Cms app) from their models.
      *
      * @param string $lang
      * @return array
@@ -48,10 +42,10 @@ class BasePermissionController extends MainController{
     }
 
     /**
-     * Delete a group and it's permissions by it's ID
+     * Delete a group and it's permissions by it's ID.
      *
-     * @param $lang
-     * @param $id
+     * @param string $lang
+     * @param int $id
      * @return array
      */
     public function delete($lang, $id){
@@ -72,7 +66,7 @@ class BasePermissionController extends MainController{
     }
 
     /**
-     * Creates or Updates group and permissions
+     * Creates or Updates group and permissions.
      *
      * @param Request $request
      * @return array
@@ -128,8 +122,7 @@ class BasePermissionController extends MainController{
     }
 
     /**
-     * Bulk Delete groups and permissions
-     * Delete many groups
+     * Bulk Delete groups and permissions, delete many groups in one request.
      *
      * @param Request $request
      * @return array
@@ -157,8 +150,8 @@ class BasePermissionController extends MainController{
     }
 
     /**
-     * USED to get list of models for custom permissions
-     * Returns array list from DB with primary key as array key and selected columns as value
+     * USED to get list of models for custom permissions.
+     * Returns array list from DB with primary key as array key and selected columns as value.
      *
      * @param Request $request
      * @return array
@@ -220,7 +213,7 @@ class BasePermissionController extends MainController{
 
 
     /**
-     * Return all permission and values structured for frontend
+     * Return all permission and values structured for frontend.
      *
      * @param Request $request
      * @return array

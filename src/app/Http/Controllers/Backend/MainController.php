@@ -46,7 +46,7 @@ class MainController extends Controller{
     }
 
     /**
-     * Returns the list of specific model
+     * Returns the list of specific model.
      *
      * @param string $lang
      * @return \Illuminate\Contracts\Pagination\Paginator
@@ -65,10 +65,13 @@ class MainController extends Controller{
     }
 
     /**
-     * Return views for a specific model LIKE update, reset password etc
+     * Return views for a specific model LIKE update, reset password etc.
      *
-     * @params view and ID
-     * */
+     * @param string $lang
+     * @param string $view
+     * @param int $id
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
     public function single($lang, $view, $id){
         $classNameArr = explode("\\", get_class($this));
         $className = str_replace("Controller","",$classNameArr[4]);
@@ -102,7 +105,7 @@ class MainController extends Controller{
     }
 
     /**
-     * Handles sort ( updates order column )
+     * Handles sort ( updates order column ).
      *
      * @param Request $request
      * @return array
@@ -126,13 +129,13 @@ class MainController extends Controller{
     }
 
     /**
-     * Used as API to get list of all rows without using pagination
-     * returns array of all rows in database
+     * Used as API to get list of all rows without using pagination.
+     * returns array of all rows in database.
      *
-     * Uses the Controller name to get his model
-     * Controller name has to start with the name as the model
+     * Uses the Controller name to get his model.
+     * Controller name has to start with the name as the model.
      *
-     * Exmp. (ModelName)Controller -- UserController
+     * Exmp. (ModelName)Controller -- UserController.
      *
      * @param string $lang
      * @return mixed
@@ -146,12 +149,12 @@ class MainController extends Controller{
 
 
     /**
-     * This function creates the slug for a row of a model and makes sure that -
-     * slugs it is not being used from a other post
+     * This function creates the slug for a row of a model and makes sure that
+     * slugs it is not being used from a other post.
      *
-     * @param $title
-     * @param $tableName
-     * @param $primaryKey
+     * @param string $title
+     * @param string $tableName
+     * @param int $primaryKey
      * @param string $languageSlug
      * @param int $id
      * @param bool $translatable
@@ -191,12 +194,12 @@ class MainController extends Controller{
 
 
     /**
-     * Make simple search with a search term
-     * Gets query params and performs where clauses
+     * Make simple search with a search term.
+     * Gets query params and performs where clauses.
      * TODO: implement ElasticSearch
      *
-     * @param $lang
-     * @param $term
+     * @param string $lang
+     * @param string $term
      * @return array
      */
     public function makeSearchParent($lang, $term){
@@ -227,6 +230,8 @@ class MainController extends Controller{
     }
 
     /**
+     * Used in Vuejs to redirect user after a save (in Create or Update forms).
+     *
      * @param string $redirectChoice what kind of redirection to make
      * @param string $belongsTo in which app to redirect
      * @param integer $id if link has a id
@@ -273,7 +278,7 @@ class MainController extends Controller{
     }
 
     /**
-     * Handle ajax responses (mainly used by view vue js
+     * Handle ajax responses (mainly used by view vue js.
      *
      * @param  integer $code HTTP response code
      * @param  string  $message The message to be shown along the error

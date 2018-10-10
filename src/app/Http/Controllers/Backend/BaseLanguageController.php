@@ -19,8 +19,8 @@ class BaseLanguageController extends MainController{
     }
 
     /**
-     * Returns language list from cache
-     * Overwrites getAll method form MainController
+     * Returns language list from cache.
+     * Overwrites getAll method form MainController.
      *
      * @param string $lang
      * @return array|\Illuminate\Contracts\Pagination\Paginator
@@ -34,7 +34,7 @@ class BaseLanguageController extends MainController{
     }
 
     /**
-     * Used te delete language label directories
+     * Used te delete language label directories.
      *
      * @param $slug
      */
@@ -46,11 +46,11 @@ class BaseLanguageController extends MainController{
     }
 
     /**
-     * Delete language
-     * Removes language directory used for labels
+     * Delete language.
+     * Removes language directory used for labels.
      *
-     * @param $lang
-     * @param $id
+     * @param string $lang
+     * @param int $id
      * @return array
      */
     public function delete($lang, $id){
@@ -74,7 +74,7 @@ class BaseLanguageController extends MainController{
     }
 
     /**
-     * Bulk Delete languages
+     * Bulk Delete languages.
      *
      * Delete many languages
      * @params array Language IDs
@@ -107,8 +107,8 @@ class BaseLanguageController extends MainController{
     }
 
     /**
-     * Create or Update language in database
-     * If the language is set to be default, the previous one is updated and set to non-default
+     * Save (Create or Update) language in database.
+     * If the language is set to be default, the previous one is updated and set to non-default.
      *
      * @param Request $request all language data
      * @return array response
@@ -174,8 +174,8 @@ class BaseLanguageController extends MainController{
     }
 
     /**
-     * Copies labels from the default languages to the new language
-     * So creates labels for new language
+     * Copies labels from the default languages to the new language.
+     * So creates labels for new language.
      *
      * @param string $slug
      */
@@ -193,7 +193,7 @@ class BaseLanguageController extends MainController{
     }
 
     /**
-     * Returns all data of language
+     * Returns all data of a single language (used in update form).
      *
      * @return array with details for a specific language
      * @params language ID

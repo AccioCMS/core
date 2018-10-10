@@ -341,15 +341,6 @@ trait MediaTrait{
         return false;
     }
 
-
-    private function setOptions(){
-
-    }
-
-    private function getOption(){
-
-    }
-
     /**
      * Check if an extension is image
      *

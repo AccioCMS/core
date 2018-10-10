@@ -21,14 +21,9 @@ use App\Models\Category;
 use App\Models\CustomFieldGroup;
 
 class BasePostController extends MainController {
-    // Check authentication in the constructor
-    public function __construct(){
-        parent::__construct();
-    }
-
 
     /**
-     * Get all post of a post type
+     * Get all post of a post type.
      *
      * TODO: me shti ne funksion ElasticSearch
      *
@@ -105,11 +100,11 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Get all data needed in the post create form
-     * Fields, Custom Fields, Categories, Languages
+     * Get all data needed in the post create form.
+     * Fields, Custom Fields, Categories, Languages.
      *
-     * @param $lang
-     * @param $postTypeSlug
+     * @param string $lang
+     * @param string $postTypeSlug
      * @return array
      * @throws \Exception
      */
@@ -135,10 +130,10 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Return view (list, create) and check permissions
+     * Return view (list, create) and check permissions.
      *
-     * @param $lang
-     * @param $postTypeSlug
+     * @param string $lang
+     * @param string $postTypeSlug
      * @param $view
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\Response|\Illuminate\View\View
      */
@@ -158,12 +153,12 @@ class BasePostController extends MainController {
     }
 
     /**
-     * This method loads single post view (like update etc.)
+     * This method loads single post view (like update etc.).
      *
-     * @param $lang
-     * @param $postTypeSlug
-     * @param $view
-     * @param $id
+     * @param string $lang
+     * @param string $postTypeSlug
+     * @param string $view
+     * @param int $id
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function postsSingle($lang, $postTypeSlug, $view, $id){
@@ -177,9 +172,9 @@ class BasePostController extends MainController {
 
     /**
      * Prepare values for each field.
-     * used when this function is called in detailsJson (update form of the post)
+     * used when this function is called in detailsJson (update form of the post).
      *
-     * @param $postType
+     * @param string $postType
      * @return array
      */
     public function getTranslatableFields($postType){
@@ -204,10 +199,10 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Get columns list that will be used only in post list table
-     * Used to add extra columns in post list table
+     * Get columns list that will be used only in post list table.
+     * Used to add extra columns in post list table.
      *
-     * @param $postType
+     * @param string $postType
      * @return array
      */
     public function getInTableColumns($postType){
@@ -243,15 +238,15 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Handel values for post type fields needed in Create and Update form
-     * Get values of every post field (custom post field)
+     * Handel values for post type fields needed in Create and Update form.
+     * Get values of every post field (custom post field).
      *
      * @param string $postType
-     * @param $post
+     * @param object $post
      * @return array
      * @throws \Exception
      */
-    public function getPostTypeFieldsValues(string $postType, $post = ""){
+    public function getPostTypeFieldsValues(string $postType, $post = null){
         $fields = PostType::getFields($postType);
         $languages = Language::cache()->getItems();
         $values = [];
@@ -344,11 +339,11 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Joins post with category and selects only ones that have the specific category
+     * Joins post with category and selects only ones that have the specific category.
      *
-     * @param $queryObject
-     * @param $categoryID
-     * @param $postTypeSlug
+     * @param object $queryObject
+     * @param int $categoryID
+     * @param string $postTypeSlug
      * @return mixed
      */
     private function selectByCategory($queryObject, $categoryID, $postTypeSlug){
@@ -357,7 +352,7 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Advanced search for posts
+     * Advanced search for posts.
      * TODO use ElasticSearch
      *
      * @param object $obj
@@ -394,7 +389,7 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Create event 'table_list_rows' to manipulate with data elsewhere
+     * Create event 'table_list_rows' to manipulate with data elsewhere.
      *
      * @param string $postType
      * @return $this
@@ -425,8 +420,8 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Appends event rows in table list
-     * Manipulate with post data using: 'table_list_rows' event
+     * Appends event rows in table list.
+     * Manipulate with post data using: 'table_list_rows' event.
      *
      * @param $paginationResult
      * @param string $postType
@@ -450,13 +445,12 @@ class BasePostController extends MainController {
         return $paginationResult;
     }
 
-
     /**
-     * Get all post of a category
+     * Get all post of a category.
      *
      * @param string $lang language slug
      * @param string $postType post type slug
-     * @param integer $categoryID selected category ID
+     * @param int $categoryID selected category ID
      *
      * @return array data of posts of a specific category
      */
@@ -481,7 +475,7 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Delete a Post (if it isn't being used)
+     * Delete a Post (if it isn't being used).
      *
      * @param string $lang current language
      * @param string $postType slug of the post type of this post
@@ -500,7 +494,7 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Bulk Delete posts (Delete many posts)
+     * Bulk Delete posts (Delete many posts).
      *
      * @param Request $request array of posts IDs
      * @return array
@@ -528,10 +522,10 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Delete a single post and all his relation data (related tags and categories)
+     * Delete a single post and all his relation data (related tags and categories).
      *
-     * @param $id
-     * @param $postType
+     * @param int $id
+     * @param string $postType
      * @return array|bool
      */
     private function deletePost($id, $postType){
@@ -566,7 +560,7 @@ class BasePostController extends MainController {
     }
 
     /**
-     * return view for search component
+     * return view for search component.
      *
      * @param string $lang language slug
      * @param string $postTypeSlug slug of the post type
@@ -583,8 +577,7 @@ class BasePostController extends MainController {
     }
 
     /**
-     *
-     * Make simple search with a search term
+     * Make simple search with a search term.
      * TODO: use ElasticSearch
      *
      * @param string $lang language slug
@@ -622,8 +615,8 @@ class BasePostController extends MainController {
     }
 
     /**
-     * This function is used to store the post in the database
-     * Is used to store the media relations too
+     * This function is used to store the post in the database.
+     * Is used to store the media relations too.
      *
      * Request $request (parameter) post Request object with all data from the custom fields:
      *      files - files array used to store the media relations (the files or images of a post)
@@ -683,8 +676,8 @@ class BasePostController extends MainController {
     }
 
     /**
-     * If title is sent empty in different languages (in store request) use the default -
-     *      language title to fill the other ones
+     * If title is sent empty in different languages (in store request) use the default
+     * language title to fill the other ones.
      *
      * @param $data array of post data
      * @return array post data with modified title and default language title
@@ -714,13 +707,13 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Slug shouldn't be empty
-     * Fills slug from default language to all other languages slugs
+     * Slug shouldn't be empty.
+     * Fills slug from default language to all other languages slugs.
      *
-     * @param $slugList array list of slugs for each language
-     * @param $postType string post type
-     * @param $defaultSlug string if slugs are empty use default slug
-     * @param $id int id of post if update
+     * @param array $slugList list of slugs for each language
+     * @param string $postType post type
+     * @param string $defaultSlug if slugs are empty use default slug
+     * @param int $id id of post if update
      * @return array generated slugs for each language
      */
     public function fillEmptySlugs($slugList, $postType, $defaultSlug, $id = 0){
@@ -737,11 +730,11 @@ class BasePostController extends MainController {
     }
 
     /**
-     * All required data for post update form
+     * All required data for post update form.
      *
-     * @param $lang
-     * @param $postTypeSlug
-     * @param $id
+     * @param string $lang
+     * @param string $postTypeSlug
+     * @param int $id
      * @return array
      * @throws \Exception
      */
@@ -822,12 +815,12 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Get all media related to a single post
+     * Get all media related to a single post.
      *
-     * @param $id
-     * @param $post
-     * @param $postTypeSlug
-     * @param $translatableFields
+     * @param int $id
+     * @param object $post
+     * @param string $postTypeSlug
+     * @param array $translatableFields
      * @return array
      */
     private function getPostRelatedMedia($id, $post, $postTypeSlug, $translatableFields){
@@ -882,10 +875,10 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Get selected categories of a single post
+     * Get selected categories of a single post.
      *
-     * @param $id
-     * @param $postTypeSlug
+     * @param int $id
+     * @param string $postTypeSlug
      * @return array
      */
     private function getPostSelectedCategories($id, $postTypeSlug){
@@ -901,10 +894,10 @@ class BasePostController extends MainController {
     }
 
     /**
-     * Get selected tags of a single post
+     * Get selected tags of a single post.
      *
-     * @param $id
-     * @param $postTypeSlug
+     * @param int $id
+     * @param string $postTypeSlug
      * @return array
      */
     private function getPostSelectedTags($id, $postTypeSlug){
@@ -927,9 +920,8 @@ class BasePostController extends MainController {
         return $selectedTags;
     }
 
-
     /**
-     * Get fields for advanced search
+     * Get fields for advanced search.
      *
      * @param string $lang language slug
      * @param string $postTypeSlug post type slug
@@ -941,7 +933,7 @@ class BasePostController extends MainController {
     }
 
     /**
-     * This function creates the slug for a category and makes sure that slugs it is not being used from a other category
+     * This function creates the slug for a category and makes sure that slugs it is not being used from a other category.
      *
      * @param string $lang language slug
      * @param string $postType post type slug
@@ -972,9 +964,8 @@ class BasePostController extends MainController {
         return array('redirectUrl' => $redirectUrl, 'view' => $view);
     }
 
-
     /**
-     * Get posts to be displayed in menu panel
+     * Get posts to be displayed in menu panel.
      *
      * @param string $lang
      * @param string $postType Slug of post type
