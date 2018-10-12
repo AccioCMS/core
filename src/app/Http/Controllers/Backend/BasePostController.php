@@ -174,8 +174,9 @@ class BasePostController extends MainController {
      * Prepare values for each field.
      * used when this function is called in detailsJson (update form of the post).
      *
-     * @param string $postType
+     * @param $postType
      * @return array
+     * @throws \Exception
      */
     public function getTranslatableFields($postType){
         // check if user has permissions to access this link
@@ -202,8 +203,9 @@ class BasePostController extends MainController {
      * Get columns list that will be used only in post list table.
      * Used to add extra columns in post list table.
      *
-     * @param string $postType
+     * @param $postType
      * @return array
+     * @throws \Exception
      */
     public function getInTableColumns($postType){
         $inTableColumnsSlugs = [];
