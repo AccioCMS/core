@@ -28,11 +28,9 @@ Route::group(['middleware' => ['auth:admin'],  'as' => 'backend.post.', 'namespa
     Route::post('/{lang}/json/posts/get-all/{post_type}', 'PostController@getAllPosts')->name('getAllPosts');
 });
 
-
 /**
  * Frontend routes that are accessed via admin panel
  */
-
 Route::group(['middleware' => ['auth'], 'as' => 'Backend.Posts.', 'namespace' => \App\Models\Theme::controllersNameSpace()], function () {
     Route::get('json/posts/get-templates', 'PostController@menuLinkRoutes')->name('menuLinkRoutes');
 });

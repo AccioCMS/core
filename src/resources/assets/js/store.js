@@ -41,7 +41,7 @@ export const store = new Vuex.Store({
         },
 
         froalaCompactConfig: {
-            toolbarButtons: ['undo', 'redo', '|', 'bold', 'italic', 'underline', '|', 'paragraphFormat', 'align','|', 'formatUL', 'formatOL', 'insertTable', '|', 'addImage', 'addVideo', 'embedBtn', '|', 'insertLink'],
+            toolbarButtons: ['undo', 'redo', '|', 'bold', 'italic', 'underline', '|', 'paragraphFormat', 'quote', 'align','|', 'formatUL', 'formatOL', 'insertTable', '|', 'addImage', 'addVideo', 'embedBtn', '|', 'insertLink'],
             quickInsertButtons: ['addImage', 'addVideo', 'embedBtn', 'ul', 'ol'],
             htmlRemoveTags: [],
             htmlExecuteScripts: false,
