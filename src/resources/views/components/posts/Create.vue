@@ -507,7 +507,6 @@
                     </div>
                 </div>
 
-
             </div>
 
             <!-- POPUP media component -->
@@ -632,6 +631,7 @@
                 createdByUserID: this.createdByUserID,
             }
         },
+
         methods: {
             /**
              * Used in custom field to hide or show the field when it should or shouldn't displayed in a category
@@ -724,7 +724,7 @@
              * Open the media popup with his options
              * @param format: what kind of files are we looking to select
              * @param inputName: for wich field are the files being selected
-             * @param langSlug: in wich language
+             * @param langSlug: in which language
              * @param multiple: does the field require multiple files
              * @param clear: should the previous files be deselected
              */

@@ -337,9 +337,10 @@ class UserModel extends Authenticatable
             ->setHrefLangData($this)
             ->setCanonical($this->href)
             ->setWildcards([
-                '{firstName}' => $this->firstName,
-                '{lastName}' => $this->lastName,
-                '{siteTitle}' => settings('siteTitle')
+                '{{firstName}}' => $this->firstName,
+                '{{lastName}}' => $this->lastName,
+                '{{title}}' => $this->firstName . " " . $this->lastName,
+                '{{sitename}}' => settings('siteTitle')
             ]);
     }
 

@@ -139,8 +139,8 @@ class TagModel extends Model{
             ->setImageOG(($this->hasFeaturedImage() ? $this->featuredImage : null))
             ->setCanonical($this->href)
             ->setWildcards([
-                '{title}' => $this->title,
-                '{siteTitle}' => settings('siteTitle')
+                '{{title}}' => $this->title,
+                '{{sitename}}' => settings('siteTitle')
             ]);
     }
 

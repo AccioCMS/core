@@ -16,6 +16,7 @@ use App\Models\PostType;
 use App\Models\RoleRelation;
 use App\Models\User;
 use App\Models\UserGroup;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Auth;
@@ -348,7 +349,7 @@ trait UserTrait{
      */
 
     public static function findBySlug($slug, $columnName = ''){
-        $userObj = \App\Models\User::cache()->whereJson('slug->'.App::getLocale(), $slug)->getItems()->first();
+        $userObj = User::cache()->whereJson('slug->'.App::getLocale(), $slug)->getItems()->first();
 
         // return custom column
         if ($columnName && isset($userObj->$columnName)) {
@@ -367,7 +368,7 @@ trait UserTrait{
      * @throws \Exception
      */
     public static function findByID($userID, $columnName = ''){
-        $userObj = \App\Models\User::cache()->where('userID', $userID)->getItems()->first();
+        $userObj = User::cache()->where('userID', $userID)->getItems()->first();
 
         // return custom column
         if ($columnName && isset($userObj->$columnName)) {
@@ -541,7 +542,7 @@ trait UserTrait{
      *
      * @return bool
      */
-    private function hasDataInDefaultApps(){
+    public function hasDataInDefaultApps(){
         $tables = ["post_type", "categories", "tags", "languages", "media"];
 
         foreach($tables as $table){
@@ -560,7 +561,7 @@ trait UserTrait{
      * @return bool
      * @throws \Exception
      */
-    private function hasDataInPostsType(){
+    public function hasDataInPostsType(){
         $postTypes = PostType::cache()->getItems();
         foreach($postTypes as $postType){
             $hasData = DB::table($postType->slug)->where("createdByUserID", $this->userID)->count();

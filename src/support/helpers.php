@@ -293,7 +293,7 @@ if(!function_exists('metaTags')) {
         $description = null;
         if(isset($customData['description'])){
             $description = $customData['description'];
-        }elseif($modelData && property_exists($modelData, 'description')){
+        }elseif($modelData && property_exists($modelData,'description')){
             $description = $modelData->description;
         }
 
@@ -302,7 +302,6 @@ if(!function_exists('metaTags')) {
         }
 
         // Get meta data from events
-
         event('meta:add', [$modelData]);
 
         \Accio\Support\Facades\Meta::printMetaTags();

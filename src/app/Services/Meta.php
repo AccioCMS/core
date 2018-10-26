@@ -70,6 +70,7 @@ class  Meta
 
     /**
      * Set meta
+     *
      * @param $name
      * @param $content
      * @param string $metaType
@@ -244,6 +245,7 @@ class  Meta
 
     /**
      * Set article open graph
+     *
      * @param object $postObj
      * @return $this
      */
@@ -419,7 +421,7 @@ class  Meta
      * @throws Exception
      */
     public function validateWildCards($input, $errorClass = ''){
-        preg_match_all('@\{.*?\}@',  $input, $matches);
+        preg_match_all('@\{.*?\}}@',  $input, $matches);
         $notDefined = [];
 
         if($matches) {

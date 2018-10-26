@@ -254,8 +254,8 @@ class CategoryModel extends Model{
           ->setCanonical($this->href)
           ->setHrefLangData($this)
           ->setWildcards([
-            '{title}' => $this->title,
-            '{siteTitle}' => settings('siteTitle')
+            '{{title}}' => $this->title,
+            '{{sitename}}' => settings('siteTitle')
           ]);
     }
 

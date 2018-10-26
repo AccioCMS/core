@@ -855,9 +855,9 @@ class PostModel extends Model{
             ->setHrefLangData($this)
             ->setCanonical($this->href)
             ->setWildcards([
-                '{categoryTitle}'=>($this->hasCategory() ? $this->category->title :  null),
-                '{title}' => $this->title,
-                '{siteTitle}' => settings('siteTitle')
+                '{{categoryTitle}}'=>($this->hasCategory() ? $this->category->title :  null),
+                '{{title}}' => $this->title,
+                '{{sitename}}' => settings('siteTitle')
             ]);
 
         return;
