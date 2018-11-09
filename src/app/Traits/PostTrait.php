@@ -157,9 +157,9 @@ trait PostTrait{
 
                 if($postObj->save()){
                     // Delete existing relations, to ensure accuracy
-                    DB::table('categories_relations')->where("belongsToID", $data['postID'])->delete();
-                    DB::table('tags_relations')->where("belongsToID", $data['postID'])->delete();
-                    DB::table('media_relations')->where("belongsToID", $data['postID'])->delete();
+                    DB::table('categories_relations')->where("belongsToID", $data['postID'])->where("belongsTo", $data['postType'])->delete();
+                    DB::table('tags_relations')->where("belongsToID", $data['postID'])->where("belongsTo", $data['postType'])->delete();
+                    DB::table('media_relations')->where("belongsToID", $data['postID'])->where("belongsTo", $data['postType'])->delete();
                 }
 
                 $postID = $postObj->postID;

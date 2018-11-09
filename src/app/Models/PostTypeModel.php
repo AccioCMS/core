@@ -268,49 +268,48 @@ class PostTypeModel extends Model{
      * @param $fields
      * @return array
      */
-    public static function createTable($postTypeSlug, $fields = [], $connection = 'mysql', $createRoutes = true){
+    public static function createTable($postTypeSlug, $fields = [], $createRoutes = true){
         self::$customFieldsArray = [];
 
-        if(!Schema::connection($connection)->hasTable($postTypeSlug)) {
-            // create new table for the posts of the post type
-            Schema::connection($connection)->create($postTypeSlug, function ($table) use ($fields) {
-                // create general fields
-                $table->bigIncrements("postID");
-                $table->integer("createdByUserID")->nullable();
-                $table->json("title")->nullable();
-                $table->json("content")->nullable();
-                $table->json("customFields")->nullable();
-                $table->integer("featuredImageID")->nullable();
-                $table->integer("featuredVideoID")->nullable();
-                $table->json("status")->nullable();
-                $table->datetime("published_at")->nullable()->index();
-                $table->json("slug")->nullable();
 
-                $post = new PostType();
-                $usedSlugs = [];
-                $usedSlugs = array_merge($usedSlugs, $post->fillable);
+        // create new table for the posts of the post type
+        Schema::create($postTypeSlug, function ($table) use ($fields) {
+            // create general fields
+            $table->bigIncrements("postID");
+            $table->integer("createdByUserID")->nullable();
+            $table->json("title")->nullable();
+            $table->json("content")->nullable();
+            $table->json("customFields")->nullable();
+            $table->integer("featuredImageID")->nullable();
+            $table->integer("featuredVideoID")->nullable();
+            $table->json("status")->nullable();
+            $table->datetime("published_at")->nullable()->index();
+            $table->json("slug")->nullable();
 
-                foreach($fields as $field){
-                    // generate unique slugs for every field
-                    if(!isset($field['slug']) || $field['slug'] == ""){
-                        $slug = self::generateSlug($field['name'], $usedSlugs);
-                    }else{
-                        $slug = self::generateSlug($field['slug'], $usedSlugs);
-                    }
-                    $usedSlugs[] = $slug;
+            $post = new PostType();
+            $usedSlugs = [];
+            $usedSlugs = array_merge($usedSlugs, $post->fillable);
 
-                    $field['slug'] = $slug;
-                    array_push(self::$customFieldsArray, $field);
-
-                    // create other fields
-                    self::createDatabaseFields($table, $field, $slug);
+            foreach($fields as $field){
+                // generate unique slugs for every field
+                if(!isset($field['slug']) || $field['slug'] == ""){
+                    $slug = self::generateSlug($field['name'], $usedSlugs);
+                }else{
+                    $slug = self::generateSlug($field['slug'], $usedSlugs);
                 }
-                $table->timestamps();
-            });
+                $usedSlugs[] = $slug;
 
-            if($createRoutes) {
-                self::createRouteFile($postTypeSlug);
+                $field['slug'] = $slug;
+                array_push(self::$customFieldsArray, $field);
+
+                // create other fields
+                self::createDatabaseFields($table, $field, $slug);
             }
+            $table->timestamps();
+        });
+
+        if($createRoutes) {
+            self::createRouteFile($postTypeSlug);
         }
 
         return self::$customFieldsArray;
@@ -342,7 +341,7 @@ class PostTypeModel extends Model{
 
                 $field['slug'] = $slug;
 
-                self::createDatabaseFields($table, $field, $slug);
+                self::createDatabaseFields($table, $field, $slug, false);
 
                 // unset the canBeRemoved from array
                 if(isset($field['canBeRemoved']) && $field['canBeRemoved'] == true){
@@ -359,13 +358,14 @@ class PostTypeModel extends Model{
     /**
      * Create fields of post type table.
      *
-     * @param $table
-     * @param $field
-     * @param $slug
+     * @param object $table
+     * @param object $field
+     * @param string $slug
+     * @param string $isCreate
      */
-    private static function createDatabaseFields($table, $field, $slug){
+    private static function createDatabaseFields($table, $field, $slug, $isCreate = true){
         // insert column only if it is not already in the DB
-        if (isset($field['canBeRemoved']) && $field['canBeRemoved'] == true){
+        if ($isCreate || (isset($field['canBeRemoved']) && $field['canBeRemoved'])){
             // if field is translatable
             if($field['translatable']){
                 $table->json($slug)->nullable();

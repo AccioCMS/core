@@ -18,11 +18,31 @@ export default {
         auth: {
             user: {},
         },
+        route: {},
         menuMode: '',
         menuLinkList: {},
         logout_link: '',
         navigationMenuStateIsMobile: false,
         translation: '',
+        froalaFullConfig: {
+            toolbarButtons: ['fullscreen', 'bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', '|','formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', 'insertTable', '|', 'emoticons', 'specialCharacters', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'help', 'html', '|', 'undo', 'redo','addImage','addVideo','insertLink','embedBtn'],
+            quickInsertButtons: ['addImage', 'addVideo', 'embedBtn', 'ul', 'ol'],
+            htmlRemoveTags: [],
+            htmlExecuteScripts: false,
+        },
+
+        froalaCompactConfig: {
+            toolbarButtons: ['undo', 'redo', '|', 'bold', 'italic', 'underline', '|', 'paragraphFormat', 'quote', 'align','|', 'formatUL', 'formatOL', 'insertTable', '|', 'addImage', 'addVideo', 'embedBtn', '|', 'insertLink'],
+            quickInsertButtons: ['addImage', 'addVideo', 'embedBtn', 'ul', 'ol'],
+            htmlRemoveTags: [],
+            htmlExecuteScripts: false,
+        },
+        froalaBasicConfig: {
+            toolbarButtons: ['undo','redo','|','bold','italic','underline','insertLink'],
+            quickInsertButtons: ['bold', 'underline', 'insertLink'],
+            htmlRemoveTags: [],
+            htmlExecuteScripts: false,
+        }
     },
     getters: {
         get_base_url(state){
@@ -63,9 +83,24 @@ export default {
         },
         get_translation(state){
             return state.translation;
-        }
+        },
+        get_route(state){
+            return state.route
+        },
+        get_froala_full_config(state){
+            return state.froalaFullConfig;
+        },
+        get_froala_compact_config(state){
+            return state.froalaCompactConfig;
+        },
+        get_froala_basic_config(state){
+            return state.froalaBasicConfig;
+        },
     },
     mutations: {
+        setRoute(state, route){
+            state.route = route
+        },
         setLabels(state, labels){
             state.labels = labels;
         },

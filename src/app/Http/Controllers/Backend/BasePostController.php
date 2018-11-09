@@ -2,7 +2,7 @@
 
 namespace Accio\App\Http\Controllers\Backend;
 
-use App;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use App\Models\Language;
@@ -186,7 +186,7 @@ class BasePostController extends MainController {
 
         // fields of this post type
         $translatableFields = [];
-        $fields = App\Models\PostType::getFields($postType);
+        $fields = PostType::getFields($postType);
         foreach ($fields as $field) {
             if (isset($post) && $post) {
                 $slug = $field->slug;
@@ -981,6 +981,7 @@ class BasePostController extends MainController {
 
         // Find posts
         $postsObj = (new Post())->setTable($postType);
+
         $postsObj = $postsObj->published();
         if(Input::input('keyword')){
             $postsObj->where('title->'.App::getLocale(), 'like', '%'.Input::input('keyword').'%');

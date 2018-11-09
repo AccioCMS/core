@@ -9,6 +9,7 @@
  */
 namespace Accio\App\Models;
 
+use Accio\Support\Facades\Meta;
 use App\Models\Menu;
 use App\Models\MenuLink;
 use Illuminate\Database\Eloquent\Model;
@@ -108,6 +109,30 @@ class MenuLinkModel extends Model{
     public function __destruct(){
         Event::fire('menuLink:destruct', [$this]);
     }
+
+    /**
+     * Define single post's SEO Meta data.
+     *
+     * @return void;
+     */
+    public function metaData(){
+        Meta::setTitle($this->label)
+//            ->set("og:type", "article", "property")
+//            ->set("og:title", $this->label, "property")
+//            ->set("og:description", $this->content(), "property")
+            ->set("og:url",$this->href, "property")
+//            ->setImageOG(($this->hasFeaturedImage() ? $this->featuredImage : null))
+//            ->setArticleOG($this)
+//            ->setHrefLangData($this)
+            ->setCanonical($this->href)
+            ->setWildcards([
+                '{{title}}' => $this->label,
+                '{{sitename}}' => settings('siteTitle')
+            ]);
+
+        return;
+    }
+
 }
 
 

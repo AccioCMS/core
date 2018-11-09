@@ -251,17 +251,20 @@ if(!function_exists('googleTagManagerBody')) {
 if(!function_exists('metaTags')) {
     /**
      * Get meta tags and prints them
-     * @param object $post
+     *
+     * @param null $modelData
      * @param array $customData
-     * @return string
+     * @throws Exception
      */
     function metaTags($modelData = null, $customData = []){
         if(\Accio\Support\Facades\Meta::getMetaIsPrinted()){
             return;
         }
 
-        $currentMenuLink =  \App\Models\MenuLink::getActive();
-
+        $currentMenuLink = \App\Models\MenuLink::getActive();
+        if(!$modelData){
+            $modelData = $currentMenuLink;
+        }
 
         // Set model data
         if($modelData) {
@@ -271,8 +274,6 @@ if(!function_exists('metaTags')) {
             if(method_exists($modelData, 'metaData')){
                 $modelData->metaData();
             }
-        }else{
-            $modelData = $currentMenuLink;
         }
 
         // Set title

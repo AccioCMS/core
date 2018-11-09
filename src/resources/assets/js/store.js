@@ -1,16 +1,16 @@
 import Vuex from 'vuex'
 import Vue from 'vue'
 import Bootstrap from './bootstrap-vuex';
-import  media from '../../views/components/media/media'
-import  users  from '../../views/components/users/users'
-import  tags  from '../../views/components/tags/tags'
-import  posts  from '../../views/components/posts/posts'
-import  post_type  from '../../views/components/post_type/post_type'
-import  permissions  from '../../views/components/permissions/permissions'
-import  menu  from '../../views/components/menu/menu'
-import  language  from '../../views/components/language/language'
-import  custom_fields  from '../../views/components/custom_fields/custom_fields'
-import  category  from '../../views/components/category/category'
+import media from '../../views/components/media/media'
+import users  from '../../views/components/users/users'
+import tags  from '../../views/components/tags/tags'
+import posts  from '../../views/components/posts/posts'
+import post_type  from '../../views/components/post_type/post_type'
+import permissions  from '../../views/components/permissions/permissions'
+import menu  from '../../views/components/menu/menu'
+import language  from '../../views/components/language/language'
+import custom_fields  from '../../views/components/custom_fields/custom_fields'
+import category  from '../../views/components/category/category'
 
 Vue.use(Vuex);
 
@@ -29,29 +29,8 @@ export const store = new Vuex.Store({
         actionReturnedData: {},
         hasPermission: false,
         translation: '',
-        route: {},
         storeResponse:{
             errors: []
-        },
-        froalaFullConfig: {
-            toolbarButtons: ['fullscreen', 'bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', '|','formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', 'insertTable', '|', 'emoticons', 'specialCharacters', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'help', 'html', '|', 'undo', 'redo','addImage','addVideo','insertLink','embedBtn'],
-            quickInsertButtons: ['addImage', 'addVideo', 'embedBtn', 'ul', 'ol'],
-            htmlRemoveTags: [],
-            htmlExecuteScripts: false,
-        },
-
-        froalaCompactConfig: {
-            toolbarButtons: ['undo', 'redo', '|', 'bold', 'italic', 'underline', '|', 'paragraphFormat', 'quote', 'align','|', 'formatUL', 'formatOL', 'insertTable', '|', 'addImage', 'addVideo', 'embedBtn', '|', 'insertLink'],
-            quickInsertButtons: ['addImage', 'addVideo', 'embedBtn', 'ul', 'ol'],
-            htmlRemoveTags: [],
-            htmlExecuteScripts: false,
-        },
-
-        froalaBasicConfig: {
-            toolbarButtons: ['undo','redo','|','bold','italic','underline','insertLink'],
-            quickInsertButtons: ['bold', 'underline', 'insertLink'],
-            htmlRemoveTags: [],
-            htmlExecuteScripts: false,
         }
     },
     getters: {
@@ -76,26 +55,11 @@ export const store = new Vuex.Store({
         get_has_permission(state){
             return state.hasPermission;
         },
-        get_froala_full_config(state){
-            return state.froalaFullConfig;
-        },
-        get_froala_compact_config(state){
-            return state.froalaCompactConfig;
-        },
-        get_froala_basic_config(state){
-            return state.froalaBasicConfig;
-        },
         get_store_response(state){
             return state.storeResponse;
-        },
-        get_route(state){
-            return state.route
         }
     },
     mutations: {
-        setRoute(state, route){
-          state.route = route
-        },
         setID(state, id){
             state.id = id;
         },

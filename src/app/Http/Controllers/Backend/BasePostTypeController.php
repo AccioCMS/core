@@ -99,8 +99,12 @@ class BasePostTypeController extends MainController{
             return $this->noPermission();
         }
 
-        if($this->deletePostType($id)){
+        $res = $this->deletePostType($id);
+        if($res && is_bool($res)){
             return $this->response( 'Post Type is successfully deleted');
+        }
+        if($res && !is_bool($res)){
+            return $res;
         }
         return $this->response( 'Post Type could not be deleted. Please try again later or contact your Administrator!', 500);
     }
@@ -110,8 +114,9 @@ class BasePostTypeController extends MainController{
      * Bulk Delete post type.
      * Delete many post type in the same time.
      *
-     * @param Request $request array of post type IDs
+     * @param Request $request
      * @return array
+     * @throws \Exception
      */
     public function bulkDelete(Request $request){
         // check if user has permissions to access this link
@@ -125,8 +130,12 @@ class BasePostTypeController extends MainController{
 
         // loop throw the item array (ids) and delete them
         foreach($request->all() as $id){
-            if(!$this->deletePostType($id)){
+            $res = $this->deletePostType($id);
+            if(!$res){
                 return $this->response( 'Post Type could not be deleted. Please try again later or contact your Administrator!', 500);
+            }
+            if(!is_bool($res)){
+                return $res;
             }
         }
         return $this->response('Selected post types are successfully deleted', 200);
@@ -136,8 +145,9 @@ class BasePostTypeController extends MainController{
      * Delete post type by using ID.
      * Used in bulkDelete and delete functions.
      *
-     * @param int $id
+     * @param $id
      * @return array|bool
+     * @throws \Exception
      */
     private function deletePostType($id){
         $postType = PostType::find($id);
@@ -159,9 +169,9 @@ class BasePostTypeController extends MainController{
                 unlink(base_path() . '/routes/' . $postType->slug . '.php');
             }
             return true;
-        }else{
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -232,9 +242,8 @@ class BasePostTypeController extends MainController{
             return $this->response( "Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
-
         if(isset($request->id)){
-            $postType = App\Models\PostType::findOrFail($request->id);
+            $postType = PostType::findOrFail($request->id);
             $customFieldsArray = PostType::updateTable($request->slug, $request->fields);
         }else{
             $slug = $request->slug;

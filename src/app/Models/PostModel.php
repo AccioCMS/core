@@ -1,25 +1,12 @@
 <?php
 
-/**
- * Posts
- *
- * Due to its nature, Posts model are managed dynamically by UI, via PostTypes
- *
- * @author Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
- * @author Faton Sopa <faton.sopa@manaferra.com>
- * @version 1.0
- */
 namespace Accio\App\Models;
 
 
 use App\Models\Category;
-use App\Models\CategoryRelation;
 use App\Models\Language;
 use App\Models\Media;
 use App\Models\Tag;
-use App\Models\TagRelation;
-use App\Models\Task;
-use App\Models\Theme;
 use App\Models\User;
 use DateTime;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -31,14 +18,11 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Accio\Support\Facades\Meta;
-use Mockery\Exception;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Validator;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\PostType;
 use App\Models\Post;
 use Accio\App\Traits;
-use Accio\Support\PostCollection;
 
 class PostModel extends Model{
     use
