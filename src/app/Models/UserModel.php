@@ -20,15 +20,15 @@ use Spatie\Activitylog\Traits\HasActivity;
 class UserModel extends Authenticatable
 {
     use
-      Notifiable,
-      HasActivity,
-      Notifiable,
-      Traits\UserTrait,
-      Traits\TranslatableTrait,
-      Traits\CacheTrait,
-      Traits\BootEventsTrait,
-      Traits\CollectionTrait,
-      HasApiTokens;
+        Notifiable,
+        HasActivity,
+        Notifiable,
+        Traits\UserTrait,
+        Traits\TranslatableTrait,
+        Traits\CacheTrait,
+        Traits\BootEventsTrait,
+        Traits\CollectionTrait,
+        HasApiTokens;
 
     /**
      * fields that can be filled in CRUD.
