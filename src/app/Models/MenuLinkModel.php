@@ -12,6 +12,7 @@ namespace Accio\App\Models;
 use Accio\Support\Facades\Meta;
 use App\Models\Menu;
 use App\Models\MenuLink;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -23,12 +24,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class MenuLinkModel extends Model{
 
     use
-      LogsActivity,
-      Traits\MenuLinkTrait,
-      Traits\CacheTrait,
-      Traits\TranslatableTrait,
-      Traits\BootEventsTrait,
-      Traits\CollectionTrait;
+        Cachable,
+        LogsActivity,
+        Traits\MenuLinkTrait,
+        Traits\TranslatableTrait,
+        Traits\BootEventsTrait,
+        Traits\CollectionTrait;
 
     /**
      * Fields that can be filled in CRUD.
@@ -92,15 +93,6 @@ class MenuLinkModel extends Model{
     public function __construct(array $attributes = []){
         parent::__construct($attributes);
         Event::fire('menuLink:construct', [$this]);
-    }
-
-    /**
-     * Delete Menulink caches.
-     */
-    public static function deleteCache(){
-        $explode = explode('\\',get_class());
-        $modelName = str_replace('Model','',end($explode));
-        Cache::forget($modelName);
     }
 
     /**

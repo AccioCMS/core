@@ -13,10 +13,8 @@ namespace Accio\App\Models;
 use App\Models\Post;
 use App\Models\PostType;
 use DB;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Accio\App\Traits;
@@ -26,11 +24,11 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class PostTypeModel extends Model{
 
     use
-      Traits\PostTypeTrait,
-      LogsActivity,
-      Traits\CacheTrait,
-      Traits\BootEventsTrait,
-      Traits\CollectionTrait;
+        Cachable,
+        Traits\PostTypeTrait,
+        LogsActivity,
+        Traits\BootEventsTrait,
+        Traits\CollectionTrait;
 
     /**
      * Fields that can be filled in CRUD.
@@ -133,7 +131,6 @@ class PostTypeModel extends Model{
      * @return mixed
      */
     public function field(string $fieldSlug){
-        // TODO me hek json decode me bo me cast
         foreach ($this->fields as $field){
             if($field->slug == $fieldSlug){
                 return $field;
@@ -249,7 +246,7 @@ class PostTypeModel extends Model{
         // adds a number in the slug string if the specific slug allready exists
         if (in_array($slug, $usedSlugs)){
             while(true){
-                $slug = camel_case($slug."_".$count, '_');
+                $slug = camel_case($slug."_".$count);
                 if (!in_array($slug, $usedSlugs)){
                     return $slug;
                 }
@@ -271,20 +268,31 @@ class PostTypeModel extends Model{
     public static function createTable($postTypeSlug, $fields = [], $createRoutes = true){
         self::$customFieldsArray = [];
 
-
         // create new table for the posts of the post type
         Schema::create($postTypeSlug, function ($table) use ($fields) {
             // create general fields
             $table->bigIncrements("postID");
-            $table->integer("createdByUserID")->nullable();
+            $table->unsignedInteger("createdByUserID")->nullable();
             $table->json("title")->nullable();
             $table->json("content")->nullable();
             $table->json("customFields")->nullable();
-            $table->integer("featuredImageID")->nullable();
-            $table->integer("featuredVideoID")->nullable();
+            $table->unsignedInteger("featuredImageID")->nullable();
+            $table->unsignedInteger("featuredVideoID")->nullable();
             $table->json("status")->nullable();
             $table->datetime("published_at")->nullable()->index();
             $table->json("slug")->nullable();
+
+            $table->foreign('createdByUserID')
+                ->references('userID')->on('users')
+                ->onDelete('cascade');
+
+            $table->foreign('featuredImageID')
+                ->references('mediaID')->on('media')
+                ->onDelete('set null');
+
+            $table->foreign('featuredVideoID')
+                ->references('mediaID')->on('media')
+                ->onDelete('set null');
 
             $post = new PostType();
             $usedSlugs = [];

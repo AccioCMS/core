@@ -230,7 +230,7 @@ trait TranslatableTrait{
                         $attr = json_decode($attr);
                     }
                 }
-                foreach(Language::cache()->getItems() as $language){
+                foreach(Language::all() as $language){
                     $langSlug = $language->slug;
 
                     if (!isset($attr->$langSlug)){

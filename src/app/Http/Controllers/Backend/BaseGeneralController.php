@@ -40,7 +40,6 @@ class BaseGeneralController extends MainController {
     public function getBaseData(){
         // menu links for the application part
         $applicationMenuLinks = MenuLink::applicationMenuLinks();
-
         // menu links for the cms part
         $cmsMenus = MenuLink::cmsMenus();
 
@@ -68,7 +67,7 @@ class BaseGeneralController extends MainController {
 
         // User data object
         //todo qetu eshte nje bug se query nuk bahet me keyby
-        $postTypeSlugs = PostType::cache()->getItems()->toArray();
+        $postTypeSlugs = PostType::all()->toArray();
         $postTypeSlugs = array_pluck($postTypeSlugs, "slug");
 
         $globalData = [
@@ -80,7 +79,7 @@ class BaseGeneralController extends MainController {
         ];
 
         // all languages
-        $languages = Language::cache()->getItems();
+        $languages = Language::all();
 
         return [
             'languages' => $languages,

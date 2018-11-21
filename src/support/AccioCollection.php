@@ -22,25 +22,25 @@ class AccioCollection extends Collection {
     private static  $_modelTable;
 
     /**
-     * Scope a query to only include published posts..
+     * Scope a query to only include published posts.
      *
-     * @return PostCollection
+     * @return AccioCollection
      */
     public function published(){
         return $this
           ->where('published_at', '<=', date('Y-m-d H:i:s'))
-          ->whereJson('status->'.App::getLocale(),'published');
+          ->where('status','published');
     }
 
     /**
      * Scope a query to only include unpublished posts..
      * 
-     * @return PostCollection
+     * @return AccioCollection
      */
     public function unpublished(){
         return $this
           ->where('published_at', '>', date('Y-m-d H:i:s'))
-          ->whereJson('status->'.App::getLocale(),'published');
+          ->where('status','published');
     }
 
     /**

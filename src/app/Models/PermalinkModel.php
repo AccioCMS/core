@@ -2,10 +2,8 @@
 
 namespace Accio\App\Models;
 
-use App\Models\Permalink;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Accio\App\Traits;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -16,7 +14,7 @@ class PermalinkModel extends Model
     use
       Traits\PermalinkTrait,
       LogsActivity,
-      Traits\CacheTrait,
+      Cachable,
       Traits\BootEventsTrait,
       Traits\CollectionTrait;
 

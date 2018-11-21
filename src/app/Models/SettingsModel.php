@@ -3,22 +3,20 @@
 namespace Accio\App\Models;
 
 use Accio\App\Traits\BootEventsTrait;
-use Accio\App\Traits\CacheTrait;
 use Accio\App\Traits\CollectionTrait;
 use App\Models\Media;
 use App\Models\Settings;
-use Facebook\GraphNodes\Collection;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class SettingsModel extends Model{
 
     use
-      LogsActivity,
-      CacheTrait,
-      BootEventsTrait,
-      CollectionTrait;
+        Cachable,
+        LogsActivity,
+        BootEventsTrait,
+        CollectionTrait;
 
     /**
      * Fields that can be filled.
@@ -88,7 +86,7 @@ class SettingsModel extends Model{
      * @throws \Exception
      */
     public static function getAllSettings(){
-        $settings = Settings::cache()->getItems();
+        $settings = Settings::all();
 
         $settingsList = [];
         foreach($settings as $setting){
@@ -105,13 +103,9 @@ class SettingsModel extends Model{
      * @throws \Exception
      */
     public static function getSetting($key){
-        $settings = Settings::cache();
-        if($settings) {
-            $setting = $settings->where('settingsKey', $key)->getItems();
-
-            if ($setting) {
-                return $setting->first()->value;
-            }
+        $setting = Settings::all()->where('settingsKey', $key)->first();
+        if($setting) {
+            return $setting->value;
         }
         return;
     }

@@ -1,9 +1,9 @@
 <?php
 namespace Accio\App\Traits;
 
+use App\Models\PostType;
 use Illuminate\Support\Facades\File;
 use App\Models\Language;
-use Illuminate\Database\Eloquent\Model;
 
 trait PermissionTrait{
 
@@ -46,7 +46,7 @@ trait PermissionTrait{
                     $result[$className]['label'] = trans($object::$label);
                 }
 
-                foreach (\App\Models\PostType::cache()->getItems() as $postType){
+                foreach (PostType::all() as $postType){
                     // Label
                     $result[$postType['slug']]['label'] = $postType['name'];
 

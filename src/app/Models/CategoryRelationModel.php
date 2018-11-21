@@ -2,18 +2,12 @@
 
 namespace Accio\App\Models;
 
-use Accio\App\Traits\CacheTrait;
-use App\Models\CategoryRelation;
-use App\Models\Post;
-use App\Models\PostType;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
-use Mockery\Exception;
 
 class CategoryRelationModel extends Model
 {
-    use CacheTrait;
+    use Cachable;
 
     /**
      * The table associated with the model.

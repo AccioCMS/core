@@ -2,11 +2,7 @@
 
 namespace Accio\App\Models;
 
-use App\Models\PostType;
-use App\Models\TagRelation;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
-use Mockery\Exception;
 
 class RoleRelationsModel extends Model{
     /**

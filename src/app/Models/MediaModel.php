@@ -1,15 +1,7 @@
 <?php
-/**
- * Media Model
- *
- * It handles Media management
- * @author Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
- * @author Faton Sopa <faton.sopa@manaferra.com>
- * @version 1.0
- */
 namespace Accio\App\Models;
 
-use App\Models\Media;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
 use DB;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,10 +14,11 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class MediaModel extends Model{
 
     use
-      Traits\MediaTrait,
-      LogsActivity,
-      Traits\BootEventsTrait,
-      Traits\CollectionTrait;
+        Cachable,
+        Traits\MediaTrait,
+        LogsActivity,
+        Traits\BootEventsTrait,
+        Traits\CollectionTrait;
 
     /**
      * Fields that can be filled in CRUD.

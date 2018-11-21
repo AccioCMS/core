@@ -53,32 +53,19 @@ trait PostTrait{
      *
      * @param  string  $slug the slug of the post
      * @param  string  $postTypeSlug the name of the post type, ex. post_services
-     * @param bool $searchInCache true if search first look for the item in cache, false to look for it into db
      *
      * @return object|null Returns post as array or null if not found
      **/
-    public static function findBySlug($slug, $postTypeSlug = '', $searchInCache = true){
-        $post = null;
+    public static function findBySlug($slug, $postTypeSlug = ''){
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
-        if($searchInCache){
-            $cachedPosts = self::cache($postTypeSlug);
-            if ($cachedPosts) {
-                $post = $cachedPosts->whereJson('slug->'.App::getLocale(), $slug)->getItems()->first();
-            }
-        }
+        $postObj = (new Post())->setTable($postTypeSlug);
+        $post = $postObj
+            ->where('slug->'.App::getLocale(), $slug)
+            ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
+            ->first();
 
-        if($post){
-            return $post;
-        }else{ // when not available in cache, search in database
-            $postObj = (new Post())->setTable($postTypeSlug);
-            $post = $postObj
-              ->where('slug->'.App::getLocale(), $slug)
-              ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
-              ->first();
-
-            return $post;
-        }
+        return $post;
     }
 
     /**
@@ -91,28 +78,13 @@ trait PostTrait{
      * @return object|null Returns post as array or null if not found
      **/
     public static function findByID($postID, $postTypeSlug = '', $searchInCache = true){
-        $post = null;
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
-
-        if($searchInCache) {
-            $cachedPosts = self::cache($postTypeSlug);
-            if ($cachedPosts) {
-                $post = $cachedPosts->where('postID', $postID)->getItems()->first();
-            }
-        }
-
-        if($post){
-            return $post;
-        }
-        else { // when not available in cache, search in database
-            $postObj = (new Post())->setTable($postTypeSlug);
-            $post = $postObj
-              ->where('postID', $postID)
-              ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
-              ->first();
-
-            return $post;
-        }
+        $postObj = (new Post())->setTable($postTypeSlug);
+        $post = $postObj
+            ->where('postID', $postID)
+            ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
+            ->first();
+        return $post;
     }
 
     /**

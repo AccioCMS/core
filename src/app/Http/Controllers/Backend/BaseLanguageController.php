@@ -30,7 +30,7 @@ class BaseLanguageController extends MainController{
         if(!User::hasAccess('Language','read')){
             return $this->noPermission();
         }
-        return ['data' => Language::cache()->getItems()];
+        return ['data' => Language::all()];
     }
 
     /**

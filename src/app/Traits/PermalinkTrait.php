@@ -24,15 +24,9 @@ trait PermalinkTrait
      * @throws \Exception
      */
     public static function getByName($belongsTo, $name, $defaultURL = ''){
-        //find by full name
-        $permalinks = Permalink::cache();
-        $singlePermalink = false;
-
-        if ($permalinks) {
-            $singlePermalink = $permalinks->where('belongsTo', $belongsTo)->where("name", $name)->getItems()->first();
-            if ($singlePermalink && $singlePermalink->custom_url) {
-                return $singlePermalink->custom_url;
-            }
+        $singlePermalink = Permalink::where('belongsTo', $belongsTo)->where("name", $name)->first();
+        if ($singlePermalink && $singlePermalink->custom_url) {
+            return $singlePermalink->custom_url;
         }
 
         if(!$singlePermalink){

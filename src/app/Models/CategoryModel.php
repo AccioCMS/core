@@ -14,11 +14,10 @@ namespace Accio\App\Models;
 use App\Models\Category;
 use App\Models\PostType;
 use App\Models\Language;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
 use DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
@@ -29,12 +28,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class CategoryModel extends Model{
 
     use
-      Traits\CategoryTrait,
-      Traits\TranslatableTrait,
-      LogsActivity,
-      Traits\CacheTrait,
-      Traits\BootEventsTrait,
-      Traits\CollectionTrait;
+        Cachable,
+        Traits\CategoryTrait,
+        Traits\TranslatableTrait,
+        LogsActivity,
+        Traits\BootEventsTrait,
+        Traits\CollectionTrait;
 
     /**
      * Fields that can be filled in CRUD.
@@ -287,8 +286,9 @@ class CategoryModel extends Model{
     /**
      * Perform certain actions after a category is saved.
      *
-     * @param object $category
-     * */
+     * @param $category
+     * @throws \Exception
+     */
     private static function _saved($category){
         self::updateMenulink($category);
     }

@@ -10,16 +10,12 @@ use App\Models\Post;
 use App\Models\PostType;
 use App\Models\Theme;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
-use Accio\Support\Facades\Routes;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Frontend\MainController as FrontEndMainController;
 
 
 class BaseMenuController extends MainController{
@@ -134,9 +130,6 @@ class BaseMenuController extends MainController{
             // Fire event
             Event::fire('menuLink:updated', [$menuLink, $request]);
         }
-
-        // Remove Caches
-        MenuLink::deleteCache();
 
         return $this->response( 'Menu is successfully saved', 200, $menuID);
 
@@ -278,7 +271,7 @@ class BaseMenuController extends MainController{
 
 
         // Check post types have routes
-        $postTypes = PostType::cache()->getItems()->where('isVisible', true);
+        $postTypes = PostType::where('isVisible', true)->get();
         foreach($postTypes as $postType){
             $postTypeControllerName = ucfirst(camel_case($postType->slug)).'Controller';
 
@@ -393,7 +386,7 @@ class BaseMenuController extends MainController{
         $final = array(
             'list' => $convertedMenuLinks,
             'menu' => $menu,
-            'languages' => Language::cache()->getItems()
+            'languages' => Language::all()
         );
 
         // Fire event

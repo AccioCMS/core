@@ -292,7 +292,7 @@ class BaseCategoryController extends MainController {
 
         if ($defaultLanguageTitle){
             // loop throw data in each language and generate title and slug if there are empty
-            $languages = Language::cache()->getItems();
+            $languages = Language::all();
             foreach($form as $formDataKey => $formDataValue){
                 foreach($languages as $language){
                     if($formDataKey == "title" && !$language['isDefault']){
@@ -366,7 +366,7 @@ class BaseCategoryController extends MainController {
         if($menuLinksList->count()){
             foreach ($menuLinksList as $menuLink){
                 $updateLabel = false;
-                foreach (Language::cache()->getItems() as $lang){
+                foreach (Language::all() as $lang){
                     $langSlug = $lang->slug;
                     if(isset($oldTitle->App) && $oldTitle->$langSlug == $menuLink->label->$langSlug){
                         $updateLabel = true;
@@ -426,7 +426,7 @@ class BaseCategoryController extends MainController {
 
             $final = array(
                 'details' => $category,
-                'languages' => Language::cache()->getItems(),
+                'languages' => Language::all(),
                 'media' => $media,
                 'customFieldsValues' => $customFieldOBJ->getCustomFieldValues(),
                 'customFieldsGroups' => $customFieldGroups,

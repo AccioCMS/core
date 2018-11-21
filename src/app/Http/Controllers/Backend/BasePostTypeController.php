@@ -30,9 +30,9 @@ class BasePostTypeController extends MainController{
      */
     public function getAll($lang = ""){
         $result = [];
-        $postType = PostType::cache()->getItems()->sortBy('postTypeID');
+        $postType = PostType::all()->orderBy('postTypeID');
         foreach ($postType as $postType){
-            $postType->categories = Category::cache()->getItems()->where("postTypeID", $postType->postTypeID);
+            $postType->categories = Category::where("postTypeID", $postType->postTypeID)->get();
             $result[] = $postType;
         }
 
@@ -422,7 +422,7 @@ class BasePostTypeController extends MainController{
             ]
         ];
         // loop throw post types
-        foreach(App\Models\PostType::cache()->getItems() as $postType){
+        foreach(PostType::all() as $postType){
             $tables[0]['options'][] = ['label' => $postType['name'], 'name' => $postType['slug'], 'belongsTo' => 'PostType'];
         }
         return $tables;

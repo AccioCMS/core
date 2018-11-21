@@ -2,12 +2,10 @@
 
 namespace Accio\App\Models;
 
-use App\Models\Post;
-use App\Models\Tag;
 use DB;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Accio\App\Traits;
 use App\Models\PostType;
@@ -17,11 +15,11 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class TagModel extends Model{
 
     use
-      Traits\TagTrait,
-      LogsActivity,
-      Traits\CacheTrait,
-      Traits\BootEventsTrait,
-      Traits\CollectionTrait;
+        Cachable,
+        Traits\TagTrait,
+        LogsActivity,
+        Traits\BootEventsTrait,
+        Traits\CollectionTrait;
 
     /**
      * Fields that can be filled in CRUD.

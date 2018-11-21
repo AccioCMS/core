@@ -2,12 +2,9 @@
 
 namespace Accio\App\Models;
 
-use App\Models\Plugin;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\File;
 use Accio\App\Traits;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -16,7 +13,7 @@ class PluginModel extends Model{
     use
       Traits\PluginTrait,
       LogsActivity,
-      Traits\CacheTrait,
+      Cachable,
       Traits\BootEventsTrait,
       Traits\CollectionTrait;
 

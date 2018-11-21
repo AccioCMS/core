@@ -62,7 +62,7 @@ trait MenuLinkTrait{
             // Get active MenuLinks by routeName and params
             $currentMenuLinkIDs = [];
             $isDefaultLanguage = (App::getLocale() == Language::getDefault('slug') ? '.default' : false);
-            foreach (\App\Models\MenuLink::cache()->getItems() as $menuLink) {
+            foreach (MenuLink::all() as $menuLink) {
                 $menuLinkRoute = Route::getRoutes()->getByName($menuLink->routeName . $isDefaultLanguage);
                 // maybe route doesn't have .default suffix
                 if (!$menuLinkRoute) {
@@ -241,7 +241,7 @@ trait MenuLinkTrait{
      * @throws \Exception
      */
     public static function findBySlug($slug,$languageSlug = ""){
-        $getMenuLink = array_where(MenuLink::cache($languageSlug), function ($value)  use($slug){
+        $getMenuLink = array_where(MenuLink::all(), function ($value)  use($slug){
             return ($value['slug'] == $slug);
         });
 
@@ -259,11 +259,8 @@ trait MenuLinkTrait{
      * @return mixed
      * @throws \Exception
      */
-    public static function findByID($menuLinkID,$languageSlug=""){
-        $menuLinks = MenuLink::cache($languageSlug);
-        if($menuLinks){
-            return $menuLinks->where('menuLinkID',$menuLinkID)->getItems()->first();
-        }
+    public static function findByID($menuLinkID, $languageSlug=""){
+        return MenuLink::all()->where('menuLinkID',$menuLinkID)->first();
     }
 
     /**
@@ -294,18 +291,15 @@ trait MenuLinkTrait{
     public static function parentID($menuLinkID){
         $parentIDs = [];
         while($menuLinkID != NULL){
-            $menuLinks = MenuLink::cache();
-            if($menuLinks) {
-                $parentObj = $menuLinks->where('menuLinkID', $menuLinkID)->getItems()->first();
-                if ($parentObj) {
-                    $menuLinkID = $parentObj->parent;
-                    if ($menuLinkID) {
-                        $parentIDs[] = $menuLinkID;
-                    }
+            $parentObj = MenuLink::all()->where('menuLinkID', $menuLinkID)->first();
+            if ($parentObj) {
+                $menuLinkID = $parentObj->parent;
+                if ($menuLinkID) {
+                    $parentIDs[] = $menuLinkID;
                 }
-                if ($parentObj || !$menuLinkID) {
-                    $menuLinkID = NULL;
-                }
+            }
+            if ($parentObj || !$menuLinkID) {
+                $menuLinkID = NULL;
             }
         }
         return $parentIDs;
@@ -403,7 +397,7 @@ trait MenuLinkTrait{
      */
     public static function cmsMenus(){
         $result = [];
-        foreach(Menu::cache()->getItems() as $menu){
+        foreach(Menu::all() as $menu){
             $result[$menu->slug] = [
               'menuID' => $menu->menuID,
               'title' => $menu->title,
@@ -624,7 +618,7 @@ trait MenuLinkTrait{
           ]
         ];
 
-        foreach (PostType::cache()->getItems() as $postType){
+        foreach (PostType::all() as $postType){
             if(!$postType->isVisible){
                 continue;
             }

@@ -12,10 +12,8 @@
 namespace Accio\App\Models;
 
 use App\Models\Language;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Lang;
 use Input;
 use Request;
 use Illuminate\Database\Eloquent\Model;
@@ -25,11 +23,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class LanguageModel extends Model{
 
     use
-      Traits\LanguageTrait,
-      LogsActivity,
-      Traits\CacheTrait,
-      Traits\BootEventsTrait,
-      Traits\CollectionTrait;
+
+        Traits\LanguageTrait,
+        LogsActivity,
+        Cachable,
+        Traits\BootEventsTrait,
+        Traits\CollectionTrait;
 
     /**
      * Fields that can be filled in CRUD.
@@ -128,11 +127,7 @@ class LanguageModel extends Model{
      * @throws \Exception
      */
     public static function getVisibleList(){
-        $languages = Language::cache();
-        if($languages) {
-            return $languages->where('isVisible', true)->getItems();
-        }
-        return;
+        return Language::where('isVisible', true)->get();
     }
 
 }

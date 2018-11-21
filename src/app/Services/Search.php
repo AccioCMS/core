@@ -23,13 +23,6 @@ class Search{
     private $DATABASE_CONNECTION = 'mysql';
 
     /**
-     * @param $con sets a different database connection
-     */
-    public function setDatabaseConnection($con){
-        $this->DATABASE_CONNECTION = $con;
-    }
-
-    /**
      * Get a search form
      * @param string $customView Name of a custom blade.php file to render the template
      * @param string $formClass Serch form class

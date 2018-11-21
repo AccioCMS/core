@@ -35,23 +35,9 @@ trait PostTypeTrait{
      * @return object Returns requested post type if found, null instead
      * */
     public static function findBySlug($postTypeSlug){
-        $postTypes = self::cache();
-
-        if(!$postTypes){
-            return;
-        }
-
-        if($postTypes) {
-            $postTypeSlug = 'post_' . cleanPostTypeSlug($postTypeSlug);
-
-
-            $getPosType = $postTypes->where('slug', $postTypeSlug);
-
-            if ($getPosType) {
-                return $getPosType->getItems()->first();
-            }
-        }
-        return;
+        $postTypeSlug = 'post_' . cleanPostTypeSlug($postTypeSlug);
+        $postTypes = self::all()->where("slug", $postTypeSlug)->first();
+        return $postTypes;
     }
 
     /**
@@ -62,12 +48,9 @@ trait PostTypeTrait{
      * @throws \Exception
      */
     public static function isInMenuLinks($postTypeID){
-        $menulinks = MenuLink::cache();
+        $menulinks = MenuLink::where('belongsToID', $postTypeID)->where('belongsTo', 'post_type')->count();
         if($menulinks) {
-            $menuLinks = $menulinks->where('belongsToID', $postTypeID)->where('belongsTo', 'post_type');
-            if ($menuLinks->count()) {
-                return true;
-            }
+            return true;
         }
         return false;
     }
@@ -76,17 +59,10 @@ trait PostTypeTrait{
      * Get post type by ID.
      *
      * @param int $postTypeID
-     * @throws \Exception
+     * @return mixed
      */
     public static function findByID($postTypeID){
-        $postTypes = \App\Models\PostType::cache();
-        if($postTypes) {
-            $getPosType = $postTypes->where('postTypeID', $postTypeID);
-            if ($getPosType) {
-                return $getPosType->getItems()->first();
-            }
-        }
-        return;
+        return PostType::all()->where("postTypeID", $postTypeID)->first();
     }
 
     /**
@@ -131,7 +107,7 @@ trait PostTypeTrait{
      * @throws \Exception
      */
     public static function getFields($post_type){
-        $postType = PostType::cache()->where('slug', $post_type)->getItems()->first();
+        $postType = PostType::all()->where('slug', $post_type)->first();
 
         if($postType){
             return $postType->fields;

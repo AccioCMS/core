@@ -29,7 +29,7 @@ trait MenuTrait
         MenuLink::setActiveIDs(true);
 
         $menuData = self::findBySlug($menuSlug);
-        $menuLinks = MenuLink::cache()->where('menuID', $menuData->menuID)->sortBy('order')->getItems();
+        $menuLinks = MenuLink::where('menuID', $menuData->menuID)->orderBy('order')->get();
 
         if($menuLinks){
             return MenuLink::children($menuLinks);
@@ -42,20 +42,15 @@ trait MenuTrait
      * @throws \Exception
      */
     public static function setPrimaryMenuID(){
-        $menu = Menu::cache();
-        if($menu) {
-            $primaryMenu = $menu->where('isPrimary', 1);
+        $primaryMenu = Menu::all()->where('isPrimary', 1)->first();
 
-            //if no primary menu is found, get the first one from the list
-            if (!$primaryMenu) {
-                $primaryMenu = $menu->getItems()->first();
-            } else {
-                $primaryMenu = $primaryMenu->getItems()->first();
-            }
+        //if no primary menu is found, get the first one from the list
+        if (!$primaryMenu) {
+            $primaryMenu = Menu::first();
+        }
 
-            if (isset($primaryMenu->menuID)) {
-                self::$primaryMenuID = $primaryMenu->menuID;
-            }
+        if (isset($primaryMenu->menuID)) {
+            self::$primaryMenuID = $primaryMenu->menuID;
         }
         return;
     }
@@ -98,15 +93,7 @@ trait MenuTrait
      * @throws \Exception
      */
     public static function findBySlug($slug){
-        $menu = Menu::cache();
-        if($menu) {
-            $getMenuLink = $menu->where('slug', $slug);
-
-            if ($getMenuLink) {
-                return $getMenuLink->getItems()->first();
-            }
-        }
-        return null;
+        return Menu::all()->where('slug', $slug)->first();
     }
 
     /**
@@ -117,15 +104,7 @@ trait MenuTrait
      * @throws \Exception
      */
     public static function findByID($menuID){
-        $menu = Menu::cache();
-        if($menu) {
-            $getMenuLink = $menu->where('id', $menuID);
-
-            if ($getMenuLink) {
-                return $getMenuLink->getItems()->first();
-            }
-        }
-        return null;
+        return Menu::all()->where('menuID', $menuID)->first();
     }
 
 }

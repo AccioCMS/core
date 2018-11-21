@@ -1,6 +1,7 @@
 <?php
 
 namespace Accio;
+
 use Accio\App\Commands\Deploy\ActivateNewReleaseAfter;
 use Accio\App\Commands\Deploy\ActivateNewReleaseBefore;
 use Accio\App\Commands\Deploy\PurgeOldReleaseAfter;
@@ -18,7 +19,6 @@ use Accio\App\Commands\SetWritePermissions;
 use Accio\App\Services\Routes;
 use App\Models\Plugin;
 use App\Models\Theme;
-use Illuminate\Routing\Router;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\File;
 use Illuminate\Foundation\AliasLoader;
@@ -27,13 +27,11 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Accio\App\Commands\CheckRequirements;
 use Accio\App\Commands\DBDumper;
-use Accio\App\Commands\MakeArchive;
 use Accio\App\Commands\MakeDummy;
 use Accio\App\Commands\AccioInstall;
 use Accio\App\Commands\AccioUninstall;
 use Accio\App\Commands\MakeTheme;
 use Accio\App\Commands\MakeUser;
-use Illuminate\Config\Repository as ConfigRepository;
 use Accio\App\Commands\PluginInstall;
 use Spatie\ArtisanDd\DdCommand;
 
@@ -61,7 +59,6 @@ class PackageServiceProvider extends ServiceProvider{
     protected $commands = [
       MakeDummy::class,
       MakeUser::class,
-      MakeArchive::class,
       DBDumper::class,
       MakeTheme::class,
       CheckRequirements::class,

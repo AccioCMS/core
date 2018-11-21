@@ -6,6 +6,7 @@ use App\Models\Language;
 use App\Models\MenuLink;
 use Illuminate\Support\Facades\DB;
 use \App\Models\Menu;
+use App\Models\PostType;
 
 trait CategoryTrait{
 
@@ -20,31 +21,23 @@ trait CategoryTrait{
     public $categoryList = [];
 
     /**
-     * Find category by ID
+     * Find category by ID.
      *
-     * @param $categoryID
-     * @throws \Exception
+     * @param int $categoryID
+     * @return mixed
      */
     public static function findByID($categoryID){
-        $categories = \App\Models\Category::cache();
-        if($categories){
-            return $categories->where('categoryID',$categoryID)->getItems()->first();
-        }
-        return;
+        return self::where('categoryID',$categoryID)->first();
     }
 
     /**
      * Find by category by slug
      *
-     * @param $categorySlug
-     * @throws \Exception
+     * @param string $categorySlug
+     * @return mixed
      */
     public static function findBySlug($categorySlug){
-        $categories = \App\Models\Category::cache();
-        if($categories){
-            return $categories->whereJson('slug->'.App::getLocale(),$categorySlug)->getItems()->first();
-        }
-        return;
+        return self::where('slug->'.App::getLocale(),$categorySlug)->first();
     }
 
     /**
@@ -57,10 +50,7 @@ trait CategoryTrait{
     public static function findByPostType($postTypeSlug){
         $postType = PostType::findBySlug($postTypeSlug);
         if($postType){
-            $categories = self::cache();
-            if($categories){
-                return $categories->where('postTypeID',$postType->postTypeID)->getItems();
-            }
+            return self::where('postTypeID',$postType->postTypeID)->get();
         }
         return;
     }
@@ -93,7 +83,7 @@ trait CategoryTrait{
      * @throws \Exception
      */
     public static function isInMenuLinks($categoriesID){
-        $isInMenulinks = MenuLink::cache()->getItems()->where('belongsToID', $categoriesID)->where('belongsTo', 'category')->count();
+        $isInMenulinks = MenuLink::where('belongsToID', $categoriesID)->where('belongsTo', 'category')->count();
         if ($isInMenulinks){
             return true;
         }

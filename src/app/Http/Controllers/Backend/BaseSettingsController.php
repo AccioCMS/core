@@ -20,7 +20,7 @@ class BaseSettingsController extends MainController{
      * @throws \Exception
      */
     public function getSettings(){
-        $settings = Settings::cache()->getItems()->keyBy('settingsKey');
+        $settings = Settings::all()->keyBy('settingsKey');
 
         $settings['defaultLanguage'] = (object) array('value' => Language::getDefault()->languageID);
 

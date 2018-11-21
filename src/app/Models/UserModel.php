@@ -7,6 +7,7 @@ use App\Models\Media;
 use App\Models\User;
 use App\Notifications\UserAdded;
 use Faker\Test\Provider\Collection;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\App;
@@ -17,15 +18,14 @@ use Accio\Support\Facades\Meta;
 use Laravel\Passport\HasApiTokens;
 use Spatie\Activitylog\Traits\HasActivity;
 
-class UserModel extends Authenticatable
-{
+class UserModel extends Authenticatable{
     use
         Notifiable,
         HasActivity,
         Notifiable,
         Traits\UserTrait,
         Traits\TranslatableTrait,
-        Traits\CacheTrait,
+        Cachable,
         Traits\BootEventsTrait,
         Traits\CollectionTrait,
         HasApiTokens;
@@ -160,17 +160,6 @@ class UserModel extends Authenticatable
     }
 
     /**
-     * Default method to handle cache query.
-     *
-     * @return array
-     */
-    public function generateCache(){
-        $data  = User::with("profileimage")->get();
-        return $data;
-    }
-
-
-    /**
      * Handle callback of insert, update, delete.
      */
     protected static function boot(){
@@ -291,24 +280,12 @@ class UserModel extends Authenticatable
      * Get Profile Image that belong to a user.
      *
      * @return mixed
-     * @throws \Exception
      */
     public function getProfileImageAttribute(){
         if($this->profileImageID) {
-            // when attribute is available, weo don't ned to re-run relation
-            if ($this->attributeExists('profileimage')) {
-                $items = $this->getAttributeFromArray('profileimage');
-                // when Collection is available, we already have the data for this attribute
-                if (!$items instanceof Collection) {
-                    $items = $this->fillCacheAttributes(Media::class, $items)->first();
-                }
-
-                return $items;
-            } // or search tags in relations
-            else {
-                return $this->getRelationValue('profileimage');
-            }
+            return $this->getRelationValue('profileimage');
         }
+        return null;
     }
 
     /**

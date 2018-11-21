@@ -113,18 +113,18 @@ class BasePostController extends MainController {
         $customFieldsGroups = CustomFieldGroup::findGroups('post-type', 'create', 0, $postTypeSlug);
 
         // post type
-        $postType = PostType::cache()->where('slug', $postTypeSlug)->getItems()->first();
+        $postType = PostType::where('slug', $postTypeSlug)->first();
 
         // Categories (options to select)
-        $categories = array_values(Category::cache()->where("postTypeID", $postType->postTypeID)->toArray());
+        $categories = array_values(Category::where("postTypeID", $postType->postTypeID)->get()->toArray());
 
         return [
             'postType' => $postType,
-            'languages' => Language::cache()->getItems(),
+            'languages' => Language::all(),
             'categories' => $categories,
             'customFieldsGroups' => $customFieldsGroups,
             'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug),
-            'users' => User::cache()->getItems(),
+            'users' => User::all(),
             'createdByUserID' => Auth::user()->userID,
         ];
     }
@@ -250,7 +250,7 @@ class BasePostController extends MainController {
      */
     public function getPostTypeFieldsValues(string $postType, $post = null){
         $fields = PostType::getFields($postType);
-        $languages = Language::cache()->getItems();
+        $languages = Language::all();
         $values = [];
 
         foreach ($fields as $field){
@@ -587,7 +587,7 @@ class BasePostController extends MainController {
      * @param string $term search term
      *
      * @return array search result
-     *
+     * @throws \Exception
      */
     public function makeSearch($lang, $postTypeSlug, $term){
         // check if user has permissions to access this link
@@ -600,11 +600,8 @@ class BasePostController extends MainController {
         $orderType  = (isset($_GET['type'])) ? $orderType = $_GET['type'] : 'DESC';
 
         $excludeColumns = array('remember_token', 'created_at', 'updated_at');
-        // if archive is activated search in archive
-        if(env('DB_ARCHIVE')){
-            Search::setDatabaseConnection("mysql_archive");
-        }
-        $searchResults = Search::searchByTerm($postTypeSlug, $term, App\Models\Post::$rowsPerPage, true, [], $excludeColumns, $orderBy, $orderType);
+
+        $searchResults = Search::searchByTerm($postTypeSlug, $term, Post::$rowsPerPage, true, [], $excludeColumns, $orderBy, $orderType);
 
         $response = $this
             ->appendListColumnsFromEvents($postTypeSlug)
@@ -775,7 +772,7 @@ class BasePostController extends MainController {
         }
 
         // Categories (options to select)
-        $categories = array_values(Category::cache()->where("postTypeID", $currentPostType->postTypeID)->toArray());
+        $categories = array_values(Category::where("postTypeID", $currentPostType->postTypeID)->get()->toArray());
 
         // selected categories of this post
         $selectedCategories = $this->getPostSelectedCategories($id, $postTypeSlug);
@@ -806,8 +803,8 @@ class BasePostController extends MainController {
             'customFieldsGroups' => $customFieldGroups,
             'postTypeFieldsValues' => $this->getPostTypeFieldsValues($postTypeSlug, $post),
             'categories' => $categories,
-            'languages' => Language::cache()->getItems(),
-            'users' => User::cache()->getItems(),
+            'languages' => Language::all(),
+            'users' => User::all(),
         );
 
         // Fire event

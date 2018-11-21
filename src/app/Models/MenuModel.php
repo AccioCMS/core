@@ -10,22 +10,20 @@
 namespace Accio\App\Models;
 
 use App\Models\Menu;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Schema;
 use Accio\App\Traits;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class MenuModel extends Model{
 
     use
-      Traits\MenuTrait,
-      LogsActivity,
-      Traits\CacheTrait,
-      Traits\BootEventsTrait,
-      Traits\CollectionTrait;
+        Traits\MenuTrait,
+        LogsActivity,
+        Cachable,
+        Traits\BootEventsTrait,
+        Traits\CollectionTrait;
 
     /**
      * Fields that can be filled in CRUD

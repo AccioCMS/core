@@ -9,7 +9,6 @@
  */
 namespace Accio\App\Models;
 
-use App\Models\Theme;
 use Illuminate\Support\Facades\Event;
 use Route;
 use Illuminate\Database\Eloquent\Model;
@@ -23,8 +22,7 @@ class ThemeModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = [])
-    {
+    public function __construct(array $attributes = []){
         parent::__construct($attributes);
 
         $this->setActiveTheme();

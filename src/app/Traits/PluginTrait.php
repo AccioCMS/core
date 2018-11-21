@@ -55,7 +55,7 @@ trait PluginTrait{
                         $explode = explode('plugins/', str_replace('\\','/', dirname($fn)));
                         if (isset($explode[1])) {
                             $pluginNamespace = str_replace('/Controllers', '', $explode[1]);
-                            self::$pluginData = Plugin::cache()->where('namespace', $pluginNamespace)->getItems()->first();
+                            self::$pluginData = Plugin::where('namespace', $pluginNamespace)->first();
                         }
 
                     }catch(\Exception $e){
@@ -154,10 +154,10 @@ trait PluginTrait{
      * @return array
      */
     public static function activePlugins(){
-        $plugins = self::cache();
+        $plugins = self::where('isActive', true)->get();
         // Plugin table must exist first
         if($plugins){
-            return $plugins->where('isActive', true)->getItems();
+            return $plugins;
         }
         return [];
     }
@@ -382,7 +382,7 @@ trait PluginTrait{
      * @throws \Exception
      */
     public static function getByNamespace($namespace){
-        $cachedPlugin = Plugin::cache()->where('namespace', $namespace)->getItems()->first();
+        $cachedPlugin = Plugin::where('namespace', $namespace)->first();
         if($cachedPlugin){
             return $cachedPlugin;
         }
