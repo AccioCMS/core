@@ -80,7 +80,6 @@ class BaseSettingsController extends MainController{
 
         if(Settings::truncate()){
             Settings::insert($settings);
-            Settings::removeCache();
         }
 
         // if request is being made from general settings
@@ -108,7 +107,7 @@ class BaseSettingsController extends MainController{
      * @throws \Exception
      */
     public function getPermalinks($lang){
-        return Permalink::cache()->getItems();
+        return Permalink::all();
     }
 
     /**
@@ -127,7 +126,6 @@ class BaseSettingsController extends MainController{
 
         if(Permalink::truncate()){
             if(Permalink::insert($tmp)){
-                Permalink::removeCache();
                 return $this->response( 'Permalinks are saved' , 200);
             }
         }

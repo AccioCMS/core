@@ -382,9 +382,9 @@ trait PluginTrait{
      * @throws \Exception
      */
     public static function getByNamespace($namespace){
-        $cachedPlugin = Plugin::where('namespace', $namespace)->first();
-        if($cachedPlugin){
-            return $cachedPlugin;
+        $plugin = Plugin::where('namespace', $namespace)->first();
+        if($plugin){
+            return $plugin;
         }
         return null;
     }

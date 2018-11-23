@@ -1,26 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: sopa
- * Date: 18/08/2017
- * Time: 10:44 PM
- */
-
 namespace Accio\App\Traits;
 
-use App\Models\Settings;
-use App\Models\Theme;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
-use Accio\App\Models\SettingsModel;
-use Mockery\Exception;
 use Riverskies\Laravel\MobileDetect\Facades\MobileDetect;
 use Illuminate\Support\Facades\Request;
 use Accio\Support\Facades\Meta;
 use Route;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\DB;
 
 trait ThemeTrait
 {

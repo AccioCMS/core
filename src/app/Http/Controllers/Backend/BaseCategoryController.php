@@ -3,9 +3,7 @@
 namespace Accio\App\Http\Controllers\Backend;
 
 use App;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -184,7 +182,7 @@ class BaseCategoryController extends MainController {
             $category->deleteChildren($category->categoryID, $postType->postTypeID);
 
             // delete relations
-            DB::table('categories_relations')->where("categoryID", $category->categoryID)->delete();
+            DB::table(categoriesRelationTable($postType->slug))->where("categoryID", $category->categoryID)->delete();
 
             // Delete the item
             if($category->delete()){

@@ -9,8 +9,6 @@
 namespace Accio\App\Traits;
 
 use App\Models\Permalink;
-use Illuminate\Support\Facades\Cache;
-use Mockery\Exception;
 
 trait PermalinkTrait
 {

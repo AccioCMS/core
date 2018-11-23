@@ -75,11 +75,10 @@ trait PostTrait{
      *
      * @param int $postID ID of the post
      * @param string $postTypeSlug Name of the post type, ex. post_services
-     * @param bool $searchInCache true if search first look for the item in cache, false to look for it into db
      *
      * @return object|null Returns post as array or null if not found
      **/
-    public static function findByID($postID, $postTypeSlug = '', $searchInCache = true){
+    public static function findByID($postID, $postTypeSlug = ''){
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
         $postObj = (new Post())->setTable($postTypeSlug);
         $post = $postObj

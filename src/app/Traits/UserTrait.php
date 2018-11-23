@@ -16,12 +16,10 @@ use App\Models\PostType;
 use App\Models\RoleRelation;
 use App\Models\User;
 use App\Models\UserGroup;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Media;
 
 trait UserTrait{
 
@@ -39,7 +37,7 @@ trait UserTrait{
      * @param  integer $ownershipPostID The ID of the post we are checking for ownership
      * @return boolean
      * */
-    public static function hasOwnership($app,$ownershipPostID){
+    public static function hasOwnership($app, $ownershipPostID){
         if($ownershipPostID){
             if(isPostType($app)){
                 $checkDB = DB::table($app)

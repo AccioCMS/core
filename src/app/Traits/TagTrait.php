@@ -1,7 +1,7 @@
 <?php
-
 namespace Accio\App\Traits;
 
+use App\Models\PostType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 
@@ -35,11 +35,8 @@ trait TagTrait{
      * @return boolean Returns true if there is any post
      */
     public static function hasPosts($tagID, $postTypeSlug = ''){
-        $queryObject = DB::table('tags_relations')->where('tagID', $tagID);
-
-        if($postTypeSlug){
-            $queryObject->where('belongsTo', $postTypeSlug);
-        }
+        $postTypeSlug ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
+        $queryObject = DB::table(tagsRelationTable($postTypeSlug))->where('tagID', $tagID);
 
         if($queryObject->count() > 0){
             return true;

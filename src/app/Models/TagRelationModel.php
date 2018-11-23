@@ -2,7 +2,6 @@
 
 namespace Accio\App\Models;
 
-use Accio\App\Traits\CacheTrait;
 use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
 

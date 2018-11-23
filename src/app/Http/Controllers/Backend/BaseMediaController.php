@@ -4,7 +4,6 @@ namespace Accio\App\Http\Controllers\Backend;
 
 use App\Models\MediaRelation;
 use App\Models\User;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -227,8 +226,6 @@ class BaseMediaController extends MainController{
                 $image->deleteThumbs();
                 $image->createDefaultThumbs();
 
-                // delete cache
-                Cache::flush();
             }else{
                 return "Some files could not be watermaked. Please select only image files.";
             }

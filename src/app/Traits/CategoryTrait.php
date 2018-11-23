@@ -65,9 +65,8 @@ trait CategoryTrait{
      * @return bool
      */
     public static function hasPosts($postType, $categoriesID){
-        if(DB::table('categories_relations')
+        if(DB::table(categoriesRelationTable($postType))
             ->where('categoryID', $categoriesID)
-            ->where('belongsTo', $postType)
             ->count()){
             return true;
         }else{
@@ -195,18 +194,20 @@ trait CategoryTrait{
      * @param int $parentID
      * @param int $postTypeID
      * @return mixed
+     * @throws \Exception
      */
     public function deleteChildren(int $parentID, int $postTypeID){
         $this->categoryList = self::where("postTypeID", $postTypeID)->get();
         $this->getAllChildren($parentID);
         foreach($this->categoriesToBeDeleted as $cat){
             // Post type should not be able to be deleted if it has posts
-            if(Category::isInMenuLinks($cat->categoryID)){
+            if(self::isInMenuLinks($cat->categoryID)){
                 return $this->response("You can't delete this Category because it is part of a menu.", 403);
             }
 
+            $postType = PostType::findByID($postTypeID);
             // delete relations
-            DB::table('categories_relations')->where("categoryID", $cat->categoryID)->delete();
+            DB::table($postType->slug.'_categories')->where("categoryID", $cat->categoryID)->delete();
             // delete children
             $cat->delete();
         }

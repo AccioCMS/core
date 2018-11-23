@@ -135,15 +135,6 @@ trait MediaTrait{
                 Event::fire('media:creating', [$media, $request]);
 
                 if($media->save()){
-                    if ($request->fromAlbum === "true" || $request->fromAlbum === true){
-                        \Illuminate\Support\Facades\DB::table('album_relations')->insert([
-                            'albumID' => $request->albumID,
-                            'mediaID' => $media->mediaID,
-                            "created_at" =>  \Carbon\Carbon::now(),
-                            "updated_at" => \Carbon\Carbon::now(),
-                        ]);
-                    }
-
                     // optimize original image
                     if(config('media.optimize_original_image')) {
                         $this->optimize($destinationOriginalDirectory . '/' . $fileName);
