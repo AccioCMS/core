@@ -14,6 +14,8 @@ use Validator;
 use App\Models\PostType;
 use App\Models\Category;
 use App\Models\Tag;
+use App\Models\TagRelation;
+use App\Models\CategoryRelation;
 
 use Illuminate\Http\Request;
 
@@ -161,7 +163,7 @@ class BasePostTypeController extends MainController{
             return $this->response( "You can't delete this Post Type. There could be posts associated with it or it is part of a menu", 403);
         }
 
-        if($this->deleteRelatedTagsAndCategory($id) && $postType->delete()){
+        if($this->deleteRelatedTagsAndCategory($postType) && $postType->delete()){
             Schema::drop($postType->slug);
 
             // delete route file
@@ -180,14 +182,14 @@ class BasePostTypeController extends MainController{
      * @param int $postTypeID
      * @return bool
      */
-    public function deleteRelatedTagsAndCategory(int $postTypeID){
-        $categories = Category::where("postTypeID", $postTypeID);
+    public function deleteRelatedTagsAndCategory($postType){
+        $categories = Category::where("postTypeID", $postType->postTypeID);
         $categoryIDs = $categories->pluck('categoryID')->toArray();
-        $categoriesRelations = App\Models\CategoryRelation::whereIn("categoryID", $categoryIDs);
+        $categoriesRelations = (new CategoryRelation)->setTable($postType->slug."_categories")->whereIn("categoryID", $categoryIDs);
 
-        $tags = Tag::where("postTypeID", $postTypeID);
+        $tags = Tag::where("postTypeID", $postType->postTypeID);
         $tagIDs = $tags->pluck('tagID')->toArray();
-        $tagsRelations = App\Models\TagRelation::whereIn("tagID", $tagIDs);
+        $tagsRelations = (new TagRelation)->setTable($postType->slug."_tags")->whereIn("tagID", $tagIDs);
 
         // return false if any delete failed
         if(($tagsRelations->count() && !$tagsRelations->delete()) ||
@@ -196,6 +198,14 @@ class BasePostTypeController extends MainController{
             ($categories->count() && !$categories->delete())
         ){
             return false;
+        }else{
+            Schema::drop($postType->slug."_media");
+            if($postType->hasCategories){
+                Schema::drop($postType->slug."_categories");
+            }
+            if($postType->hasTags){
+                Schema::drop($postType->slug."_tags");
+            }
         }
         return true;
     }
@@ -244,7 +254,7 @@ class BasePostTypeController extends MainController{
 
         if(isset($request->id)){
             $postType = PostType::findOrFail($request->id);
-            $customFieldsArray = PostType::updateTable($request->slug, $request->fields);
+            $customFieldsArray = PostType::updateTable($request->slug, $request->fields, $request->hasCategories, $request->hasTags);
         }else{
             $slug = $request->slug;
             if(isset($slug) && empty($slug)){
@@ -253,7 +263,7 @@ class BasePostTypeController extends MainController{
                 $slug = self::generateSlug($request->slug, 'post_type', 'postTypeID', App::getLocale(), 0);
             }
             // create new table for the posts of the post type
-            $customFieldsArray = PostType::createTable($slug, $request->fields);
+            $customFieldsArray = PostType::createTable($slug, $request->fields, $request->hasCategories, $request->hasTags);
 
             // Create post type
             $postType = new PostType();
@@ -369,16 +379,17 @@ class BasePostTypeController extends MainController{
     /**
      * @inheritdoc
      * */
-    public function generateSlug($title, $tableName, $primaryKey, $languageSlug = '', $id = 0, $translatable = false, $delimiter = "-"){
+    public function generateSlug($title, $tableName, $primaryKey, $languageSlug = '', $id = 0, $translatable = false,
+                                 $hasVirtualSlug = false, $delimiter = "_"){
         $count = 0;
         $found = true;
-        $originalSlug = str_slug($title, '-');
-        $originalSlug = str_replace('post-','',$originalSlug);
-        $originalSlug = "post_".$originalSlug;
+        $originalSlug = str_slug($title, $delimiter);
+        $originalSlug = str_replace('post'.$delimiter,'',$originalSlug);
+        $originalSlug = "post".$delimiter.$originalSlug;
 
         while($found){
             if($count != 0){
-                $slug = $originalSlug."-".$count;
+                $slug = $originalSlug.$delimiter.$count;
             }else{
                 $slug = $originalSlug;
             }

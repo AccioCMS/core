@@ -158,10 +158,12 @@ class MainController extends Controller{
      * @param string $languageSlug
      * @param int $id
      * @param bool $translatable
+     * @param bool $hasVirtualSlug
      * @param string $delimiter
      * @return string
      */
-    public function generateSlug($title, $tableName, $primaryKey, $languageSlug = '', $id = 0, $translatable = false, $delimiter = "-"){
+    public function generateSlug($title, $tableName, $primaryKey, $languageSlug = '', $id = 0, $translatable = false,
+                                 $hasVirtualSlug = false, $delimiter = "-"){
         $count = 0;
         $found = true;
         $originalSlug = str_slug($title, $delimiter);
@@ -175,7 +177,11 @@ class MainController extends Controller{
 
             $countObj = DB::table($tableName);
             if ($translatable){
-                $countObj->where('slug->'.$languageSlug, $slug);
+                if($hasVirtualSlug){
+                    $countObj->where('slug_'.$languageSlug, $slug);
+                }else{
+                    $countObj->where('slug->'.$languageSlug, $slug);
+                }
             }else{
                 $countObj->where('slug', $slug);
             }

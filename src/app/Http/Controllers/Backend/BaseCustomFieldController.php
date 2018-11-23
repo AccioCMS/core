@@ -236,7 +236,7 @@ class BaseCustomFieldController extends MainController{
 
         if($customFieldGroup) {
             $fields = CustomField::where('customFieldGroupID', $id);
-            if ($fields){
+            if($fields){
                 $fields->delete();
                 $customFieldGroup->delete();
 

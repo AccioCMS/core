@@ -86,6 +86,7 @@ class PackageServiceProvider extends ServiceProvider{
      * @var array
      */
     protected $aliases = [
+      'AccioQuery' => 'Accio\App\Services\AccioQuery',
       'Pagination' => 'Accio\App\Services\Pagination',
       'Routes' => 'Accio\App\Services\Routes',
       'Search' => 'Accio\App\Services\Search',
@@ -101,7 +102,6 @@ class PackageServiceProvider extends ServiceProvider{
     {
          if (!$this->app->routesAreCached()) {
             Route::group(['middleware' => ['web']], function () {
-                // todo me e kontrollu pse e kena cehck routesAreCached dhe aka nevoje me e la a jo
                 $routes = new Routes();
 
                 // Backend Routes

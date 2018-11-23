@@ -11,18 +11,10 @@ trait TagTrait{
      * Get tag by Slug.
      *
      * @param  string $tagSlug  Slug of tag
-     * @return object|null Returns an object with post type's data if found, or nullnull if not found
+     * @return object|null Returns an object with post type's data if found, or null if not found
      * */
     public static function findBySlug($tagSlug){
-        $getPostTypeTags = selfitem;
-
-        if($getPostTypeTags) {
-            $tag = $getPostTypeTags->where('slug',$tagSlug);
-            if($tag){
-                return $tag->getItems()->first();
-            }
-        }
-        return null;
+        return self::where('slug',$tagSlug)->first();
     }
 
     /**

@@ -188,11 +188,9 @@ class BasePostController extends MainController {
         $translatableFields = [];
         $fields = PostType::getFields($postType);
         foreach ($fields as $field) {
-            if (isset($post) && $post) {
-                $slug = $field->slug;
-                if ($field->translatable) {
-                    array_push($translatableFields, $slug);
-                }
+            $slug = $field->slug;
+            if ($field->translatable) {
+                array_push($translatableFields, $slug);
             }
         }
 
@@ -349,8 +347,9 @@ class BasePostController extends MainController {
      * @return mixed
      */
     private function selectByCategory($queryObject, $categoryID, $postTypeSlug){
-        return $queryObject->join('categories_relations','categories_relations.belongsToID',$postTypeSlug.'.postID')
-            ->where('categories_relations.categoryID', '=', $categoryID);
+        $categoryRelationTable = categoriesRelationTable($postTypeSlug);
+        return $queryObject->join($categoryRelationTable, $categoryRelationTable.'.postID',$postTypeSlug.'.postID')
+            ->where($categoryRelationTable.'.categoryID', '=', $categoryID);
     }
 
     /**
@@ -466,10 +465,10 @@ class BasePostController extends MainController {
         $orderType = (isset($_GET['type'])) ? $_GET['type'] : 'DESC';
 
         // get postIDs from relations
-        $relations = DB::table('categories_relations')->where('categoryID', $categoryID)->select('belongsToID')->get();
+        $relations = DB::table(categoriesRelationTable($postType))->where('categoryID', $categoryID)->select('postID')->get();
         $postIDs = [];
         foreach ($relations as $postID){
-            $postIDs[] = $postID->belongsToID;
+            $postIDs[] = $postID->postID;
         }
         // get post list
         $list = DB::table($postType)->whereIn('postID', $postIDs)->orderBy($orderBy, $orderType)->paginate(Post::$rowsPerPage);
@@ -553,9 +552,9 @@ class BasePostController extends MainController {
 
         if ($post->delete()){
             // Delete categories relations of this post
-            DB::table('categories_relations')->where('belongsTo', $postType)->where('belongsToID',$id)->delete();
+            DB::table(categoriesRelationTable($postType))->where('postID',$id)->delete();
             // Delete tags relations of this post
-            DB::table('tags_relations')->where('belongsTo', $postType)->where('belongsToID',$id)->delete();
+            DB::table(tagsRelationTable($postType))->where('postID',$id)->delete();
             return true;
         }
         return false;
@@ -651,6 +650,7 @@ class BasePostController extends MainController {
         if(isset($data['postID'])){
             $postID = $data['postID'];
         }
+
         $data['slug'] = $this->fillEmptySlugs($data['slug'], $data['postType'], $firstFilledTitle, $postID);
 
         try{
@@ -722,7 +722,7 @@ class BasePostController extends MainController {
             if($slug == ""){
                 $tmpSlug = $defaultSlug;
             }
-            $checkedSlug = parent::generateSlug($tmpSlug, $postType, 'postID', $languageSlug, $id, true);
+            $checkedSlug = parent::generateSlug($tmpSlug, $postType, 'postID', $languageSlug, $id, true, true);
             $slugsFinal[$languageSlug] = $checkedSlug;
         }
         return $slugsFinal;
@@ -825,15 +825,16 @@ class BasePostController extends MainController {
     private function getPostRelatedMedia($id, $post, $postTypeSlug, $translatableFields){
         $media = array();
 
+        $mediaRelationTable = $postTypeSlug.'_media';
         // get the media relation joining the media table and the post
-        $mediaRelationsResults = DB::table('media_relations')
-            ->where("belongsTo", $postTypeSlug)
-            ->join('media','media_relations.mediaID','media.mediaID')
-            ->join($postTypeSlug,'media_relations.belongsToID',$postTypeSlug.'.postID')
-            ->where("belongsToID", $id)
-            ->select('media.title as title', 'media.mediaID', 'media_relations.mediaRelationID', 'media_relations.belongsTo', 'media_relations.belongsToID', 'media_relations.language',
+        $mediaRelationsResults = DB::table($mediaRelationTable)
+            ->join('media',$mediaRelationTable.'.mediaID','media.mediaID')
+            ->join($postTypeSlug,$mediaRelationTable.'.postID',$postTypeSlug.'.postID')
+            ->where($mediaRelationTable.".postID", $id)
+            ->select('media.title as title', 'media.mediaID', $mediaRelationTable.'.mediaRelationID',
+                $mediaRelationTable.'.postID', $mediaRelationTable.'.language',
                 'media.description', 'media.credit', 'media.type', 'media.extension',
-                'media.url', 'media.filename', 'media.fileDirectory', 'media.filesize', 'media.dimensions', 'media_relations.field')
+                'media.url', 'media.filename', 'media.fileDirectory', 'media.filesize', 'media.dimensions', $mediaRelationTable.'.field')
             ->get();
 
 
@@ -882,10 +883,10 @@ class BasePostController extends MainController {
      */
     private function getPostSelectedCategories($id, $postTypeSlug){
         // get the selected categories from the DB table categories_relations
-        $selectedCategories = DB::table('categories_relations')
-            ->leftJoin('categories','categories_relations.categoryID','categories.categoryID')
-            ->where('categories_relations.belongsTo', $postTypeSlug)
-            ->where('categories_relations.belongsToID', $id)
+        $categoryRelationTable = $postTypeSlug.'_categories';
+        $selectedCategories = DB::table($categoryRelationTable)
+            ->leftJoin('categories',$categoryRelationTable.'.categoryID','categories.categoryID')
+            ->where($categoryRelationTable.'.postID', $id)
             ->select("categories.categoryID", "categories.postTypeID", "categories.title", "categories.slug")
             ->get();
 
@@ -902,11 +903,11 @@ class BasePostController extends MainController {
     private function getPostSelectedTags($id, $postTypeSlug){
         // get selected tags from the DB table tags_relations
         $selectedTags = [];
-        $tagsRelations = DB::table('tags_relations')
-            ->leftJoin('tags','tags_relations.tagID','tags.tagID')
-            ->where('tags_relations.belongsTo', $postTypeSlug)
-            ->where('tags_relations.belongsToID', $id)
-            ->select("tags.tagID", "tags_relations.language", "tags.title", "tags.slug")
+        $tagsRelationTable = tagsRelationTable($postTypeSlug);
+        $tagsRelations = DB::table($tagsRelationTable)
+            ->leftJoin('tags',$tagsRelationTable.'.tagID','tags.tagID')
+            ->where($tagsRelationTable.'.postID', $id)
+            ->select("tags.tagID", $tagsRelationTable.".language", "tags.title", "tags.slug")
             ->get();
 
         foreach($tagsRelations as $tagsRelation){

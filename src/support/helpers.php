@@ -623,3 +623,21 @@ if (! function_exists('isTablet')) {
         return \Riverskies\Laravel\MobileDetect\Facades\MobileDetect::isTablet();
     }
 }
+
+if (! function_exists('categoriesRelationTable')) {
+    function categoriesRelationTable($postTypeSlug){
+        return $postTypeSlug."_categories";
+    }
+}
+
+if (! function_exists('tagsRelationTable')) {
+    function tagsRelationTable($postTypeSlug){
+        return $postTypeSlug."_tags";
+    }
+}
+
+if (! function_exists('mediaRelationTable')) {
+    function mediaRelationTable($postTypeSlug){
+        return $postTypeSlug."_media";
+    }
+}

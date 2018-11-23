@@ -128,7 +128,6 @@
                                             <div v-if="value.type.inputType == 'image'">
                                                 <!-- If it is translatable -->
                                                 <div class="imagePrevContainer col-md-10 col-sm-10 col-xs-12" v-if="value.translatable">
-
                                                     <div class="imageSingleThumb" v-for="(file, count) in mediaSelectedFiles[value.slug+'__lang__'+lang.slug]" :key="count">
                                                         <i class="fa fa-close closeBtnForPrevImages" @click="deleteSelectedMediaFile(value.slug+'__lang__'+lang.slug, file.mediaID)"></i>
                                                         <img :src="constructMediaUrl(file)">

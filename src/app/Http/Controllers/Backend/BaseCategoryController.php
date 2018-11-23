@@ -242,7 +242,7 @@ class BaseCategoryController extends MainController {
         // Create Category
         $categoryModel->title = $form['title'];
         $categoryModel->postTypeID = $data['postTypeID'];
-        $categoryModel->parentID = $parentID;
+        $categoryModel->parentID = ($parentID ? $parentID: null);
         $categoryModel->featuredImageID = $form['featuredImageID'];
         $categoryModel->description = $form['description'];
         $categoryModel->slug = $form['slug'];

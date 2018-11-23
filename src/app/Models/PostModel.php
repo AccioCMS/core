@@ -667,19 +667,49 @@ class PostModel extends Model{
      *
      * @return HasManyThrough
      */
-    public function media()
-    {
-        $query =  $this->hasManyThrough('App\Models\Media', 'App\Models\MediaRelation','belongsToID','mediaID','postID', 'mediaID');
-
+    public function media(){
+        $query =  $this->customHasManyThrough('App\Models\Media', 'App\Models\MediaRelation','postID','mediaID','postID', 'mediaID', $this->getTable()."_media");
+        
         if($this->mediaField){
-            $query->where('media_relations.field',$this->mediaField);
+            $query->where($this->getTable().'_media.field',$this->mediaField);
         }
 
         // We also need 'field' from media relations, so we can select media based on field name
-        $query->select(['media.*','media_relations.field']);
+        $query->select(['media.*',$this->getTable().'_media.field']);
 
         return $query;
     }
+
+
+    /**
+     *
+     *
+     * @param $related
+     * @param $through
+     * @param null $firstKey
+     * @param null $secondKey
+     * @param null $localKey
+     * @param null $secondLocalKey
+     * @return HasManyThrough
+     */
+    public function customHasManyThrough($related, $through, $firstKey = null, $secondKey = null, $localKey = null, $secondLocalKey = null, $table = null){
+        $instance = (new $related);
+
+        $through = (new $through)->setTable($table);
+
+        $firstKey = $firstKey ?: $this->getForeignKey();
+
+        $secondKey = $secondKey ?: $through->getForeignKey();
+
+        return new HasManyThrough($instance->newQuery(), $this, $through, $firstKey, $secondKey, $localKey, $secondLocalKey);
+    }
+
+
+
+
+
+
+
 
     /**
      * Cached categories that belong to a post.
@@ -780,7 +810,9 @@ class PostModel extends Model{
         if(!$findPostType){
             throw new \Exception("Categories  relations could not be made because the post type of the post #".$this->postID." could ont be found!");
         }
-        return $this->hasManyThrough('App\Models\Category', 'App\Models\CategoryRelation','belongsToID','categoryID','postID','categoryID')->where('postTypeID',$findPostType->postTypeID);
+        return $this->customHasManyThrough('App\Models\Category', 'App\Models\CategoryRelation',
+            'postID','categoryID','postID','categoryID', $this->getTable()."_categories")
+            ->where('postTypeID',$findPostType->postTypeID);
     }
 
     /**
@@ -794,7 +826,9 @@ class PostModel extends Model{
         if(!$findPostType){
             throw new \Exception("Tag relations could not be made because the post type of the post #".$this->postID." could ont be found!");
         }
-        return $this->hasManyThrough('App\Models\Tag', 'App\Models\TagRelation','belongsToID','tagID','postID','tagID')->where('postTypeID',$findPostType->postTypeID);
+        return $this->customHasManyThrough('App\Models\Tag', 'App\Models\TagRelation',
+            'postID','tagID','postID','tagID', $this->getTable()."_tags")
+            ->where('postTypeID',$findPostType->postTypeID);
     }
 
 

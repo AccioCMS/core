@@ -2,10 +2,12 @@
 
 namespace Accio\App\Traits;
 
+use App\Models\CategoryRelation;
+use App\Models\MediaRelation;
 use App\Models\MenuLink;
 use App\Models\Post;
 use App\Models\PostType;
-use App\Models\Task;
+use App\Models\TagRelation;
 use App\Models\Theme;
 use App\Models\User;
 use Illuminate\Support\Facades\Event;
@@ -61,7 +63,7 @@ trait PostTrait{
 
         $postObj = (new Post())->setTable($postTypeSlug);
         $post = $postObj
-            ->where('slug->'.App::getLocale(), $slug)
+            ->where('slug_'.App::getLocale(), $slug)
             ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
             ->first();
 
@@ -105,9 +107,6 @@ trait PostTrait{
         $postObj = new Post();
         $postObj->setTable($data['postType']);
 
-        // Remove foreign key check
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-
         // on create
         if(!isset($data['postID'])){
             $populatedFields = self::populateStoreColumns($postObj, $data);
@@ -129,9 +128,9 @@ trait PostTrait{
 
                 if($postObj->save()){
                     // Delete existing relations, to ensure accuracy
-                    DB::table('categories_relations')->where("belongsToID", $data['postID'])->where("belongsTo", $data['postType'])->delete();
-                    DB::table('tags_relations')->where("belongsToID", $data['postID'])->where("belongsTo", $data['postType'])->delete();
-                    DB::table('media_relations')->where("belongsToID", $data['postID'])->where("belongsTo", $data['postType'])->delete();
+                    DB::table($data['postType'].'_categories')->where("postID", $data['postID'])->delete();
+                    DB::table($data['postType'].'_tags')->where("postID", $data['postID'])->delete();
+                    DB::table($data['postType'].'_media')->where("postID", $data['postID'])->delete();
                 }
 
                 $postID = $postObj->postID;
@@ -497,20 +496,15 @@ trait PostTrait{
             foreach ($selectedCategories as $selectedCategory){
                 $newCategoryRelation[] = [
                   'categoryID' => $selectedCategory['categoryID'],
-                  'belongsToID' => $postID,
-                  'belongsTo' => $postTypeSlug,
-                  "created_at" =>  \Carbon\Carbon::now(),
-                  "updated_at" => \Carbon\Carbon::now(),
+                  'postID' => $postID,
                 ];
                 $categoriesIDs[] = $selectedCategory['categoryID'];
             }
 
             // if post is only in the archive
             // if post is in the main database
-            $insertedCategories = DB::table('categories_relations')->insert($newCategoryRelation);
+            $insertedCategories = (new CategoryRelation())->setTable($postTypeSlug.'_categories')->insert($newCategoryRelation);
             if ($insertedCategories){
-                // create task
-                Task::create('categories_relations', 'create', $newCategoryRelation, ['postID' => $postID, 'postType' => $postTypeSlug]);
                 return $categoriesIDs;
             }
         }
@@ -554,11 +548,8 @@ trait PostTrait{
                         //add new tag relationship
                         $newTagsRelations[] = [
                           'tagID' => $tagsID,
-                          'belongsToID' => $postID,
-                          'belongsTo' => $postType['slug'],
-                          'language' => $langSlug,
-                          "created_at" =>  \Carbon\Carbon::now(),
-                          "updated_at" => \Carbon\Carbon::now(),
+                          'postID' => $postID,
+                          'language' => $langSlug
                         ];
                         $tagsIDs[] = $tagsID;
                     }
@@ -566,11 +557,8 @@ trait PostTrait{
             }
 
             // if post is in the main database
-            $insertedTags = DB::table('tags_relations')->insert($newTagsRelations);
+            $insertedTags = (new TagRelation())->setTable($postTypeSlug.'_tags')->insert($newTagsRelations);
             if($insertedTags){
-                // create task
-                Task::create('tags_relations', 'create', $newTagsRelations, ['postID' => $postID, 'postType' => $postTypeSlug]);
-
                 return $tagsIDs;
             }
         }
@@ -605,8 +593,7 @@ trait PostTrait{
                     $image = array();
                     $image['field'] = $fileKey;
                     $image['mediaID'] = $file['mediaID'];
-                    $image['belongsTo'] = $postTypeSlug;
-                    $image['belongsToID'] = $postID;
+                    $image['postID'] = $postID;
 
                     $languageAvailability = array();
                     foreach ($languages as $lang){
@@ -622,8 +609,7 @@ trait PostTrait{
                 foreach ($files as $file){
                     $image['field'] = $fieldName;
                     $image['mediaID'] = $file['mediaID'];
-                    $image['belongsTo'] = $postTypeSlug;
-                    $image['belongsToID'] = $postID;
+                    $image['postID'] = $postID;
 
                     //store only the language which the input belongs to
                     $languageAvailability = array();
@@ -640,7 +626,7 @@ trait PostTrait{
             }
         }
 
-        $mediaSaved = DB::table('media_relations')->insert($imagesArr);
+        $mediaSaved = (new MediaRelation())->setTable($postTypeSlug.'_media')->insert($imagesArr);
         if($mediaSaved){
             return $imagesArr;
         }
@@ -804,8 +790,9 @@ trait PostTrait{
      */
     public function printTags($customView = '', $ulClass =""){
         if($this->hasTags()) {
+            $tags = "tags";
             return new HtmlString(view()->make(($customView ? $customView : "vendor.tags.default"), [
-              'tagsList' => $this->tags,
+              'tagsList' => $this->$tags,
               'ulClass' => $ulClass,
               'postTypeSlug' => $this->getTable()
 
@@ -819,8 +806,9 @@ trait PostTrait{
      * @return boolean Returns true if found
      */
     public function hasTags(){
+        $tags = "tags";
         $postType = getPostType($this->getTable());
-        return ($postType->hasTags && isset($this->tags) && !$this->tags->isEmpty());
+        return ($postType->hasTags && isset($this->$tags) && !$this->$tags->isEmpty());
     }
 
     /**
@@ -843,10 +831,11 @@ trait PostTrait{
      * @return mixed
      */
     public function getPostsByTags($limit = 6, $tagIDs = []){
+        $tags = "tags";
         // Validate post type
         if(!$tagIDs) {
             $tagIDs = [];
-            foreach ($this->tags as $tag) {
+            foreach ($this->$tags as $tag) {
                 $tagIDs[] = $tag->tagID;
             }
         }
@@ -856,12 +845,11 @@ trait PostTrait{
             $postsObj->setTable($this->getTable());
             $posts = $postsObj
               ->select('postID', 'title', 'featuredImageID', 'slug')
-              ->join('tags_relations', 'tags_relations.belongsToID', $this->getTable() . '.postID')
-              ->where('belongsTo', $this->getTable())
+              ->join($this->getTable().'_tags', $this->getTable().'_tags.postID', $this->getTable() . '.postID')
               ->with('featuredImage')
               ->published()
               ->whereIn('tagID', $tagIDs)
-              ->where('postID', "!=",$this->postID)
+              ->where('postID', "!=", $this->postID)
               ->orderBy('published_at', 'DESC')
               ->limit($limit)
               ->get();

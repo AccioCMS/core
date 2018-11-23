@@ -2,9 +2,11 @@
 
 namespace Accio\App\Http\Controllers\Backend;
 
+use Accio\App\Services\AccioQuery;
 use App;
 use App\Models\User;
 use App\Models\Language;
+use App\Models\PostType;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
@@ -65,6 +67,12 @@ class BaseLanguageController extends MainController{
             }
 
             if($language->delete()){
+                // create virutal column for slug of every post type in the created language
+                $allPostTypes = PostType::all();
+                foreach ($allPostTypes as $postType){
+                    AccioQuery::deleteColumn($postType->slug, "slug_".$language->slug);
+                }
+
                 $this->deleteDirectory($language->slug);
                 return $this->response('The Language was deleted');
             }
@@ -89,6 +97,8 @@ class BaseLanguageController extends MainController{
             return $this->response( 'Please select some languages to be deleted', 500);
         }
 
+        $allPostTypes = PostType::all();
+
         // loop through language IDs
         foreach ($request->all() as $id) {
             $language = Language::find($id);
@@ -100,6 +110,11 @@ class BaseLanguageController extends MainController{
             if(!$language->delete()){
                 return $this->response( 'The language '.$language->languageID.' was not deleted so the deleting process has stopped. Please try again later', 500);
             }else{
+                // create virutal column for slug of every post type in the created language
+                foreach ($allPostTypes as $postType){
+                    AccioQuery::deleteColumn($postType->slug, "slug_".$language->slug);
+                }
+
                 $this->deleteDirectory($language->slug);
             }
         }
@@ -160,6 +175,12 @@ class BaseLanguageController extends MainController{
         $language->isVisible = $request->isVisible;
 
         if($language->save()){
+            // create virutal column for slug of every post type in the created language
+            $allPostTypes = PostType::all();
+            foreach ($allPostTypes as $postType){
+                PostType::createVirtualColumnsForSlug($postType->slug, $language->slug);
+            }
+
             // create labels
             if(!isset($request->id))
                 $this->createNewLanguageLabels($language->slug);

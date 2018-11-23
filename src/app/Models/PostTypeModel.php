@@ -10,6 +10,8 @@
  */
 namespace Accio\App\Models;
 
+use Accio\App\Services\AccioQuery;
+use App\Models\Language;
 use App\Models\Post;
 use App\Models\PostType;
 use DB;
@@ -265,11 +267,11 @@ class PostTypeModel extends Model{
      * @param $fields
      * @return array
      */
-    public static function createTable($postTypeSlug, $fields = [], $createRoutes = true){
+    public static function createTable($postTypeSlug, $fields = [], $hasCategories = false, $hasTags = false, $createRoutes = true){
         self::$customFieldsArray = [];
 
         // create new table for the posts of the post type
-        Schema::create($postTypeSlug, function ($table) use ($fields) {
+        $isTableCreated = Schema::create($postTypeSlug, function ($table) use ($fields) {
             // create general fields
             $table->bigIncrements("postID");
             $table->unsignedInteger("createdByUserID")->nullable();
@@ -316,11 +318,122 @@ class PostTypeModel extends Model{
             $table->timestamps();
         });
 
+        self::createMediaRelationsTable($postTypeSlug);
+
+        if($hasCategories){
+            self::createCategoryRelationsTable($postTypeSlug);
+        }
+
+        if($hasTags){
+            self::createTagRelationsTable($postTypeSlug);
+        }
+
         if($createRoutes) {
             self::createRouteFile($postTypeSlug);
         }
 
+        self::createVirtualColumnsForSlug($postTypeSlug);
+
         return self::$customFieldsArray;
+    }
+
+    /**
+     * Create virtual columns for slug in every language
+     *
+     * @param string $postTypeSlug
+     * @param array|string $languageSlugs
+     */
+    public static function createVirtualColumnsForSlug(string $postTypeSlug, $languageSlugs = []){
+        $languageSlugs = ($languageSlugs && !is_array($languageSlugs) ? explode(" ", $languageSlugs): $languageSlugs);
+        $languageSlugs = ($languageSlugs ? $languageSlugs : Language::all()->pluck(['slug'])->toArray());
+
+        $virtualColumns = [];
+        foreach ($languageSlugs as $languageSlug){
+            $virtualColumns[] = [
+                "name" => $languageSlug,
+                "type" => "string",
+                "index" => true,
+                "length" => 200,
+            ];
+        }
+        AccioQuery::createVirtualColumns($postTypeSlug, "slug", $virtualColumns);
+    }
+
+    /**
+     * Creates media relations table for the selected Post Type
+     *
+     * @param $postTypeSlug
+     */
+    private static function createMediaRelationsTable($postTypeSlug){
+        Schema::create($postTypeSlug."_media", function ($table) use($postTypeSlug){
+            // create general fields
+            $table->bigIncrements("mediaRelationID");
+            $table->bigInteger("postID")->unsigned()->nullable();
+            $table->unsignedInteger("mediaID")->nullable();
+            $table->json("language")->nullable();
+            $table->string("field", 60)->nullable();
+
+            $table->foreign('postID')
+                ->references('postID')->on($postTypeSlug)
+                ->onDelete('cascade');
+
+            $table->foreign('mediaID')
+                ->references('mediaID')->on("media")
+                ->onDelete('cascade');
+        });
+    }
+
+    /**
+     * Creates category relations table for the selected Post Type
+     *
+     * @param $postTypeSlug
+     */
+    private static function createCategoryRelationsTable($postTypeSlug){
+        if(!Schema::hasTable($postTypeSlug."_categories")) {
+            Schema::create($postTypeSlug."_categories", function ($table)  use($postTypeSlug){
+                // create general fields
+                $table->bigIncrements("categoryRelationID");
+                $table->bigInteger("postID")->unsigned()->nullable();
+                $table->unsignedInteger("categoryID")->nullable();
+
+                $table->foreign('postID')
+                    ->references('postID')->on($postTypeSlug)
+                    ->onDelete('cascade');
+
+                $table->foreign('categoryID')
+                    ->references('categoryID')->on("categories")
+                    ->onDelete('cascade');
+
+                $table->unique(array('postID', 'categoryID'));
+            });
+        }
+    }
+
+    /**
+     * Creates media relations table for the selected Post Type
+     *
+     * @param $postTypeSlug
+     */
+    private static function createTagRelationsTable($postTypeSlug){
+        if(!Schema::hasTable($postTypeSlug."_tags")) {
+            Schema::create($postTypeSlug."_tags", function ($table)  use($postTypeSlug){
+                // create general fields
+                $table->bigIncrements("tagRelationID");
+                $table->bigInteger("postID")->unsigned()->nullable();
+                $table->unsignedInteger("tagID")->nullable();
+                $table->string("language", 5)->nullable();
+
+                $table->foreign('postID')
+                    ->references('postID')->on($postTypeSlug)
+                    ->onDelete('cascade');
+
+                $table->foreign('tagID')
+                    ->references('tagID')->on("tags")
+                    ->onDelete('cascade');
+
+                $table->unique(array('postID', 'tagID', 'language'));
+            });
+        }
     }
 
     /**
@@ -330,7 +443,7 @@ class PostTypeModel extends Model{
      * @param $fields
      * @return array
      */
-    public static function updateTable($postTypeSlug, $fields){
+    public static function updateTable($postTypeSlug, $fields, $hasTags = false, $hasCategories = false){
         self::$customFieldsArray = [];
 
         Schema::table($postTypeSlug, function($table) use($fields){
@@ -359,6 +472,14 @@ class PostTypeModel extends Model{
                 array_push(self::$customFieldsArray, $field);
             }
         });
+
+        if($hasCategories){
+            self::createCategoryRelationsTable($postTypeSlug);
+        }
+
+        if($hasTags){
+            self::createTagRelationsTable($postTypeSlug);
+        }
 
         return self::$customFieldsArray;
     }
@@ -414,4 +535,5 @@ class PostTypeModel extends Model{
         }
         return $route;
     }
+
 }
