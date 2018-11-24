@@ -22,7 +22,7 @@ use App\Models\PostType;
 use App\Models\Post;
 use Accio\App\Traits;
 
-class PostModel extends Model{
+abstract class PostModel extends Model{
     use
         Cachable,
         Traits\PostTrait,
@@ -38,6 +38,13 @@ class PostModel extends Model{
      * @var string $table
      */
     public $table = 'post_articles';
+
+    /**
+     * If has a dynamic tables or pre-declared table
+     *
+     * @var bool
+     */
+    public $hasDynamicTable = true;
 
     /**
      * The temporary table is associated with the "with" method of laravel
@@ -150,11 +157,22 @@ class PostModel extends Model{
     ];
 
     /**
+     * Configure if post model has dynamic tables or pre-declared table
+     *
+     * @return bool
+     */
+    abstract protected function setHasDynamicTable() : bool;
+
+    /**
      * @inheritdoc
      * */
     public function __construct(array $attributes = []){
         parent::__construct($attributes);
         Event::fire('post:construct', [$this]);
+
+        // set if model has dynamic table
+        $this->hasDynamicTable = $this->setHasDynamicTable();
+
         if(self::$useTmpTable && self::$_tmptable){
             $this->table = self::$_tmptable;
         }
@@ -183,13 +201,17 @@ class PostModel extends Model{
     public static function with($relations){
         $model = (new static());
 
-        if(self::$_tmptable){
-            $model->setTable(self::$_tmptable);
+        if($model->hasDynamicTable){
+            if(self::$_tmptable){
+                $model->setTable(self::$_tmptable);
+            }
+            $model->bind(config("database.default"), self::$_tmptable);
+            return $model->newQuery()->with(
+                is_string($relations) ? func_get_args() : $relations
+            );
+        }else{
+            return parent::with($relations);
         }
-        $model->bind(config("database.default"), self::$_tmptable);
-        return $model->newQuery()->with(
-            is_string($relations) ? func_get_args() : $relations
-        );
     }
 
     public function bind(string $connection, string $table){
@@ -484,8 +506,8 @@ class PostModel extends Model{
             $findHomePage = null;
             if (settings('homepageID')) {
                 $findHomePage = (new Post())->setTable("post_pages")
-                  ->where('postID', settings('homepageID'))
-                  ->first();
+                    ->where('postID', settings('homepageID'))
+                    ->first();
             }
 
             // get the first found page if no homepage is defined
@@ -669,7 +691,7 @@ class PostModel extends Model{
      */
     public function media(){
         $query =  $this->customHasManyThrough('App\Models\Media', 'App\Models\MediaRelation','postID','mediaID','postID', 'mediaID', $this->getTable()."_media");
-        
+
         if($this->mediaField){
             $query->where($this->getTable().'_media.field',$this->mediaField);
         }
@@ -679,7 +701,6 @@ class PostModel extends Model{
 
         return $query;
     }
-
 
     /**
      *
@@ -703,13 +724,6 @@ class PostModel extends Model{
 
         return new HasManyThrough($instance->newQuery(), $this, $through, $firstKey, $secondKey, $localKey, $secondLocalKey);
     }
-
-
-
-
-
-
-
 
     /**
      * Cached categories that belong to a post.
