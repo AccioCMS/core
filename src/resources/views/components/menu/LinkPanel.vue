@@ -56,34 +56,47 @@
                             <button class="btn btn-default selectLinkBtn" @click="addLinkInMenu">{{trans.__globalSelect}}</button>
                             <div class="clearfix"></div>
                         </div>
-                        <div class="tabPane fade" v-if="mode == 'search'">
-                            <!--<input type="search" class="form-control" placeholder="Categories name" @keyup="searchLink($event, 'categories')" v-model="categoriesSearchTerm">-->
+
+                        <div class="tabPane" v-if="mode == 'search'">
+                            <input type="search" class="form-control" placeholder="Categories name" @keyup="searchLink()" v-model="searchTerm">
                             <div class="tableContainer">
-                                <table class="table table-striped">
-                                    <thead>
+
+                                <div class="tableContainer" v-if="Object.keys(searchedData).length">
+                                    <table class="table table-striped">
+                                        <thead>
                                         <tr>
                                             <th v-for="column in columns">{{ column }}</th>
                                         </tr>
-                                    </thead>
-                                    <tbody>
+                                        </thead>
 
-                                    <!--<tr v-for="(categories, index) in searchedCategoriesResult">-->
-                                        <!--<td><input type="checkbox" :value="categories" v-model="selectedCategories"></td>-->
-                                        <!--<td>{{ categories.title }}</td>-->
-                                        <!--<td>{{ categories.name }}</td>-->
-                                    <!--</tr>-->
+                                        <tr v-if="spinner" :id="'panel-'+index+'-spinner'">
+                                            <td colspan="7">
+                                                <!-- Loading component -->
+                                                <spinner :width="'30px'" :height="'30px'" :border="'5px'"></spinner>
+                                            </td>
+                                        </tr>
 
-                                    </tbody>
-                                </table>
+                                        <tbody>
+                                            <tr v-for="(item, index) in searchedData">
+                                                <td v-for="(column, key, index) in columns">
+                                                    <input type="checkbox" :value="item" v-model="selectedLinks" v-if="column == 'id'">
+                                                    <span v-else>
+                                                        <template v-if="item[key][$route.params.lang] !== undefined">
+                                                            {{ item[key][$route.params.lang] }}
+                                                        </template>
+
+                                                        <template v-else>
+                                                            {{ item[key] }}
+                                                        </template>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+
+                                    </table>
+                                </div>
+
                             </div>
-
-                            <button class="btn btn-default selectLinkBtn" @click="addLinkInMenu('categories')">{{trans.__globalSelect}}</button>
-
-                            <div class="paginationBtns">
-                                <button class="btn btn-default selectLinkBtn" @click="updatePagination('categories', 'next')">{{trans.__next}} <i class="fa fa-arrow-right"></i></button>
-                                <button class="btn btn-default selectLinkBtn" @click="updatePagination('categories', 'prev')"><i class="fa fa-arrow-left"></i> {{trans.__previous}} </button>
-                            </div>
-                            <div class="clearfix"></div>
 
                         </div>
 
@@ -106,27 +119,41 @@
                 selectedLinks: [],
                 mode: 'recent',
                 spinner: false,
+                searchTerm: '',
+                searchedData: {},
             }
         },
         methods:{
+            getData(){
+                let query = "";
+                if(this.searchTerm){
+                    query = "?keyword=" + this.searchTerm;
+                }
+                this.$http.get(this.panel.items.url + query)
+                    .then((resp) => {
+                        this.columns = resp.body.columns;
+                        if(this.mode == 'recent'){
+                            this.data = resp.body.data;
+                        }else{
+                            this.searchedData = resp.body.data;
+                        }
+
+                        this.spinner = false;
+                    }, response => {
+                        new Noty({
+                            type: "error",
+                            layout: 'bottomLeft',
+                            text: response.statusText
+                        }).show();
+                        this.spinner = false;
+                    });
+            },
             openPanel(){
                 if(!this.isPanelOpen){
                     this.isPanelOpen = true;
                     if(!Object.keys(this.data).length){
                         this.spinner = true;
-                        this.$http.get(this.panel.items.url)
-                            .then((resp) => {
-                                this.columns = resp.body.columns;
-                                this.data = resp.body.data;
-                                this.spinner = false;
-                            }, response => {
-                                new Noty({
-                                    type: "error",
-                                    layout: 'bottomLeft',
-                                    text: response.statusText
-                                }).show();
-                                this.spinner = false;
-                            });
+                        this.getData();
                     }
                 }else{
                     this.isPanelOpen = false;
@@ -192,7 +219,19 @@
                     }
                 }
                 return value;
-            }
+            },
+
+            /**
+             * Search items (When the search input is changed)
+             *
+             * @param ev
+             * @param type
+             */
+            searchLink(){
+                if(this.searchTerm.length > 3){
+                    this.getData();
+                }
+            },
 
         },
 

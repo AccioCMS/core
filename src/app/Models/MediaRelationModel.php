@@ -14,18 +14,18 @@ class MediaRelationModel extends Model{
     protected $table = "media_relations";
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     protected $primaryKey = "mediaRelationID";
 
     /**
-     * Media that belong to a Media Relation
+     * Media that belong to a Media Relation.
+     *
      * @return BelongsTo
      */
-    public function media()
-    {
+    public function media(){
         return $this->belongsTo('App\Models\Media','mediaID','mediaID');
     }
 }

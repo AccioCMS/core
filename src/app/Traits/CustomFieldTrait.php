@@ -1,19 +1,17 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: sopa
- * Date: 05/10/2017
- * Time: 5:26 PM
- */
 
 namespace Accio\App\Traits;
 
-
-use App\Models\CustomFieldGroup;
 use App\Models\Media;
 
 trait CustomFieldTrait{
 
+    /**
+     * Get custom field values in required structure required in frontend
+     *
+     * @param array $customFieldGroups
+     * @param \stdClass $customFields
+     */
     public function constructValues(array $customFieldGroups, \stdClass $customFields){
         // get only the values of the allowed custom fields in update form
         $allowedCustomFields = [];

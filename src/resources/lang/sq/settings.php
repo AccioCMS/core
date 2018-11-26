@@ -10,7 +10,7 @@ return [
     'timezone' => 'Timezone',
     'logo' => 'Logo',
     'defaultLanguage' => 'Default language',
-    'homepage' => 'Front page',
+    'homepage' => 'Home page',
     'trackingCode' => 'Google Tracking Code',
     'useTagManager' => 'Use Google Tag Manager Instead',
     'tagManager' => 'Google Tag Manager',

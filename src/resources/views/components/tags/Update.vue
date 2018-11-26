@@ -52,7 +52,7 @@
                                 <div class="form-group" id="form-group-featuredImage">
                                     <label class="control-label col-md-2 col-sm-2 col-xs-12">{{trans.__featuredImage}}</label>
                                     <div class="imageContainer col-md-10 col-sm-10 col-xs-12">
-                                        <img v-if="mediaSelectedFiles['featuredImage']" :src="generateUrl(constructUrl(mediaSelectedFiles['featuredImage'][0]))" class="featuredImagePreview">
+                                        <img v-if="mediaSelectedFiles['featuredImage']" :src="constructMediaUrl(mediaSelectedFiles['featuredImage'][0])" class="featuredImagePreview">
                                         <br>
                                         <a class="btn btn-info" v-if="!mediaSelectedFiles['featuredImage']" @click="openMedia" id="openMediaFeatureImage">{{trans.__addImage}}</a>
                                         <a class="btn btn-info" v-if="mediaSelectedFiles['featuredImage']" @click="openMedia">{{trans.__change}}</a>
@@ -108,7 +108,6 @@
     </div>
 </template>
 <script>
-    import PopupMedia from '../media/Popup.vue'
     import { globalComputed } from '../../mixins/globalComputed';
     import { globalMethods } from '../../mixins/globalMethods';
     import { globalData } from '../../mixins/globalData';
@@ -116,9 +115,6 @@
 
     export default{
         mixins: [globalComputed, globalMethods, globalData, globalUpdated],
-        components:{
-            'popup-media':PopupMedia
-        },
         created(){
             // translations
             this.trans = {
@@ -206,7 +202,7 @@
                         formData: this.form,
                         pluginsData: this.pluginsData
                     },
-                    url: this.basePath+'/'+this.getAdminPrefix+"/json/tags/storeUpdate",
+                    url: this.basePath+'/'+this.getAdminPrefix+"/json/tags/store",
                     error: "Tag could not be updated. Please try again later."
                 }).then((resp) => {
                     if(resp.code == 200){

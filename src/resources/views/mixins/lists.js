@@ -51,6 +51,7 @@ export const lists = {
             }
             return 'fa fa-long-arrow-down';
         },
+
         // refresh list ( make a ajax request to refresh data of table )
         refreshList(){
             var url = '';
@@ -115,7 +116,7 @@ export const lists = {
                     }else{
                         // noty notification
                         this.$store.dispatch('closeLoading');
-                        this.noty("error", 'bottomLeft', "Error occurred. Please try again later.", 3000);
+                        this.noty("error", 'bottomLeft', resp.body.message, 5000);
                     }
                 }, response => {
                     // if a error happens

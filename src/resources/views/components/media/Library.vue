@@ -40,13 +40,6 @@
 
                 <div class="col-lg-8 col-md-7 col-sm-6 col-xs-6" id="filesMediaPopup2">
 
-                    <div class="x_title albumTitle" v-if="isAlbum">
-                        <h2 style="margin:0;">{{ albumDetails.title }}</h2>
-                        <div class="clearfix"></div>
-                        <h4 style="cursor: pointer; text-align: start; font-size: 14px" @click="backToAlbumList()"><i class="fa fa-arrow-left backBtn" aria-hidden="true"></i> {{ trans.__backToAlbums }}</h4>
-                        <div class="clearfix"></div>
-                    </div>
-
                     <div v-if="noResults">
                         {{trans.__noResults}}
                     </div>
@@ -55,7 +48,7 @@
 
                     <div v-if="!spinner && !noResults" :class="{'imageWrapper':true, 'active': isFileSelected(image.mediaID)}" v-for="(image, index) in getMediaList" @click="selectFile" :id="image.mediaID" :data-index="index">
                         <div class="singleImgContainer">
-                            <img :src="generateUrl(constructUrl(image))" draggable="false" v-if="image.type == 'image'">
+                            <img :src="constructMediaUrl(image)" draggable="false" v-if="image.type == 'image'">
                             <img :src="resourcesUrl(constructUrl(image))" draggable="false" v-else>
                         </div>
                         <p>{{ image.title }}</p>
@@ -71,12 +64,12 @@
                             <h5>{{trans.__details}}</h5>
                             <div class="col-xs-12" :class="{'col-lg-12 col-md-12 col-sm-12': selectedFiles[0].type == 'video', 'col-lg-6 col-md-6 col-sm-6': selectedFiles[0].type != 'video'}">
                                 <template v-if="selectedFiles[0] !== undefined && selectedFiles[0].type != 'video'">
-                                    <img :src="generateUrl(constructUrl(selectedFiles[0]))" id="detailsUrl">
+                                    <img :src="constructMediaUrl(selectedFiles[0])" id="detailsUrl">
                                 </template>
                                 <template v-else>
                                     <figure width="100%" height="100%">
                                         <video  width="100%" height="100%" controls>
-                                            <source :src="generateUrl(constructUrl(selectedFiles[0], true))" :type="'video/'+selectedFiles[0].extension" width="100%" height="100%" />
+                                            <source :src="constructMediaUrl(selectedFiles[0], true)" :type="'video/'+selectedFiles[0].extension" width="100%" height="100%" />
                                         </video>
                                     </figure>
 
@@ -117,22 +110,6 @@
                                 <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__credit}}</label>
                                 <div class="col-md-9 col-sm-9 col-xs-12">
                                     <input type="text" class="form-control" id="credit" v-model="selectedFileChangedCredit">
-                                </div>
-                            </div>
-
-                            <div class="form-group clearfix">
-                                <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__album}}</label>
-                                <div class="col-md-9 col-sm-9 col-xs-12">
-                                    <multiselect
-                                            v-model="selectedFileAlbums"
-                                            :options="albums"
-                                            :multiple="true"
-                                            :close-on-select="false"
-                                            :clear-on-select="false"
-                                            :hide-selected="true"
-                                            :placeholder="trans.__pickSome"
-                                            label="title"
-                                            track-by="title"></multiselect>
                                 </div>
                             </div>
 
@@ -196,7 +173,7 @@
             Datepicker,
             'crop-image': CropImage
         },
-        props: ['multiple', 'multipleInputs', 'isAlbum'],
+        props: ['multiple', 'multipleInputs'],
         mixins: [globalComputed, globalData, globalMethods, globalUpdated],
         created(){
             this.$store.commit('setMediaList', []);
@@ -208,71 +185,30 @@
             this.hasUpdatePermission = this.hasPermission('Media','update');
             this.hasDeletePermission = this.hasPermission('Media','delete');
 
-            // if the album ID is set
-            if(this.getAlbumID !== 0 && this.isAlbum){
-                // instances from the saved state
-                this.searchTerm = this.getLibrarySavedState.album.searchTerm;
-                this.type = this.getLibrarySavedState.album.type;
-                this.from = this.getLibrarySavedState.album.from;
-                this.to = this.getLibrarySavedState.album.to;
-                this.selectedFiles = this.getLibrarySavedState.album.selectedFiles;
+            // Get the first 100 results
+            this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/media/json/get-list/'+ 1)
+                .then((resp) => {
+                    this.$store.commit('setMediaList', resp.body.list);
+                    this.$store.state.pagination = parseInt(resp.body.pagination);
+                    this.$store.state.imagesExtensions = resp.body.imagesExtensions;
+                    this.$store.state.videoExtensions = resp.body.videoExtensions;
+                    this.$store.state.audioExtensions = resp.body.audioExtensions;
+                    this.$store.state.documentExtensions = resp.body.documentExtensions;
+                    this.videoIconUrl = resp.body.videoIconUrl;
+                    this.audioIconUrl = resp.body.audioIconUrl;
+                    this.documentIconUrl = resp.body.documentIconUrl;
+                    this.$store.dispatch('closeLoading');
+                });
 
-                // get media IDs that have relation with this album ID
-                // get the album info if we are updating
-                this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/album/get-media-ids-of-album/'+this.getAlbumID)
-                    .then((resp) => {
-                        this.albumRelatedMediaIDs = resp.body;
-                    });
-
-                /* Album Data */
-                this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/album/details/'+this.getAlbumID)
-                    .then((resp) => {
-                        this.albumDetails = resp.body.album[this.$route.params.lang];
-                        this.$store.commit('setMediaList', resp.body.images);
-
-                        this.$store.state.pagination = 1;
-                        this.$store.state.imagesExtensions = resp.body.imagesExtensions;
-                        this.$store.state.videoExtensions = resp.body.videoExtensions;
-                        this.$store.state.audioExtensions = resp.body.audioExtensions;
-                        this.$store.state.documentExtensions = resp.body.documentExtensions;
-
-                        this.videoIconUrl = resp.body.videoIconUrl;
-                        this.audioIconUrl = resp.body.audioIconUrl;
-                        this.documentIconUrl = resp.body.documentIconUrl;
-
-                        this.$store.dispatch('closeLoading');
-                    });
-                // if search has been made
-                if(this.getLibrarySavedState.album.filtered !== undefined && this.getLibrarySavedState.album.filtered){
-                    this.makeSearch();
-                }
-            }else{ // normal library -- all files
-
-                // Get the first 100 results
-                this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/media/json/get-list/'+ 1)
-                    .then((resp) => {
-                        this.$store.commit('setMediaList', resp.body.list);
-                        this.$store.state.pagination = parseInt(resp.body.pagination);
-                        this.$store.state.imagesExtensions = resp.body.imagesExtensions;
-                        this.$store.state.videoExtensions = resp.body.videoExtensions;
-                        this.$store.state.audioExtensions = resp.body.audioExtensions;
-                        this.$store.state.documentExtensions = resp.body.documentExtensions;
-                        this.videoIconUrl = resp.body.videoIconUrl;
-                        this.audioIconUrl = resp.body.audioIconUrl;
-                        this.documentIconUrl = resp.body.documentIconUrl;
-                        this.$store.dispatch('closeLoading');
-                    });
-
-                // instances from the saved state
-                this.searchTerm = this.getLibrarySavedState.library.searchTerm;
-                this.type = this.getLibrarySavedState.library.type;
-                this.from = this.getLibrarySavedState.library.from;
-                this.to = this.getLibrarySavedState.library.to;
-                this.selectedFiles = this.getLibrarySavedState.library.selectedFiles;
-                // if search has been made
-                if(this.getLibrarySavedState.library.filtered !== undefined && this.getLibrarySavedState.library.filtered){
-                    this.makeSearch();
-                }
+            // instances from the saved state
+            this.searchTerm = this.getLibrarySavedState.library.searchTerm;
+            this.type = this.getLibrarySavedState.library.type;
+            this.from = this.getLibrarySavedState.library.from;
+            this.to = this.getLibrarySavedState.library.to;
+            this.selectedFiles = this.getLibrarySavedState.library.selectedFiles;
+            // if search has been made
+            if(this.getLibrarySavedState.library.filtered !== undefined && this.getLibrarySavedState.library.filtered){
+                this.makeSearch();
             }
 
             // if there are any selected files from saved state
@@ -289,19 +225,10 @@
                 }
             }
 
-            // get all albums with the related images
-            this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/album/get-all/0')
-                .then((resp) => {
-                    this.albums = resp.body.data;
-                });
-
             var dropzone = document.getElementById('dropzone');
             var global = this;
             dropzone.ondragover = function(){
                 this.className = 'dropzone dragover text-container';
-                if(global.getAlbumID !== 0 && global.isAlbum){
-                    global.$store.commit('setLibrarySavedStateForUpload', { fromAlbum: true });
-                }
                 global.$store.commit('setPopUpActiveMediaView', 'upload');
                 return false;
             }
@@ -314,7 +241,6 @@
 
             // translations
             this.trans = {
-                __backToAlbums: this.__('media.backToAlbums'),
                 __term: this.__('media.form.term'),
                 __type: this.__('media.form.type'),
                 __search: this.__('base.search'),
@@ -339,7 +265,6 @@
                 __watermarkBtn: this.__('media.form.watermarkBtn'),
                 __editBtn: this.__('media.form.editBtn'),
                 __title: this.__('media.form.title'),
-                __album: this.__('media.form.album'),
                 __credit: this.__('media.form.credit'),
             };
 
@@ -353,20 +278,16 @@
                 type: 'false',
                 from: '',
                 to: '',
-                albums: [],
                 format: 'd MMMM yyyy',
                 noResults: false,
                 selectedFiles: [],
                 selectedFileChangedTitle: '',
                 selectedFileChangedCredit: '',
                 selectedFileChangedDescription: '',
-                selectedFileAlbums: [],
                 selectedOptionForModal: "",
                 multiselect: false,
                 hasUpdatePermission: true,
                 hasDeletePermission: false,
-                albumRelatedMediaIDs: [],
-                albumDetails: '',
                 selectedMediaFilesFromSavedState: [],
                 pageNumber: 1,
             }
@@ -448,11 +369,6 @@
                     selectedFiles: this.selectedFiles,
                     filtered: true,
                 };
-                if(this.isAlbum){
-                    this.$store.commit('setLibrarySavedStateForAlbum', obj);
-                }else{
-                    this.$store.commit('setLibrarySavedStateForLibrary', obj);
-                }
 
                 let request = {
                     term: this.searchTerm,
@@ -477,8 +393,6 @@
                     });
             },
             reset(updateImgInEditPanel){
-                // TODO reset the album DATA in store
-
                 // Get the first 100 results
                 this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/media/json/get-list/'+ 1)
                     .then((resp) => {
@@ -519,7 +433,6 @@
                 var selectedIndex = '';
                 var removedSelectedIndex = '';
                 var multiFilesSelectedIndexes = []; // when selecting multiple images with shift
-                this.selectedFileAlbums = [];
 
                 // find wich file is beeing selected
                 for(let i = 0; i < event.path.length; i++){
@@ -603,17 +516,9 @@
                 if(this.selectedFiles.length == 1){
                     this.populateEditPanel();
 
-                    // get related albums
-                    this.$http.get(this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/album/get-album-relation/'+this.selectedFiles[0].mediaID)
-                        .then((resp) => {
-                            this.selectedFileAlbums = resp.body;
-                        });
-
                 }else if(this.selectedFiles.length > 1){
-                    //$("#editPanel .row").hide(50);
                     this.multiselect = true;
                 }else{
-                    //$("#editPanel .row").hide(50);
                     this.multiselect = false;
                 }
             },
@@ -634,7 +539,6 @@
                 this.selectedFiles[0].title = this.selectedFileChangedTitle;
                 this.selectedFiles[0].credit = this.selectedFileChangedCredit;
                 this.selectedFiles[0].description = this.selectedFileChangedDescription;
-                this.selectedFiles[0].selectedFileAlbums = this.selectedFileAlbums;
                 this.$http.post(this.basePath+'/'+this.$route.params.adminPrefix+'/media/json/edit', this.selectedFiles[0])
                     .then((resp) => {
                         var resultMsg = "";
@@ -806,47 +710,6 @@
                     closeWith: ['button']
                 }).show();
             },
-            shouldHide(id){ // this function hides files
-                if(this.getAlbumID !== 0 && this.isAlbum){
-                    if(this.albumRelatedMediaIDs.indexOf(id) == -1){
-                        return false;
-                    }
-                }
-                return true;
-            },
-            // return view to album
-            backToAlbumList(){
-                let obj = {
-                    searchTerm: "",
-                    type: "",
-                    from: "",
-                    to: "",
-                    selectedFiles: [],
-                    filtered: false,
-                };
-                if(this.isAlbum){
-                    this.$store.commit('setLibrarySavedStateForAlbum', obj);
-                }else{
-                    this.$store.commit('setLibrarySavedStateForLibrary', obj);
-                }
-                this.$store.commit('setSelectedAlbumID', 0);
-            },
-            // register the saved state of this component
-            registerSavedState(){
-                let obj = {
-                    searchTerm: this.searchTerm,
-                    type: this.type,
-                    from: this.from,
-                    to: this.to,
-                    selectedFiles: this.selectedFiles,
-                    filtered: this.getLibrarySavedState.library.filtered,
-                };
-                if(this.isAlbum){
-                    this.$store.commit('setLibrarySavedStateForAlbum', obj);
-                }else{
-                    this.$store.commit('setLibrarySavedStateForLibrary', obj);
-                }
-            },
             isFileSelected(mediaID){
                 if(this.selectedFiles.length > 0 && this.selectedMediaFilesFromSavedState.indexOf(mediaID) !== -1){
                     return true;
@@ -855,9 +718,6 @@
             }
         },
         computed:{
-            getAlbumID(){
-                return this.$store.getters.get_selected_album_ID;
-            },
             getLibrarySavedState(){
                 return this.$store.getters.get_library_saved_state;
             },

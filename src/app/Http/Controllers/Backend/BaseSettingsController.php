@@ -14,20 +14,22 @@ use Illuminate\Support\Facades\DB;
 class BaseSettingsController extends MainController{
 
     /**
-     * Get all settings
+     * Get list of all settings and corresponding data, languages for language images etc.
      *
-     * @return array settings
+     * @return array
+     * @throws \Exception
      */
     public function getSettings(){
         $settings = Settings::all()->keyBy('settingsKey');
+
         $settings['defaultLanguage'] = (object) array('value' => Language::getDefault()->languageID);
 
         if(isset($settings['logo'])){
-            $media = Media::where('mediaID',$settings['logo']->value)->first();
+            $media = Media::where('mediaID',$settings['logo']->value)->select("mediaID", "type", "filename", "fileDirectory")->first();
             if ($media){
                 $settings['logo']['media'] = $media;
             }
-            $watermark = Media::where('mediaID',$settings['watermark']->value)->first();
+            $watermark = Media::where('mediaID',$settings['watermark']->value)->select("mediaID", "type", "filename", "fileDirectory")->first();
             if ($watermark){
                 $settings['watermark']['media'] = $watermark;
             }
@@ -35,10 +37,10 @@ class BaseSettingsController extends MainController{
         // user groups
         $userGroups = UserGroup::all();
         // get all posts
-        $posts = DB::table('post_pages')->get();
+        $posts = DB::table('post_pages')->select("postID", "title", "slug")->get();
         $posts = Language::filterRows($posts, false);
         // theme configs
-        $themeConfigs = $this->getThemeConfigs();
+        $themeConfigs = Theme::configs();
 
         return [
             'settings' => $settings,
@@ -49,39 +51,48 @@ class BaseSettingsController extends MainController{
     }
 
     /**
-     * @return array configs of all themes
+     * API -- Used to take theme configs.
+     *
+     * @param string $lang
+     * @return array
+     * @throws \Exception
      */
-    public function getThemeConfigs(){
+    public function getThemeConfigs($lang){
         return Theme::configs();
     }
 
     /**
-     * Store all settings in the database
+     * Store all settings in the database.
      *
      * @param Request $request
      * @return array
      */
     public function store(Request $request){
         // insert key and value in settings table
+        $settings = Settings::all()->keyBy('settingsKey')->toArray();
+
         foreach ($request->form as $key => $value){
-            $settings = Settings::where('settingsKey',$key)->first();
-            if(!$settings){
-                $settings = new Settings();
-                $settings->settingsKey = $key;
+            if(!isset($settings[$key])){
+                $settings[$key] = ["settingsKey" => $key, "value" => $value];
             }
-            $settings->value = ($value ? $value : null);
-            $settings->save();
+            $settings[$key]['value'] = ($value ? $value : null);
+        }
+
+        if(Settings::truncate()){
+            Settings::insert($settings);
         }
 
         // if request is being made from general settings
         if($request->settingsType == 'general'){
+            if(isset($settings['defaultLanguage']) &&
+                ((int) $settings['defaultLanguage']['value'] !== Language::getDefault()->languageID)){
+                    // remove the current default language ( set it to non-default ) if this new one is the default
+                    Language::where('isDefault',1)->update(['isDefault' => 0]);
+                    // set the new default language
+                    $defaultLanguage = $request->form['defaultLanguage'];
+                    Language::find($defaultLanguage)->update(['isDefault' => 1]);
+            }
 
-            // remove the current default language ( set it to non-default ) if this new one is the default
-            Language::where('isDefault',1)->update(['isDefault' => 0]);
-
-            // set the new default language
-            $defaultLanguage = $request->form['defaultLanguage'];
-            Language::find($defaultLanguage)->update(['isDefault' => 1]);
         }
 
         return $this->response( 'Settings are saved' , 200);
@@ -89,16 +100,19 @@ class BaseSettingsController extends MainController{
 
 
     /**
-     * Get list of all permalinks
+     * Get list of all permalinks.
      *
-     * @param string $lang language slug
-     * @return array all permalinks
+     * @param $lang
+     * @return mixed
+     * @throws \Exception
      */
     public function getPermalinks($lang){
         return Permalink::all();
     }
 
     /**
+     * Store permalinks in database.
+     *
      * @param Request $request
      * @return array
      */
@@ -118,6 +132,4 @@ class BaseSettingsController extends MainController{
 
         return $this->response( 'Permalinks could not be saved. Please try again later.', 500);
     }
-
-
 }

@@ -20,5 +20,4 @@ Route::group(['middleware' => ['auth:admin'], 'as' => 'backend.language.', 'name
      */
     Route::post('/json/language/store', 'LanguageController@store')->name('store');
     Route::post('/json/language/bulk-deletes', 'LanguageController@bulkDelete')->name('bulkDelete');
-    Route::post('/json/language/storeUpdate', 'LanguageController@storeUpdate')->name('storeUpdate');
 });

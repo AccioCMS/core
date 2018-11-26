@@ -2,10 +2,8 @@
 
 namespace Accio\App\Models;
 
-use App\Models\Permalink;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Accio\App\Traits;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -16,8 +14,9 @@ class PermalinkModel extends Model
     use
       Traits\PermalinkTrait,
       LogsActivity,
-      Traits\CacheTrait,
-      Traits\BootEventsTrait;
+      Cachable,
+      Traits\BootEventsTrait,
+      Traits\CollectionTrait;
 
     /**
      * The table associated with the model.
@@ -27,14 +26,14 @@ class PermalinkModel extends Model
     protected $table = 'permalinks';
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     public $primaryKey = "permalinkID";
 
     /**
-     * Fields that can be filled in CRUD
+     * Fields that can be filled in CRUD.
      *
      * @var array $fillable
      */
@@ -67,10 +66,9 @@ class PermalinkModel extends Model
     }
 
     /**
-     * Destruct model instance
+     * Destruct model instance.
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('permalink:destruct', [$this]);
     }
 }

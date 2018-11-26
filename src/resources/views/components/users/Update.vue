@@ -114,7 +114,7 @@
 
                                 <div class="col-md-9 col-sm-9 col-xs-12">
                                     <div class="imageContainer">
-                                        <img v-if="mediaSelectedFiles['featuredImage']" :src="generateUrl(constructUrl(mediaSelectedFiles['featuredImage'][0]))" class="featuredImagePreview">
+                                        <img v-if="mediaSelectedFiles['featuredImage']" :src="constructMediaUrl(mediaSelectedFiles['featuredImage'][0])" class="featuredImagePreview">
                                         <br>
                                         <a class="btn btn-info" v-if="!mediaSelectedFiles['featuredImage']" @click="openMedia" id="openMediaFeatureImage">{{trans.__select}}</a>
                                         <a class="btn btn-info" v-if="mediaSelectedFiles['featuredImage']" @click="openMedia" id="openMediaChangeFeatureImage">{{trans.__change}}</a>
@@ -211,7 +211,6 @@
     </div>
 </template>
 <script>
-    import PopupMedia from '../media/Popup.vue'
     import { globalComputed } from '../../mixins/globalComputed';
     import { globalMethods } from '../../mixins/globalMethods';
     import { globalData } from '../../mixins/globalData';
@@ -281,8 +280,6 @@
                     this.$store.commit('setSpinner', false);
                 });
         },
-
-        components: { 'popup-media':PopupMedia },
         data(){
             return{
                 groupsList: [],
@@ -319,20 +316,20 @@
                         user: this.user,
                         redirect: redirectChoice,
                     },
-                    url: this.basePath+'/'+this.getAdminPrefix+"/json/user/storeUpdate",
+                    url: this.basePath+'/'+this.getAdminPrefix+"/json/user/store",
                     error: "User could not be updated. Please try again later"
                 }).then((resp) => {
                     if(resp.code == 200){
-                    if(this.Auth.userID == resp.data.userID){
-                        this.Auth.firstName = resp.data.firstName;
-                        this.Auth.lastName = resp.data.lastName;
-                        if(this.mediaSelectedFiles['featuredImage'] !== undefined) {
-                            this.Auth.avatar = this.basePath + '/' + this.mediaSelectedFiles['featuredImage'][0].fileDirectory + '/200x200/' + this.mediaSelectedFiles['featuredImage'][0].filename;
+                        if(this.Auth.userID == resp.data.userID){
+                            this.Auth.firstName = resp.data.firstName;
+                            this.Auth.lastName = resp.data.lastName;
+                            if(this.mediaSelectedFiles['featuredImage'] !== undefined) {
+                                this.Auth.avatar = this.basePath + '/' + this.mediaSelectedFiles['featuredImage'][0].fileDirectory + '/200x200/' + this.mediaSelectedFiles['featuredImage'][0].filename;
+                            }
                         }
+                        this.onStoreBtnClicked('user-',redirectChoice);
                     }
-                    this.onStoreBtnClicked('user-',redirectChoice);
-                }
-            });
+                });
             },
             openMedia(){
                 this.$store.commit('setOpenMediaOptions', { multiple: false, has_multile_files: false, multipleInputs: false, format : 'image', inputName: 'featuredImage', langSlug: '', clear: true });

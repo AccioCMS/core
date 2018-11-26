@@ -27,7 +27,7 @@
                             <div class="form-group" id="form-group-name">
                                 <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__name}}</label>
                                 <div class="col-md-9 col-sm-9 col-xs-12">
-                                    <select name="name" class="form-control" id="name" v-model="form.language">
+                                    <select name="name" class="form-control" id="name" v-model="selected" @change="languageChanged()">
                                         <option v-for="language in languageListWithCodes" :value="language">{{ language.name }}</option>
                                     </select>
                                     <div class="alert" v-if="StoreResponse.errors.name" v-for="error in StoreResponse.errors.name">{{ error }}</div>
@@ -37,7 +37,7 @@
                             <div class="form-group" id="form-group-nativeName">
                                 <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__nativeName}}</label>
                                 <div class="col-md-9 col-sm-9 col-xs-12">
-                                    <input type="text" class="form-control" id="nativeName" name="nativeName" :value="form.language.nativeName" disabled>
+                                    <input type="text" class="form-control" id="nativeName" name="nativeName" :value="form.nativeName" disabled>
                                     <div class="alert" v-if="StoreResponse.errors.nativeName" v-for="error in StoreResponse.errors.nativeName">{{ error }}</div>
                                 </div>
                             </div>
@@ -45,7 +45,7 @@
                             <div class="form-group" id="form-group-slug">
                                 <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__slug}}</label>
                                 <div class="col-md-9 col-sm-9 col-xs-12">
-                                    <input type="text" class="form-control" id="slug" name="slug" :value="form.language.slug" disabled>
+                                    <input type="text" class="form-control" id="slug" name="slug" :value="form.slug" disabled>
                                     <div class="alert" v-if="StoreResponse.errors.slug" v-for="error in StoreResponse.errors.slug">{{ error }}</div>
                                 </div>
                             </div>
@@ -134,10 +134,12 @@
         },
         data(){
             return{
-                selected : [],
+                selected: [],
                 savedDropdownMenuVisible: false,
                 form:{
-                    language: {},
+                    name: '',
+                    nativeName: '',
+                    slug: '',
                     isDefault: false,
                     isVisible: true,
                     redirect: '',
@@ -146,7 +148,16 @@
         },
         methods: {
             resetForm(){
-                this.form = { name: '', isDefault: false, isVisible: true, slug: '', redirect: '' };
+                this.form = { name: '', isDefault: false, isVisible: true, slug: '', redirect: '', nativeName: '' };
+            },
+
+            /**
+             * Languaage dropdown changed change slug, and nativeName
+             */
+            languageChanged(){
+                this.form.name = this.selected.name;
+                this.form.nativeName = this.selected.nativeName;
+                this.form.slug = this.selected.slug;
             },
             // store user
             store(redirectChoice){

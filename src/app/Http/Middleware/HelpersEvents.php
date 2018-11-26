@@ -14,7 +14,7 @@ class HelpersEvents
      */
     public function handle($request, Closure $next)
     {
-        Event::listen('theme:body_end', function(){
+        Event::listen('theme:body_start', function(){
             print googleAnalytics();
             print googleTagManager();
         });

@@ -14,11 +14,10 @@ namespace Accio\App\Models;
 use App\Models\Category;
 use App\Models\PostType;
 use App\Models\Language;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
 use DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
@@ -29,21 +28,22 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class CategoryModel extends Model{
 
     use
-      Traits\CategoryTrait,
-      Traits\TranslatableTrait,
-      LogsActivity,
-      Traits\CacheTrait,
-      Traits\BootEventsTrait;
+        Cachable,
+        Traits\CategoryTrait,
+        Traits\TranslatableTrait,
+        LogsActivity,
+        Traits\BootEventsTrait,
+        Traits\CollectionTrait;
 
     /**
-     * Fields that can be filled in CRUD
+     * Fields that can be filled in CRUD.
      *
      * @var array $fillable
      */
     protected $fillable = ['postTypeID','parentID','customFieldID','featuredImageID','title','slug','description','order','createdByUserID','isVisible', 'customFields'];
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
@@ -70,20 +70,21 @@ class CategoryModel extends Model{
     ];
 
     /**
-     * Default number of rows per page to be shown in admin panel
+     * Default number of rows per page to be shown in admin panel.
      *
      * @var integer $rowsPerPage
      */
     public static $rowsPerPage = 50;
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "categories.label";
 
     /**
-     * Default permissions that will be listed in settings of permissions
+     * Default permissions that will be listed in settings of permissions.
      *
      * @var array $defaultPermissions
      */
@@ -102,14 +103,14 @@ class CategoryModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = [])
-    {
+    public function __construct(array $attributes = []){
         parent::__construct($attributes);
         Event::fire('category:construct', [$this]);
     }
 
     /**
-     * Define menu panel
+     * Define menu panel.
+     *
      * @return array
      */
     protected static function menuLinkPanel(){
@@ -129,7 +130,7 @@ class CategoryModel extends Model{
     }
 
     /**
-     * Declare columns that should be saved in MenuLinks table as 'attributes', to enable navigation in front-end
+     * Declare columns that should be saved in MenuLinks table as 'attributes', to enable navigation in front-end.
      *
      * @return array
      */
@@ -151,16 +152,17 @@ class CategoryModel extends Model{
     }
 
     /**
-     * Featured image of a category
+     * Featured image of a category.
+     *
      * @return HasOne
      */
-    public function featuredImage()
-    {
+    public function featuredImage(){
         return $this->hasOne('App\Models\Media','mediaID','featuredImageID');
     }
 
     /**
-     * Parent of a category
+     * Parent of a category.
+     *
      * @return HasOne
      */
     public function parent(){
@@ -168,22 +170,22 @@ class CategoryModel extends Model{
     }
 
     /**
-     * Generate the URL to a category
-     *
+     * Generate the URL to a category.
      *
      * @return string
+     * @throws \Exception
      */
     public function getHrefAttribute(){
         return $this->href();
     }
 
     /**
-     * Generate a custom URL to a category
+     * Generate a custom URL to a category.
      *
      * @param string $routeName
      * @param array $customAttributes
-     *
      * @return string
+     * @throws \Exception
      */
     public function href($routeName = '', $customAttributes = []){
         if(!$routeName){
@@ -237,7 +239,7 @@ class CategoryModel extends Model{
 
 
     /**
-     * Define single user's SEO Meta data
+     * Define single user's SEO Meta data.
      *
      * @return array
      */
@@ -251,8 +253,8 @@ class CategoryModel extends Model{
           ->setCanonical($this->href)
           ->setHrefLangData($this)
           ->setWildcards([
-            '{title}' => $this->title,
-            '{siteTitle}' => settings('siteTitle')
+            '{{title}}' => $this->title,
+            '{{sitename}}' => settings('siteTitle')
           ]);
     }
 
@@ -271,7 +273,7 @@ class CategoryModel extends Model{
     }
 
     /**
-     * Handle callback of insert, update, delete
+     * Handle callback of insert, update, delete.
      * */
     protected static function boot(){
         parent::boot();
@@ -282,19 +284,19 @@ class CategoryModel extends Model{
     }
 
     /**
-     * Perform certain actions after a category is saved
+     * Perform certain actions after a category is saved.
      *
-     * @param object $category
-     * */
+     * @param $category
+     * @throws \Exception
+     */
     private static function _saved($category){
         self::updateMenulink($category);
     }
 
     /**
-     * Destruct model instance
+     * Destruct model instance.
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('category:destruct', [$this]);
     }
 }

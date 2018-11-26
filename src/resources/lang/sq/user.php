@@ -2,7 +2,6 @@
 return [
     'title' => 'Users',
     'label' => 'Users',
-    'label_single' => 'User',
     'listTitle' => 'All users',
     'updateTitle' => 'Update user',
     'addBtn' => 'Add user',
@@ -46,7 +45,7 @@ return [
         ),
     ),
 
-    'author' => 'Autori',
+    'author' => 'Author',
 
     'advancedFields' => array(
         'newFieldBtn' => 'New Field',

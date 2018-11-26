@@ -27,5 +27,4 @@ Route::group(['middleware' => ['auth:admin'], 'as' => 'backend.customField.', 'n
     Route::post('/json/custom-fields/storeUpdate', 'CustomFieldController@storeUpdate')->name('storeUpdate');
     Route::post('/json/custom-fields/get-table-data', 'CustomFieldController@getTableData')->name('getTableData');
     Route::post('/json/custom-fields/generate-field-slug-request', 'CustomFieldController@generateFieldSlugRequest')->name('generateFieldSlugRequest');
-
 });

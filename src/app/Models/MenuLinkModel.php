@@ -9,8 +9,10 @@
  */
 namespace Accio\App\Models;
 
+use Accio\Support\Facades\Meta;
 use App\Models\Menu;
 use App\Models\MenuLink;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -22,14 +24,15 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class MenuLinkModel extends Model{
 
     use
-      LogsActivity,
-      Traits\MenuLinkTrait,
-      Traits\CacheTrait,
-      Traits\TranslatableTrait,
-      Traits\BootEventsTrait;
+        Cachable,
+        LogsActivity,
+        Traits\MenuLinkTrait,
+        Traits\TranslatableTrait,
+        Traits\BootEventsTrait,
+        Traits\CollectionTrait;
 
     /**
-     * Fields that can be filled in CRUD
+     * Fields that can be filled in CRUD.
      *
      * @var array $fillable
      */
@@ -46,11 +49,12 @@ class MenuLinkModel extends Model{
     ];
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     protected $primaryKey = "menuLinkID";
+
 
     /**
      * The table associated with the model.
@@ -60,13 +64,14 @@ class MenuLinkModel extends Model{
     public $table = "menu_links";
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "MenuLink.label";
 
     /**
-     * Default permissions that will be listed in settings of permissions
+     * Default permissions that will be listed in settings of permissions.
      *
      * @var array $defaultPermissions
      */
@@ -85,28 +90,41 @@ class MenuLinkModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = [])
-    {
+    public function __construct(array $attributes = []){
         parent::__construct($attributes);
         Event::fire('menuLink:construct', [$this]);
     }
 
     /**
-     * Delete Menulink caches
+     * Destruct model instance.
      */
-    public static function deleteCache(){
-        $explode = explode('\\',get_class());
-        $modelName = str_replace('Model','',end($explode));
-        Cache::forget($modelName);
+    public function __destruct(){
+        Event::fire('menuLink:destruct', [$this]);
     }
 
     /**
-     * Destruct model instance
+     * Define single post's SEO Meta data.
+     *
+     * @return void;
      */
-    public function __destruct()
-    {
-        Event::fire('menuLink:destruct', [$this]);
+    public function metaData(){
+        Meta::setTitle($this->label)
+//            ->set("og:type", "article", "property")
+//            ->set("og:title", $this->label, "property")
+//            ->set("og:description", $this->content(), "property")
+            ->set("og:url",$this->href, "property")
+//            ->setImageOG(($this->hasFeaturedImage() ? $this->featuredImage : null))
+//            ->setArticleOG($this)
+//            ->setHrefLangData($this)
+            ->setCanonical($this->href)
+            ->setWildcards([
+                '{{title}}' => $this->label,
+                '{{sitename}}' => settings('siteTitle')
+            ]);
+
+        return;
     }
+
 }
 
 

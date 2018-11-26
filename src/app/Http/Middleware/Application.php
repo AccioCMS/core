@@ -38,8 +38,8 @@ class Application{
         MenuLink::initialize($request);
 
         // Initialize Theme
-        // When routes are not cached, teme is initialized in Routes
-        if(App::routesAreCached()) {
+        // When routes are not cached, theme is initialized in Routes
+        if(App::routesAreCached()){
             new Theme();
         }
 

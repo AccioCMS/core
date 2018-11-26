@@ -3,24 +3,18 @@
 namespace Accio\App\Traits;
 
 use App\Models\CategoryRelation;
-use App\Models\CustomField;
-use App\Models\Media;
+use App\Models\MediaRelation;
 use App\Models\MenuLink;
 use App\Models\Post;
 use App\Models\PostType;
 use App\Models\TagRelation;
-use App\Models\Task;
 use App\Models\Theme;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Mockery\Exception;
 use Validator;
 use Carbon\Carbon;
 use Datetime;
@@ -29,7 +23,8 @@ trait PostTrait{
 
 
     /**
-     * Noty message
+     * Noty message.
+     *
      * @var array $notyList
      */
     protected $notyMessages = [];
@@ -38,6 +33,14 @@ trait PostTrait{
         return $this->notyMessages;
     }
 
+    /**
+     * Noty messages.
+     * retrun nory messages array structure.
+     *
+     * @param string $type
+     * @param string $message
+     * @param string $key
+     */
     public function noty($type, $message, $key = ""){
         array_push($this->notyMessages,[
           'key' => $key,
@@ -56,63 +59,37 @@ trait PostTrait{
      * @return object|null Returns post as array or null if not found
      **/
     public static function findBySlug($slug, $postTypeSlug = ''){
-        $post = null;
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
 
-        // search in cache
-        $cachedPosts = self::cache($postTypeSlug)->getItems();
-        if($cachedPosts){
-            $post = $cachedPosts->where('slug',$slug)->first();
-        }
+        $postObj = (new Post())->setTable($postTypeSlug);
+        $post = $postObj
+            ->where('slug_'.App::getLocale(), $slug)
+            ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
+            ->first();
 
-        if($post){
-            return $post;
-        }
-        else { // when not available in cache, search in database
-            $postObj = (new Post())->setTable($postTypeSlug);
-            $post = $postObj
-              ->where('slug->'.App::getLocale(), $slug)
-              ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
-              ->first();
-
-            return $post;
-        }
+        return $post;
     }
 
     /**
      * Find a post by ID.
      *
-     * @param  int     $postID ID of the post
-     * @param  string  $postTypeSlug Name of the post type, ex. post_services
+     * @param int $postID ID of the post
+     * @param string $postTypeSlug Name of the post type, ex. post_services
      *
      * @return object|null Returns post as array or null if not found
      **/
     public static function findByID($postID, $postTypeSlug = ''){
-        $post = null;
         $postTypeSlug = ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
-
-        // search in cache
-        $cachedPosts = self::cache($postTypeSlug)->getItems();
-        if($cachedPosts){
-            $post = $cachedPosts->where('postID',$postID)->first();
-        }
-
-        if($post){
-            return $post;
-        }
-        else { // when not available in cache, search in database
-            $postObj = (new Post())->setTable($postTypeSlug);
-            $post = $postObj
-              ->where('postID', $postID)
-              ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
-              ->first();
-
-            return $post;
-        }
+        $postObj = (new Post())->setTable($postTypeSlug);
+        $post = $postObj
+            ->where('postID', $postID)
+            ->with($postObj->getDefaultRelations(getPostType($postTypeSlug)))
+            ->first();
+        return $post;
     }
 
     /**
-     *  Store (Create or Update) the post and its related data (ex. media, categories, tags) in the database
+     * Store (Create or Update) the post and its related data (ex. media, categories, tags) in the database
      *
      * @param $data array of data from request
      * @return array Returns 200 if successful, 500 if any internal error is found
@@ -128,9 +105,6 @@ trait PostTrait{
         // Set posts table
         $postObj = new Post();
         $postObj->setTable($data['postType']);
-
-        // Remove foreign key check
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
         // on create
         if(!isset($data['postID'])){
@@ -153,9 +127,9 @@ trait PostTrait{
 
                 if($postObj->save()){
                     // Delete existing relations, to ensure accuracy
-                    DB::table('categories_relations')->where("belongsToID", $data['postID'])->delete();
-                    DB::table('tags_relations')->where("belongsToID", $data['postID'])->delete();
-                    DB::table('media_relations')->where("belongsToID", $data['postID'])->delete();
+                    DB::table($data['postType'].'_categories')->where("postID", $data['postID'])->delete();
+                    DB::table($data['postType'].'_tags')->where("postID", $data['postID'])->delete();
+                    DB::table($data['postType'].'_media')->where("postID", $data['postID'])->delete();
                 }
 
                 $postID = $postObj->postID;
@@ -193,7 +167,7 @@ trait PostTrait{
     }
 
     /**
-     * Prepares an array with object to be used from the Laravel Validator class and validates the inputs
+     * Prepares an array with object to be used from the Laravel Validator class and validates the inputs.
      *
      * @param array $data all data from the store request
      *
@@ -349,11 +323,12 @@ trait PostTrait{
     }
 
     /**
-     * @param $postObj
+     * Prepares a array to be stored in the database.
+     *
+     * @param object $postObj
      * @param array $data all data from the store request
      * @return array with post object prepared to be inserted to DB and array of file slugs
      * @throws \Exception
-     *
      */
     private static function populateStoreColumns($postObj, $data){
         $files = array();
@@ -431,6 +406,8 @@ trait PostTrait{
     }
 
     /**
+     * Handles post type field values.
+     *
      * @param array $formData data of a custom field
      * @param boolean $translatable if this field is translatable
      * @param array $languages list of languages data
@@ -503,7 +480,7 @@ trait PostTrait{
     }
 
     /**
-     * Insert Post Categories
+     * Insert Post Categories.
      *
      * @param array  $selectedCategories  The list of selected categories
      * @param int    $postID ID of the Post
@@ -518,20 +495,15 @@ trait PostTrait{
             foreach ($selectedCategories as $selectedCategory){
                 $newCategoryRelation[] = [
                   'categoryID' => $selectedCategory['categoryID'],
-                  'belongsToID' => $postID,
-                  'belongsTo' => $postTypeSlug,
-                  "created_at" =>  \Carbon\Carbon::now(),
-                  "updated_at" => \Carbon\Carbon::now(),
+                  'postID' => $postID,
                 ];
                 $categoriesIDs[] = $selectedCategory['categoryID'];
             }
 
             // if post is only in the archive
             // if post is in the main database
-            $insertedCategories = DB::table('categories_relations')->insert($newCategoryRelation);
+            $insertedCategories = (new CategoryRelation())->setTable($postTypeSlug.'_categories')->insert($newCategoryRelation);
             if ($insertedCategories){
-                // create task
-                Task::create('categories_relations', 'create', $newCategoryRelation, ['postID' => $postID, 'postType' => $postTypeSlug]);
                 return $categoriesIDs;
             }
         }
@@ -539,11 +511,11 @@ trait PostTrait{
     }
 
     /**
-     * Insert Post tags
+     * Insert Post tags.
      *
-     * @param  array  $selectedTags The list of selected tags
-     * @param  int    $postID ID of the Post
-     * @param  string $postTypeSlug The slug of post type
+     * @param array $selectedTags The list of selected tags
+     * @param int $postID ID of the Post
+     * @param string $postTypeSlug The slug of post type
      *
      * @return array  List of inserted media files
      * */
@@ -575,11 +547,8 @@ trait PostTrait{
                         //add new tag relationship
                         $newTagsRelations[] = [
                           'tagID' => $tagsID,
-                          'belongsToID' => $postID,
-                          'belongsTo' => $postType['slug'],
-                          'language' => $langSlug,
-                          "created_at" =>  \Carbon\Carbon::now(),
-                          "updated_at" => \Carbon\Carbon::now(),
+                          'postID' => $postID,
+                          'language' => $langSlug
                         ];
                         $tagsIDs[] = $tagsID;
                     }
@@ -587,11 +556,8 @@ trait PostTrait{
             }
 
             // if post is in the main database
-            $insertedTags = DB::table('tags_relations')->insert($newTagsRelations);
+            $insertedTags = (new TagRelation())->setTable($postTypeSlug.'_tags')->insert($newTagsRelations);
             if($insertedTags){
-                // create task
-                Task::create('tags_relations', 'create', $newTagsRelations, ['postID' => $postID, 'postType' => $postTypeSlug]);
-
                 return $tagsIDs;
             }
         }
@@ -599,7 +565,7 @@ trait PostTrait{
     }
 
     /**
-     * Insert Post media files
+     * Insert Post media files.
      *
      * @param  array  $mediaFiles  The list of media files from Post Request
      * @param  int    $postID ID of the Post
@@ -626,8 +592,7 @@ trait PostTrait{
                     $image = array();
                     $image['field'] = $fileKey;
                     $image['mediaID'] = $file['mediaID'];
-                    $image['belongsTo'] = $postTypeSlug;
-                    $image['belongsToID'] = $postID;
+                    $image['postID'] = $postID;
 
                     $languageAvailability = array();
                     foreach ($languages as $lang){
@@ -643,8 +608,7 @@ trait PostTrait{
                 foreach ($files as $file){
                     $image['field'] = $fieldName;
                     $image['mediaID'] = $file['mediaID'];
-                    $image['belongsTo'] = $postTypeSlug;
-                    $image['belongsToID'] = $postID;
+                    $image['postID'] = $postID;
 
                     //store only the language which the input belongs to
                     $languageAvailability = array();
@@ -661,7 +625,7 @@ trait PostTrait{
             }
         }
 
-        $mediaSaved = DB::table('media_relations')->insert($imagesArr);
+        $mediaSaved = (new MediaRelation())->setTable($postTypeSlug.'_media')->insert($imagesArr);
         if($mediaSaved){
             return $imagesArr;
         }
@@ -669,7 +633,7 @@ trait PostTrait{
     }
 
     /**
-     * Setup advanced search fields to be used in Posts advanced search
+     * Setup advanced search fields to be used in Posts advanced search.
      *
      * @param  string $postType  Slug of Post Type (ex. post_services)
      *
@@ -706,7 +670,7 @@ trait PostTrait{
     }
 
     /**
-     *  Get a custom vuejs template for a particular default function
+     *  Get a custom vuejs template for a particular default function.
      *
      * @param  string $baseTemplateName The base name of Custom template (ex. 'Create' or 'Update')
      * @param  string $postType The slug of Post Type (ex. post_service)
@@ -728,7 +692,7 @@ trait PostTrait{
     }
 
     /**
-     * Check if a post has featured image
+     * Check if a post has featured image.
      *
      * @return boolean Returns true if found
      */
@@ -740,7 +704,7 @@ trait PostTrait{
     }
 
     /**
-     * Check if a post has featured video
+     * Check if a post has featured video.
      *
      * @return boolean Returns true if found
      */
@@ -752,7 +716,7 @@ trait PostTrait{
     }
 
     /**
-     * Get URL of post's featured image
+     * Get URL of post's featured image.
      *
      * @param  int $width
      * @param  int $height
@@ -761,8 +725,7 @@ trait PostTrait{
      *
      * @return string|null Returns url of featured image if found, null instead
      */
-    public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = '', array $options = [])
-    {
+    public function featuredImageURL($width = null, $height = null, $defaultFeaturedImageURL = '', array $options = []){
         $imageURL = null;
         if ($this->hasFeaturedImage()) {
             if (!$width && !$height) {
@@ -784,7 +747,7 @@ trait PostTrait{
     }
 
     /**
-     * Renders featured image of a post
+     * Renders featured image of a post.
      *
      * @param  int $width
      * @param  int $height
@@ -801,7 +764,7 @@ trait PostTrait{
     }
 
     /**
-     * Renders featured image of a post
+     * Renders featured image of a post.
      *
      * @param  string $coverImage Absolute path of cover image
      * @return HtmlString Returns featured image html
@@ -817,7 +780,7 @@ trait PostTrait{
 
 
     /**
-     * Render Tags of a post
+     * Render Tags of a post.
      *
      * @param string $customView Name of a custom blade.php file to render the template
      * @param string $ulClass
@@ -826,8 +789,9 @@ trait PostTrait{
      */
     public function printTags($customView = '', $ulClass =""){
         if($this->hasTags()) {
+            $tags = "tags";
             return new HtmlString(view()->make(($customView ? $customView : "vendor.tags.default"), [
-              'tagsList' => $this->tags,
+              'tagsList' => $this->$tags,
               'ulClass' => $ulClass,
               'postTypeSlug' => $this->getTable()
 
@@ -836,17 +800,19 @@ trait PostTrait{
     }
 
     /**
-     * Check if a post has tags
+     * Check if a post has tags.
      *
      * @return boolean Returns true if found
      */
     public function hasTags(){
+        $tags = "tags";
         $postType = getPostType($this->getTable());
-        return ($postType->hasTags && isset($this->tags) && !$this->tags->isEmpty());
+        return ($postType->hasTags && isset($this->$tags) && !$this->$tags->isEmpty());
     }
 
     /**
-     * Check if a post has a primary category
+     * Check if a post has a primary category.
+     *
      * @return bool
      */
     public function hasCategory(){
@@ -856,19 +822,19 @@ trait PostTrait{
 
     /**
      * Get posts a tag.
-     * Accepts query parameters: limit, belongsTo
+     * Accepts query parameters: limit, belongsTo.
      *
      * @param int $limit
      * @param array $tagIDs
      *
      * @return mixed
      */
-    public function getPostsByTags($limit = 6, $tagIDs = [])
-    {
+    public function getPostsByTags($limit = 6, $tagIDs = []){
+        $tags = "tags";
         // Validate post type
         if(!$tagIDs) {
             $tagIDs = [];
-            foreach ($this->tags as $tag) {
+            foreach ($this->$tags as $tag) {
                 $tagIDs[] = $tag->tagID;
             }
         }
@@ -878,12 +844,11 @@ trait PostTrait{
             $postsObj->setTable($this->getTable());
             $posts = $postsObj
               ->select('postID', 'title', 'featuredImageID', 'slug')
-              ->join('tags_relations', 'tags_relations.belongsToID', $this->getTable() . '.postID')
-              ->where('belongsTo', $this->getTable())
+              ->join($this->getTable().'_tags', $this->getTable().'_tags.postID', $this->getTable() . '.postID')
               ->with('featuredImage')
               ->published()
               ->whereIn('tagID', $tagIDs)
-              ->where('postID', "!=",$this->postID)
+              ->where('postID', "!=", $this->postID)
               ->orderBy('published_at', 'DESC')
               ->limit($limit)
               ->get();
@@ -895,7 +860,8 @@ trait PostTrait{
     }
 
     /**
-     * Handle post's content
+     * Handle post's content.
+     *
      * @return mixed
      */
     public function content(){
@@ -913,6 +879,8 @@ trait PostTrait{
     }
 
     /**
+     * Check if post is being used as menu link.
+     *
      * @param integer $postID ID of the post
      * @return bool is this post being used in menu links
      */
@@ -925,7 +893,8 @@ trait PostTrait{
     }
 
     /**
-     * Update post parameters in MenuLink
+     * Update post parameters in MenuLink.
+     *
      * @param object $post
      * @return void
      */
@@ -940,7 +909,7 @@ trait PostTrait{
     }
 
     /**
-     * Fire before content events
+     * Fire before content events.
      */
     public function beforeContentEvents(){
         event('theme:post:before_content', [$this]);
@@ -948,7 +917,7 @@ trait PostTrait{
     }
 
     /**
-     * Fire after content events
+     * Fire after content events.
      */
     public function afterContentEvents(){
         Event::fire('theme:post:after_content', [$this]);
@@ -956,7 +925,7 @@ trait PostTrait{
     }
 
     /**
-     * Fire before content events
+     * Fire before content events.
      */
     public function beforeListEvents(){
         Event::fire('theme:post:before_list', [$this]);
@@ -964,7 +933,7 @@ trait PostTrait{
     }
 
     /**
-     * Fire after content events
+     * Fire after content events.
      */
     public function afterListEvents(){
         Event::fire('theme:post:after_list', [$this]);
@@ -972,7 +941,7 @@ trait PostTrait{
     }
 
     /**
-     * Check if a post type has its on Controller (check made by patter {slug}Controller.php
+     * Check if a post type has its on Controller (check made by patter {slug}Controller.php.
      *
      * @param $postTypeSlug
      * @return bool
@@ -989,7 +958,7 @@ trait PostTrait{
     }
 
     /**
-     * Get Default routes for post types that do not have their own Controller
+     * Get Default routes for post types that do not have their own Controller.
      *
      * @param object $postType
      * @return array
@@ -1006,7 +975,7 @@ trait PostTrait{
     }
 
     /**
-     * Get default routes for a post type
+     * Get default routes for a post type.
      *
      * @param object $postType
      * @return array
@@ -1023,16 +992,55 @@ trait PostTrait{
     }
 
     /**
-     * Get option value
-     * @param $field
+     * Get option value.
+     *
+     * @param string $field
      * @return mixed
+     * @throws \Exception
      */
     public function getOptionValue($field){
         $postType = getPostType($this->getTable());
         if(!$postType){
             throw new \Exception("Post type ".$this->getTable()."' does not exists!");
         }
-        return $postType->getMultioptionFieldValue($field, $this->{$field});
+        return $postType->getMultioptionFieldValue($field, $this->$field);
     }
 
+
+    /**
+     * This function creates the slug for a row of a model and makes sure that
+     * slugs it is not being used from a other post.
+     *
+     *  @return string unique slug
+     * */
+    public static function generateSlug($title, $tableName, $primaryKey, $languageSlug = '', $id = 0, $translatable = false, $delimiter = "-"){
+        $count = 0;
+        $found = true;
+        $originalSlug = str_slug($title, $delimiter);
+
+        while($found){
+            if($count != 0){
+                $slug = $originalSlug.$delimiter.$count;
+            }else{
+                $slug = $originalSlug;
+            }
+
+            $countObj = DB::table($tableName);
+            if ($translatable){
+                $countObj->where('slug->'.$languageSlug, $slug);
+            }else{
+                $countObj->where('slug', $slug);
+            }
+            if($id){
+                $countObj->where($primaryKey, '!=' ,$id);
+            }
+            $countPosts = $countObj->count();
+
+            if(!$countPosts){
+                return $slug;
+            }
+            $count++;
+        }
+        return $originalSlug;
+    }
 }

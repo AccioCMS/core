@@ -2,18 +2,20 @@
 
 namespace Accio\App\Models;
 
-use App\Models\Plugin;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\File;
 use Accio\App\Traits;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class PluginModel extends Model{
 
-    use Traits\PluginTrait, LogsActivity, Traits\CacheTrait;
+    use
+      Traits\PluginTrait,
+      LogsActivity,
+      Cachable,
+      Traits\BootEventsTrait,
+      Traits\CollectionTrait;
 
     /**
      * The table associated with the model.
@@ -23,22 +25,30 @@ class PluginModel extends Model{
     protected $table = "plugins";
 
     /**
-     * Fields that can be filled in CRUD
+     * The primary key of the table.
+     *
+     * @var string $primaryKey
+     */
+    protected $primaryKey = "pluginID";
+
+    /**
+     * Fields that can be filled in CRUD.
      *
      * @var array $fillable
      */
     protected $fillable = [
-        'title', 'namespace', 'organization', 'version', 'isActive'
+      'title', 'namespace', 'organization', 'version', 'isActive'
     ];
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "Plugin.label";
 
     /**
-     * Default permissions that will be listed in settings of permissions
+     * Default permissions that will be listed in settings of permissions.
      *
      * @var array $defaultPermissions
      */
@@ -64,46 +74,7 @@ class PluginModel extends Model{
     }
 
     /**
-     * Handle callback of insert, update, delete
-     * */
-    protected static function boot(){
-        parent::boot();
-
-        self::saving(function($plugin){
-            Event::fire('plugin:saving', [$plugin]);
-        });
-
-        self::saved(function($plugin){
-            Event::fire('plugin:saved', [$plugin]);
-        });
-
-        self::creating(function($plugin){
-            Event::fire('plugin:creating', [$plugin]);
-        });
-
-        self::created(function($plugin){
-            Event::fire('plugin:created', [$plugin]);
-        });
-
-        self::updating(function($plugin){
-            Event::fire('plugin:updating', [$plugin]);
-        });
-
-        self::updated(function($plugin){
-            Event::fire('plugin:updated', [$plugin]);
-        });
-
-        self::deleting(function($plugin){
-            Event::fire('plugin:deleting', [$plugin]);
-        });
-
-        self::deleted(function($plugin){
-            Event::fire('plugin:deleted', [$plugin]);
-        });
-    }
-
-    /**
-     * Destruct model instance
+     * Destruct model instance.
      */
     public function __destruct(){
         Event::fire('plugin:destruct', [$this]);

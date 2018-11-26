@@ -3,6 +3,7 @@
 namespace Accio\App\Models;
 
 use Accio\App\Traits\BootEventsTrait;
+use Accio\App\Traits\CollectionTrait;
 use App\Models\Permission;
 use App\Models\UserGroup;
 use Illuminate\Database\Eloquent\Model;
@@ -14,17 +15,29 @@ class UserGroupModel extends Model{
 
     use
       LogsActivity,
-      BootEventsTrait;
+      BootEventsTrait,
+      CollectionTrait;
 
-    /** @var array $fillable fields that can be filled in CRUD*/
+    /**
+     * fields that can be filled in CRUD
+     * @var array
+     */
     protected $fillable = [
         'name', 'slug', 'isDefault'
     ];
 
-    /** @var string $primaryKey the primary key */
+    /**
+     * Name of the primary key
+     *
+     * @var string
+     */
     protected $primaryKey = "groupID";
 
-    /** @var string $table The name of the table in database */
+    /**
+     * Table name
+     *
+     * @var string
+     */
     protected $table = "users_groups";
 
     /**
@@ -38,7 +51,8 @@ class UserGroupModel extends Model{
     protected static $logOnlyDirty = true;
 
     /**
-     * Get admin group
+     * Get admin group.
+     *
      * @return object
      * @throws Exception
      */
@@ -47,7 +61,8 @@ class UserGroupModel extends Model{
     }
 
     /**
-     * Get an editor role
+     * Get an editor role.
+     *
      * @return object
      * @throws Exception
      */
@@ -56,7 +71,8 @@ class UserGroupModel extends Model{
     }
 
     /**
-     * Get an editor role
+     * Get an editor role.
+     *
      * @return object
      * @throws Exception
      */
@@ -65,7 +81,8 @@ class UserGroupModel extends Model{
     }
 
     /**
-     * Create default roles
+     * Create default roles.
+     *
      * @return void
      */
     public static function createDefaultRoles(){
@@ -77,7 +94,8 @@ class UserGroupModel extends Model{
     }
 
     /**
-     * Create an Admin role
+     * Create an Admin role.
+     *
      * @param bool $force Create admin role even if it exist
      * @return bool
      */
@@ -95,7 +113,8 @@ class UserGroupModel extends Model{
     }
 
     /**
-     * Create an Editor role
+     * Create an Editor role.
+     *
      * @param bool $force Create editor role even if it exist
      * @return bool
      */
@@ -113,7 +132,8 @@ class UserGroupModel extends Model{
     }
 
     /**
-     * Create an Author role
+     * Create an Author role.
+     *
      * @param bool $force Create author role even if it exist
      * @return bool
      */
@@ -131,7 +151,7 @@ class UserGroupModel extends Model{
     }
 
     /**
-     * Create an admin role
+     * Create an admin role.
      *
      * @param string $name
      * @param bool $isDefault
@@ -173,8 +193,7 @@ class UserGroupModel extends Model{
     /**
      * Destruct model instance
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('userGroup:destruct', [$this]);
     }
 }

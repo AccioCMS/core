@@ -4,7 +4,6 @@ namespace Accio\App\Models;
 
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
 
 class TaskModel extends Model {
     /**
@@ -20,12 +19,12 @@ class TaskModel extends Model {
     /**
      * Create new task
      *
-     * @param string $type type of task
-     * @param array|object $data
-     * @param string $primaryKey
+     * @param string $belongsTo
+     * @param string $type
+     * @param object|array $data
+     * @param array $attributes
      */
     public static function create($belongsTo, $type, $data, $attributes = []){
-        $cacheData = [];
         $obj = new Task();
         $obj->belongsTo = $belongsTo;
         $obj->type = $type;
@@ -36,6 +35,7 @@ class TaskModel extends Model {
 
     /**
      * Get all tasks
+     *
      * @return array
      */
     public static function get(){
@@ -52,6 +52,9 @@ class TaskModel extends Model {
         return false;
     }
 
+    /**
+     * Clear tasks from database
+     */
     public static function clear(){
         self::truncate();
     }

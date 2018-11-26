@@ -1,23 +1,16 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: sopa
- * Date: 20/10/2017
- * Time: 10:11 AM
- */
 
 namespace Accio\App\Traits;
 
 
 use App\Models\Media;
 
-trait CustomFieldsValuesTrait
-{
+trait CustomFieldsValuesTrait{
 
     /**
-     * Get custom field value by key
+     * Get custom field value by key.
      *
-     * @param $key
+     * @param string $key
      * @return mixed
      */
     public function customFieldValue($key){
@@ -39,9 +32,9 @@ trait CustomFieldsValuesTrait
     }
 
     /**
-     * Check if a given key is a custom field
+     * Check if a given key is a custom field.
      *
-     * @param $key
+     * @param string $key
      * @return bool
      */
     public function hasCustomField($key){
@@ -55,7 +48,7 @@ trait CustomFieldsValuesTrait
 
 
     /**
-     * Replaces mediaIDs eith the actuall media object
+     * Replaces mediaIDs eith the actuall media object.
      *
      * @param array ...$slugs slugs of media in custom field group
      * @return array

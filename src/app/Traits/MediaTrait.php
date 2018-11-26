@@ -3,12 +3,10 @@ namespace Accio\App\Traits;
 
 use App\Models\Media;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
-use Mockery\Exception;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Request;
 use Intervention\Image\Facades\Image;
-use Illuminate\Database\Eloquent\Model;
 use DB;
 use Auth;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -18,11 +16,12 @@ trait MediaTrait{
 
     /**
      * Upload files, create thumbs and save it to db
+     * TODO chunk in multi-functions
      *
-     * @param  Request $request The request that contains $_FILES
-     * @param  string  $belongsToApp The name of the app for which thumbs should be created. If empty, only general thumbs will be craeted
-     *
+     * @param Request $request
+     * @param string $belongsToApp
      * @return array
+     * @throws \Exception
      */
     public function upload($request, $belongsToApp = ''){
         $results = array();
@@ -136,15 +135,6 @@ trait MediaTrait{
                 Event::fire('media:creating', [$media, $request]);
 
                 if($media->save()){
-                    if ($request->fromAlbum === "true" || $request->fromAlbum === true){
-                        \Illuminate\Support\Facades\DB::table('album_relations')->insert([
-                            'albumID' => $request->albumID,
-                            'mediaID' => $media->mediaID,
-                            "created_at" =>  \Carbon\Carbon::now(),
-                            "updated_at" => \Carbon\Carbon::now(),
-                        ]);
-                    }
-
                     // optimize original image
                     if(config('media.optimize_original_image')) {
                         $this->optimize($destinationOriginalDirectory . '/' . $fileName);
@@ -173,10 +163,12 @@ trait MediaTrait{
     }
 
     /**
-     * Create default thumbs
+     * Create default thumbs.
+     *
      * @param null $image
      * @param string $app
      * @return $this
+     * @throws \Exception
      */
     public function createDefaultThumbs($image = null, $app = 'default'){
         if(!$image){
@@ -195,9 +187,12 @@ trait MediaTrait{
 
         return $this;
     }
+
     /**
-     * Deletes thumbs (not the default ones of cms) for a image
-     * @param Media $image
+     * Deletes thumbs (not the default ones of cms) for a image.
+     *
+     * @param object $image
+     * @return $this
      */
     public function deleteThumbs($image = null){
         if(!$image){
@@ -229,9 +224,9 @@ trait MediaTrait{
      * Get thumb by image and size.
      * If requested thumb does not exist, it automatically creates it.
      *
-     * @param $width
-     * @param null $height
-     * @param null $imageObj
+     * @param int $width
+     * @param int $height
+     * @param int $imageObj
      * @param array $options
      * @return null|string Returns URL of thumb, null if thumb could not found or created
      *
@@ -341,20 +336,12 @@ trait MediaTrait{
         return false;
     }
 
-
-    private function setOptions(){
-
-    }
-
-    private function getOption(){
-
-    }
-
     /**
-     * Check if an extension is image
+     * Check if an extension is image.
      *
-     * @param $extension
+     * @param null $extension
      * @return bool
+     * @throws \Exception
      */
     public function hasImageExtension($extension = null){
         if(!$extension && $this->extension){
@@ -372,10 +359,11 @@ trait MediaTrait{
     }
 
     /**
-     * Check if an extension is video
+     * Check if an extension is video.
      *
-     * @param $extension
+     * @param null $extension
      * @return bool
+     * @throws \Exception
      */
     private function hasVideoExtension($extension = null){
         if(!$extension && $this->extension){
@@ -391,10 +379,11 @@ trait MediaTrait{
     }
 
     /**
-     * Check if an extension is audio
+     * Check if an extension is audio.
      *
-     * @param $extension
+     * @param null $extension
      * @return bool
+     * @throws \Exception
      */
     private function hasAudioExtension($extension = null){
         if(!$extension && $this->extension){
@@ -412,10 +401,11 @@ trait MediaTrait{
     }
 
     /**
-     * Check if an extension is document
+     * Check if an extension is document.
      *
-     * @param $extension
+     * @param null $extension
      * @return bool
+     * @throws \Exception
      */
     private function hasDocumentExtension($extension = null){
         if(!$extension && $this->extension){
@@ -433,9 +423,11 @@ trait MediaTrait{
     }
 
     /**
-     * Check if an extension is allowed to be uploaded
-     * @param string $extension
+     * Check if an extension is allowed to be uploaded.
+     *
+     * @param null $extension
      * @return bool
+     * @throws \Exception
      */
     private function isAllowedExtension($extension = null){
         if(!$extension && $this->extension){
@@ -464,7 +456,7 @@ trait MediaTrait{
         );
     }
     /**
-     * Compress & optimize an image
+     * Compress & optimize an image.
      *
      * @param string $pathToImage
      * @param string|null $pathToOutput

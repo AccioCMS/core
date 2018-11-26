@@ -1,9 +1,9 @@
 <?php
 namespace Accio\App\Traits;
 
+use App\Models\PostType;
 use Illuminate\Support\Facades\File;
 use App\Models\Language;
-use Illuminate\Database\Eloquent\Model;
 
 trait PermissionTrait{
 
@@ -11,6 +11,7 @@ trait PermissionTrait{
      * Get permissions list from each model.
      *
      * @return array
+     * @throws \Exception
      */
     public static function getPermissionsFromModels(){
         $result = array();
@@ -45,7 +46,7 @@ trait PermissionTrait{
                     $result[$className]['label'] = trans($object::$label);
                 }
 
-                foreach (\App\Models\PostType::cache()->getItems() as $postType){
+                foreach (PostType::all() as $postType){
                     // Label
                     $result[$postType['slug']]['label'] = $postType['name'];
 
@@ -101,7 +102,7 @@ trait PermissionTrait{
     }
 
     /**
-     * Checks if a permission exists
+     * Checks if a permission exists.
      *
      * @param string $app
      * @param string $key
@@ -109,6 +110,133 @@ trait PermissionTrait{
      */
     public static function exists($app = 'global', $key){
         return ((new static())->where('app',$app)->where('key', $key)->where('value', true)->count() ? true : false);
+    }
+
+
+    /**
+     * Prepare global permission array to be stored on database.
+     * Gets input from the front-end and customizes object to be stored as JSON in DB.
+     *
+     * @param $globalPermissions
+     * @param $id
+     * @return array
+     */
+    public static function createGlobalPermissions($globalPermissions, $id){
+        $query = [];
+
+        if ($globalPermissions){
+            // Create global permissions
+            foreach ($globalPermissions as $globalPermissionKey => $globalPermissionValue){
+                if($globalPermissionValue){
+                    $query[] = array(
+                        'groupID' => $id,
+                        'app' => 'global',
+                        'key' => $globalPermissionKey,
+                        'value' => true,
+                        'ids' => NULL,
+                        'hasAll' => false,
+                    );
+                }
+            }
+        }
+        return $query;
+    }
+
+    /**
+     * Prepare custom and default permission array to be stored on database.
+     * Gets input from the front-end and customizes object to be stored as JSON in DB.
+     *
+     * @param array $permissions
+     * @param int $id
+     * @return array
+     */
+    public static function createPermissions($permissions, $id){
+        $query = [];
+
+        if($permissions){
+            // create other permissions
+            foreach($permissions as $appName => $app){
+                foreach ($app as $permissionType => $permission){
+                    if($permissionType == 'defaultPermissionsValues'){
+                        foreach ($permission as $key){
+                            $query[] = array(
+                                'groupID' => $id,
+                                'app' => $appName,
+                                'key' => $key,
+                                'value' => true,
+                                'ids' => NULL,
+                                'hasAll' => false,
+                            );
+                        }
+                    }else if ($permissionType == 'customPermissionsValues'){
+                        foreach($permission as $key => $object){
+                            if (is_array($object)){
+
+                                if(count($object)){
+                                    $IDs = array();
+                                    $c = 0;
+                                    foreach($object as $value){
+                                        $class = "App\\Models\\".$appName;
+                                        $model = new $class();
+                                        $IDs['ID'.$c] = $value[$model->getKeyName()];
+                                        $c++;
+                                    }
+                                    $query[] = array(
+                                        'groupID' => $id,
+                                        'app' => $appName,
+                                        'key' => $key,
+                                        'value' => true,
+                                        'ids' => json_encode($IDs),
+                                        'hasAll' => false,
+                                    );
+                                }
+                            }else{
+                                if ($object){
+                                    $query[] = array(
+                                        'groupID' => $id,
+                                        'app' => $appName,
+                                        'key' => $key,
+                                        'value' => true,
+                                        'ids' => NULL,
+                                        'hasAll' => false,
+                                    );
+                                }
+                            }
+                        }
+                    }else if ($permissionType == 'categoriesValues'){
+                        if ($app['hasAll']){
+                            $query[] = array(
+                                'groupID' => $id,
+                                'app' => $appName,
+                                'key' => 'categories',
+                                'value' => true,
+                                'ids' => NULL,
+                                'hasAll' => true,
+                            );
+                        }else{
+                            $IDs = array();
+                            $c=0;
+                            foreach ($permission as $category){
+                                $IDs['ID'.$c] = $category['categoryID'];
+                                $c++;
+                            }
+                            if (count($IDs)){
+                                $query[] = array(
+                                    'groupID' => $id,
+                                    'app' => $appName,
+                                    'key' => 'categories',
+                                    'value' => true,
+                                    'ids' => json_encode($IDs),
+                                    'hasAll' => false,
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $query;
     }
 
 }

@@ -1,11 +1,12 @@
 <?php
 namespace Accio\App\Traits;
 
+use App;
 use App\Models\Language;
 use App\Models\MenuLink;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use \App\Models\Menu;
+use App\Models\PostType;
 
 trait CategoryTrait{
 
@@ -20,70 +21,52 @@ trait CategoryTrait{
     public $categoryList = [];
 
     /**
-     * Find by ID
+     * Find category by ID.
      *
-     * @param int $categoryID ID of Category
-     *
-     * @return array|null Category data if found, false if not found
-     *
+     * @param int $categoryID
+     * @return mixed
      */
     public static function findByID($categoryID){
-        $categories = \App\Models\Category::cache()->getItems();
-        if($categories){
-            return $categories->where('categoryID',$categoryID)->first();
-        }
-        return;
+        return self::where('categoryID',$categoryID)->first();
     }
 
     /**
-     * Find by ID
+     * Find by category by slug
      *
-     * @param string $categorySlug ID of Category
-     *
-     * @return object|boolean Category data if found, false if not found
-     *
+     * @param string $categorySlug
+     * @return mixed
      */
     public static function findBySlug($categorySlug){
-        $categories = \App\Models\Category::cache()->getItems();
-        if($categories){
-            return $categories->where('slug',$categorySlug)->first();
-        }
-        return;
+        return self::where('slug->'.App::getLocale(),$categorySlug)->first();
     }
 
     /**
-     * Find by Post Type
+     * Find category by Post Type.
      *
      * @param string $postTypeSlug
      *
      * @return object|boolean Category data if found, false if not found
-     *
      */
     public static function findByPostType($postTypeSlug){
         $postType = PostType::findBySlug($postTypeSlug);
         if($postType){
-            $categories = self::cache()->getItems();
-            if($categories){
-                return $categories->where('postTypeID',$postType->postTypeID);
-            }
+            return self::where('postTypeID',$postType->postTypeID)->get();
         }
         return;
     }
 
 
     /**
-     * Check if a category has posts
+     * Check if a category has posts.
      *
      * @param string $postType slug of post type
      * @param string $categoriesID selected category ID
      *
      * @return bool
-     *
      */
     public static function hasPosts($postType, $categoriesID){
-        if(DB::table('categories_relations')
+        if(DB::table(categoriesRelationTable($postType))
             ->where('categoryID', $categoriesID)
-            ->where('belongsTo', $postType)
             ->count()){
             return true;
         }else{
@@ -92,10 +75,11 @@ trait CategoryTrait{
     }
 
     /**
-     * Checks if a category is part of a menulink
+     * Checks if a category is part of a menulink.
      *
-     * @param integer $categoriesID ID of the post type
-     * @return bool True is the category is being used in menu links, false instead
+     * @param int $categoriesID
+     * @return bool
+     * @throws \Exception
      */
     public static function isInMenuLinks($categoriesID){
         $isInMenulinks = MenuLink::where('belongsToID', $categoriesID)->where('belongsTo', 'category')->count();
@@ -106,7 +90,8 @@ trait CategoryTrait{
     }
 
     /**
-     * Add a category to a Menu
+     * Add a category to a Menu.
+     *
      * @param Menu $menu
      * @return object
      */
@@ -132,9 +117,10 @@ trait CategoryTrait{
     }
 
     /**
-     * Update category paremeters in MenuLink
-     * @param object $category
-     * @return void
+     * Update category paremeters in MenuLink.
+     *
+     * @param $category
+     * @throws \Exception
      */
     public static function updateMenulink($category){
         if(self::isInMenuLinks($category->categoryID)){
@@ -147,9 +133,10 @@ trait CategoryTrait{
     }
 
     /**
-     * Make parent child tree
-     * (every category has a children array that contains his children)
-     * @param $list
+     * Make parent child tree.
+     * (every category has a children array that contains his children).
+     *
+     * @param $categories
      * @return array
      */
     public function makeChildrenTree($categories){
@@ -172,7 +159,7 @@ trait CategoryTrait{
     }
 
     /**
-     * Get children of a category
+     * Get children of a category.
      *
      * @param $parentID
      * @return array
@@ -189,7 +176,8 @@ trait CategoryTrait{
     }
 
     /**
-     * Get all children tree of a parent
+     * Get all children tree of a parent.
+     *
      * @param $parentID
      */
     public function getAllChildren($parentID){
@@ -201,22 +189,25 @@ trait CategoryTrait{
     }
 
     /**
-     * Delete List of children
+     * Delete List of children.
+     *
      * @param int $parentID
      * @param int $postTypeID
      * @return mixed
+     * @throws \Exception
      */
     public function deleteChildren(int $parentID, int $postTypeID){
         $this->categoryList = self::where("postTypeID", $postTypeID)->get();
         $this->getAllChildren($parentID);
         foreach($this->categoriesToBeDeleted as $cat){
             // Post type should not be able to be deleted if it has posts
-            if(Category::isInMenuLinks($cat->categoryID)){
+            if(self::isInMenuLinks($cat->categoryID)){
                 return $this->response("You can't delete this Category because it is part of a menu.", 403);
             }
 
+            $postType = PostType::findByID($postTypeID);
             // delete relations
-            DB::table('categories_relations')->where("categoryID", $cat->categoryID)->delete();
+            DB::table($postType->slug.'_categories')->where("categoryID", $cat->categoryID)->delete();
             // delete children
             $cat->delete();
         }

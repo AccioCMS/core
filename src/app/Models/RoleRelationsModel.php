@@ -2,14 +2,9 @@
 
 namespace Accio\App\Models;
 
-use App\Models\PostType;
-use App\Models\TagRelation;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
-use Mockery\Exception;
 
-class RoleRelationsModel extends Model
-{
+class RoleRelationsModel extends Model{
     /**
      * The table associated with the model.
      *
@@ -18,7 +13,7 @@ class RoleRelationsModel extends Model
     protected $table = "roles_relations";
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */

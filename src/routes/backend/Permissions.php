@@ -13,7 +13,6 @@ Route::group(['middleware' => ['auth:admin'], 'as' => 'backend.permissions.', 'n
     Route::get('/{lang}/json/permissions/delete/{id}', 'PermissionController@delete')->name('delete');
     Route::get('/{lang}/permissions/{view}/{id}', 'PermissionController@single')->name('single');
     Route::get('/{lang}/json/permissions/get-permissions', 'PermissionController@getPermissions')->name('getPermissions');
-    Route::get('/{lang}/json/permissions/has-all-categories/{postTypeSlug}/{groupID}', 'PermissionController@hasAllCategories')->name('hasAllCategories');
     Route::get('/{lang}/json/permissions/get-all-permissions-options', 'PermissionController@getAllPermissionsOptions')->name('getAllPermissionsOptions');
 
     /**

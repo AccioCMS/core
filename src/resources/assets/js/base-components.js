@@ -7,6 +7,8 @@ Vue.component('app', require('../../views/components/App.vue'));
 Vue.component('application-link', require('../../views/components/vendor/ApplicationLink.vue'));
 Vue.component('cms-menu-link', require('../../views/components/vendor/CmsMenuLink.vue'));
 
+Vue.component('popup-media', require('../../views/components/media/Popup'));
+
 // Spinner (Loading compontent)
 Vue.component('spinner', require('../../views/components/vendor/Spinner.vue'));
 

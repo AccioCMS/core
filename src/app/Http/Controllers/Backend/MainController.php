@@ -2,11 +2,9 @@
 
 namespace Accio\App\Http\Controllers\Backend;
 
-use HTMLMin\HTMLMin\HTMLMin;
 use Illuminate\Routing\Controller;
 use App;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -16,7 +14,6 @@ use Illuminate\Http\Request;
 use Accio\Support\Facades\Search;
 use App\Models\User;
 use App\Models\Language;
-use Illuminate\Support\Facades\Session;
 use ImageOptimizer;
 
 class MainController extends Controller{
@@ -26,12 +23,17 @@ class MainController extends Controller{
         if(App::routesAreCached()) {
             $this->middleware('application');
             $this->middleware('backend');
+
         }
     }
 
     /**
-     *  Base view
-     * */
+     * Returns view with no ID param, like create etc.
+     *
+     * @param string $lang
+     * @param string $view
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
     public function index($lang = "", $view = ""){
         $classNameArr = explode("\\", get_class($this));
         $className = str_replace("Controller","",$classNameArr[4]);
@@ -44,8 +46,11 @@ class MainController extends Controller{
     }
 
     /**
-     * Returns the list of specific model
-     * */
+     * Returns the list of specific model.
+     *
+     * @param string $lang
+     * @return \Illuminate\Contracts\Pagination\Paginator
+     */
     public function getAll($lang = ""){
         $classNameArr = explode("\\", get_class($this));
         $className = "App\\Models\\".str_replace("Controller","",$classNameArr[4]);
@@ -60,9 +65,13 @@ class MainController extends Controller{
     }
 
     /**
-     * return views for a specific model LIKE update, reset password etc
-     * @params view and ID
-     * */
+     * Return views for a specific model LIKE update, reset password etc.
+     *
+     * @param string $lang
+     * @param string $view
+     * @param int $id
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
     public function single($lang, $view, $id){
         $classNameArr = explode("\\", get_class($this));
         $className = str_replace("Controller","",$classNameArr[4]);
@@ -96,8 +105,11 @@ class MainController extends Controller{
     }
 
     /**
-     * Handles sort ( updates order column )
-     * */
+     * Handles sort ( updates order column ).
+     *
+     * @param Request $request
+     * @return array
+     */
     public function sort(Request $request){
         $classNameArr = explode("\\", get_class($this));
         $className = str_replace("Controller","",$classNameArr[4]);
@@ -117,8 +129,17 @@ class MainController extends Controller{
     }
 
     /**
-     *  Get all without pagination
-     * */
+     * Used as API to get list of all rows without using pagination.
+     * returns array of all rows in database.
+     *
+     * Uses the Controller name to get his model.
+     * Controller name has to start with the name as the model.
+     *
+     * Exmp. (ModelName)Controller -- UserController.
+     *
+     * @param string $lang
+     * @return mixed
+     */
     public function getAllWithoutPagination($lang = ""){
         $classNameArr = explode("\\", get_class($this));
         $className = "App\\Models\\".str_replace("Controller","",$classNameArr[4]);
@@ -128,11 +149,21 @@ class MainController extends Controller{
 
 
     /**
-     *  This function creates the slug for a row of a model and makes sure that slugs it is not being used from a other post
-     *  @return string unique slug
+     * This function creates the slug for a row of a model and makes sure that
+     * slugs it is not being used from a other post.
      *
-     * */
-    public function generateSlug($title, $tableName, $primaryKey, $languageSlug = '', $id = 0, $translatable = false, $delimiter = "-"){
+     * @param string $title
+     * @param string $tableName
+     * @param int $primaryKey
+     * @param string $languageSlug
+     * @param int $id
+     * @param bool $translatable
+     * @param bool $hasVirtualSlug
+     * @param string $delimiter
+     * @return string
+     */
+    public function generateSlug($title, $tableName, $primaryKey, $languageSlug = '', $id = 0, $translatable = false,
+                                 $hasVirtualSlug = false, $delimiter = "-"){
         $count = 0;
         $found = true;
         $originalSlug = str_slug($title, $delimiter);
@@ -146,7 +177,11 @@ class MainController extends Controller{
 
             $countObj = DB::table($tableName);
             if ($translatable){
-                $countObj->where('slug->'.$languageSlug, $slug);
+                if($hasVirtualSlug){
+                    $countObj->where('slug_'.$languageSlug, $slug);
+                }else{
+                    $countObj->where('slug->'.$languageSlug, $slug);
+                }
             }else{
                 $countObj->where('slug', $slug);
             }
@@ -165,8 +200,14 @@ class MainController extends Controller{
 
 
     /**
-     * Make simple search with a search term
-     * */
+     * Make simple search with a search term.
+     * Gets query params and performs where clauses.
+     * TODO: implement ElasticSearch
+     *
+     * @param string $lang
+     * @param string $term
+     * @return array
+     */
     public function makeSearchParent($lang, $term){
         // get the current model of the request
         $classNameArr = explode("\\", get_class($this));
@@ -195,6 +236,8 @@ class MainController extends Controller{
     }
 
     /**
+     * Used in Vuejs to redirect user after a save (in Create or Update forms).
+     *
      * @param string $redirectChoice what kind of redirection to make
      * @param string $belongsTo in which app to redirect
      * @param integer $id if link has a id
@@ -241,7 +284,7 @@ class MainController extends Controller{
     }
 
     /**
-     * Handle ajax responses (mainly used by view vue js
+     * Handle ajax responses (mainly used by view vue js.
      *
      * @param  integer $code HTTP response code
      * @param  string  $message The message to be shown along the error
@@ -280,6 +323,11 @@ class MainController extends Controller{
         ];
     }
 
+    /**
+     * General response if user has no permission
+     *
+     * @return array
+     */
     protected function noPermission(){
         return $this->response("You don't have permissions to perform this action", 403);
     }

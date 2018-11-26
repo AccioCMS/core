@@ -116,7 +116,7 @@
                                                 <div v-if="mediaSelectedFiles['feature_image']">
                                                     <div class="imageSingleThumb" v-if="mediaSelectedFiles['feature_image']">
                                                         <i class="fa fa-close closeBtnForPrevImages" @click="deleteSelectedMediaFile('feature_image', mediaSelectedFiles['feature_image'])"></i>
-                                                        <img :src="generateUrl(constructUrl(mediaSelectedFiles['feature_image'][0]))">
+                                                        <img :src="constructMediaUrl(mediaSelectedFiles['feature_image'][0])">
                                                     </div>
                                                 </div>
 
@@ -195,7 +195,6 @@
     </div>
 </template>
 <script>
-    import PopupMedia from '../media/Popup.vue'
     import { globalComputed } from '../../mixins/globalComputed';
     import { globalMethods } from '../../mixins/globalMethods';
     import { globalData } from '../../mixins/globalData';
@@ -205,7 +204,7 @@
 
     export default{
         mixins: [globalComputed, globalMethods, globalData, globalUpdated, customFields],
-        components:{'popup-media':PopupMedia, CustomFieldGroup},
+        components:{CustomFieldGroup},
         mounted() {
             // translations
             this.trans = {

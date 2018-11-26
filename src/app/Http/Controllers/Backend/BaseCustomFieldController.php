@@ -26,10 +26,9 @@ class BaseCustomFieldController extends MainController{
     }
 
     /**
-     * Used to get the list of custom field groups
+     * Used to get the list of custom field groups.
      *
      * @param string $lang language slug
-     *
      * @return array
      */
     public function getAll($lang = ""){
@@ -39,10 +38,9 @@ class BaseCustomFieldController extends MainController{
     }
 
     /**
-     * Use to store the custom field groups and custom fields in the database
+     * Use to store the custom field groups and custom fields in the database.
      *
      * @param Request $request object with multi-dimensional array with values of custom fields
-     *
      * @return array ErrorHandler response
      */
     public function store(Request $request){
@@ -123,11 +121,10 @@ class BaseCustomFieldController extends MainController{
     }
 
     /**
-     * Used to prepare the custom field array to insert the fields in the database
+     * Used to prepare the custom field array to insert the fields in the database.
      *
      * @param array $fields list of custom fields
      * @param integer $groupID id of custom fields group
-     *
      * @return array
      */
     public function prepareCustomFieldArray($fields, $groupID){
@@ -179,7 +176,7 @@ class BaseCustomFieldController extends MainController{
     }
 
     /**
-     * Used to make null the empty values of custom field columns (like '[]', '""', '')
+     * Used to make null the empty values of custom field columns (like '[]', '""', '').
      *
      * @param array $fieldsQuery multi-dimensional array with custom fields
      * @return array
@@ -201,7 +198,7 @@ class BaseCustomFieldController extends MainController{
     }
 
     /**
-     * Divides Fields from sub fields in two different arrays
+     * Divides Fields from sub fields in two different arrays.
      *
      * @param array $customFieldsArr array of custom fields
      * @return array of custom fields
@@ -224,7 +221,7 @@ class BaseCustomFieldController extends MainController{
     }
 
     /**
-     * Delete a custom field group from database
+     * Delete a custom field group from database.
      *
      * @param string $lang language slug
      * @param integer $id custom fields group ID
@@ -239,7 +236,7 @@ class BaseCustomFieldController extends MainController{
 
         if($customFieldGroup) {
             $fields = CustomField::where('customFieldGroupID', $id);
-            if ($fields){
+            if($fields){
                 $fields->delete();
                 $customFieldGroup->delete();
 
@@ -251,7 +248,7 @@ class BaseCustomFieldController extends MainController{
     }
 
     /**
-     * Bulk Delete custom fields groups and their custom fields
+     * Bulk Delete custom fields groups and their custom fields.
      *
      * @param Request $request array of custom fields IDs
      * @return array ErrorHandler response
@@ -275,9 +272,12 @@ class BaseCustomFieldController extends MainController{
     }
 
     /**
-     * return JSON object with details for a specific custom field
-     * @params custom field ID
-     * */
+     * JSON object with all details for a specific custom field (used in update form).
+     *
+     * @param string $lang
+     * @param int $id
+     * @return array
+     */
     public function detailsJSON($lang, $id){
         // check if user has permissions to access this link
         if(!User::hasAccess('CustomField','read')){
@@ -293,13 +293,20 @@ class BaseCustomFieldController extends MainController{
     }
 
 
+    /**
+     * Get all data of a table (for custom field purposes in front-end).
+     *
+     * @param Request $request
+     * @return array
+     */
     public function getTableData(Request $request){
         $table = $request->all()['name'];
         return Language::filterRows(DB::table($table)->get(), false);
     }
 
     /**
-     * This function creates the slug for a custom field group and makes sure that slugs it is not being used from a other group
+     * This function creates the slug for a custom field group and makes sure that slugs it is not being used from
+     * a other group.
      *
      * @param string $lang language slug
      * @param string $title the string to be slug
@@ -311,7 +318,7 @@ class BaseCustomFieldController extends MainController{
     }
 
     /**
-     * Catches the post request from frontend
+     * Catches the post request from frontend.
      *
      * @param Request $request data of the request
      * @return string generated key
@@ -325,14 +332,12 @@ class BaseCustomFieldController extends MainController{
 
 
     /**
-     * This function creates the slug/key for a custom field
+     * This function generates the slug/key for a custom field by using a chosen value.
      *
      * @param string $lang language slug
      * @param string $key text to be made slug
      * @param integer $id id of the current custom field
-     *
      * @return string generated key
-     *
      */
     public function generateFieldSlug($lang, $key, $id, $keys){
         $count = 1;
@@ -364,6 +369,8 @@ class BaseCustomFieldController extends MainController{
     }
 
     /**
+     * Return all custom fields of a app/module.
+     *
      * @param string $module module/app
      * @param string $formType (create, update)
      * @param int $id (optional) id of the item

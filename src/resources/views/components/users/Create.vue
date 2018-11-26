@@ -112,7 +112,7 @@
 
                                 <div class="col-md-9 col-sm-9 col-xs-12">
                                     <div class="imageContainer">
-                                        <img v-if="mediaSelectedFiles['featuredImage']" :src="generateUrl(constructUrl(mediaSelectedFiles['featuredImage'][0]))" class="featuredImagePreview">
+                                        <img v-if="mediaSelectedFiles['featuredImage']" :src="constructMediaUrl(mediaSelectedFiles['featuredImage'][0])" class="featuredImagePreview">
                                         <br>
                                         <a class="btn btn-info" v-if="!mediaSelectedFiles['featuredImage']" @click="openMedia" id="openMediaFeatureImage">{{trans.__select}}</a>
                                         <a class="btn btn-info" v-if="mediaSelectedFiles['featuredImage']" @click="openMedia">{{trans.__change}}</a>
@@ -141,7 +141,7 @@
                                     :data-lang="lang.slug"
                                     @click="activeLang = lang.slug">
 
-                                    <a :href="'#tab_content'+ ++count" :id="'lang-tab'+count" role="tab" data-toggle="tab" aria-expanded="true">{{ lang.name }}</a>
+                                    <a :href="'#tab_content'+ ++count" :id="'lang-tab'+count" role="tab" data-toggle="tab">{{ lang.name }}</a>
 
                                 </li>
                             </ul>
@@ -153,7 +153,7 @@
                                      :key="count"
                                      v-if="activeLang == lang.slug">
 
-                                        <div class="form-group" :id="'form-group-about_'+ lang.slug">
+                                    <div class="form-group" :id="'form-group-about_'+ lang.slug">
                                         <label class="control-label col-md-12 col-sm-12 col-xs-12">{{trans.__about}}</label>
                                         <div class="col-md-12 col-sm-12 col-xs-12 froala-container">
                                             <froala :tag="'textarea'" :config="froalaBasicConfig" v-model="user.about[lang.slug]" class="froala" :id="'froala-about-'+lang.slug"></froala>
@@ -209,7 +209,6 @@
     </div>
 </template>
 <script>
-    import PopupMedia from '../media/Popup.vue'
     import { globalComputed } from '../../mixins/globalComputed';
     import { globalMethods } from '../../mixins/globalMethods';
     import { globalData } from '../../mixins/globalData';
@@ -261,7 +260,6 @@
                     this.$store.commit('setSpinner', false);
                 });
         },
-        components: { 'popup-media':PopupMedia },
         data(){
             return{
                 groupsList: [],

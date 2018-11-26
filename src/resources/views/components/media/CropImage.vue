@@ -94,9 +94,8 @@
                         ]
                    });
 
-                    let stringExt = escapeUrl(global.selected_image.updated_at);
+                    let stringExt = global.escapeUrl(global.selected_image.updated_at);
                     var url = global.generateUrl('/'+global.selected_image.url+"?"+stringExt);
-                    console.log("url :: ", url)
                     // set image src for preview
                     $("#imagePrev").css("background-image","url("+url+")");
                     // set crop preview
