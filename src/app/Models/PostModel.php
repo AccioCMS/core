@@ -157,6 +157,13 @@ abstract class PostModel extends Model{
     ];
 
     /**
+     * Elastic connection
+     *
+     * @var null
+     */
+    protected $elastic = null;
+
+    /**
      * Configure if post model has dynamic tables or pre-declared table
      *
      * @return bool
@@ -172,6 +179,7 @@ abstract class PostModel extends Model{
 
         // set if model has dynamic table
         $this->hasDynamicTable = $this->setHasDynamicTable();
+
 
         if(self::$useTmpTable && self::$_tmptable){
             $this->table = self::$_tmptable;
