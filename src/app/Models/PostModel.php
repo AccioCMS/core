@@ -6,6 +6,7 @@ namespace Accio\App\Models;
 use App\Models\Language;
 use App\Models\User;
 use DateTime;
+use Elasticsearch\ClientBuilder;
 use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -164,6 +165,13 @@ abstract class PostModel extends Model{
     protected $elastic = null;
 
     /**
+     * Has activated elastic
+     *
+     * @var bool
+     */
+    protected $hasElastic = false;
+
+    /**
      * Configure if post model has dynamic tables or pre-declared table
      *
      * @return bool
@@ -180,6 +188,10 @@ abstract class PostModel extends Model{
         // set if model has dynamic table
         $this->hasDynamicTable = $this->setHasDynamicTable();
 
+        // create elastic instance if model is using elastic search
+        if($this->hasElastic){
+            $this->elastic = ClientBuilder::create()->build();
+        }
 
         if(self::$useTmpTable && self::$_tmptable){
             $this->table = self::$_tmptable;
