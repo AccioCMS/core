@@ -18,7 +18,7 @@ class Backend{
      */
     public  function handle($request, Closure $next){
         if (isInAdmin()) {
-            if (Auth::check()) {
+            if (Auth::guard("admin")->check()) {
                 // get all permissions
                 Auth::user()->getPermissions();
 

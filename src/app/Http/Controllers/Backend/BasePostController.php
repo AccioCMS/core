@@ -252,11 +252,6 @@ class BasePostController extends MainController {
         $values = [];
 
         foreach ($fields as $field){
-            if($field->inTable){
-                // add columns that should appear in table
-                array_push($column, $field);
-            }
-
             /**
              * prepare values for each field
              * used when this function is called in detailsJson (update form of the post)

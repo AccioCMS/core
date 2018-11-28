@@ -45,7 +45,7 @@ abstract class PostModel extends Model{
      *
      * @var bool
      */
-    public $hasDynamicTable = true;
+    protected $hasDynamicTable = true;
 
     /**
      * The temporary table is associated with the "with" method of laravel
@@ -172,21 +172,11 @@ abstract class PostModel extends Model{
     protected $hasElastic = false;
 
     /**
-     * Configure if post model has dynamic tables or pre-declared table
-     *
-     * @return bool
-     */
-    abstract protected function setHasDynamicTable() : bool;
-
-    /**
      * @inheritdoc
      * */
     public function __construct(array $attributes = []){
         parent::__construct($attributes);
         Event::fire('post:construct', [$this]);
-
-        // set if model has dynamic table
-        $this->hasDynamicTable = $this->setHasDynamicTable();
 
         // create elastic instance if model is using elastic search
         if($this->hasElastic){
@@ -211,17 +201,34 @@ abstract class PostModel extends Model{
     }
 
     /**
+     * Configure if post model has dynamic tables or pre-declared table
+     */
+    public function setHasDynamicTable($hasDynamicTable){
+        $this->hasDynamicTable = $hasDynamicTable;
+    }
+
+    /**
      * Begin querying a model with eager loading.
      * The default "with" method initializes a model with pre-defined table new.
      * The table name of a post type is saved in a static variable which is than appended to the model.
      *
      * @param  array|string  $relations
      * @return \Illuminate\Database\Eloquent\Builder|static
+     * @throws \ReflectionException
      */
     public static function with($relations){
         $model = (new static());
 
-        if($model->hasDynamicTable){
+        if(!$model->hasDynamicTable){
+            return parent::with($relations);
+        }
+
+        $class = new \ReflectionClass($model);
+        $method = $class->getProperty("table");
+
+        $class = explode("\\", $method->class);
+
+        if ($class[count($class)-1] != class_basename($model)) {
             if(self::$_tmptable){
                 $model->setTable(self::$_tmptable);
             }
@@ -232,6 +239,7 @@ abstract class PostModel extends Model{
         }else{
             return parent::with($relations);
         }
+
     }
 
     public function bind(string $connection, string $table){

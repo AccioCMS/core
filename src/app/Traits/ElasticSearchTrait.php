@@ -225,8 +225,17 @@ trait ElasticSearchTrait{
 
 
 
-    public function addItemOnES(array $item)  : bool{
+    public function addItemOnES(array $item, int $id)  : bool{
+        $this->elasticFieldsConfig = array_merge($this->elasticFieldsConfig, $this->casts);
 
+        $params = [
+            'index' => $this->getTable(),
+            'type' => '_doc',
+            'id' => $id,
+            'body' => $item
+        ];
+
+        $this->elastic->index($params);
     }
 
     public function addItemsOnElastic(string $index, array $items)  : bool{
@@ -234,6 +243,10 @@ trait ElasticSearchTrait{
     }
 
     public function hasElasticConnection() : bool{
+
+    }
+
+    public function deleteES($id){
 
     }
 

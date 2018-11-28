@@ -397,8 +397,8 @@ trait UserTrait{
     /**
      * Returns if a logged in user is active or no.
      */
-    public static function isActive(){
-        if(Auth::check()){
+    public static function isActive($guard = "admin"){
+        if (Auth::guard($guard)->check()) {
            return Auth::user()->isActive;
         }
         return false;
