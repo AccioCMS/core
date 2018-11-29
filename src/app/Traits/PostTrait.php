@@ -188,7 +188,7 @@ trait PostTrait{
         $validationMessagesTemplate = array(
           'required'=> "{{field}} can't be empty",
           'email'=>"{{field}} must be an email",
-          'number'=>"{{field}} must be a number",
+          'integer'=>"{{field}} must be a number",
         );
         $validationMessages = array();
         $validationRules = array();
@@ -287,13 +287,13 @@ trait PostTrait{
                 case "number":
                     foreach ($data['languages'] as $lang){
                         if(isset($data['status']) && $data['status'][$lang['slug']] != 'draft') {
-                            $validationMessages[$formData['slug'] . "_" . $lang['slug'] . ".number"] = str_replace("{{field}}", $formData['name'], $validationMessagesTemplate["number"]);
+                            $validationMessages[$formData['slug'] . "_" . $lang['slug'] . ".integer"] = str_replace("{{field}}", $formData['name'], $validationMessagesTemplate["integer"]);
 
                             //set email rule
                             if(isset($validationRules[$formData['slug'] . "_" . $lang['slug']])){
-                                $validationRules[$formData['slug'] . "_" . $lang['slug']] .= '|number';
+                                $validationRules[$formData['slug'] . "_" . $lang['slug']] .= '|integer';
                             }else{
-                                $validationRules[$formData['slug'] . "_" . $lang['slug']] = 'number';
+                                $validationRules[$formData['slug'] . "_" . $lang['slug']] = 'integer';
                             }
                         }
                     }
