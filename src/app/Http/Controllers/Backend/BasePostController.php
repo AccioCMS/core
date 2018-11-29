@@ -770,10 +770,16 @@ class BasePostController extends MainController {
         $categories = array_values(Category::where("postTypeID", $currentPostType->postTypeID)->get()->toArray());
 
         // selected categories of this post
-        $selectedCategories = $this->getPostSelectedCategories($id, $postTypeSlug);
+        $selectedCategories = [];
+        if($currentPostType->hasCategories){
+            $selectedCategories = $this->getPostSelectedCategories($id, $postTypeSlug);
+        }
 
         // selected tags of this post
-        $selectedTags = $this->getPostSelectedTags($id, $postTypeSlug);
+        $selectedTags = [];
+        if($currentPostType->hasTags){
+            $selectedTags = $this->getPostSelectedTags($id, $postTypeSlug);
+        }
 
         $response = array(
             'post' => [

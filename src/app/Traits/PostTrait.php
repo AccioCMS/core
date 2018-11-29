@@ -105,6 +105,7 @@ trait PostTrait{
         // Set posts table
         $postObj = new Post();
         $postObj->setTable($data['postType']);
+        $postType = PostType::findBySlug($data['postType']);
 
         // on create
         if(!isset($data['postID'])){
@@ -127,8 +128,13 @@ trait PostTrait{
 
                 if($postObj->save()){
                     // Delete existing relations, to ensure accuracy
-                    DB::table($data['postType'].'_categories')->where("postID", $data['postID'])->delete();
-                    DB::table($data['postType'].'_tags')->where("postID", $data['postID'])->delete();
+                    if($postType->hasCategories){
+                        DB::table($data['postType'].'_categories')->where("postID", $data['postID'])->delete();
+                    }
+
+                    if($postType->hasTags){
+                        DB::table($data['postType'].'_tags')->where("postID", $data['postID'])->delete();
+                    }
                     DB::table($data['postType'].'_media')->where("postID", $data['postID'])->delete();
                 }
 
@@ -139,11 +145,15 @@ trait PostTrait{
         }
 
         if($postID){
-            // Insert categories
-            self::insertCategories($data['selectedCategories'], $postObj->postID, $data['postType']);
+            if($postType->hasCategories){
+                // Insert categories
+                self::insertCategories($data['selectedCategories'], $postObj->postID, $data['postType']);
+            }
 
-            // Insert tags
-            self::insertTags($data['selectedTags'], $postObj->postID, $data['postType']);
+            if($postType->hasTags){
+                // Insert tags
+                self::insertTags($data['selectedTags'], $postObj->postID, $postType);
+            }
 
             // Insert media
             self::insertMedia($data['files'],$postObj->postID, $data['postType'], $data['languages'], $populatedFields['files'], $data['filesToBeIgnored']);
@@ -515,15 +525,14 @@ trait PostTrait{
      *
      * @param array $selectedTags The list of selected tags
      * @param int $postID ID of the Post
-     * @param string $postTypeSlug The slug of post type
+     * @param object $postType The slug of post type
      *
      * @return array  List of inserted media files
      * */
 
-    public static function insertTags($selectedTags, $postID, $postTypeSlug){
+    public static function insertTags($selectedTags, $postID, $postType){
         if(count($selectedTags)){
             $tagsIDs = [];
-            $postType = PostType::findBySlug($postTypeSlug);
 
             $newTagsRelations = [];
             foreach ($selectedTags as $langSlug => $selectedTagForLanguage){
@@ -556,7 +565,7 @@ trait PostTrait{
             }
 
             // if post is in the main database
-            $insertedTags = (new TagRelation())->setTable($postTypeSlug.'_tags')->insert($newTagsRelations);
+            $insertedTags = (new TagRelation())->setTable($postType->slug.'_tags')->insert($newTagsRelations);
             if($insertedTags){
                 return $tagsIDs;
             }
