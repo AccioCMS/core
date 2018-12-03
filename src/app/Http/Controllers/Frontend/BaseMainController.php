@@ -2,15 +2,12 @@
 
 namespace Accio\App\Http\Controllers\Frontend;
 
-use App\Models\Category;
 use App\Models\Theme;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Cache;
 
 class BaseMainController extends BaseController{
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;

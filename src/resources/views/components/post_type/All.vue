@@ -132,7 +132,6 @@
             };
             // get data for the table
             this.getListData();
-
         },
         data(){
             return{

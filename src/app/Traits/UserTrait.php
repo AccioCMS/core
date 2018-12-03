@@ -10,29 +10,34 @@
  */
 namespace Accio\App\Traits;
 
+use App\Models\Language;
 use App\Models\Permission;
+use App\Models\PostType;
 use App\Models\RoleRelation;
 use App\Models\User;
 use App\Models\UserGroup;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Media;
 
 trait UserTrait{
 
-    /** @var array $permissions Stores permissions of the user that is logged in admin panel*/
+    /**
+     * $permissions Stores permissions of the user that is logged in admin panel.
+     * 
+     * @var array
+     */
     protected  static $permissions = [];
 
     /**
-     * Checks if user has ownership in a particular post
+     * Checks if user has ownership in a particular post.
      *
      * @param  string  $app The name of the app. Ex: "post_service"
      * @param  integer $ownershipPostID The ID of the post we are checking for ownership
-     *
      * @return boolean
      * */
-    public static function hasOwnership($app,$ownershipPostID){
+    public static function hasOwnership($app, $ownershipPostID){
         if($ownershipPostID){
             if(isPostType($app)){
                 $checkDB = DB::table($app)
@@ -54,7 +59,7 @@ trait UserTrait{
     }
 
     /**
-     *  Checks if user has access in a particular permission
+     *  Checks if user has access in a particular permission.
      *
      *  @param  string  $app  The name of the app. Ex: MenuLinks
      *  @param  string  $key The key identifier of the ownership
@@ -130,9 +135,8 @@ trait UserTrait{
                     $hasSinglePermission = true;
                 }
             }
-        }
+        }else{
         // if the user does  belong to a default group and it has permissions in a default allowed app, check access of this particular permission
-        else{
             if(isset(self::$permissions[$app]) && isset(self::$permissions[$app][$key])){
                 //check if the user has access into all items
                 if($id === 'hasAll'){
@@ -149,9 +153,8 @@ trait UserTrait{
                     }else{
                         $hasSinglePermission = true;
                     }
-                }
-                //if id is not given, it means we already have access into this permission
-                else{
+                }else{
+                    //if id is not given, it means we already have access into this permission
                     $hasSinglePermission = true;
                 }
             }
@@ -174,24 +177,20 @@ trait UserTrait{
             if($hasSinglePermission && $hasOwnership){
                 return true;
             }
-        }
-
-        //check editor
-        else if(self::isDefaultGroup() && self::isEditor()){
+        }else if(self::isDefaultGroup() && self::isEditor()){
+            //check editor
             if($appPermission || $hasSinglePermission){
                 return true;
             }
-        }
-
-        //check specific permission
-        else if ($hasSinglePermission){
+        }else if ($hasSinglePermission){
+            //check specific permission
             return true;
         }
         return false;
     }
 
     /**
-     * Checks if the user is an Administrator
+     * Checks if the user is an Administrator.
      *
      * @return boolean Returns true if the user is admin
      * */
@@ -200,7 +199,7 @@ trait UserTrait{
     }
 
     /**
-     * Checks if the user is an Editor
+     * Checks if the user is an Editor.
      *
      * @return boolean Returns true if the user is editor
      * */
@@ -209,7 +208,7 @@ trait UserTrait{
     }
 
     /**
-     * Checks if the user is an Author
+     * Checks if the user is an Author.
      *
      * @return boolean Returns true if the user is author
      * */
@@ -217,20 +216,21 @@ trait UserTrait{
         return (isset(self::$permissions['global']['author']) ? self::$permissions['global']['author'] : false);
     }
 
-
-
-
     /**
-     * Get permissions of the user
+     * Get permissions of the user.
      *
      * @return array
      */
     public function getPermissions(){
-        // return permissoins if they have already been requested
+        // return permissions if they have already been requested
+        if(Session::get("usersPermission")) {
+            self::$permissions = Session::get("usersPermission");
+            return Session::get("usersPermission");
+        }
+        // return permissions if they have already been requested
         if(self::$permissions) {
             return self::$permissions;
         }
-
 
         $groupIDs = [];
         foreach (Auth::user()->roles as $group) {
@@ -249,12 +249,12 @@ trait UserTrait{
               'hasAll' => $permission['hasAll']
             ];
         }
-
+        Session::put("usersPermission", self::$permissions);
         return self::$permissions;
     }
 
     /**
-     * Get a particular permission
+     * Get a particular permission.
      *
      * @param int $userID Default: Authenticated User
      * @return mixed
@@ -265,7 +265,7 @@ trait UserTrait{
     }
 
     /**
-     * Checks if a user belongs to one of default roles
+     * Checks if a user belongs to one of default roles.
      *
      * @param int $userID Default: Authenticated User
      * @return boolean Returns true if the group is a default group
@@ -276,7 +276,7 @@ trait UserTrait{
     }
 
     /**
-     * Get full avatar url
+     * Get full avatar url.
      *
      * @param int $width Width of image. ex: 200
      * @param int $height Height of image. ex: 200
@@ -301,7 +301,7 @@ trait UserTrait{
     }
 
     /**
-     * Print Avatar image
+     * Print Avatar image.
      *
      * @param int $width Width of image. ex: 200
      * @param int $height Height of image. ex: 200
@@ -320,7 +320,7 @@ trait UserTrait{
     }
 
     /**
-     * Print Gravatar image
+     * Print Gravatar image.
      *
      * @param int $width Width of image. ex: 200
      * @param int $height Height of image. ex: 200
@@ -338,16 +338,16 @@ trait UserTrait{
     }
 
     /**
-     * Get user by Slug (Name-Surname)
+     * Get user by Slug (Name-Surname).
      *
-     * @param  string $slug The slug of the User
-     * @param string $columnName Column name
-     *
-     * @return object
-     * */
+     * @param $slug
+     * @param string $columnName
+     * @return mixed
+     * @throws \Exception
+     */
 
     public static function findBySlug($slug, $columnName = ''){
-        $userObj = \App\Models\User::cache()->getItems()->where('slug', $slug)->first();
+        $userObj = User::where('slug', $slug)->first();
 
         // return custom column
         if ($columnName && isset($userObj->$columnName)) {
@@ -358,44 +358,29 @@ trait UserTrait{
     }
 
     /**
-     * Get user by ID
+     * Get user by ID.
      *
-     * @param  int $userID
-     * @param string $columnName Column name
-     *
-     * @return object|null Returns requested user if found, null instead
-     * */
-    public static function findByID($userID, $columnName = ''){
-        $userObj = \App\Models\User::cache()->getItems()->where('userID', $userID)->first();
-
-        // return custom column
-        if ($columnName && isset($userObj->$columnName)) {
-            return $userObj->$columnName;
-        }
-
-        return $userObj;
-    }
-
-
-    /**
-     * @param bool $includForgotPaswordLink
+     * @param $userID
+     * @param string $columnName
+     * @return mixed
+     * @throws \Exception
      */
-    public static function getLoginForm($includForgotPaswordLink = false){
+    public static function findByID($userID, $columnName = ''){
+        $userObj = User::where('userID', $userID)->first();
 
+        // return custom column
+        if ($columnName && isset($userObj->$columnName)) {
+            return $userObj->$columnName;
+        }
+
+        return $userObj;
     }
 
-    public static function getRegisterForm(){
-
-    }
-
-    public static function getResetPasswordForm(){
-
-    }
     /**
-     *  Get user's avatar from gravatar.com by using email address
+     * Get user's avatar from gravatar.com by using email address.
      *
      * @param  string $email The email address of the user we want to get the avatar
-     * @param  int    $width The width of image
+     * @param  int $width The width of image
      *
      * @return string The Gravatar image url of the given email
      * */
@@ -410,16 +395,16 @@ trait UserTrait{
     }
 
     /**
-     * Returns if a logged in user is active or no
+     * Returns if a logged in user is active or no.
      */
-    public static function isActive(){
-        if(Auth::check()){
+    public static function isActive($guard = "admin"){
+        if (Auth::guard($guard)->check()) {
            return Auth::user()->isActive;
         }
         return false;
     }
     /**
-     * Get the admin group
+     * Get the admin group.
      *
      * @return mixed
      * @throws \Exception
@@ -434,7 +419,7 @@ trait UserTrait{
     }
 
     /**
-     * Get an admin
+     * Get an admin.
      *
      * @return object
      * @throws \Exception
@@ -454,7 +439,7 @@ trait UserTrait{
     }
 
     /**
-     * Get an editor
+     * Get an editor.
      *
      * @return object
      * @throws \Exception
@@ -474,7 +459,7 @@ trait UserTrait{
     }
 
     /**
-     * Get an editor
+     * Get an editor.
      *
      * @return object
      * @throws \Exception
@@ -494,7 +479,7 @@ trait UserTrait{
     }
 
     /**
-     * Assign roles to a user
+     * Assign roles to a user.
      *
      * @param array|int $groups groups that are selected in frontend for the new or existing user
      * @param boolean Bypass permission check. Useful when creating users via CLI.
@@ -533,14 +518,14 @@ trait UserTrait{
         if(RoleRelation::insert($roles)){
             return true;
         }
-
         return false;
     }
 
     /**
-     * Return if users ID is beeing used somewhere in the database
+     * Return if users ID is beeing used somewhere in the database.
      *
      * @return bool
+     * @throws \Exception
      */
     public function hasRelatedData(){
         if(!$this->hasDataInDefaultApps() && !$this->hasDataInPostsType()){
@@ -550,12 +535,12 @@ trait UserTrait{
     }
 
     /**
-     * Check if user has a data created by him in default apps
-     * If of the default apps "post_type", "categories", "tags", "languages", "media" has the createdByUsID associated with this user
+     * Check if user has a data created by him in default apps.
+     * If of the default apps "post_type", "categories", "tags", "languages", "media" has the createdByUsID associated with this user.
      *
      * @return bool
      */
-    private function hasDataInDefaultApps(){
+    public function hasDataInDefaultApps(){
         $tables = ["post_type", "categories", "tags", "languages", "media"];
 
         foreach($tables as $table){
@@ -569,12 +554,13 @@ trait UserTrait{
     }
 
     /**
-     * Check if the current user has any post or is related to any post (in post fields "dropdown from db")
+     * Check if the current user has any post or is related to any post (in post fields "dropdown from db").
      *
      * @return bool
+     * @throws \Exception
      */
-    private function hasDataInPostsType(){
-        $postTypes = PostType::cache()->getItems();
+    public function hasDataInPostsType(){
+        $postTypes = PostType::all();
         foreach($postTypes as $postType){
             $hasData = DB::table($postType->slug)->where("createdByUserID", $this->userID)->count();
             if($hasData){
@@ -585,12 +571,12 @@ trait UserTrait{
                 if($field->type->inputType == "db" && $field->dbTable->name == "users"){
                     if($field->translatable){
                         if($field->isMultiple){
-                            foreach(Language::cache()->getItems() as $language){
+                            foreach(Language::all() as $language){
                                 $hasData = DB::table("post_articles")->whereRaw("JSON_CONTAINS($field->slug->\"$.$language->slug\", '[$this->userID]')")->count();
                                 if($hasData) return true;
                             }
                         }else{
-                            foreach(Language::cache()->getItems() as $language){
+                            foreach(Language::all() as $language){
                                 $hasData = DB::table($postType->slug)->where($field->slug."->".$language->slug, $this->userID)->count();
                                 if($hasData) return true;
                             }
@@ -610,17 +596,5 @@ trait UserTrait{
 
         }
         return false;
-    }
-
-    /**
-     * TODO : Me kry qekun neper custom field values neper tabela
-     */
-    private function hasDataInCustomFields(){
-        $customFields = CustomField::with("group")->where("type", "db")->get();
-        $customFieldsSlugs = [];
-        foreach ($customFields as $customField){
-            $customFieldsSlugs[] = $customField->group->slug . "__" . $customField->slug;
-        }
-        return $customFieldsSlugs;
     }
 }

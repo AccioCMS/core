@@ -2,6 +2,7 @@
 
 namespace Accio\App\Traits;
 
+use App;
 use App\Models\MenuLink;
 use App\Models\PostType;
 use Illuminate\Support\Facades\DB;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Request;
 
 trait PostTypeTrait{
     /**
-     * Check if a post type has posts
+     * Check if a post type has posts.
      *
      * @param  string  $postTypeSlug  The name of the post type. ex. service
      * @return boolean Returns true if there is any post
@@ -27,62 +28,45 @@ trait PostTypeTrait{
     }
 
     /**
-     * Get post type by slug
+     * Get post type by slug.
      *
      * @param  string $postTypeSlug  The slug of Post Type
      *
      * @return object Returns requested post type if found, null instead
      * */
     public static function findBySlug($postTypeSlug){
-        if(self::cache()->getItems()) {
-            $postTypeSlug = 'post_' . cleanPostTypeSlug($postTypeSlug);
-            $postTypes = self::cache()->getItems();
-
-            if(!$postTypes){
-                return;
-            }
-            $getPosType = $postTypes->where('slug', $postTypeSlug);
-
-            if ($getPosType) {
-                return $getPosType->first();
-            }
-        }
-        return;
+        $postTypeSlug = 'post_' . cleanPostTypeSlug($postTypeSlug);
+        $postTypes = self::all()->where("slug", $postTypeSlug)->first();
+        return $postTypes;
     }
 
     /**
-     * @param integer $postTypeID ID of the post type
-     * @return bool is this post type being used in menu links
+     * Check if post type is being used as menulink
+     *
+     * @param int $postTypeID
+     * @return bool
+     * @throws \Exception
      */
     public static function isInMenuLinks($postTypeID){
-        if(MenuLink::cache()->getItems()) {
-            $menuLinks = MenuLink::cache()->getItems()->getItems()->where('belongsToID', $postTypeID)->where('belongsTo', 'post_type');
-            if ($menuLinks->count()) {
-                return true;
-            }
+        $menulinks = MenuLink::where('belongsToID', $postTypeID)->where('belongsTo', 'post_type')->count();
+        if($menulinks) {
+            return true;
         }
         return false;
     }
 
     /**
-     * Get post type by ID
+     * Get post type by ID.
      *
-     * @param  string $postTypeID  ID of Post Type
-     *
-     * @return object Returns requested post type if found, null instead
-     * */
+     * @param int $postTypeID
+     * @return mixed
+     */
     public static function findByID($postTypeID){
-        if(\App\Models\PostType::cache()) {
-            $getPosType = \App\Models\PostType::cache()->getItems()->where('postTypeID', $postTypeID);
-            if ($getPosType) {
-                return $getPosType->first();
-            }
-        }
-        return;
+        return PostType::all()->where("postTypeID", $postTypeID)->first();
     }
 
     /**
-     * Get current post type slug
+     * Get current post type slug.
      *
      * @param bool $removePrefix It revmoes "post_" from slug
      * @return \Illuminate\Config\Repository|mixed
@@ -116,12 +100,14 @@ trait PostTypeTrait{
     }
 
     /**
-     * Get fields of a post type
-     * @param $post_type
+     * Get fields of a post type.
+     *
+     * @param string $post_type
      * @return array
+     * @throws \Exception
      */
     public static function getFields($post_type){
-        $postType = PostType::cache()->getItems()->where('slug', $post_type)->first();
+        $postType = PostType::all()->where('slug', $post_type)->first();
 
         if($postType){
             return $postType->fields;
@@ -132,7 +118,8 @@ trait PostTypeTrait{
 
 
     /**
-     * Check if a post type has a custom controller
+     * Check if a post type has a custom controller.
+     *
      * @return bool
      */
     public function hasCustomController(){
@@ -144,7 +131,8 @@ trait PostTypeTrait{
     }
 
     /**
-     * Get Post type's custom controller
+     * Get Post type's custom controller.
+     *
      * @return string
      */
     public function getCustomController(){

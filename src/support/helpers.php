@@ -251,16 +251,20 @@ if(!function_exists('googleTagManagerBody')) {
 if(!function_exists('metaTags')) {
     /**
      * Get meta tags and prints them
-     * @param object $post
+     *
+     * @param null $modelData
      * @param array $customData
-     * @return string
+     * @throws Exception
      */
     function metaTags($modelData = null, $customData = []){
         if(\Accio\Support\Facades\Meta::getMetaIsPrinted()){
             return;
         }
 
-        $currentMenuLink =  \App\Models\MenuLink::getActive();
+        $currentMenuLink = \App\Models\MenuLink::getActive();
+        if(!$modelData){
+            $modelData = $currentMenuLink;
+        }
 
         // Set model data
         if($modelData) {
@@ -270,8 +274,6 @@ if(!function_exists('metaTags')) {
             if(method_exists($modelData, 'metaData')){
                 $modelData->metaData();
             }
-        }else{
-            $modelData = $currentMenuLink;
         }
 
         // Set title
@@ -292,7 +294,7 @@ if(!function_exists('metaTags')) {
         $description = null;
         if(isset($customData['description'])){
             $description = $customData['description'];
-        }elseif($modelData && property_exists($modelData, 'description')){
+        }elseif($modelData && property_exists($modelData,'description')){
             $description = $modelData->description;
         }
 
@@ -593,5 +595,49 @@ if (! function_exists('currentMenuLink')) {
     function currentMenuLink($columnName = '')
     {
         return \App\Models\MenuLink::getCurrent($columnName);
+    }
+}
+
+if (! function_exists('isMobile')) {
+    /**
+     * Check if site is access via mobile.
+     *
+     * @return mixed
+     */
+    function isMobile()
+    {
+        // temporary
+        return \Riverskies\Laravel\MobileDetect\Facades\MobileDetect::isMobile();
+    }
+}
+
+if (! function_exists('isTablet')) {
+    /**
+     * Check if site is access via tablet.
+     *
+     * @return mixed
+     */
+    function isTablet()
+    {
+        // temporary
+        return \Riverskies\Laravel\MobileDetect\Facades\MobileDetect::isTablet();
+    }
+}
+
+if (! function_exists('categoriesRelationTable')) {
+    function categoriesRelationTable($postTypeSlug){
+        return $postTypeSlug."_categories";
+    }
+}
+
+if (! function_exists('tagsRelationTable')) {
+    function tagsRelationTable($postTypeSlug){
+        return $postTypeSlug."_tags";
+    }
+}
+
+if (! function_exists('mediaRelationTable')) {
+    function mediaRelationTable($postTypeSlug){
+        return $postTypeSlug."_media";
     }
 }

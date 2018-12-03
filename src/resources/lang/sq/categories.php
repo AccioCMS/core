@@ -2,7 +2,7 @@
 return [
     'title' => 'Categories',
     'label' => 'Categories',
-    'labelSingle' => 'Kategoria',
+    'labelSingle' => 'Category',
     'listTitle' => 'All categories',
     'updateTitle' => 'Update category',
     'add' => 'Add category',
@@ -18,6 +18,8 @@ return [
     'posts' => 'Posts',
     'createFormTitle' => 'Create category',
     'updateFormTitle' => 'Update category',
+    'sureToDelete' => 'Are you sure ?',
+    'sureToDeleteMsg' => 'This category may have posts related to it',
     'form' => array(
         'title' => 'Title',
     ),

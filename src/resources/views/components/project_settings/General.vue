@@ -48,7 +48,7 @@
 
                         <div class="imageSingleThumb" v-if="mediaSelectedFiles['logo']">
                             <i class="fa fa-close closeBtnForPrevImages" @click="deleteSelectedMediaFile('logo', 0)"></i>
-                            <img :src="generateUrl(constructUrl(mediaSelectedFiles['logo'][0]))">
+                            <img :src="constructMediaUrl(mediaSelectedFiles['logo'][0])">
                         </div>
 
                         <div class="clearfix"></div>
@@ -68,7 +68,7 @@
 
                         <div class="imageSingleThumb" v-if="mediaSelectedFiles['watermark']">
                             <i class="fa fa-close closeBtnForPrevImages" @click="deleteSelectedMediaFile('watermark', 0)"></i>
-                            <img :src="generateUrl(constructUrl(mediaSelectedFiles['watermark'][0]))">
+                            <img :src="constructMediaUrl(mediaSelectedFiles['watermark'][0])">
                         </div>
 
                         <div class="clearfix"></div>
@@ -106,7 +106,7 @@
                     <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__activeTheme}}</label>
                     <div class="col-md-9 col-sm-9 col-xs-12">
                         <select v-model="form.activeTheme" id="activeTheme" name="activeTheme" class="form-control">
-                            <option :value="theme.namespace" v-for="theme in themesList">{{ theme.Title }}</option>
+                            <option :value="theme.namespace" v-for="theme in themesList">{{ theme.title }}</option>
                         </select>
                         <div class="alert" v-if="StoreResponse.errors.activeTheme" v-for="error in StoreResponse.errors.activeTheme">{{ error }}</div>
                     </div>
@@ -126,11 +126,11 @@
                     </div>
                 </div>
 
-                <div class="form-group clearfix" id="form-group-activeTheme">
+                <div class="form-group clearfix">
                     <label class="control-label col-md-3 col-sm-3 col-xs-12">{{trans.__mobileActiveTheme}}</label>
                     <div class="col-md-9 col-sm-9 col-xs-12">
-                        <select v-model="form.mobileActiveTheme" :disabled="!form.activateMobileTheme"  id="activeTheme" name="activeTheme" class="form-control">
-                            <option :value="theme.namespace" v-for="theme in themesList">{{ theme.Title }}</option>
+                        <select v-model="form.mobileActiveTheme" :disabled="!form.activateMobileTheme"  id="activeMobileTheme" name="activeMobileTheme" class="form-control">
+                            <option :value="theme.namespace" v-for="theme in themesList">{{ theme.title }}</option>
                         </select>
                     </div>
                 </div>
@@ -168,7 +168,6 @@
     }
 </style>
 <script>
-    import PopupMedia from '../media/Popup.vue'
     import { globalComputed } from '../../mixins/globalComputed';
     import { globalData } from '../../mixins/globalData';
     import { globalUpdated } from '../../mixins/globalUpdated';
@@ -176,7 +175,6 @@
 
     export default{
         mixins: [globalComputed, globalMethods, globalData, globalUpdated],
-        components:{'popup-media':PopupMedia},
         data(){
             return {
                 userRoles: [],

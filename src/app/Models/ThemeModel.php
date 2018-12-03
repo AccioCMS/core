@@ -9,20 +9,20 @@
  */
 namespace Accio\App\Models;
 
-use App\Models\Theme;
 use Illuminate\Support\Facades\Event;
 use Route;
 use Illuminate\Database\Eloquent\Model;
 use Accio\App\Traits;
 
 class ThemeModel extends Model{
-    use Traits\ThemeTrait;
+    use
+      Traits\ThemeTrait,
+      Traits\CollectionTrait;
 
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = [])
-    {
+    public function __construct(array $attributes = []){
         parent::__construct($attributes);
 
         $this->setActiveTheme();
@@ -31,7 +31,7 @@ class ThemeModel extends Model{
     }
 
     /**
-     * Handle callback of insert, update, delete
+     * Handle callback of insert, update, delete.
      * */
     protected static function boot(){
         parent::boot();
@@ -72,8 +72,7 @@ class ThemeModel extends Model{
     /**
      * Destruct model instance
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('theme:destruct', [$this]);
     }
 }

@@ -1,70 +1,53 @@
 <?php
-
 namespace Accio\App\Traits;
 
-
+use App\Models\PostType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 
 trait TagTrait{
 
     /**
-     * Get tag by Slug
+     * Get tag by Slug.
      *
      * @param  string $tagSlug  Slug of tag
-     * @return object|null Returns an object with post type's data if found, or nullnull if not found
+     * @return object|null Returns an object with post type's data if found, or null if not found
      * */
     public static function findBySlug($tagSlug){
-        $getPostTypeTags = self::cache()->getItems();
-
-        if($getPostTypeTags) {
-            $tag = $getPostTypeTags->where('slug',$tagSlug);
-            if($tag){
-                return $tag->first();
-            }
-        }
-        return null;
+        return self::where('slug',$tagSlug)->first();
     }
 
     /**
-     * Get tag by ID
+     * Get tag by ID.
      *
      * @param  int $tagID  ID of Tag
      * @return object|null Returns an object with tag's data if found, or null if not found
      * */
     public static function findByID($tagID){
-        $getTags = self::cache()->getItems();
-
-        if(isset($getTags->$tagID)){
-            return $getTags->$tagID;
-        }
-        return null;
+        return self::where("tagID", $tagID)->first();
     }
 
     /**
-     * Check if there is any post related to a tag
+     * Check if there is any post related to a tag.
      *
      * @param  int     $tagID  ID of tag
      * @param  string  $postTypeSlug Slug of post type
      * @return boolean Returns true if there is any post
      */
     public static function hasPosts($tagID, $postTypeSlug = ''){
-        $queryObject = DB::table('tags_relations')->where('tagID', $tagID);
-
-        if($postTypeSlug){
-            $queryObject->where('belongsTo', $postTypeSlug);
-        }
+        $postTypeSlug ($postTypeSlug ? $postTypeSlug : PostType::getSlug());
+        $queryObject = DB::table(tagsRelationTable($postTypeSlug))->where('tagID', $tagID);
 
         if($queryObject->count() > 0){
             return true;
-        }else{
-            return false;
         }
+
+        return false;
     }
 
 
     /**
-     * Check if a tag has featured image
+     * Check if a tag has featured image.
      *
      * @return boolean Returns true if found
      */
@@ -76,7 +59,7 @@ trait TagTrait{
     }
 
     /**
-     * Get URL of a tag's featured image
+     * Get URL of a tag's featured image.
      *
      * @param  int $width
      * @param  int $height
@@ -99,7 +82,7 @@ trait TagTrait{
     }
 
     /**
-     * Renders featured image of a tag
+     * Renders featured image of a tag.
      *
      * @param  int $width
      * @param  int $height

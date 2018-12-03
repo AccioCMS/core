@@ -169,17 +169,7 @@
                 });
 
             // get data for the table
-            this.getListData().then(resp => {
-                var global = this;
-                setTimeout(function(){
-                    $(document).ready(function(){
-                        $('tbody.sortable').sortable({
-                            handle: '.handleSort',
-                            update: global.orderRows
-                        });
-                    });
-                },3000)
-            });
+            this.getListData();
         },
         data(){
             return{
@@ -205,11 +195,6 @@
             }
         },
         methods: {
-            // method responsible to sort (re-order) the list
-            // TODO (DELETE) qiky funksion nuk perdoret prejsi u bo parent child relation ne category
-            orderRows( event, ui ){
-                this.$store.dispatch('sort', {url: this.basePath+'/'+this.getAdminPrefix+'/json/category/sort', error: "List could not be sort"});
-            },
             deleteConfirmDialog(id, index){
                 this.categoryToBeDeleted = {id: id, index: index};
                 this.modalOpen = true;
@@ -222,7 +207,7 @@
         watch:{
             // watch for url changes and component doesn't change
             '$route': function(){
-                this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/category/get-all/'+this.$route.params.id;
+                this.listUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/category/get-tree/'+this.$route.params.id;
                 this.viewSearchUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/post-type/category/'+this.$route.params.id+'/search/';
                 this.dataSearchUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/category/'+this.$route.params.id+'/search/';
                 this.deleteUrl = this.basePath+'/'+this.$route.params.adminPrefix+'/'+this.$route.params.lang+'/json/category/delete/';

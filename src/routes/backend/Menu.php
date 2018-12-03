@@ -12,7 +12,6 @@ Route::group(['middleware' => ['auth:admin'], 'as' => 'backend.menu.', 'namespac
     Route::get('/{lang}/menu/{view}/{menuID}', 'MenuController@single')->name('single');
     Route::get('/{lang}/json/menu/get-all', 'MenuController@getAll')->name('getAll');
     Route::get('/{lang}/json/menu/details/{id}', 'MenuController@detailsJSON')->name('detailsJSON');
-    Route::get('/{lang}/json/menu/get-related-apps/{menuLinkID}', 'MenuController@getRelatedApps')->name('getRelatedApps');
     Route::get('/{lang}/menuLinkPanels','MenuController@menuLinkPanels')->name('menuLinkPanels');
     Route::get('/{lang}/menu/delete/{menuID}','MenuController@deleteMenu')->name('deleteMenu');
 
@@ -20,5 +19,4 @@ Route::group(['middleware' => ['auth:admin'], 'as' => 'backend.menu.', 'namespac
      * POST
      */
     Route::post('/json/menu/store', 'MenuController@store')->name('store');
-    Route::post('/json/menu/store-related', 'MenuController@storeRelated')->name('storeRelated');
 });

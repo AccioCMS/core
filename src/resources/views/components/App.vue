@@ -39,7 +39,6 @@
         created(){
             this.$store.commit('setBaseURL', this.base_url);
             this.$store.commit('setBasePath', this.base_path);
-
             // basic data for cms start
             this.$http.get(this.base_url+'/'+this.$route.params.adminPrefix+'/get-base-data')
                 .then((resp) => {
@@ -50,7 +49,8 @@
                     this.$store.commit('setLabels', resp.body.labels);
                     this.$store.commit('setPluginsConfigs', resp.body.pluginsConfigs);
                     this.$store.commit('setLanguages', resp.body.languages);
-                    this.$store.commit('setRoute',this.$route);
+
+                    this.$store.commit('setRoute', this.$route);
 
                     this.applicationMenuLinks = resp.body.applicationMenuLinks;
                     this.cmsMenus = resp.body.cmsMenus;

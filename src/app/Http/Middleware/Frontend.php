@@ -17,8 +17,7 @@ class Frontend
      * @return \Illuminate\Http\Response|mixed
      * @throws \Exception
      */
-    public  function handle($request, Closure $next)
-    {
+    public  function handle($request, Closure $next){
         // http to https redirect
         if (env('HTTP_TO_HTTPS_REDIRECT') && !isHttps()) {
             return Redirect::to(Request::fullUrl(), 301,[],true);

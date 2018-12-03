@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Config;
 
 
 class BasePluginController extends MainController {
+    /**
+     * Return view for plugin.
+     *
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
     public function pluginView(){
         return view('content');
     }

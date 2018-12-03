@@ -444,7 +444,7 @@
 
                     <div class="imageSingleThumb" v-for="(file, count) in mediaSelectedFiles[vModel+'__lang__'+lang.slug]" v-if="mediaSelectedFiles[vModel+'__lang__'+lang.slug] !== undefined">
                         <i class="fa fa-close closeBtnForPrevImages" @click="deleteSelectedMediaFile(vModel+'__lang__'+lang.slug, file.mediaID)"></i>
-                        <img :src="generateUrl(constructUrl(file))">
+                        <img :src="constructMediaUrl(file)">
                     </div>
 
                     <div class="clearfix"></div>
@@ -464,7 +464,7 @@
                 <div class="imagePrevContainer col-md-10 col-sm-10 col-xs-12" v-if="!field.isTranslatable">
                     <div class="imageSingleThumb" v-for="(file, count) in mediaSelectedFiles[vModel]" v-if="mediaSelectedFiles[vModel] !== undefined">
                         <i class="fa fa-close closeBtnForPrevImages" @click="deleteSelectedMediaFile(vModel, file.mediaID)"></i>
-                        <img :src="generateUrl(constructUrl(file))">
+                        <img :src="constructMediaUrl(file)">
                     </div>
 
                     <div class="clearfix"></div>
@@ -485,7 +485,7 @@
                 <template v-if="isParentTranslatable">
                     <div class="imageSingleThumb" v-for="(file, count) in mediaSelectedFiles[vModel+'___'+subFieldGroupIndex+'___'+childKey+'___lang___'+lang.slug]" v-if="mediaSelectedFiles[vModel+'___'+subFieldGroupIndex+'___'+childKey+'___lang___'+lang.slug] !== undefined">
                         <i class="fa fa-close closeBtnForPrevImages" @click="deleteSelectedMediaFile(vModel+'___'+subFieldGroupIndex+'___'+childKey+'___lang___'+lang.slug, file.mediaID)"></i>
-                        <img :src="generateUrl(constructUrl(file))">
+                        <img :src="constructMediaUrl(file)">
                     </div>
 
                     <div class="clearfix"></div>
@@ -503,7 +503,7 @@
                 <template v-else>
                     <div class="imageSingleThumb" v-for="(file, count) in mediaSelectedFiles[vModel+'___'+subFieldGroupIndex+'___'+childKey]" v-if="mediaSelectedFiles[vModel+'___'+subFieldGroupIndex+'___'+childKey] !== undefined">
                         <i class="fa fa-close closeBtnForPrevImages" @click="deleteSelectedMediaFile(vModel+'___'+subFieldGroupIndex+'___'+childKey, file.mediaID)"></i>
-                        <img :src="generateUrl(constructUrl(file))">
+                        <img :src="constructMediaUrl(file)">
                     </div>
 
                     <div class="clearfix"></div>

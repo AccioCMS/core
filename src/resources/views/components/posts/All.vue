@@ -30,8 +30,6 @@
                 <div class="x_panel">
                     <div class="x_title">
                         <h2>{{trans.__listTableTitle}} {{ postType }}</h2>
-                        <!-- RELATED BUTTONS COMPONENT USED IN CMS NAVIGATION -->
-                        <related-buttons v-if="$route.query.menu_link_id"></related-buttons>
                         <div class="clearfix"></div>
                     </div>
 
@@ -120,7 +118,6 @@
     }
 </style>
 <script>
-    import RelatedButtons from '../menu/RelatedButtons.vue'
     import { globalComputed } from '../../mixins/globalComputed';
     import { globalMethods } from '../../mixins/globalMethods';
     import { globalData } from '../../mixins/globalData';
@@ -133,7 +130,6 @@
     export default{
         mixins: [globalComputed, globalMethods, globalData, globalUpdated, lists],
         components:{
-            'related-buttons':RelatedButtons,
             'simpleSearch': SimpleSearch,
             'pagination': Pagination,
             'advancedSearch':AdvancedSearch,

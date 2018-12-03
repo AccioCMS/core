@@ -387,7 +387,6 @@
 </template>
 <style src="./style.css" scoped></style>
 <script>
-    import RelatedButtons from '../menu/RelatedButtons.vue'
     import { globalComputed } from '../../mixins/globalComputed';
     import { globalMethods } from '../../mixins/globalMethods';
     import { globalData } from '../../mixins/globalData';
@@ -395,9 +394,6 @@
 
     export default{
         mixins: [globalComputed, globalMethods, globalData, globalUpdated],
-        components:{
-            'related-buttons':RelatedButtons
-        },
         mounted() {
             this.$store.commit('setSpinner', true);
             // get post type data
@@ -541,7 +537,7 @@
                 this.$store.dispatch('openLoading');
 
                 this.form.redirect = redirectChoice;
-                this.$http.post(this.basePath+'/'+this.getAdminPrefix+"/json/post-type/storeUpdate", this.form)
+                this.$http.post(this.basePath+'/'+this.getAdminPrefix+"/json/post-type/store", this.form)
                     .then((resp) => {
                         console.log("this.form",resp.body);
 

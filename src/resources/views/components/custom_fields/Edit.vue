@@ -168,7 +168,6 @@
 </template>
 <style src="./style.css" scoped></style>
 <script>
-    import PopupMedia from '../media/Popup.vue'
     import GroupRules from './GroupRules.vue'
     import { globalComputed } from '../../mixins/globalComputed';
     import { globalMethods } from '../../mixins/globalMethods';
@@ -181,7 +180,6 @@
     export default{
         mixins: [globalComputed, globalMethods, globalData, globalUpdated, lists, trans, update],
         components:{
-            'popup-media':PopupMedia,
             'group-rules':GroupRules,
         },
         created(){

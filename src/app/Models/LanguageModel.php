@@ -12,10 +12,8 @@
 namespace Accio\App\Models;
 
 use App\Models\Language;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Lang;
 use Input;
 use Request;
 use Illuminate\Database\Eloquent\Model;
@@ -25,20 +23,22 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class LanguageModel extends Model{
 
     use
-      Traits\LanguageTrait,
-      LogsActivity,
-      Traits\CacheTrait,
-      Traits\BootEventsTrait;
+
+        Traits\LanguageTrait,
+        LogsActivity,
+        Cachable,
+        Traits\BootEventsTrait,
+        Traits\CollectionTrait;
 
     /**
-     * Fields that can be filled in CRUD
+     * Fields that can be filled in CRUD.
      *
      * @var array $fillable
      */
     protected $fillable = ['createdByUserID','name','nativeName','slug','isDefault','isVisible'];
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
@@ -53,14 +53,15 @@ class LanguageModel extends Model{
 
 
     /**
-     * Default number of rows per page to be shown in admin panel
+     * Default number of rows per page to be shown in admin panel.
      *
      * @var integer $rowsPerPage
      */
     public static $rowsPerPage = 100;
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "language.label";
@@ -73,7 +74,7 @@ class LanguageModel extends Model{
     public static $defaultPermissions = ['create','read', 'update', 'delete'];
 
     /**
-     * Custom permission that will be listed in settings of permissions
+     * Custom permission that will be listed in settings of permissions.
      *
      * @var array $customPermissions
      */
@@ -108,8 +109,7 @@ class LanguageModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = [])
-    {
+    public function __construct(array $attributes = []){
         parent::__construct($attributes);
         Event::fire('language:construct', [$this]);
     }
@@ -117,20 +117,17 @@ class LanguageModel extends Model{
     /**
      * Destruct model instance
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('language:destruct', [$this]);
     }
 
     /**
      * Get visible langauges from caches
-     * @return mixed
+     *
+     * @throws \Exception
      */
     public static function getVisibleList(){
-        if(Language::cache()->getItems()) {
-            return Language::cache()->getItems()->where('isVisible', true);
-        }
-        return;
+        return Language::where('isVisible', true)->get();
     }
 
 }

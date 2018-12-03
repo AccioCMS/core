@@ -1,27 +1,13 @@
 <?php
 
-/**
- * Posts
- *
- * Due to its nature, Posts model are managed dynamically by UI, via PostTypes
- *
- * @author Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
- * @author Faton Sopa <faton.sopa@manaferra.com>
- * @version 1.0
- */
 namespace Accio\App\Models;
 
 
-use App\Models\Category;
-use App\Models\CategoryRelation;
 use App\Models\Language;
-use App\Models\Media;
-use App\Models\Tag;
-use App\Models\TagRelation;
-use App\Models\Task;
-use App\Models\Theme;
 use App\Models\User;
 use DateTime;
+use Elasticsearch\ClientBuilder;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Query\Builder;
@@ -31,23 +17,21 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Accio\Support\Facades\Meta;
-use Mockery\Exception;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Validator;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\PostType;
 use App\Models\Post;
 use Accio\App\Traits;
-use Accio\Support\PostCollection;
 
-class PostModel extends Model{
+abstract class PostModel extends Model{
     use
+        Cachable,
         Traits\PostTrait,
         Traits\TranslatableTrait,
         Traits\CustomFieldsValuesTrait,
         LogsActivity,
-        Traits\CacheTrait,
-        Traits\BootEventsTrait;
+        Traits\BootEventsTrait,
+        Traits\CollectionTrait;
 
     /**
      * The primary table associated with the model.
@@ -57,15 +41,23 @@ class PostModel extends Model{
     public $table = 'post_articles';
 
     /**
+     * If has a dynamic tables or pre-declared table
+     *
+     * @var bool
+     */
+    protected $hasDynamicTable = true;
+
+    /**
      * The temporary table is associated with the "with" method of laravel
-     * as it creates a new instance of model, and as a result the $table property has its default value
+     * as it creates a new instance of model, and as a result the $table property has its default value.
      *
      * @var string $table
      */
     public static $_tmptable;
 
     /**
-     * Media field to select with media relations
+     * Media field to select with media relations.
+     *
      * @var string $mediaField
      */
     protected $mediaField;
@@ -101,14 +93,15 @@ class PostModel extends Model{
     protected $dates = ['created_at', 'updated_at', 'published_at'];
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     public $primaryKey = "postID";
 
     /**
-     * Lang key that points to the multi language label in translate file
+     * Lang key that points to the multi language label in translate file.
+     *
      * @var string
      */
     public static $label = "posts.label";
@@ -121,7 +114,7 @@ class PostModel extends Model{
     public static $postsAllowedInTable = 12;
 
     /**
-     * Default number of rows per page to be shown in admin panel
+     * Default number of rows per page to be shown in admin panel.
      *
      * @var integer $rowsPerPage
      */
@@ -143,15 +136,16 @@ class PostModel extends Model{
     public $autoCacheRelations = [];
 
     /**
-     * Define default cachelimit
+     * Define default cachelimit.
+     *
      * @var int
      */
-    public $defaultLimitCache = 1000;
+    public $defaultLimitCache = 500;
 
     /**
-     * List of default table columns
+     * List of default table columns.
      *
-     * NOTE: translations shall be referred via __ prefix
+     * NOTE: translations shall be referred via __ prefix.
      *
      * @var array
      */
@@ -164,25 +158,34 @@ class PostModel extends Model{
     ];
 
     /**
+     * Elastic connection
+     *
+     * @var null
+     */
+    protected $elastic = null;
+
+    /**
+     * Has activated elastic
+     *
+     * @var bool
+     */
+    protected $hasElastic = false;
+
+    /**
      * @inheritdoc
      * */
     public function __construct(array $attributes = []){
         parent::__construct($attributes);
         Event::fire('post:construct', [$this]);
+
+        // create elastic instance if model is using elastic search
+        if($this->hasElastic){
+            $this->elastic = ClientBuilder::create()->build();
+        }
+
         if(self::$useTmpTable && self::$_tmptable){
             $this->table = self::$_tmptable;
         }
-    }
-
-    /**
-     * Create a new Eloquent Collection instance.
-     *
-     * @param  array  $models
-     * @return PostCollection
-     */
-    public function newCollection(array $models = [])
-    {
-        return new PostCollection($models);
     }
 
     /**
@@ -191,49 +194,89 @@ class PostModel extends Model{
      * @param  string  $table
      * @return $this
      */
-    public function setTable($table)
-    {
+    public function setTable($table){
         $this->table = 'post_'.cleanPostTypeSlug($table);
         self::$_tmptable = $this->table;
         return $this;
     }
 
     /**
+     * Configure if post model has dynamic tables or pre-declared table
+     */
+    public function setHasDynamicTable($hasDynamicTable){
+        $this->hasDynamicTable = $hasDynamicTable;
+    }
+
+    /**
      * Begin querying a model with eager loading.
+     * The default "with" method initializes a model with pre-defined table new.
+     * The table name of a post type is saved in a static variable which is than appended to the model.
      *
      * @param  array|string  $relations
      * @return \Illuminate\Database\Eloquent\Builder|static
+     * @throws \ReflectionException
      */
-    public static function with($relations)
-    {
-        $model = (new static);
+    public static function with($relations){
+        $model = (new static());
 
-        if(self::$_tmptable){
-            $model->setTable(self::$_tmptable);
+        if(!$model->hasDynamicTable){
+            return parent::with($relations);
         }
 
-        return $model->newQuery()->with(
-            is_string($relations) ? func_get_args() : $relations
-        );
+        $class = new \ReflectionClass($model);
+        $method = $class->getProperty("table");
+
+        $class = explode("\\", $method->class);
+
+        if ($class[count($class)-1] != class_basename($model)) {
+            if(self::$_tmptable){
+                $model->setTable(self::$_tmptable);
+            }
+            $model->bind(config("database.default"), self::$_tmptable);
+            return $model->newQuery()->with(
+                is_string($relations) ? func_get_args() : $relations
+            );
+        }else{
+            return parent::with($relations);
+        }
+
     }
 
-    public function newInstance($attributes = [], $exists = false)
-    {
+    public function bind(string $connection, string $table){
+        $this->setConnection($connection);
+        $this->setTable($table);
+    }
+
+    public function newInstance($attributes = [], $exists = false){
         // Overridden in order to allow for late table binding.
+
         $model = parent::newInstance($attributes, $exists);
         $model->setTable($this->table);
+
         return $model;
     }
 
+    /**
+     * Get only published posts for the post paginate object
+     *
+     * @param $paginateObj
+     * @return mixed
+     */
+    public static function filterPublished($paginateObj){
+        $paginateObj->setCollection($paginateObj->published());
+        return $paginateObj;
+    }
 
     /**
-     * Define menu panel
+     * Define menu panel.
+     *
      * @return array
+     * @throws \Exception
      */
     protected static function menuLinkPanel(){
         // List one menu panel for each post type
         $panels =[];
-        foreach(PostType::cache()->getItems() as $postType){
+        foreach(PostType::all() as $postType){
             $panels[] = [
                 'label' => $postType->name,
                 'belongsTo' => $postType->slug,
@@ -253,7 +296,7 @@ class PostModel extends Model{
     }
 
     /**
-     * Declare columns that should be saved in MenuLinks table as 'attributes', to enable navigation in front-end
+     * Declare columns that should be saved in MenuLinks table as 'attributes', to enable navigation in front-end.
      *
      * @return array
      */
@@ -270,236 +313,6 @@ class PostModel extends Model{
 
         $this->setAutoTranslate($previousAutoTranslate);
         return $data;
-    }
-
-    /**
-     * Initialize cache instance.
-     * Cache is generated if not found.
-     *
-     * @param string $cacheName
-     * @return mixed
-     * @throws \Exception
-     */
-    public static function cache($cacheName = ''){
-        if(!$cacheName){
-            $cacheName = self::getAutoCacheName();
-        }
-        $cacheInstance = self::initializeCache($cacheName);
-        $cacheInstance->cachedItems = Cache::get($cacheInstance->cacheName);
-
-        // Validate post type by cache name
-        $postType = getPostType($cacheInstance->cacheName);
-        if(!$postType){
-            // or from table
-            $postType = getPostType($cacheInstance->getTable());
-
-            if(!$postType) {
-                throw new \Exception($cacheInstance->cacheName . ' doest\'t seem like a post type slug.');
-            }
-        }
-
-        // Set table to this post type
-        $cacheInstance->setTable($postType->slug);
-
-        return $cacheInstance;
-    }
-
-    /**
-     * Cache posts by post type.
-     *
-     * @return Collection
-     *
-     * @throws \Exception
-     **/
-    private function generateCache(){
-        $postType = getPostType($this->getTable());
-
-        $queryObject = $this;
-
-        // Category Inner selection
-        if($this->whereCacheValue('categories_relations.categoryID')) {
-            $queryObject = $queryObject->join('categories_relations', 'categories_relations.belongsToID', $postType->slug . '.postID');
-        }
-
-        // Join
-        if($this->joinCache){
-            foreach($this->joinCache as $join){
-                $queryObject = $queryObject->join($join['table'], $join['first'], $join['operator'], $join['second'], $join['type'], $join['where']);
-            }
-        }
-
-        // With relations
-        $withRelations = ($this->withCache ? $this->withCache : $this->getDefaultRelations($postType));
-        if($withRelations){
-            $queryObject = $queryObject->with($withRelations);
-        }
-
-        // Where conditions
-        if($this->whereCache){
-            foreach($this->whereCache as $where){
-                $queryObject = $queryObject->where($where['key'], $where['operator'], $where['value']);
-            }
-        }
-
-        // Limit
-        $limit = ($this->defaultLimitCache ? $this->defaultLimitCache : $this->limitCache);
-        if($limit){
-            $queryObject = $queryObject->limit($limit);
-        }
-
-        // Order
-        $orderBy = $this->orderByCache;
-        if($orderBy){
-            $queryObject = $queryObject->orderBy($orderBy['key'],$orderBy['type']);
-        }else{
-            $queryObject = $queryObject->orderBy('published_at','DESC');
-        }
-
-        // Execute query
-        $data = $queryObject->get()->toArray();
-
-        // Save in cache
-        Cache::forever($this->cacheName,$data);
-
-        return $data;
-    }
-
-    /**
-     * Update cache in post types.
-     *
-     * @param object $postObj
-     * @param string $mode created, updating, updated, deleting, deleted
-     * @throws \Exception
-     */
-    private function updateCache($postObj, string $mode){
-        // Get post data
-        switch ($mode) {
-            case 'deleting':
-                self::$deletingItem = Post::findByID($postObj->postID, $postObj->getTable());
-                break;
-
-            case 'updating':
-                self::$updatingItem = Post::findByID($postObj->postID, $postObj->getTable());
-                break;
-
-            case 'deleted':
-                $postObj = self::$deletingItem;
-                break;
-
-            default:
-                // Select post with all of its relations
-                $postObj = Post::findByID($postObj->postID, $postObj->getTable());
-                break;
-        }
-
-        $this->updatePostTypeCache($postObj, $mode);
-        $this->updateCategoriesPostsCache($postObj, $mode);
-    }
-
-    /**
-     * Update cache in post types.
-     *
-     * @param $postObj
-     * @param string $mode
-     * @throws \Exception
-     */
-    private function updatePostTypeCache($postObj, string $mode){
-        switch ($mode){
-            case 'deleted':
-                $this->refreshPostInPostTypeCache($postObj, $mode);
-                break;
-
-            case 'created':
-            case 'updated':
-                // Post has relations that are saved after a post is saved
-                // therefore we need to fire cache refresh after all relations are saved.
-                Event::listen('post:stored', function ($data, $postObj) use($mode){
-                    $this->refreshPostInPostTypeCache($postObj, $mode);
-                });
-                break;
-        }
-    }
-
-    /**
-     * Update post in post type cache.
-     *
-     * @param $postObj
-     * @param string $mode
-     * @throws \Exception
-     */
-    private function refreshPostInPostTypeCache($postObj, string $mode){
-        Post::cache($postObj->getTable())
-            ->setTable($postObj->getTable())
-            ->refreshState($postObj, $mode);
-    }
-
-    /**
-     * Update cache in categories.
-     *
-     * @param object $postObj
-     * @param string $mode created, updating, updated, deleting, deleted
-     * @throws \Exception
-     * @throws \Exception
-     */
-    private function updateCategoriesPostsCache($postObj, string $mode){
-        switch ($mode){
-            case 'deleted':
-                if ($postObj->hasCategory()) {
-                    foreach ($postObj->categories as $category) {
-                        $this->refreshPostInCacheCategory($postObj, $mode, $category);
-                    }
-                }
-                break;
-
-            case 'created':
-            case 'updated':
-
-                // Post has relations that are saved after a post is saved
-                // therefore we need to fire cache refresh after all relations are saved.
-                Event::listen('post:stored', function ($data, $postObj) use($mode){
-                    if ($postObj->hasCategory()) {
-                        foreach ($postObj->categories as $category) {
-
-                            // Remove cache of previous selected categories, if there is any change
-                            if (self::$updatingItem && self::$updatingItem->hasCategory()) {
-                                foreach (self::$updatingItem->categories as $prevCategory) {
-                                    // only update if previous category is currently not selected
-                                    if ($postObj->categories->where('categoryID', $prevCategory->categoryID)->isEmpty()) {
-                                        $this->refreshPostInCacheCategory($postObj, "deleted", $prevCategory);
-                                    }
-                                }
-                            }
-
-                            // update from current changes
-                            $this->refreshPostInCacheCategory($postObj, $mode, $category);
-                        }
-                    }else{
-                        // Remove post from previous category if there is no category selected
-                        if (self::$updatingItem && self::$updatingItem->hasCategory()) {
-                            foreach (self::$updatingItem->categories as $prevCategory) {
-                                $this->refreshPostInCacheCategory($postObj, "deleted", $prevCategory);
-                            }
-                        }
-                    }
-                });
-                break;
-        }
-    }
-
-    /**
-     * Update post in cache category.
-     *
-     * @param $postObj
-     * @param $mode
-     * @param $category
-     *
-     * @throws \Exception
-     */
-    private function refreshPostInCacheCategory($postObj,$mode, $category){
-        Post::cache("category_posts_".$category->categoryID)
-            ->setTable($postObj->getTable())
-            ->whereCache('categories_relations.categoryID', $category->categoryID)
-            ->refreshState($postObj, $mode);
     }
 
     /**
@@ -558,6 +371,7 @@ class PostModel extends Model{
 
     /**
      * Get most read posts from cache
+     *
      * @return array
      */
     public static function getMostReadCache(){
@@ -569,7 +383,7 @@ class PostModel extends Model{
     }
 
     /**
-     * @param PostModel $post
+     * @param int $days
      */
     public function markAsReadCache($days = 2){
         if(!Cache::has("most_read_articles_ids")){
@@ -625,13 +439,13 @@ class PostModel extends Model{
         }
 
         // FeaturedImage
-        $relations[] = 'featuredImage';
+        $relations[] = 'featuredimage';
 
         return $relations;
     }
 
     /**
-     * Handle callback of insert, update, delete
+     * Handle callback of insert, update, delete.
      * */
     protected static function boot(){
         parent::boot();
@@ -648,20 +462,6 @@ class PostModel extends Model{
      * */
     public static function _saved($post){
         self::updateMenulink($post);
-    }
-
-    /**
-     * Switch between connection @if archive is active switches to it otherwise uses primary connection.
-     *
-     * @return $this
-     */
-    public function checkConnection(){
-        if(env("DB_ARCHIVE")){
-            $this->setConnection("mysql_archive");
-        }else{
-            $this->setConnection("mysql");
-        }
-        return $this;
     }
 
     /**
@@ -686,8 +486,7 @@ class PostModel extends Model{
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeUnpublished($query, $languageSlug = '')
-    {
+    public function scopeUnpublished($query, $languageSlug = ''){
         if (!$languageSlug) {
             $languageSlug = App::getLocale();
         }
@@ -734,18 +533,21 @@ class PostModel extends Model{
         if(!self::$homepage) {
             $findHomePage = null;
             if (settings('homepageID')) {
-                $findHomePage = Post::cache('post_pages')->getItems()->where('postID', settings('homepageID'))->first();
+                $findHomePage = (new Post())->setTable("post_pages")
+                    ->where('postID', settings('homepageID'))
+                    ->first();
             }
 
             // get the first found page if no homepage is defined
             if (!$findHomePage) {
-                $findHomePage = Post::cache('post_pages')->getItems()->first();
+                $findHomePage = (new Post())->setTable("post_pages")->first();
             }
 
             if(!$findHomePage){
                 throw new \Exception("No homepage found. Please add a page post!");
             }
             self::$homepage = $findHomePage;
+
         }
 
         return self::$homepage;
@@ -859,14 +661,13 @@ class PostModel extends Model{
             ->setHrefLangData($this)
             ->setCanonical($this->href)
             ->setWildcards([
-                '{categoryTitle}'=>($this->hasCategory() ? $this->category->title :  null),
-                '{title}' => $this->title,
-                '{siteTitle}' => settings('siteTitle')
+                '{{categoryTitle}}'=>($this->hasCategory() ? $this->category->title :  null),
+                '{{title}}' => $this->title,
+                '{{sitename}}' => settings('siteTitle')
             ]);
 
         return;
     }
-
 
     /**
      * Get media list of a post.
@@ -875,26 +676,13 @@ class PostModel extends Model{
      * @throws \Exception
      */
     public function getMediaAttribute(){
-        // when attribute is available, weo don't ned to re-run relation
-        if ($this->attributeExists('media')) {
-            $items = $this->getAttributeFromArray('media');
-            // when Collection is available, we already have the data for this attribute
-            if(!$items instanceof Collection) {
-                $items = $this->fillCacheAttributes(Media::class, $items);
-            }
-        }
-        // or search tags in relations
-        else{
-            $items = $this->getRelationValue('media');
-        }
-
+        $items = $this->getRelationValue('media');
         if(is_null($items)){
             return collect([]);
         }
 
         return $items;
     }
-
 
     /**
      * Get media of a specific field.
@@ -929,45 +717,40 @@ class PostModel extends Model{
      *
      * @return HasManyThrough
      */
-    public function media()
-    {
-        $this->setConnection("mysql"); //@todo temporary, se po i thirr prje arkives kur posti eshte i arkives
-        $query =  $this->hasManyThrough('App\Models\Media', 'App\Models\MediaRelation','belongsToID','mediaID','postID', 'mediaID');
+    public function media(){
+        $query =  $this->customHasManyThrough('App\Models\Media', 'App\Models\MediaRelation','postID','mediaID','postID', 'mediaID', $this->getTable()."_media");
 
         if($this->mediaField){
-            $query->where('media_relations.field',$this->mediaField);
+            $query->where($this->getTable().'_media.field',$this->mediaField);
         }
 
         // We also need 'field' from media relations, so we can select media based on field name
-        $query->select(['media.*','media_relations.field']);
+        $query->select(['media.*',$this->getTable().'_media.field']);
 
         return $query;
     }
 
     /**
-     * Generate default URL to a post.
      *
-     * @return Collection|mixed
-     * @throws \Exception
+     *
+     * @param $related
+     * @param $through
+     * @param null $firstKey
+     * @param null $secondKey
+     * @param null $localKey
+     * @param null $secondLocalKey
+     * @return HasManyThrough
      */
-    public function getTagsAttribute()
-    {
-        // request caregory only if post type use categories
-        $getPostType = getPostType($this->getTable());
-        if($getPostType->hasTags) {
-            // when attribute is available, weo don't ned to re-run relation
-            if ($this->attributeExists('tags')) {
-                $items = $this->getAttributeFromArray('tags');
-                // when Collection is available, we already have the data for this attribute
-                if (!$items instanceof Collection) {
-                    $items = $this->fillCacheAttributes(Tag::class, $items);
-                }
-                return $items;
-            } // or search tags in relations
-            else {
-                return $this->getRelationValue('tags');
-            }
-        }
+    public function customHasManyThrough($related, $through, $firstKey = null, $secondKey = null, $localKey = null, $secondLocalKey = null, $table = null){
+        $instance = (new $related);
+
+        $through = (new $through)->setTable($table);
+
+        $firstKey = $firstKey ?: $this->getForeignKey();
+
+        $secondKey = $secondKey ?: $through->getForeignKey();
+
+        return new HasManyThrough($instance->newQuery(), $this, $through, $firstKey, $secondKey, $localKey, $secondLocalKey);
     }
 
     /**
@@ -976,37 +759,25 @@ class PostModel extends Model{
      * @return array|Collection|mixed
      * @throws \Exception
      */
-    public function getCategoriesAttribute()
-    {
+    public function getCategoriesAttribute(){
         // Request category only if post type uses categories
         $getPostType = getPostType($this->getTable());
 
         if($getPostType->hasCategories) {
-            if ($this->attributeExists('categories')) {
-                $items = $this->getAttributeFromArray('categories');
-                // when Collection is available, we already have the data for this attribute
-                if (!$items instanceof Collection) {
-                    $items = $this->fillCacheAttributes(Category::class, $items);
-                }
-                return $items;
-            } else {
-                // or search in relations
-                return $this->getRelationValue('categories');
-            }
+            return $this->getRelationValue('categories');
         }
+        return null;
     }
 
     /**
-     * Get Primary Cached category
+     * Get Primary Cached category.
      *
      * @return string
      */
-    public function getCategoryAttribute()
-    {
+    public function getCategoryAttribute(){
         if(!is_null($this->categories)){
             return $this->categories->first();
         }
-
         return;
     }
 
@@ -1016,31 +787,17 @@ class PostModel extends Model{
      * @return mixed|null
      * @throws \Exception
      */
-    public function getUserAttribute()
-    {
-
+    public function getUserAttribute(){
         if($this->createdByUserID){
-            // when attribute is available, weo don't ned to re-run relation
-            if ($this->attributeExists('user')) {
-                $items = $this->getAttributeFromArray('user');
-                // when Collection is available, we already have the data for this attribute
-                if(!$items instanceof Collection) {
-                    if($this->createdByUserID){
-                        $items =  User::cache()->getItems()->where('userID', $this->createdByUserID)->first();
-                    }
-                }
 
-                return $items;
-            }else{
-                // search in cache
-                $user = User::cache()->getItems()->where('userID', $this->createdByUserID)->first();
+            // search in cache
+            $user = User::where('userID', $this->createdByUserID)->first();
 
-                // search in database
-                if (!$user) {
-                    $user = $this->getRelationValue('user');
-                }
-                return $user;
+            // search in database
+            if (!$user) {
+                $user = $this->getRelationValue('user');
             }
+            return $user;
         }
         return null;
     }
@@ -1051,41 +808,28 @@ class PostModel extends Model{
      * @return mixed
      * @throws \Exception
      */
-    public function getFeaturedImageAttribute()
-    {
+    public function getFeaturedImageAttribute(){
         if($this->featuredImageID) {
-            // when attribute is available, weo don't ned to re-run relation
-            if ($this->attributeExists('featuredimage')) {
-                $items = $this->getAttributeFromArray('featuredimage');
-                // when Collection is available, we already have the data for this attribute
-                if (!$items instanceof Collection) {
-                    $items = $this->fillCacheAttributes(Media::class, $items)->first();
-                }
-
-                return $items;
-            } // or search tags in relations
-            else {
-                return $this->getRelationValue('featuredImage');
-            }
+            return $this->getRelationValue('featuredimage');
         }
+        return null;
     }
 
     /**
      * Featured image of a post
+     *
      * @return HasOne
      */
-    public function featuredImage()
-    {
-        $this->setConnection("mysql"); //@todo temporary, se po i thirr prje arkives kur posti eshte i arkives
+    public function featuredImage(){
         return $this->hasOne('App\Models\Media','mediaID','featuredImageID');
     }
 
     /**
      * Featured video of a post
+     *
      * @return HasOne
      */
     public function featuredVideo(){
-        $this->setConnection("mysql"); //@todo temporary, se po i thirr prje arkives kur posti eshte i arkives
         return $this->hasOne('App\Models\Media','mediaID','featuredVideoID');
     }
 
@@ -1108,7 +852,9 @@ class PostModel extends Model{
         if(!$findPostType){
             throw new \Exception("Categories  relations could not be made because the post type of the post #".$this->postID." could ont be found!");
         }
-        return $this->hasManyThrough('App\Models\Category', 'App\Models\CategoryRelation','belongsToID','categoryID','postID','categoryID')->where('postTypeID',$findPostType->postTypeID);
+        return $this->customHasManyThrough('App\Models\Category', 'App\Models\CategoryRelation',
+            'postID','categoryID','postID','categoryID', $this->getTable()."_categories")
+            ->where('postTypeID',$findPostType->postTypeID);
     }
 
     /**
@@ -1122,7 +868,9 @@ class PostModel extends Model{
         if(!$findPostType){
             throw new \Exception("Tag relations could not be made because the post type of the post #".$this->postID." could ont be found!");
         }
-        return $this->hasManyThrough('App\Models\Tag', 'App\Models\TagRelation','belongsToID','tagID','postID','tagID')->where('postTypeID',$findPostType->postTypeID);
+        return $this->customHasManyThrough('App\Models\Tag', 'App\Models\TagRelation',
+            'postID','tagID','postID','tagID', $this->getTable()."_tags")
+            ->where('postTypeID',$findPostType->postTypeID);
     }
 
 
@@ -1134,7 +882,7 @@ class PostModel extends Model{
      * @throws \Exception
      */
     public function getFieldRelations(string $fieldSlug){
-        $postType = PostType::cache()->getItems()->where("slug", $this->getTable())->first();
+        $postType = PostType::where("slug", $this->getTable())->first();
         if($postType){
             // get the specific field
             $field = $postType->field($fieldSlug);
@@ -1175,8 +923,7 @@ class PostModel extends Model{
     /**
      * Destruct model instance
      */
-    public function __destruct()
-    {
+    public function __destruct(){
         Event::fire('post:destruct', [$this]);
     }
 }

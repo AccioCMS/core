@@ -1,40 +1,37 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: sopa
- * Date: 19/10/2017
- * Time: 10:34 PM
- */
 
 namespace Accio\App\Traits;
-
 
 use App\Models\Language;
 use Illuminate\Support\Facades\App;
 
-trait TranslatableTrait
-{
+trait TranslatableTrait{
 
+    protected static $counti = 0;
     /**
-     * Specifies the language that data should be translated when they are called
-     * @var
+     * Specifies the language that data should be translated when they are called.
+     *
+     * @var bool
      */
     protected $_translateLanguage;
 
     /**
-     * Specifies the default translate language that data should be translated when they are called
-     * @var
+     * Specifies the default translate language that data should be translated when they are called.
+     *
+     * @var string
      */
     protected $_defaultTranslateLanguage;
 
     /**
-     * Defines if translatable attributes should be auto translate when called
+     * Defines if translatable attributes should be auto translate when called.
+     *
      * @var bool
      */
     protected $autoTranslate = true;
 
     /**
-     * Set auto translate
+     * Set auto translate.
+     *
      * @param boolean $autoTranslate
      * @return $this
      */
@@ -44,14 +41,15 @@ trait TranslatableTrait
     }
 
     /**
-     * Get auto translate
+     * Get auto translate.
      */
     public function getAutoTranslate(){
         return $this->autoTranslate;
     }
 
     /**
-     * Get class attributes
+     * Get class attributes.
+     *
      * @param string $key
      *
      * @return mixed
@@ -59,16 +57,15 @@ trait TranslatableTrait
     public function getAttribute($key)
     {
         //set default language
-        if(!$this->getDefaultTranslateLanguage()){
+        if(!$this->_defaultTranslateLanguage){
             $this->setDefaultTranslateLanguage();
         }
 
         // In case we just need the translation for current property
         if(!$this->getTranslateLanguage()){
-            $this->translate($this->getDefaultTranslateLanguage());
+            $this->translate($this->_defaultTranslateLanguage);
         }
 
-        //handle custom fields
         if(method_exists($this,'isCustomField') && $this->isCustomField($key)) {
             $value = $this->customFieldValue($key);
 
@@ -79,9 +76,8 @@ trait TranslatableTrait
                 $this->attributes[$key] = $value;
                 $value = $this->getAttributeValue($key);
             }
-        }
-        //is translatable value
-        else{
+        }else{
+            //is translatable value
             $value = parent::getAttribute($key);
 
             if ($this->autoTranslate && $this->isTranslatable($value, $key)) {
@@ -95,6 +91,9 @@ trait TranslatableTrait
                 }else {
                     $value = $this->getTranslation($value);
                 }
+
+                // we don't need current language any more, we have the default une
+                $this->resetTranslateLanguage();
             }else{
 
                 // If the given $attribute has a mutator, we push it to $attributes and then call getAttributeValue
@@ -106,16 +105,14 @@ trait TranslatableTrait
                 }
             }
         }
-
-        // we don't need current language any more, we have the default une
-        $this->resetTranslateLanguage();
+        //handle custom fields
 
         return $value;
     }
 
 
     /**
-     * Translate an object into a specific language
+     * Translate an object into a specific language.
      *
      * @param $languageSlug
      * @return $this
@@ -125,7 +122,7 @@ trait TranslatableTrait
         return $this;
     }
     /**
-     * Get current translating language
+     * Get current translating language.
      * @return string
      */
     private function getTranslateLanguage(){
@@ -133,15 +130,16 @@ trait TranslatableTrait
     }
 
     /**
-     * Get current translating language
+     * Get current translating language.
+     *
      * @return string
      */
     private function resetTranslateLanguage(){
-        $this->_translateLanguage = $this->getDefaultTranslateLanguage();
+        $this->_translateLanguage = $this->_defaultTranslateLanguage;
     }
 
     /**
-     * Set default language
+     * Set default language.
      *
      * @param string $languageSlug
      * @return $this
@@ -155,17 +153,7 @@ trait TranslatableTrait
     }
 
     /**
-     * Get default language
-     * @return string
-     */
-    private function getDefaultTranslateLanguage(){
-        return $this->_defaultTranslateLanguage;
-    }
-
-
-
-    /**
-     * Gets current language value
+     * Gets current language value.
      *
      * @param  array|object|string $value The rows to be translated
      *
@@ -194,7 +182,8 @@ trait TranslatableTrait
     }
 
     /**
-     * Check if a value has language keys
+     * Check if a value has language keys.
+     *
      * @param string $value
      * @return bool
      */
@@ -222,9 +211,10 @@ trait TranslatableTrait
 
 
     /**
-     * Add language keys in translatable json columns where a key doesn't exits
+     * Add language keys in translatable json columns where a key doesn't exits.
      *
      * @return $this
+     * @throws \Exception
      */
     public function appendLanguageKeys(){
         $attributes = $this->getAttributes();
@@ -240,7 +230,7 @@ trait TranslatableTrait
                         $attr = json_decode($attr);
                     }
                 }
-                foreach(Language::cache()->getItems() as $language){
+                foreach(Language::all() as $language){
                     $langSlug = $language->slug;
 
                     if (!isset($attr->$langSlug)){

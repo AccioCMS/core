@@ -11,8 +11,7 @@ export const globalMethods = {
             return this.getHasPermission; // This is causing a loop @todo
         },
         redirect(name, id = '', params = '', query = {}){
-            if(id === undefined || id == ''){
-
+            if(id === undefined || id === ''){
                 this.$router.push({ name: name, query: query });
             }else{
                 this.$router.push({ name: name, params: {id: id}, query: query});
@@ -55,13 +54,13 @@ export const globalMethods = {
         },
 
         /**
-         * get the urls for the files
+         * get the urls for the media files ()
          * @param media
          */
-        constructUrl(image){
+        constructMediaUrl(image, imgSize = "200x200"){
             var url = "";
             if(image.type == "image"){
-                url = "/"+image.fileDirectory + "/200x200/" + image.filename;
+                url = "/"+image.fileDirectory + "/"+imgSize+"/" + image.filename;
             }else if(image.type == "document"){
                 url = this.documentIconUrl;
             }else if(image.type == "video"){
@@ -69,7 +68,7 @@ export const globalMethods = {
             }else if(image.type == "audio"){
                 url = this.audioIconUrl;
             }
-            return url;
+            return this.baseURL+url;
         },
         // base url to resources folder
         resourcesUrl(url){
@@ -81,6 +80,7 @@ export const globalMethods = {
             this.pluginsConfigs.map(function(config, key){
                 let prefix = config.namespace.replace("/","_");
                 let panels = [];
+
                 for(let panelKey in config.panels){
                     let panel = config.panels[panelKey];
                     if((app.indexOf(panelKey) != -1 && panel.placement == type) || (app.indexOf(panelKey) != -1 && panel.placement =='all')){

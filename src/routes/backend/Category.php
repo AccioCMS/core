@@ -8,19 +8,15 @@ Route::group(['middleware' => ['auth:admin'], 'as' => 'backend.category.', 'name
     /**
      * GET
      */
-    Route::get('/{lang}/json/category/get-all/{postTypeID}', 'CategoryController@getAllByPostType')->name('getAllByPostType');
     Route::get('/{lang}/json/category/get-tree/{postTypeID}', 'CategoryController@getTree')->name('getTree');
     Route::get('/{lang}/json/category/get-all', 'CategoryController@getAll')->name('getAll');
-    Route::get('/{lang}/json/category/get-latest', 'CategoryController@getLatest')->name('getLatest');
     Route::get('/{lang}/json/category/delete/{id}', 'CategoryController@delete')->name('delete');
     Route::get('/{lang}/json/category/details/{id}', 'CategoryController@detailsJSON')->name('detailsJSON');
     Route::get('/{lang}/json/category/get-all-without-pagination', 'CategoryController@getAllWithoutPagination')->name('getAllWithoutPagination');
-    Route::get('/{lang}/json/category/get-all-without-pagination-by-post-type/{postType}', 'CategoryController@getAllWithoutPaginationByPostType')->name('getAllWithoutPaginationByPostType');
     Route::get('/{lang}/json/category/check-slug/{postTypeID}/{slug}', 'CategoryController@getSlug')->name('getSlug');
     Route::get('/{lang}/json/category/get-post-type/{categoryID}', 'CategoryController@getPostType')->name('getPostType');
     Route::get('/{lang}/json/category/{postTypeID}/search/{term}', 'CategoryController@makeSearch')->name('makeSearch');
     Route::get('/{lang}/post-type/category/{postTypeID}/search/{term}', 'CategoryController@search')->name('search');
-
     Route::get('/{lang}/category/json/menuPanelItems', 'CategoryController@menuPanelItems')->name('menuPanelItems');
 
     /**
@@ -35,7 +31,6 @@ Route::group(['middleware' => ['auth:admin'], 'as' => 'backend.category.', 'name
 /**
  * Frontend routes that are accessed via admin panel
  */
-
 Route::group(['middleware' => ['auth'], 'as' => 'Backend.Categories.', 'namespace' => \App\Models\Theme::getNamespace()], function () {
     Route::get('json/posts/get-templates', 'CategoryController@menuLinkRoutes')->name('menuLinkRoutes');
 });

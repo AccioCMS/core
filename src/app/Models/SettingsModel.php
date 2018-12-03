@@ -3,37 +3,37 @@
 namespace Accio\App\Models;
 
 use Accio\App\Traits\BootEventsTrait;
-use Accio\App\Traits\CacheTrait;
+use Accio\App\Traits\CollectionTrait;
 use App\Models\Media;
 use App\Models\Settings;
-use Facebook\GraphNodes\Collection;
+use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class SettingsModel extends Model{
 
     use
-      LogsActivity,
-      CacheTrait,
-      BootEventsTrait;
+        Cachable,
+        LogsActivity,
+        BootEventsTrait,
+        CollectionTrait;
 
     /**
-     * Fields that can be filled
+     * Fields that can be filled.
      *
      * @var array $fillable
      */
     protected $fillable = ['settingsKey','value'];
 
     /**
-     * The primary key of the table
+     * The primary key of the table.
      *
      * @var string $primaryKey
      */
     public $primaryKey = "settingsID";
 
     /**
-     * Default number of rows per page to be shown in admin panel
+     * Default number of rows per page to be shown in admin panel.
      *
      * @var integer $rowsPerPage
      */
@@ -70,8 +70,9 @@ class SettingsModel extends Model{
     protected static $logOnlyDirty = true;
 
     /**
-     * Get Project Logo
-     * @return HasOne
+     * Get Project Logo.
+     *
+     * @return mixed
      */
     public static function logo()
     {
@@ -80,10 +81,12 @@ class SettingsModel extends Model{
 
     /**
      * Get all settings as a list
-     * @@return array
+     *
+     * @return array
+     * @throws \Exception
      */
     public static function getAllSettings(){
-        $settings = Settings::cache()->getItems();
+        $settings = Settings::all();
 
         $settingsList = [];
         foreach($settings as $setting){
@@ -95,22 +98,21 @@ class SettingsModel extends Model{
 
     /**
      * Get a setting
-     * @param string $key
+     *
+     * @param $key
+     * @throws \Exception
      */
     public static function getSetting($key){
-        $settings = Settings::cache()->getItems();
-        if($settings) {
-            $setting = $settings->where('settingsKey', $key)->first();
-
-            if ($setting) {
-                return $setting->value;
-            }
+        $setting = Settings::all()->where('settingsKey', $key)->first();
+        if($setting) {
+            return $setting->value;
         }
         return;
     }
 
     /**
-     * Add or update an item in settings
+     * Add or update an item in settings.
+     *
      * @param $key
      * @param $value
      * @return object
