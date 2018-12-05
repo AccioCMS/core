@@ -21,4 +21,11 @@ class TagRelationModel extends Model{
      * @var string $primaryKey
      */
     protected $primaryKey = "tagRelationID";
+
+    /**
+     * Disable timestamp
+     *
+     * @var bool
+     */
+    public $timestamps = false;
 }

@@ -29,4 +29,11 @@ class CategoryRelationModel extends Model
      * @var string
      */
     public static $label = "categories.relations.label";
+
+    /**
+     * Disable timestamp
+     *
+     * @var bool
+     */
+    public $timestamps = false;
 }

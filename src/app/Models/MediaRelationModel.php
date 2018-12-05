@@ -21,6 +21,13 @@ class MediaRelationModel extends Model{
     protected $primaryKey = "mediaRelationID";
 
     /**
+     * Disable timestamp
+     *
+     * @var bool
+     */
+    public $timestamps = false;
+
+    /**
      * Media that belong to a Media Relation.
      *
      * @return BelongsTo
