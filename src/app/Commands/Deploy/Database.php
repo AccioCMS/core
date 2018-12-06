@@ -15,7 +15,7 @@ class Database extends Command
      *
      * @var string
      */
-    protected $signature = 'deploy:db {--path} {--drop}';
+    protected $signature = 'deploy:db {--path} {--drop} --env=production';
 
     /**
      * Deployments path

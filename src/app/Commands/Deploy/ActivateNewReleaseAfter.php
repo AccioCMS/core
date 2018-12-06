@@ -14,7 +14,7 @@ class ActivateNewReleaseAfter extends Command
      *
      * @var string
      */
-    protected $signature = 'deploy:activate_new_release.after';
+    protected $signature = 'deploy:activate_new_release.after {--env=production}';
 
     /**
      * The console command description.
@@ -49,7 +49,8 @@ class ActivateNewReleaseAfter extends Command
         $commands = config('deploy.commands.activate_new_release.after');
         foreach($commands as $command){
             $output = $this->scriptParser->parseString($command, [
-              'base_path' => base_path()
+              'base_path' => base_path(),
+              'env' => $this->option('env')
             ])->run($this);
 
             if(!$output){
