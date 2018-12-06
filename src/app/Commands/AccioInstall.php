@@ -527,7 +527,7 @@ class AccioInstall extends Command{
         ]);
 
         // assign role
-        $user->assignRoles(UserGroup::getAdminGroup()->groupID);
+        $user->assignRoles(UserGroup::getAdminGroup()->groupID, true);
     }
     /**
      * Calls the artisan key:generate to set the APP_KEY.
