@@ -361,7 +361,7 @@ class AccioInstall extends Command{
         $this->advanceBar();
 
         $this->info("Creating example media...");
-        (new \MediaDevSeeder())->run(20);
+        (new \MediaDevSeeder())->run(5);
         $this->advanceBar();
 
         // Create tags example
