@@ -257,13 +257,27 @@ abstract class PostModel extends Model{
     }
 
     /**
+     * Scope a query to only include published posts.
+     *
+     * @return $this
+     */
+    public function published(){
+        return $this
+            ->where('published_at', '<=', date('Y-m-d H:i:s'))
+            ->where('status->'. App::getLocale(),'published');
+    }
+
+    /**
      * Get only published posts for the post paginate object
      *
      * @param $paginateObj
      * @return mixed
      */
     public static function filterPublished($paginateObj){
-        $paginateObj->setCollection($paginateObj->published());
+        $paginateObj->setCollection(
+            $paginateObj
+                ->where('published_at', '<=', date('Y-m-d H:i:s'))
+                ->where('status','published'));
         return $paginateObj;
     }
 
