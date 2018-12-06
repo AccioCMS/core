@@ -14,7 +14,7 @@ class ActivateNewReleaseAfter extends Command
      *
      * @var string
      */
-    protected $signature = 'deploy:activate_new_release.after {--env=production}';
+    protected $signature = 'deploy:activate_new_release.after';
 
     /**
      * The console command description.

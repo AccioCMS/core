@@ -14,7 +14,7 @@ class ActivateNewReleaseBefore extends Command
      *
      * @var string
      */
-    protected $signature = 'deploy:activate_new_release.before {--env=production}';
+    protected $signature = 'deploy:activate_new_release.before';
 
     /**
      * The console command description.

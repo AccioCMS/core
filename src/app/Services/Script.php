@@ -51,7 +51,7 @@ class Script
         $values = array_values($tokens);
 
         $tokens = array_map(function ($token) {
-            return '{{ ' . strtolower($token) . ' }}';
+            return '{{' . strtolower($token) . '}}';
         }, array_keys($tokens));
 
 

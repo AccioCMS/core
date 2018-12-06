@@ -14,7 +14,7 @@ class PurgeOldReleaseBefore extends Command
      *
      * @var string
      */
-    protected $signature = 'deploy:purge_old_release.before {--env=production}';
+    protected $signature = 'deploy:purge_old_release.before';
 
     /**
      * The console command description.
