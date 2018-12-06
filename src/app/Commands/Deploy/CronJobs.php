@@ -17,7 +17,7 @@ class Cronjobs extends Command
      *
      * @var string
      */
-    protected $signature = 'deploy:cron';
+    protected $signature = 'deploy:cron --env=production';
 
     /**
      * The console command description.
@@ -54,7 +54,8 @@ class Cronjobs extends Command
             foreach(config('deploy.cron') as $cronCommand){
                 $output = $this->scriptParser->parseFile('createCronJobs', [
                   'command' => $cronCommand,
-                  'base_path' => base_path()
+                  'base_path' => base_path(),
+                  'env' => $this->option('env')
                 ])->run($this);
                 
                 if(!$output){

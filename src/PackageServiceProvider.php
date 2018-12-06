@@ -33,7 +33,6 @@ use Accio\App\Commands\AccioUninstall;
 use Accio\App\Commands\MakeTheme;
 use Accio\App\Commands\MakeUser;
 use Accio\App\Commands\PluginInstall;
-use Spatie\ArtisanDd\DdCommand;
 
 class PackageServiceProvider extends ServiceProvider{
 
@@ -76,8 +75,7 @@ class PackageServiceProvider extends ServiceProvider{
       ActivateNewReleaseAfter::class,
       ActivateNewReleaseBefore::class,
       PurgeOldReleaseBefore::class,
-      PurgeOldReleaseAfter::class,
-      DdCommand::class
+      PurgeOldReleaseAfter::class
     ];
 
     /**

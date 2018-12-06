@@ -14,7 +14,7 @@ class PurgeOldReleaseBefore extends Command
      *
      * @var string
      */
-    protected $signature = 'deploy:purge_old_release.before';
+    protected $signature = 'deploy:purge_old_release.before {--env=production}';
 
     /**
      * The console command description.
@@ -49,7 +49,8 @@ class PurgeOldReleaseBefore extends Command
         $commands = config('deploy.commands.purge_old_releases.before');
         foreach($commands as $command){
             $output = $this->scriptParser->parseString($command, [
-              'base_path' => base_path()
+              'base_path' => base_path(),
+              'env' => $this->option('env')
             ])->run($this);
 
             if(!$output){
