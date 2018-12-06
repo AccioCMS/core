@@ -28,8 +28,8 @@ class AccioCollection extends Collection {
      */
     public function published(){
         return $this
-          ->where('published_at', '<=', date('Y-m-d H:i:s'))
-          ->where('status','published');
+            ->where('published_at', '<=', date('Y-m-d H:i:s'))
+            ->where('status','published');
     }
 
     /**
