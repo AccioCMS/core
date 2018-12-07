@@ -26,11 +26,11 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class PostTypeModel extends Model{
 
     use
-        Cachable,
-        Traits\PostTypeTrait,
-        LogsActivity,
-        Traits\BootEventsTrait,
-        Traits\CollectionTrait;
+      Cachable,
+      Traits\PostTypeTrait,
+      LogsActivity,
+      Traits\BootEventsTrait,
+      Traits\CollectionTrait;
 
     /**
      * Fields that can be filled in CRUD.
@@ -267,7 +267,7 @@ class PostTypeModel extends Model{
      * @param $fields
      * @return array
      */
-    public static function createTable($postTypeSlug, $fields = [], $hasCategories = false, $hasTags = false, $createRoutes = true){
+    public static function createTable($postTypeSlug, $fields = [], $hasCategories = false, $hasTags = false, $createRoutes = true, $controller = null){
         self::$customFieldsArray = [];
 
         // create new table for the posts of the post type
@@ -285,16 +285,16 @@ class PostTypeModel extends Model{
             $table->json("slug")->nullable();
 
             $table->foreign('createdByUserID')
-                ->references('userID')->on('users')
-                ->onDelete('cascade');
+              ->references('userID')->on('users')
+              ->onDelete('cascade');
 
             $table->foreign('featuredImageID')
-                ->references('mediaID')->on('media')
-                ->onDelete('set null');
+              ->references('mediaID')->on('media')
+              ->onDelete('set null');
 
             $table->foreign('featuredVideoID')
-                ->references('mediaID')->on('media')
-                ->onDelete('set null');
+              ->references('mediaID')->on('media')
+              ->onDelete('set null');
 
             $post = new PostType();
             $usedSlugs = [];
@@ -329,7 +329,7 @@ class PostTypeModel extends Model{
         }
 
         if($createRoutes) {
-            self::createRouteFile($postTypeSlug);
+            self::createRouteFile($postTypeSlug, $controller);
         }
 
         self::createVirtualColumnsForSlug($postTypeSlug);
@@ -350,10 +350,10 @@ class PostTypeModel extends Model{
         $virtualColumns = [];
         foreach ($languageSlugs as $languageSlug){
             $virtualColumns[] = [
-                "name" => $languageSlug,
-                "type" => "string",
-                "index" => true,
-                "length" => 200,
+              "name" => $languageSlug,
+              "type" => "string",
+              "index" => true,
+              "length" => 200,
             ];
         }
         AccioQuery::createVirtualColumns($postTypeSlug, "slug", $virtualColumns);
@@ -374,12 +374,12 @@ class PostTypeModel extends Model{
             $table->string("field", 60)->nullable();
 
             $table->foreign('postID')
-                ->references('postID')->on($postTypeSlug)
-                ->onDelete('cascade');
+              ->references('postID')->on($postTypeSlug)
+              ->onDelete('cascade');
 
             $table->foreign('mediaID')
-                ->references('mediaID')->on("media")
-                ->onDelete('cascade');
+              ->references('mediaID')->on("media")
+              ->onDelete('cascade');
         });
     }
 
@@ -397,12 +397,12 @@ class PostTypeModel extends Model{
                 $table->unsignedInteger("categoryID")->nullable();
 
                 $table->foreign('postID')
-                    ->references('postID')->on($postTypeSlug)
-                    ->onDelete('cascade');
+                  ->references('postID')->on($postTypeSlug)
+                  ->onDelete('cascade');
 
                 $table->foreign('categoryID')
-                    ->references('categoryID')->on("categories")
-                    ->onDelete('cascade');
+                  ->references('categoryID')->on("categories")
+                  ->onDelete('cascade');
 
                 $table->unique(array('postID', 'categoryID'));
             });
@@ -424,12 +424,12 @@ class PostTypeModel extends Model{
                 $table->string("language", 5)->nullable();
 
                 $table->foreign('postID')
-                    ->references('postID')->on($postTypeSlug)
-                    ->onDelete('cascade');
+                  ->references('postID')->on($postTypeSlug)
+                  ->onDelete('cascade');
 
                 $table->foreign('tagID')
-                    ->references('tagID')->on("tags")
-                    ->onDelete('cascade');
+                  ->references('tagID')->on("tags")
+                  ->onDelete('cascade');
 
                 $table->unique(array('postID', 'tagID', 'language'));
             });
@@ -526,9 +526,10 @@ class PostTypeModel extends Model{
      * @param string $slug
      * @return mixed
      */
-    public static function createRouteFile(string $slug){
+    public static function createRouteFile(string $slug, $controller = 'PostController'){
         $stub =  File::get(stubPath('PostType'));
         $route = str_replace('DummySlug',cleanPostTypeSlug($slug),$stub);
+        $route = str_replace('DummyController',$controller,$route);
         $bytes_written = File::put(base_path().'/routes/'.$slug.'.php', $route);
         if ($bytes_written === false){
             die("Error writing to new route file");
