@@ -181,6 +181,7 @@ class AccioInstall extends Command{
      * @throws \Exception
      */
     public function handle(){
+        set_time_limit ( 900 );
 
         $this->clearCaches();
 
@@ -199,11 +200,11 @@ class AccioInstall extends Command{
           ->renameEnvFile()
           ->setEnvValues()
           ->saveConfiguration()
+          ->generateKey()
           ->deleteUploads()
           ->runMigration()
           ->createDummyContent()
           ->createDefaultTheme()
-          ->generateKey()
           ->successfullyInstalled();
         return;
     }
@@ -218,8 +219,12 @@ class AccioInstall extends Command{
     private function createDefaultTheme(){
         $this->info("Creating default theme...");
 
-        // create theme if it doesn't exist
-        if(!file_exists(base_path('themes/'.config('project.defaultTheme')))) {
+        // Delete default theme, so we later get the latest version from git
+        $defaultThemePath = base_path('themes/'.config('project.defaultTheme'));
+
+        if(file_exists($defaultThemePath)){
+            File::deleteDirectory($defaultThemePath);
+        }else{
             (new DummyTheme([
               'title' => 'Default Theme',
               'namespace' => 'DefaultTheme',
@@ -231,21 +236,6 @@ class AccioInstall extends Command{
             ]))->make();
         }
 
-        // Delete default theme, so we later get the latest version from git
-        $defaultThemePath = base_path('themes/'.config('project.defaultTheme'));
-        if(file_exists($defaultThemePath)){
-            File::deleteDirectory($defaultThemePath);
-        }
-
-        // clone theme
-
-        // Recreate an empty directory for theme
-        if(!file_exists($defaultThemePath)) {
-//            File::makeDirectory($defaultThemePath);
-        }
-
-        GitRepository::cloneRepository('https://github.com/AccioCMS/default-theme.git', $defaultThemePath);
-
         $this->advanceBar();
 
         return $this;
@@ -256,7 +246,7 @@ class AccioInstall extends Command{
      * @param int $steps
      * @return $this
      */
-    private function setBar($steps = 15){
+    private function setBar($steps = 14){
         if($this->option('deleteUploads')){
             $steps++;
         }
@@ -360,10 +350,6 @@ class AccioInstall extends Command{
         (new \DefaultPostTypesDevSeeder())->run();
         $this->advanceBar();
 
-        $this->info("Creating example media...");
-        (new \MediaDevSeeder())->run(5);
-        $this->advanceBar();
-
         // Create tags example
         $this->info("Creating example tags...");
         (new \TagDevSeeder())->run(20, null, true);
@@ -376,6 +362,10 @@ class AccioInstall extends Command{
         $categoryObj->run(3, null);
         $this->advanceBar();
 
+        $this->info("Creating example posts...");
+        (new \PostDevSeeder())->run(0, 5,'', 0, 0, 0, false);
+        $this->advanceBar();
+
         // Create default permalinks
         $this->info("Creating default permalinks...");
         (new \PermalinksTableSeeder())->run();
@@ -384,10 +374,6 @@ class AccioInstall extends Command{
         // Creating settings
         $this->info("Saving settings...");
         $this->setSettings();
-        $this->advanceBar();
-
-        $this->info("Creating example posts...");
-        (new \PostDevSeeder())->run(0, 5,'', 0, 0, 0, true);
         $this->advanceBar();
 
         // Create Primary Menu

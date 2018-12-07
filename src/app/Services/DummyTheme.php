@@ -127,6 +127,10 @@ class DummyTheme
     public function moveTheme(){
         $this->destinationDir = base_path('themes') . '/' . $this->getAttribute('namespace');
 
+        // remove hidden directories
+        File::deleteDirectory($this->tmpDirectory.'/.git');
+        File::deleteDirectory($this->tmpDirectory.'/.idea');
+
         $success = File::copyDirectory($this->tmpDirectory, $this->destinationDir);
         if (!$success) {
             throw new \Exception("Theme could not be moved to " . $this->destinationDir . ". Check you have all permissions needed!");

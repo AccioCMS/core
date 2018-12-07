@@ -3,8 +3,8 @@
 Route::group(['as' => 'post.DummySlug.', 'middleware' => 'translate', 'namespace' => \App\Models\Theme::controllersNameSpace()], function () {
 
     // Index
-    Route::get(permalink("DummySlug/","index","DummySlug/"), 'PostController@index')->name('index');
+    Route::get(permalink("DummySlug/","index","DummySlug/"), 'DummyController@index')->name('index');
 
     // Single
-    Route::get(permalink("DummySlug","single","DummySlug/{postSlug}"), 'PostController@single')->name('single');
+    Route::get(permalink("DummySlug","single","DummySlug/{postSlug}"), 'DummyController@single')->name('single');
 });
