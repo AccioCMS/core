@@ -13,16 +13,18 @@ use Accio\Support\Facades\Pagination;
 use Accio\Support\Facades\Search;
 
 
-class BaseMediaController extends MainController{
+class BaseMediaController extends MainController
+{
     /**
      * This function uses upload function that is defined in Media model that uploads files.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array
      */
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('Media','create')){
+        if(!User::hasAccess('Media', 'create')) {
             return $this->noPermission();
         }
         return (new Media())->upload($request);
@@ -31,13 +33,14 @@ class BaseMediaController extends MainController{
     /**
      * Get the list of media files.
      *
-     * @param string $lang
-     * @param int $pagination
+     * @param  string $lang
+     * @param  int    $pagination
      * @return array
      */
-    public function getList($lang, $pagination){
+    public function getList($lang, $pagination)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('Media','read')){
+        if(!User::hasAccess('Media', 'read')) {
             return $this->noPermission();
         }
         $list = Pagination::infiniteScrollPagination('media', $pagination, Media::$infinitPaginationShow);
@@ -62,15 +65,16 @@ class BaseMediaController extends MainController{
     /**
      * Search media (simple search).
      *
-     * @param string $term
-     * @param int $pagination
+     * @param  string $term
+     * @param  int    $pagination
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function search($term, $pagination){
+    public function search($term, $pagination)
+    {
         $view = 'search';
         // check if user has permissions to access this link
-        if(!User::hasAccess('Media','create')){
-            return view('errors.permissions', compact('view','term','pagination'));
+        if(!User::hasAccess('Media', 'create')) {
+            return view('errors.permissions', compact('view', 'term', 'pagination'));
         }
         return view('content');
     }
@@ -79,22 +83,24 @@ class BaseMediaController extends MainController{
      * Perform search in media.
      * TODO Use elastic search
      *
-     * @param Request $request
+     * @param  Request $request
      * @return mixed
      */
-    public function searchMedia(Request $request){
+    public function searchMedia(Request $request)
+    {
         return Search::media($request->term, $request->from, $request->to, $request->type, "created_at", "DESC", $request->page);
     }
 
     /**
      * Edit a specific media file information.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array|string
      */
-    public function edit(Request $request){
+    public function edit(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('Media','update')){
+        if(!User::hasAccess('Media', 'update')) {
             return $this->noPermission();
         }
         $media = Media::find($request->mediaID);
@@ -102,7 +108,7 @@ class BaseMediaController extends MainController{
         $media->description = $request->description;
         $media->credit = $request->credit;
 
-        if ($media->save()){
+        if ($media->save()) {
             return "OK";
         }
         return "ERR";
@@ -111,26 +117,27 @@ class BaseMediaController extends MainController{
     /**
      * Delete media file.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array|string
      */
-    public function delete(Request $request){
+    public function delete(Request $request)
+    {
         $isOk = "OK";
         // loop throw file array
         foreach ($request->all() as $key => $file){
-            if ($key === "postTypes"){
+            if ($key === "postTypes") {
                 continue;
             }
 
             // check if user has permissions to access this link
-            if(!User::hasAccess('Media','delete',$file['mediaID'], true)){
+            if(!User::hasAccess('Media', 'delete', $file['mediaID'], true)) {
                 return $this->noPermission();
             }
 
             // get file info from database
             $media = Media::find($file['mediaID']);
             MediaRelation::where("mediaID", $file['mediaID'])->delete();
-            if ($media->delete()){ // delete from database
+            if ($media->delete()) { // delete from database
                 if(file_exists($media->url)) {
                     unlink($media->url); // delete original file
                 }
@@ -147,20 +154,21 @@ class BaseMediaController extends MainController{
      *
      * @return array
      */
-    private function getWatermak(){
+    private function getWatermak()
+    {
         // Verify watermark
-        $watermarkMediaID = settings( "watermark");
-        if(!$watermarkMediaID){
+        $watermarkMediaID = settings("watermark");
+        if(!$watermarkMediaID) {
             return $this->response("No watermark is available. Go to settings and set a watermark", 500);
         }
 
         $watermarImage = Media::find($watermarkMediaID);
-        if(!$watermarImage){
+        if(!$watermarImage) {
             return $this->response("Watermark Image is not selected. Please go to settings and choose a new watermark", 500);
         }
 
         $watermarkUrl = $watermarImage->url;
-        if(!File::exists(base_path($watermarkUrl))){
+        if(!File::exists(base_path($watermarkUrl))) {
             return $this->response("Watermark URL is not avialable. Please go to settings and choose a new watermark", 500);
         }
 
@@ -170,14 +178,15 @@ class BaseMediaController extends MainController{
     /**
      * Assign watermark to media images.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array|string
      * @throws \Exception
      */
-    public function assignWatermark(Request $request){
+    public function assignWatermark(Request $request)
+    {
         $getWatermak = $this->getWatermak();
 
-        if(!$getWatermak){
+        if(!$getWatermak) {
             return $getWatermak;
         }
 
@@ -186,22 +195,22 @@ class BaseMediaController extends MainController{
             $image = new Media($file);
 
             // check if user has permissions to access this link
-            if(!User::hasAccess('Media','update',$image->mediaID, true)){
+            if(!User::hasAccess('Media', 'update', $image->mediaID, true)) {
                 return $this->noPermission();
             }
 
-            if ($image->type == "image"){
+            if ($image->type == "image") {
 
                 // mark original image
                 $url = strpos($image->url, '?');
-                if($url == false){
+                if($url == false) {
                     $url = base_path($image->url);
                 }else{
-                    $url = base_path(explode('?',$image->url)[0]);
+                    $url = base_path(explode('?', $image->url)[0]);
                 }
 
                 // does file exist
-                if(!File::exists($url)){
+                if(!File::exists($url)) {
                     throw new \Exception("Original images ".$url." doesn't exists.");
                 }
 
@@ -217,9 +226,11 @@ class BaseMediaController extends MainController{
                 $watermark = Image::make($getWatermak->url);
 
                 // resize watermark
-                $watermark->resize($width, null, function ($constraint){
-                    $constraint->aspectRatio();
-                });
+                $watermark->resize(
+                    $width, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                    }
+                );
                 $originalImage->insert($watermark, 'center');
                 $originalImage->save($url, 100);
 
@@ -237,12 +248,13 @@ class BaseMediaController extends MainController{
     /**
      * Crop the image with the specific dimensions.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return string
      */
-    public function cropImage(Request $request){
+    public function cropImage(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('Media','update')){
+        if(!User::hasAccess('Media', 'update')) {
             return $this->noPermission();
         }
         // get all inputs
@@ -254,7 +266,7 @@ class BaseMediaController extends MainController{
         $mediaID = $inputs[0]['mediaID'];
 
         // check if user has permissions to access this link
-        if(!User::hasAccess('Media','update',$mediaID, true)){
+        if(!User::hasAccess('Media', 'update', $mediaID, true)) {
             return $this->noPermission();
         }
 
@@ -268,10 +280,10 @@ class BaseMediaController extends MainController{
         $imageApperanceHeight = $inputs[3];
         // original image
         $url = strpos($inputs[0]['url'], '?');
-        if($url == false){
+        if($url == false) {
             $url = $inputs[0]['url'];
         }else{
-            $url = explode('?',$inputs[0]['url'])[0];
+            $url = explode('?', $inputs[0]['url'])[0];
         }
         $img = Image::make($url);
         // $croppedWidth = the width of the cropped window

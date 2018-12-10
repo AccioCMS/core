@@ -10,7 +10,8 @@ use GeneaLabs\LaravelModelCaching\Traits\Cachable;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class SettingsModel extends Model{
+class SettingsModel extends Model
+{
 
     use
         Cachable,
@@ -48,6 +49,7 @@ class SettingsModel extends Model{
 
     /**
      * Lang key that points to the multi language label of a
+     *
      * @var string
      */
     public static $label = "settings.label";
@@ -85,7 +87,8 @@ class SettingsModel extends Model{
      * @return array
      * @throws \Exception
      */
-    public static function getAllSettings(){
+    public static function getAllSettings()
+    {
         $settings = Settings::all();
 
         $settingsList = [];
@@ -99,10 +102,11 @@ class SettingsModel extends Model{
     /**
      * Get a setting
      *
-     * @param $key
+     * @param  $key
      * @throws \Exception
      */
-    public static function getSetting($key){
+    public static function getSetting($key)
+    {
         $setting = Settings::all()->where('settingsKey', $key)->first();
         if($setting) {
             return $setting->value;
@@ -113,11 +117,12 @@ class SettingsModel extends Model{
     /**
      * Add or update an item in settings.
      *
-     * @param $key
-     * @param $value
+     * @param  $key
+     * @param  $value
      * @return object
      */
-    public static function setSetting($key, $value){
+    public static function setSetting($key, $value)
+    {
         $result = Settings::updateOrCreate(['settingsKey' => $key], ['value' => $value]);
         return $result;
     }

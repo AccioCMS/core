@@ -4,15 +4,17 @@ namespace Accio\App\Traits;
 
 use App\Models\Media;
 
-trait CustomFieldTrait{
+trait CustomFieldTrait
+{
 
     /**
      * Get custom field values in required structure required in frontend
      *
-     * @param array $customFieldGroups
+     * @param array     $customFieldGroups
      * @param \stdClass $customFields
      */
-    public function constructValues(array $customFieldGroups, \stdClass $customFields){
+    public function constructValues(array $customFieldGroups, \stdClass $customFields)
+    {
         // get only the values of the allowed custom fields in update form
         $allowedCustomFields = [];
         $fields = [];
@@ -37,7 +39,7 @@ trait CustomFieldTrait{
                         // if custom field is multi-language loop throw all languages
                         foreach($fieldVal as $langKey => $val){
                             // if custom field is multiple files (array)
-                            if(gettype($val) == 'array'){
+                            if(gettype($val) == 'array') {
                                 $tmpMedia = Media::whereIn('mediaID', $val)->get();
                             }else{
                                 // if custom field can have onli one file (is not multiple)

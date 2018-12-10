@@ -22,20 +22,20 @@ class Tags extends MainController
     public function posts(string $tagsID)
     {
         $validateQuery = $this->validateQuery();
-        if($validateQuery->fails()){
+        if($validateQuery->fails()) {
             return $this->error($validateQuery->errors());
         }
 
         // Validate post type
         $postType = getPostType(request('belongsTo'));
-        if(!$postType){
+        if(!$postType) {
             return $this->error('Post type not found');
         }
 
         // Validate IDs
         $tags = explode(',', $tagsID);
         foreach($tags as $tagID){
-            if(!is_numeric($tagID)){
+            if(!is_numeric($tagID)) {
                 return $this->error('Invalid Tag IDs');
             }
         }
@@ -47,16 +47,16 @@ class Tags extends MainController
         $postsObj->setTable($postType->slug);
         $postsObj->select('postID', 'title', 'featuredImageID');
         $posts = $postsObj
-          ->select('postID', 'title', 'featuredImageID')
-          ->join('tags_relations','tags_relations.belongsToID',$postType->slug.'.postID')
-          ->where('belongsTo',$postType->slug)
-          ->with('featuredImage')
-          ->published()
-          ->whereIn('tagID',$tags)
-          ->orderBy('published_at','DESC')
-          ->limit($this->limit)
-          ->get()
-          ->toArray();
+            ->select('postID', 'title', 'featuredImageID')
+            ->join('tags_relations', 'tags_relations.belongsToID', $postType->slug.'.postID')
+            ->where('belongsTo', $postType->slug)
+            ->with('featuredImage')
+            ->published()
+            ->whereIn('tagID', $tags)
+            ->orderBy('published_at', 'DESC')
+            ->limit($this->limit)
+            ->get()
+            ->toArray();
 
         return response()->json(['data' => $posts], 200);
     }

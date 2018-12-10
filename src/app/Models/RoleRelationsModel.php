@@ -4,7 +4,8 @@ namespace Accio\App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class RoleRelationsModel extends Model{
+class RoleRelationsModel extends Model
+{
     /**
      * The table associated with the model.
      *

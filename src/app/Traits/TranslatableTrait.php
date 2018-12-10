@@ -5,7 +5,8 @@ namespace Accio\App\Traits;
 use App\Models\Language;
 use Illuminate\Support\Facades\App;
 
-trait TranslatableTrait{
+trait TranslatableTrait
+{
 
     protected static $counti = 0;
     /**
@@ -32,10 +33,11 @@ trait TranslatableTrait{
     /**
      * Set auto translate.
      *
-     * @param boolean $autoTranslate
+     * @param  boolean $autoTranslate
      * @return $this
      */
-    public function setAutoTranslate($autoTranslate){
+    public function setAutoTranslate($autoTranslate)
+    {
         $this->autoTranslate = $autoTranslate;
         return $this;
     }
@@ -43,7 +45,8 @@ trait TranslatableTrait{
     /**
      * Get auto translate.
      */
-    public function getAutoTranslate(){
+    public function getAutoTranslate()
+    {
         return $this->autoTranslate;
     }
 
@@ -57,16 +60,16 @@ trait TranslatableTrait{
     public function getAttribute($key)
     {
         //set default language
-        if(!$this->_defaultTranslateLanguage){
+        if(!$this->_defaultTranslateLanguage) {
             $this->setDefaultTranslateLanguage();
         }
 
         // In case we just need the translation for current property
-        if(!$this->getTranslateLanguage()){
+        if(!$this->getTranslateLanguage()) {
             $this->translate($this->_defaultTranslateLanguage);
         }
 
-        if(method_exists($this,'isCustomField') && $this->isCustomField($key)) {
+        if(method_exists($this, 'isCustomField') && $this->isCustomField($key)) {
             $value = $this->customFieldValue($key);
 
             // If the given $attribute has a mutator, we push it to $attributes and then call getAttributeValue
@@ -114,18 +117,21 @@ trait TranslatableTrait{
     /**
      * Translate an object into a specific language.
      *
-     * @param $languageSlug
+     * @param  $languageSlug
      * @return $this
      */
-    public function translate($languageSlug = ''){
+    public function translate($languageSlug = '')
+    {
         $this->_translateLanguage = $languageSlug;
         return $this;
     }
     /**
      * Get current translating language.
+     *
      * @return string
      */
-    private function getTranslateLanguage(){
+    private function getTranslateLanguage()
+    {
         return $this->_translateLanguage;
     }
 
@@ -134,18 +140,20 @@ trait TranslatableTrait{
      *
      * @return string
      */
-    private function resetTranslateLanguage(){
+    private function resetTranslateLanguage()
+    {
         $this->_translateLanguage = $this->_defaultTranslateLanguage;
     }
 
     /**
      * Set default language.
      *
-     * @param string $languageSlug
+     * @param  string $languageSlug
      * @return $this
      */
-    public function setDefaultTranslateLanguage($languageSlug = ''){
-        if(!$languageSlug){
+    public function setDefaultTranslateLanguage($languageSlug = '')
+    {
+        if(!$languageSlug) {
             $languageSlug = App::getLocale();
         }
         $this->_defaultTranslateLanguage = $languageSlug;
@@ -155,13 +163,14 @@ trait TranslatableTrait{
     /**
      * Gets current language value.
      *
-     * @param  array|object|string $value The rows to be translated
+     * @param array|object|string $value The rows to be translated
      *
      * @return mixed  Returns the translated value
      * */
-    public function getTranslation($value){
+    public function getTranslation($value)
+    {
         // in case cast is not used, we need to manually convert the value to object
-        if(!is_object($value) && !is_array($value)){
+        if(!is_object($value) && !is_array($value)) {
             $value = json_decode($value);
         }
 
@@ -184,13 +193,14 @@ trait TranslatableTrait{
     /**
      * Check if a value has language keys.
      *
-     * @param string $value
+     * @param  string $value
      * @return bool
      */
-    public function isTranslatable($value, $key){
+    public function isTranslatable($value, $key)
+    {
 
         // in case cast is not used, we need to manually convert the value to object
-        if(!is_object($value) && !is_array($value)){
+        if(!is_object($value) && !is_array($value)) {
             $value = json_decode($value);
         }
 
@@ -202,7 +212,7 @@ trait TranslatableTrait{
         // verify if this is another language
         // TODO find a better way of verification
         $valueToArray = key((array) $value);
-        if(strlen($valueToArray) == 2){
+        if(strlen($valueToArray) == 2) {
             return true;
         }
 
@@ -216,25 +226,26 @@ trait TranslatableTrait{
      * @return $this
      * @throws \Exception
      */
-    public function appendLanguageKeys(){
+    public function appendLanguageKeys()
+    {
         $attributes = $this->getAttributes();
         foreach($attributes as $attrKey => $attr){
-            if(isset($this->translatableColumns[$attrKey])){
-                if(is_array($attr)){
+            if(isset($this->translatableColumns[$attrKey])) {
+                if(is_array($attr)) {
                     continue;
                 }
-                if($attr == null || $attr == "" || $attr == '[]'){
+                if($attr == null || $attr == "" || $attr == '[]') {
                     $attr = new \stdClass();
                 }else{
-                    if(!is_object($attr)){
+                    if(!is_object($attr)) {
                         $attr = json_decode($attr);
                     }
                 }
                 foreach(Language::all() as $language){
                     $langSlug = $language->slug;
 
-                    if (!isset($attr->$langSlug)){
-                        if($this->translatableColumns[$attrKey] == "string"){
+                    if (!isset($attr->$langSlug)) {
+                        if($this->translatableColumns[$attrKey] == "string") {
                             $attr->$langSlug = "";
                         }else{
                             $attr->$langSlug = [];

@@ -18,7 +18,8 @@ use Accio\Support\Facades\Meta;
 use Laravel\Passport\HasApiTokens;
 use Spatie\Activitylog\Traits\HasActivity;
 
-class UserModel extends Authenticatable{
+class UserModel extends Authenticatable
+{
     use
         Notifiable,
         HasActivity,
@@ -154,7 +155,8 @@ class UserModel extends Authenticatable{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = []){
+    public function __construct(array $attributes = [])
+    {
         parent::__construct($attributes);
         Event::fire('user:construct', [$this]);
     }
@@ -162,17 +164,20 @@ class UserModel extends Authenticatable{
     /**
      * Handle callback of insert, update, delete.
      */
-    protected static function boot(){
+    protected static function boot()
+    {
         parent::boot();
 
-        self::created(function($user){
-            try{
-                $user->notify(new UserAdded($user));
-            }catch (\Exception $e){
+        self::created(
+            function ($user) {
+                try{
+                    $user->notify(new UserAdded($user));
+                }catch (\Exception $e){
 
+                }
+                Event::fire('user:created', [$user]);
             }
-            Event::fire('user:created', [$user]);
-        });
+        );
     }
 
     /**
@@ -181,20 +186,22 @@ class UserModel extends Authenticatable{
      * @return string
      * @throws \Exception
      */
-    public function getHrefAttribute(){
+    public function getHrefAttribute()
+    {
         return $this->href();
     }
 
     /**
      * Generate a custom URL to a user.
      *
-     * @param string $routeName
-     * @param array $customAttributes
+     * @param  string $routeName
+     * @param  array  $customAttributes
      * @return string
      * @throws \Exception
      */
-    public function href($routeName = '', $customAttributes = []){
-        if(!$routeName){
+    public function href($routeName = '', $customAttributes = [])
+    {
+        if(!$routeName) {
             $routeName = 'user.single';
         }
         $getRoute = Route::getRoutes()->getByName($routeName);
@@ -202,7 +209,7 @@ class UserModel extends Authenticatable{
             $routeParams = Route::getRoutes()->getByName($routeName)->parameterNames();
 
             // translating language
-            if($this->getTranslateLanguage()){
+            if($this->getTranslateLanguage()) {
                 $languageSlug = $this->getTranslateLanguage();
             }
             else{
@@ -213,24 +220,24 @@ class UserModel extends Authenticatable{
             $params = [];
             foreach($routeParams as $name){
                 switch ($name){
-                    case 'authorSlug';
-                        $params['authorSlug'] = $this->slug;
-                        break;
+                case 'authorSlug';
+                    $params['authorSlug'] = $this->slug;
+                    break;
 
-                    case 'lang';
-                        // don't show language slug on default language
-                        if(config('project.hideDefaultLanguageInURL') && $languageSlug !=  Language::getDefault('slug')) {
-                            $params['lang'] = $languageSlug;
-                        }
-                        break;
+                case 'lang';
+                    // don't show language slug on default language
+                    if(config('project.hideDefaultLanguageInURL') && $languageSlug !=  Language::getDefault('slug')) {
+                        $params['lang'] = $languageSlug;
+                    }
+                    break;
                 }
             }
 
-            if($customAttributes){
+            if($customAttributes) {
                 $params = array_merge($customAttributes, $params);
             }
 
-            return route($routeName,$params);
+            return route($routeName, $params);
         }else{
             throw new \Exception("Route $routeName not found");
         }
@@ -242,21 +249,24 @@ class UserModel extends Authenticatable{
      *
      * @return string
      */
-    public function getFullNameAttribute(){
+    public function getFullNameAttribute()
+    {
         return $this->firstName." ".$this->lastName;
     }
 
     /**
      * Destruct model instance.
      */
-    public function __destruct(){
+    public function __destruct()
+    {
         Event::fire('user:destruct', [$this]);
     }
 
     /**
      * Get posts of users
      */
-    public function posts(){
+    public function posts()
+    {
         return $this->hasMany('App\Models\Post', 'createdByUserID');
     }
 
@@ -265,14 +275,16 @@ class UserModel extends Authenticatable{
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function roles(){
+    public function roles()
+    {
         return $this->hasManyThrough(
-          'App\Models\UserGroup',
-          'App\Models\RoleRelation',
-          'userID',
-          'groupID',
-          'userID',
-          'groupID');
+            'App\Models\UserGroup',
+            'App\Models\RoleRelation',
+            'userID',
+            'groupID',
+            'userID',
+            'groupID'
+        );
     }
 
 
@@ -281,7 +293,8 @@ class UserModel extends Authenticatable{
      *
      * @return mixed
      */
-    public function getProfileImageAttribute(){
+    public function getProfileImageAttribute()
+    {
         if($this->profileImageID) {
             return $this->getRelationValue('profileimage');
         }
@@ -293,8 +306,9 @@ class UserModel extends Authenticatable{
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function profileImage(){
-        return $this->hasOne('App\Models\Media','mediaID', 'profileImageID');
+    public function profileImage()
+    {
+        return $this->hasOne('App\Models\Media', 'mediaID', 'profileImageID');
     }
 
     /**
@@ -302,23 +316,26 @@ class UserModel extends Authenticatable{
      *
      * @return array
      */
-    public function metaData(){
+    public function metaData()
+    {
         Meta::setTitle($this->fullName)
             ->set("description", $this->about)
             ->set("og:type", "profile", "property")
             ->set("og:title", $this->fullName, "property")
             ->set("og:description", $this->about, "property")
-            ->set("og:url",$this->href, "property")
+            ->set("og:url", $this->href, "property")
             ->setImageOG($this->profileImage)
             ->setProfileOG($this)
             ->setHrefLangData($this)
             ->setCanonical($this->href)
-            ->setWildcards([
+            ->setWildcards(
+                [
                 '{{firstName}}' => $this->firstName,
                 '{{lastName}}' => $this->lastName,
                 '{{title}}' => $this->firstName . " " . $this->lastName,
                 '{{sitename}}' => settings('siteTitle')
-            ]);
+                ]
+            );
     }
 
 }

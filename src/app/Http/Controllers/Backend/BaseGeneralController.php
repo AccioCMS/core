@@ -12,12 +12,14 @@ use App\Models\Plugin;
 use App\Models\PostType;
 use App\Http\Controllers\Controller as Controller;
 
-class BaseGeneralController extends MainController {
+class BaseGeneralController extends MainController
+{
 
     /**
      * BaseGeneralController constructor.
      */
-    public function __construct(){
+    public function __construct()
+    {
         parent::__construct();
     }
 
@@ -26,7 +28,8 @@ class BaseGeneralController extends MainController {
      *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function logoutUser(){
+    public function logoutUser()
+    {
         Auth::logout();
         return redirect(route('backend.auth.login'));
     }
@@ -37,7 +40,8 @@ class BaseGeneralController extends MainController {
      * @return array
      * @throws \Exception
      */
-    public function getBaseData(){
+    public function getBaseData()
+    {
         // menu links for the application part
         $applicationMenuLinks = MenuLink::applicationMenuLinks();
         // menu links for the cms part
@@ -45,7 +49,7 @@ class BaseGeneralController extends MainController {
 
         // user data
         $user = Auth::user();
-        $user->avatar = $user->avatar(200,200,true);
+        $user->avatar = $user->avatar(200, 200, true);
 
         // Get Labels
         $labels = Language::getlabels();
@@ -56,8 +60,8 @@ class BaseGeneralController extends MainController {
 
         // Logo
         $projectLogo =  Settings::logo();
-        if($projectLogo){
-            $projectLogoURL = asset($projectLogo->thumb(200,200));
+        if($projectLogo) {
+            $projectLogoURL = asset($projectLogo->thumb(200, 200));
         }else{
             $projectLogoURL = asset('public/images/logo-mana.png');
         }

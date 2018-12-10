@@ -9,7 +9,8 @@ use Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Auth;
 
-class BaseRegisterController extends MainController {
+class BaseRegisterController extends MainController
+{
     /*
     |--------------------------------------------------------------------------
     | Register Controller
@@ -35,7 +36,8 @@ class BaseRegisterController extends MainController {
      *
      * @return void
      */
-    public function __construct(){
+    public function __construct()
+    {
         $this->middleware('guest');
         parent::__construct();
     }
@@ -54,31 +56,35 @@ class BaseRegisterController extends MainController {
     /**
      * Get a validator for an incoming registration request.
      *
-     * @param  array  $data
+     * @param  array $data
      * @return \Illuminate\Contracts\Validation\Validator
      */
     protected function validator(array $data)
     {
-        return Validator::make($data, [
+        return Validator::make(
+            $data, [
             'name' => 'required|max:255',
             'email' => 'required|email|max:255|unique:users',
             'password' => 'required|min:6|confirmed',
-        ]);
+            ]
+        );
     }
 
     /**
      * Create a new user instance after a valid registration.
      *
-     * @param  array  $data
+     * @param  array $data
      * @return User
      */
     protected function create(array $data)
     {
-        return User::create([
+        return User::create(
+            [
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => bcrypt($data['password']),
-        ]);
+            ]
+        );
     }
 
 

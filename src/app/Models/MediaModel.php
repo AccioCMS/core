@@ -11,7 +11,8 @@ use Auth;
 use Accio\App\Traits;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class MediaModel extends Model{
+class MediaModel extends Model
+{
 
     use
         Cachable,
@@ -75,7 +76,8 @@ class MediaModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = []){
+    public function __construct(array $attributes = [])
+    {
         parent::__construct($attributes);
         Event::fire('media:construct', [$this]);
     }
@@ -85,55 +87,61 @@ class MediaModel extends Model{
      *
      * @return HasMany
      */
-    public function relations(){
-        return $this->hasMany('App\Models\MediaRelation','mediaID','mediaID');
+    public function relations()
+    {
+        return $this->hasMany('App\Models\MediaRelation', 'mediaID', 'mediaID');
     }
 
     /**
      * Scope a query to only include images.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeImages($query){
-        return $query->where('type','image');
+    public function scopeImages($query)
+    {
+        return $query->where('type', 'image');
     }
 
 
     /**
      * Scope a query to only include videos.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeVideos($query){
-        return $query->where('type','video');
+    public function scopeVideos($query)
+    {
+        return $query->where('type', 'video');
     }
 
     /**
      * Scope a query to only include audio.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeAudio($query){
-        return $query->where('type','audio');
+    public function scopeAudio($query)
+    {
+        return $query->where('type', 'audio');
     }
 
     /**
      * Scope a query to only include documents.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeDocuments($query){
-        return $query->where('type','documents');
+    public function scopeDocuments($query)
+    {
+        return $query->where('type', 'documents');
     }
 
     /**
      * Destruct model instance
      */
-    public function __destruct(){
+    public function __destruct()
+    {
         Event::fire('media:destruct', [$this]);
     }
 }

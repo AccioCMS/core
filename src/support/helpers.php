@@ -4,12 +4,14 @@ if (! function_exists('assetUrl')) {
 
     /**
      * Prints url to the assets directory, if filename is not empty it will be added to the result string
-     * @param string $fileName
+     *
+     * @param  string $fileName
      * @return string
      */
-    function assetUrl(string $fileName = ''){
+    function assetUrl(string $fileName = '')
+    {
         $assets = url('themes/'.\App\Models\Theme::getActiveTheme().'/assets');
-        if($fileName){
+        if($fileName) {
             $assets .= "/".$fileName;
         }
         return $assets;
@@ -21,13 +23,14 @@ if (! function_exists('css')) {
     /**
      * Print Theme css as configured on /public/{YOUR THEME NAME}/config/theme.php
      *
-     * @param true $header where we are printing header or footer css
-     * @param array $files List of css files to be printed
-     * @param array $defaultAttributes Default attribute to be assigned to all js files.
-     * @param bool $noScript True if css should be appended within a <noscript> tag
+     * @param  true  $header            where we are printing header or footer css
+     * @param  array $files             List of css files to be printed
+     * @param  array $defaultAttributes Default attribute to be assigned to all js files.
+     * @param  bool  $noScript          True if css should be appended within a <noscript> tag
      * @return string
      */
-    function css($header = true, $defaultAttributes = [], $files = [], $noScript = false){
+    function css($header = true, $defaultAttributes = [], $files = [], $noScript = false)
+    {
         return \App\Models\Theme::css($header, $defaultAttributes, $files, $noScript);
     }
 }
@@ -37,10 +40,12 @@ if (! function_exists('cssUrl')) {
     /**
      * Prints url to the css file with the providen filename
      * If no file name is provided prints the directory of the css
-     * @param string $fileName
+     *
+     * @param  string $fileName
      * @return string
      */
-    function cssUrl(string $fileName = ''){
+    function cssUrl(string $fileName = '')
+    {
         return \App\Models\Theme::cssUrl($fileName);
     }
 }
@@ -51,10 +56,12 @@ if (! function_exists('imageUrl')) {
     /**
      * Prints url to the image file with the providen filename
      * If no file name is provided prints the directory of the image
-     * @param string $fileName
+     *
+     * @param  string $fileName
      * @return string
      */
-    function imageUrl(string $fileName = ''){
+    function imageUrl(string $fileName = '')
+    {
         return \App\Models\Theme::imageUrl($fileName);
     }
 }
@@ -64,10 +71,12 @@ if (! function_exists('jsUrl')) {
     /**
      * Prints url to the js file with the providen filename
      * If no file name is provided prints the directory of the js
-     * @param string $fileName
+     *
+     * @param  string $fileName
      * @return string
      */
-    function jsUrl(string $fileName = ''){
+    function jsUrl(string $fileName = '')
+    {
         return \App\Models\Theme::jsUrl($fileName);
     }
 }
@@ -77,10 +86,12 @@ if (! function_exists('fontUrl')) {
     /**
      * Prints url to the font file with the providen filename
      * If no file name is provided prints the directory of the font
-     * @param string $fileName
+     *
+     * @param  string $fileName
      * @return string
      */
-    function fontUrl(string $fileName = ''){
+    function fontUrl(string $fileName = '')
+    {
         return \App\Models\Theme::fontUrl($fileName);
     }
 }
@@ -91,53 +102,58 @@ if (! function_exists('js')) {
     /**
      * Print Theme javascripts as configured on /public/{YOUR THEME NAME}/config/theme.php
      *
-     * @param true $header where we are printing header or footer js
-     * @param array $defaultAttributes Default attribute to be assigned to all js files.
-     * @param array $files List of js files to be printed
+     * @param  true  $header            where we are printing header or footer js
+     * @param  array $defaultAttributes Default attribute to be assigned to all js files.
+     * @param  array $files             List of js files to be printed
      * @return string
      */
-    function js($header = true, $defaultAttributes = [], $files = []){
+    function js($header = true, $defaultAttributes = [], $files = [])
+    {
         return \App\Models\Theme::js($header, $defaultAttributes, $files);
     }
 }
 
-if(!function_exists('menu')){
+if(!function_exists('menu')) {
     /**
      * Prints MenuLinks of a menu
      *
-     * @param string $menuSlug Slug of Menu
-     * @param string $customView Name of a custom blade.php file to render the template
-     * @param string $ulClass Class of ul
+     * @param  string $menuSlug   Slug of Menu
+     * @param  string $customView Name of a custom blade.php file to render the template
+     * @param  string $ulClass    Class of ul
      * @return \Illuminate\Support\HtmlString Returns an html navigation of a particular menu
      */
-    function menu($menuSlug = "primary", $customView = '', $ulClass = ''){
+    function menu($menuSlug = "primary", $customView = '', $ulClass = '')
+    {
         return \App\Models\Menu::printMenu($menuSlug, $customView, $ulClass);
     }
 }
 
-if(!function_exists('languages')){
+if(!function_exists('languages')) {
     /**
      * Print list of languages
      *
      * @param string $customView Name of a custom blade file to render the template
-     * @param string $ulClass Class of ul
+     * @param string $ulClass    Class of ul
      *
      * @return \Illuminate\Support\HtmlString
      */
-    function languages($customView= '', $ulClass=''){
+    function languages($customView= '', $ulClass='')
+    {
         return \App\Models\Language::printLanguages($customView, $ulClass);
     }
 }
 
-if(!function_exists('searchForm')){
+if(!function_exists('searchForm')) {
     /**
      * Get a search form
+     *
      * @param string $customView Name of a custom blade.php file to render the template
-     * @param string $formClass Serch form class
+     * @param string $formClass  Serch form class
      *
      * @return \Illuminate\Support\HtmlString|string
      */
-    function searchForm($customView ='', $formClass=""){
+    function searchForm($customView ='', $formClass="")
+    {
         return \Accio\Support\Facades\Search::printSearchForm($customView, $formClass);
     }
 }
@@ -145,9 +161,11 @@ if(!function_exists('searchForm')){
 if(!function_exists('getLocale')) {
     /**
      * Get locale
+     *
      * @return mixed
      */
-    function getLocale(){
+    function getLocale()
+    {
         return \Illuminate\Support\Facades\App::getLocale();
     }
 }
@@ -156,10 +174,11 @@ if(!function_exists('noImage')) {
      * Get no image.
      * Used in cases where there is not featured image set
      *
-     * @param string $imagePath
+     * @param  string $imagePath
      * @return \Illuminate\Contracts\Routing\UrlGenerator|string
      */
-    function noImage($imagePath = 'no-image-default.png'){
+    function noImage($imagePath = 'no-image-default.png')
+    {
         return \App\Models\Theme::imageUrl($imagePath);
     }
 }
@@ -167,9 +186,11 @@ if(!function_exists('noImage')) {
 if(!function_exists('searchKeyword')) {
     /**
      * Get search keyword
+     *
      * @return string
      */
-    function searchKeyword(){
+    function searchKeyword()
+    {
         return \Accio\Support\Facades\Search::getKeyword();
     }
 }
@@ -177,11 +198,13 @@ if(!function_exists('searchKeyword')) {
 if(!function_exists('projectDirectory')) {
     /**
      * Get directory of the project
+     *
      * @return string
      */
-    function projectDirectory(){
+    function projectDirectory()
+    {
         $splitRoot = explode(request()->getHost(), Request::root());
-        if(isset($splitRoot[1])){
+        if(isset($splitRoot[1])) {
             return $splitRoot[1];
         }
 
@@ -192,10 +215,12 @@ if(!function_exists('projectDirectory')) {
 if(!function_exists('settings')) {
     /**
      * Get a project settings
-     * @param string $key
+     *
+     * @param  string $key
      * @return string
      */
-    function settings($key){
+    function settings($key)
+    {
         return \App\Models\Settings::getSetting($key);
     }
 }
@@ -203,15 +228,21 @@ if(!function_exists('settings')) {
 if(!function_exists('googleAnalytics')) {
     /**
      * Get a project settings
-     * @param string $trackingID
+     *
+     * @param  string $trackingID
      * @return string
      */
-    function googleAnalytics($trackingID = ''){
+    function googleAnalytics($trackingID = '')
+    {
         $trackingID = ($trackingID ? $trackingID : settings('trackingCode'));
-        if($trackingID){
-            return new \Illuminate\Support\HtmlString(view()->make("vendor.general.googleAnalytics", [
-                'trackingID' => $trackingID
-            ])->render());
+        if($trackingID) {
+            return new \Illuminate\Support\HtmlString(
+                view()->make(
+                    "vendor.general.googleAnalytics", [
+                    'trackingID' => $trackingID
+                    ]
+                )->render()
+            );
         }
     }
 }
@@ -219,15 +250,21 @@ if(!function_exists('googleAnalytics')) {
 if(!function_exists('googleTagManager')) {
     /**
      * Get a project settings
-     * @param string $containerID
+     *
+     * @param  string $containerID
      * @return string
      */
-    function googleTagManager($containerID = ''){
+    function googleTagManager($containerID = '')
+    {
         $containerID = ($containerID ? $containerID : settings('tagManager'));
-        if($containerID){
-            return new \Illuminate\Support\HtmlString(view()->make("vendor.general.googleTagManagerHead", [
-                'containerID' => $containerID
-            ])->render());
+        if($containerID) {
+            return new \Illuminate\Support\HtmlString(
+                view()->make(
+                    "vendor.general.googleTagManagerHead", [
+                    'containerID' => $containerID
+                    ]
+                )->render()
+            );
         }
     }
 }
@@ -235,15 +272,21 @@ if(!function_exists('googleTagManager')) {
 if(!function_exists('googleTagManagerBody')) {
     /**
      * Get a project settings
-     * @param string $containerID
+     *
+     * @param  string $containerID
      * @return string
      */
-    function googleTagManagerBody($containerID = ''){
+    function googleTagManagerBody($containerID = '')
+    {
         $containerID = ($containerID ? $containerID : settings('tagManager'));
-        if($containerID){
-            return new \Illuminate\Support\HtmlString(view()->make("vendor.general.googleTagManagerBody", [
-                'containerID' => $containerID
-            ])->render());
+        if($containerID) {
+            return new \Illuminate\Support\HtmlString(
+                view()->make(
+                    "vendor.general.googleTagManagerBody", [
+                    'containerID' => $containerID
+                    ]
+                )->render()
+            );
         }
     }
 }
@@ -252,17 +295,18 @@ if(!function_exists('metaTags')) {
     /**
      * Get meta tags and prints them
      *
-     * @param null $modelData
-     * @param array $customData
+     * @param  null  $modelData
+     * @param  array $customData
      * @throws Exception
      */
-    function metaTags($modelData = null, $customData = []){
-        if(\Accio\Support\Facades\Meta::getMetaIsPrinted()){
+    function metaTags($modelData = null, $customData = [])
+    {
+        if(\Accio\Support\Facades\Meta::getMetaIsPrinted()) {
             return;
         }
 
         $currentMenuLink = \App\Models\MenuLink::getActive();
-        if(!$modelData){
+        if(!$modelData) {
             $modelData = $currentMenuLink;
         }
 
@@ -271,34 +315,34 @@ if(!function_exists('metaTags')) {
             \Accio\Support\Facades\Meta::setModelData($modelData);
 
             // Get model's own meta data
-            if(method_exists($modelData, 'metaData')){
+            if(method_exists($modelData, 'metaData')) {
                 $modelData->metaData();
             }
         }
 
         // Set title
         $title = null;
-        if(isset($customData['title'])){
+        if(isset($customData['title'])) {
             $title = $customData['title'];
-        }elseif($modelData && property_exists($modelData, 'title')){
+        }elseif($modelData && property_exists($modelData, 'title')) {
             $title = $modelData->title;
-        }elseif($currentMenuLink && $currentMenuLink->label){
+        }elseif($currentMenuLink && $currentMenuLink->label) {
             $title = $currentMenuLink->label;
         }
 
-        if($title){
+        if($title) {
             \Accio\Support\Facades\Meta::setTitle($title);
         }
 
         // Set description
         $description = null;
-        if(isset($customData['description'])){
+        if(isset($customData['description'])) {
             $description = $customData['description'];
-        }elseif($modelData && property_exists($modelData,'description')){
+        }elseif($modelData && property_exists($modelData, 'description')) {
             $description = $modelData->description;
         }
 
-        if($description){
+        if($description) {
             $this->set('description', $description);
         }
 
@@ -318,27 +362,32 @@ if(!function_exists('homepage')) {
      *
      * @return array|null Returns the data of the primary Menu if found, null instead
      */
-    function homepage($columnName = ''){
+    function homepage($columnName = '')
+    {
         return \App\Models\Post::getHomepage($columnName);
     }
 }
 
-function uploadsPath($extraPath = null){
+function uploadsPath($extraPath = null)
+{
     return config('filesystems.disks.public.path').($extraPath ? "/".$extraPath : '');
 }
-function uploadsURL($filePath){
+function uploadsURL($filePath)
+{
     return Storage::disk('public')->url($filePath);
 }
 
 if(!function_exists('noPostTypeSlug')) {
     /**
      * Remove 'post_' from post type slug
-     * @param $postTypeSlug
-     * @param string $replaceWith
+     *
+     * @param  $postTypeSlug
+     * @param  string       $replaceWith
      * @return mixed
      */
-    function cleanPostTypeSlug($postTypeSlug, $replaceWith = ''){
-        return str_replace('post_',$replaceWith,$postTypeSlug);
+    function cleanPostTypeSlug($postTypeSlug, $replaceWith = '')
+    {
+        return str_replace('post_', $replaceWith, $postTypeSlug);
     }
 }
 
@@ -346,9 +395,9 @@ if(!function_exists('permalink')) {
     /**
      * Get a permalink by name
      *
-     * @param $belongsTo
-     * @param $name
-     * @param string $defaultURL
+     * @param  $belongsTo
+     * @param  $name
+     * @param  string    $defaultURL
      * @return string
      */
     function permalink($belongsTo, $name, $defaultURL = '')
@@ -360,8 +409,9 @@ if(!function_exists('permalink')) {
 if(!function_exists('stubPath')) {
     /**
      * Get stub Path-
-     * @param string $path
-     * @param bool $stubExtension True if .stub extension should be added in the given path
+     *
+     * @param  string $path
+     * @param  bool   $stubExtension True if .stub extension should be added in the given path
      * @return string
      */
     function stubPath($path, $stubExtension = true)
@@ -374,19 +424,20 @@ if(!function_exists('routeIsActive')) {
     /**
      * Check if a route is active
      *
-     * @param $routeName
-     * @param string $className
+     * @param  $routeName
+     * @param  string    $className
      * @return bool|string
      */
-    function routeIsActive($routeName, $className = ""){
-        $currentRouteName = str_replace('.default', '' ,\Request::route()->getName());
-        if($currentRouteName == $routeName){
-            if($className){
+    function routeIsActive($routeName, $className = "")
+    {
+        $currentRouteName = str_replace('.default', '', \Request::route()->getName());
+        if($currentRouteName == $routeName) {
+            if($className) {
                 return $className;
             }
             return false;
         }else{
-            if($className){
+            if($className) {
                 return '';
             }
             return true;
@@ -398,6 +449,7 @@ if(!function_exists('authControllerExist')) {
     /**
      * Checks if auth controller exist
      * This is used to check if user account routes shall be defined and if login/register links should be shown in Default Theme
+     *
      * @return bool
      */
     function authControllerExist()
@@ -410,9 +462,11 @@ if (! function_exists('error404')) {
 
     /**
      * Error 404
+     *
      * @return \Illuminate\Http\Response
      */
-    function error404(){
+    function error404()
+    {
         return response()->view(\App\Models\Theme::view('errors/404'), [], 404);
     }
 }
@@ -421,10 +475,12 @@ if (! function_exists('error404')) {
 if (! function_exists('pluginsPath')) {
     /**
      * Error 404
+     *
      * @return \Illuminate\Http\Response
      */
-    function pluginsPath($path = ''){
-        $path = str_replace('\\','/',$path);
+    function pluginsPath($path = '')
+    {
+        $path = str_replace('\\', '/', $path);
         return base_path().'/plugins'.($path ? '/'.$path : "");
     }
 }
@@ -433,10 +489,12 @@ if (! function_exists('pluginsPath')) {
 if (! function_exists('tmpPath')) {
     /**
      * tmp path 404
-     * @param string $path
+     *
+     * @param  string $path
      * @return \Illuminate\Http\Response
      */
-    function tmpPath($path = ''){
+    function tmpPath($path = '')
+    {
         return storage_path('tmp'.($path ? '/'.$path : ""));
     }
 }
@@ -445,10 +503,11 @@ if (! function_exists('accioPath')) {
     /**
      * Manafarra CMS path
      *
-     * @param string $path
+     * @param  string $path
      * @return string
      */
-    function accioPath($path = ''){
+    function accioPath($path = '')
+    {
         return base_path('vendor/acciocms/core/src'.($path ? '/'.$path : ""));
     }
 }
@@ -457,11 +516,12 @@ if (! function_exists('findPostByID')) {
     /**
      * Find a post by its ID
      *
-     * @param int $postID
-     * @param string $postTypeSlug
+     * @param  int    $postID
+     * @param  string $postTypeSlug
      * @return object
      */
-    function findPostByID(int $postID, string $postTypeSlug = ''){
+    function findPostByID(int $postID, string $postTypeSlug = '')
+    {
         return \App\Models\Post::findByID($postID, $postTypeSlug);
     }
 }
@@ -470,11 +530,12 @@ if (! function_exists('findPostBySlug')) {
     /**
      * Find a post by its slug
      *
-     * @param string $slug
-     * @param string $postTypeSlug
+     * @param  string $slug
+     * @param  string $postTypeSlug
      * @return object
      */
-    function findPostBySlug(string $slug, string $postTypeSlug = ''){
+    function findPostBySlug(string $slug, string $postTypeSlug = '')
+    {
         return \App\Models\Post::findBySlug($slug, $postTypeSlug);
     }
 }
@@ -483,11 +544,12 @@ if (! function_exists('shareUrl')) {
     /**
      * Get all links to share content in social media
      *
-     * @param string $url to be shared
-     * @param string $title (optional) if you want to append text to share
+     * @param  string $url   to be shared
+     * @param  string $title (optional) if you want to append text to share
      * @return array all social links
      */
-    function shareUrl(string $url, string $title = ''){
+    function shareUrl(string $url, string $title = '')
+    {
         $links = [];
         $links['facebook'] = "https://www.facebook.com/sharer.php?u=" . $url;
         $links['twitter'] = "https://twitter.com/intent/tweet?url={$url}&text={$title}";
@@ -504,23 +566,24 @@ if (! function_exists('getPostType')) {
     /**
      * Get post type object
      *
-     * @param mixed $postTypeSlug without the post_ prefix
+     * @param  mixed $postTypeSlug without the post_ prefix
      * @return mixed
      */
-    function getPostType($postTypeSlug = ''){
-        if(!$postTypeSlug){
+    function getPostType($postTypeSlug = '')
+    {
+        if(!$postTypeSlug) {
             $postTypeSlug = config('project.default_post_type');
         }
 
         // find it by slug
         $postType  = \App\Models\PostType::findBySlug($postTypeSlug);
-        if($postType){
+        if($postType) {
             return $postType;
         }
 
         // find it by id
         $postType  = \App\Models\PostType::findByID($postTypeSlug);
-        if($postType){
+        if($postType) {
             return $postType;
         }
         return false;
@@ -530,19 +593,20 @@ if (! function_exists('isPostType')) {
     /**
      * Get post type object
      *
-     * @param string $postType without the post_ prefix
+     * @param  string $postType without the post_ prefix
      * @return mixed
      */
-    function isPostType($postTypeSlug){
+    function isPostType($postTypeSlug)
+    {
         // find it by slug
         $postType  = \App\Models\PostType::findBySlug($postTypeSlug);
-        if($postType){
+        if($postType) {
             return true;
         }
 
         // find it by id
         $postType  = \App\Models\PostType::findByID($postTypeSlug);
-        if($postType){
+        if($postType) {
             return true;
         }
         return false;
@@ -552,16 +616,18 @@ if (! function_exists('isSecure')) {
     /**
      * check whether the site is opened via https or no
      *
-     * @param $request
+     * @param  $request
      * @return bool
      */
-    function isHttps(){
+    function isHttps()
+    {
         return request()->headers->get('x-forwarded-proto') == 'https' ? true: false;
     }
 }
 if (! function_exists('adminURL')) {
     /**
      * Get project's admin URL
+     *
      * @return \Illuminate\Contracts\Routing\UrlGenerator|string
      */
     function adminURL()
@@ -576,7 +642,8 @@ if (! function_exists('isInAdmin')) {
      *
      * @return bool
      */
-    function isInAdmin(){
+    function isInAdmin()
+    {
         if (request()->is((string) Config::get('project')['adminPrefix'].'*')) {
             return true;
         }
@@ -589,7 +656,7 @@ if (! function_exists('currentMenuLink')) {
     /**
      * Current MenuLink
      *
-     * @param string $columnName
+     * @param  string $columnName
      * @return int|null
      */
     function currentMenuLink($columnName = '')
@@ -625,19 +692,22 @@ if (! function_exists('isTablet')) {
 }
 
 if (! function_exists('categoriesRelationTable')) {
-    function categoriesRelationTable($postTypeSlug){
+    function categoriesRelationTable($postTypeSlug)
+    {
         return $postTypeSlug."_categories";
     }
 }
 
 if (! function_exists('tagsRelationTable')) {
-    function tagsRelationTable($postTypeSlug){
+    function tagsRelationTable($postTypeSlug)
+    {
         return $postTypeSlug."_tags";
     }
 }
 
 if (! function_exists('mediaRelationTable')) {
-    function mediaRelationTable($postTypeSlug){
+    function mediaRelationTable($postTypeSlug)
+    {
         return $postTypeSlug."_media";
     }
 }

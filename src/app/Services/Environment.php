@@ -23,14 +23,15 @@ class Environment
     /**
      * Write env file configuration
      *
-     * @param array $properties
+     * @param  array $properties
      * @return bool
      */
-    public function setEnv($properties){
+    public function setEnv($properties)
+    {
         $envPath = app()->environmentFilePath();
 
         $contents = File::get($envPath);
-        if(!$contents){
+        if(!$contents) {
             throw new \Exception('Could not read env file');
         }
 
@@ -42,8 +43,7 @@ class Environment
             $contents = preg_replace('/' . $key . '=(.*)/', $key . '=' . $value, $contents);
         }
 
-        if (File::put($envPath, $contents) === false)
-        {
+        if (File::put($envPath, $contents) === false) {
             throw new \Exception('Could not write env file');
         }
 
@@ -65,7 +65,8 @@ class Environment
      *
      * @return void
      */
-    private function setEnvValue($name, $value){
+    private function setEnvValue($name, $value)
+    {
         // If PHP is running as an Apache module and an existing
         // Apache environment variable exists, overwrite it
         if (function_exists('apache_getenv') && function_exists('apache_setenv') && apache_getenv($name)) {

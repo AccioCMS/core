@@ -154,7 +154,7 @@ export default {
             let translationGroupName = request.split('::');
 
             // Handle group translations
-            if(request.indexOf('::') !== -1){
+            if(request.indexOf('::') !== -1) {
                 let groupName = translationGroupName[0];
                 let labelKey = request.replace(groupName+'::','');
                 let transPathArr = labelKey.split('.');
@@ -179,7 +179,7 @@ export default {
                     allLabels = allLabels[transPathArr[key]];
                 }
             }
-            if (isOK){
+            if (isOK) {
                 context.commit('setTranslation', allLabels);
             }
         }

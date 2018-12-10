@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Event;
 use Mockery\Exception;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class UserGroupModel extends Model{
+class UserGroupModel extends Model
+{
 
     use
       LogsActivity,
@@ -20,6 +21,7 @@ class UserGroupModel extends Model{
 
     /**
      * fields that can be filled in CRUD
+     *
      * @var array
      */
     protected $fillable = [
@@ -56,7 +58,8 @@ class UserGroupModel extends Model{
      * @return object
      * @throws Exception
      */
-    public static function getAdminGroup(){
+    public static function getAdminGroup()
+    {
         return UserGroup::where('slug', "admin")->get()->first();
     }
 
@@ -66,7 +69,8 @@ class UserGroupModel extends Model{
      * @return object
      * @throws Exception
      */
-    public static function getEditorGroup(){
+    public static function getEditorGroup()
+    {
         return UserGroup::where('slug', "editor")->get()->first();
     }
 
@@ -76,7 +80,8 @@ class UserGroupModel extends Model{
      * @return object
      * @throws Exception
      */
-    public static function getAuthorGroup(){
+    public static function getAuthorGroup()
+    {
         return UserGroup::where('slug', "author")->get()->first();
     }
 
@@ -85,7 +90,8 @@ class UserGroupModel extends Model{
      *
      * @return void
      */
-    public static function createDefaultRoles(){
+    public static function createDefaultRoles()
+    {
         self::createAdminRole();
         self::createEditorRole();
         self::createAuthorRole();
@@ -96,69 +102,79 @@ class UserGroupModel extends Model{
     /**
      * Create an Admin role.
      *
-     * @param bool $force Create admin role even if it exist
+     * @param  bool $force Create admin role even if it exist
      * @return bool
      */
-    public static function createAdminRole($force = false){
-        if(!$force){
+    public static function createAdminRole($force = false)
+    {
+        if(!$force) {
             if(Permission::exists('global', 'admin')) {
                 return false;
             }
         }
 
-        return self::createRole('Admin', true, [[
+        return self::createRole(
+            'Admin', true, [[
             'app' => 'global',
             'key' => 'admin'
-        ]]);
+            ]]
+        );
     }
 
     /**
      * Create an Editor role.
      *
-     * @param bool $force Create editor role even if it exist
+     * @param  bool $force Create editor role even if it exist
      * @return bool
      */
-    public static function createEditorRole($force = false){
-        if(!$force){
+    public static function createEditorRole($force = false)
+    {
+        if(!$force) {
             if(Permission::exists('global', 'editor')) {
                 return false;
             }
         }
 
-        return self::createRole('Editor', true, [[
+        return self::createRole(
+            'Editor', true, [[
             'app' => 'global',
             'key' => 'editor'
-        ]]);
+            ]]
+        );
     }
 
     /**
      * Create an Author role.
      *
-     * @param bool $force Create author role even if it exist
+     * @param  bool $force Create author role even if it exist
      * @return bool
      */
-    public static function createAuthorRole($force = false){
-        if(!$force){
+    public static function createAuthorRole($force = false)
+    {
+        if(!$force) {
             if(Permission::exists('global', 'author')) {
                 return false;
             }
         }
 
-        return self::createRole('Author', true, [[
+        return self::createRole(
+            'Author', true, [[
             'app' => 'global',
             'key' => 'author'
-        ]]);
+            ]]
+        );
     }
 
     /**
      * Create an admin role.
      *
-     * @param string $name
-     * @param bool $isDefault
-     * @param array $permissions ["app" => "lorem", "key" => ipsum]
+     * @param  string $name
+     * @param  bool   $isDefault
+     * @param  array  $permissions ["app" => "lorem", "key" => ipsum]
      * @return boolean
      */
-    public static function createRole($name, $isDefault, $permissions = []){
+    public static function createRole($name, $isDefault, $permissions = [])
+    {
 
         // Create admin role
         $role = (new static());
@@ -193,7 +209,8 @@ class UserGroupModel extends Model{
     /**
      * Destruct model instance
      */
-    public function __destruct(){
+    public function __destruct()
+    {
         Event::fire('userGroup:destruct', [$this]);
     }
 }

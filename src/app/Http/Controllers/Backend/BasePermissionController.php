@@ -11,17 +11,19 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\Language;
 use App\Models\Permission;
 
-class BasePermissionController extends MainController{
+class BasePermissionController extends MainController
+{
 
     /**
      * Get the permission options for each module (Cms app) from their models.
      *
-     * @param string $lang
+     * @param  string $lang
      * @return array
      * @throws \Exception
      */
-    public function getAllPermissionsOptions($lang = ""){
-        if(!User::hasAccess('permissions','read')){
+    public function getAllPermissionsOptions($lang = "")
+    {
+        if(!User::hasAccess('permissions', 'read')) {
             return $this->noPermission();
         }
         return Permission::getPermissionsFromModels();
@@ -33,9 +35,10 @@ class BasePermissionController extends MainController{
      *
      * @return array
      * */
-    public function getUserGroups($lang = ""){
+    public function getUserGroups($lang = "")
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('Permissions','read')){
+        if(!User::hasAccess('Permissions', 'read')) {
             return $this->noPermission();
         }
         return array('data' => \App\Models\UserGroup::all());
@@ -44,19 +47,20 @@ class BasePermissionController extends MainController{
     /**
      * Delete a group and it's permissions by it's ID.
      *
-     * @param string $lang
-     * @param int $id
+     * @param  string $lang
+     * @param  int    $id
      * @return array
      */
-    public function delete($lang, $id){
+    public function delete($lang, $id)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('Permissions','delete')){
+        if(!User::hasAccess('Permissions', 'delete')) {
             return $this->noPermission();
         }
 
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
         $group = \App\Models\UserGroup::find($id)->delete();
-        if($group){
+        if($group) {
             DB::table('permissions')->where('groupID', $id)->delete();
             $result = $this->response('Group is deleted');
         }else{
@@ -68,12 +72,13 @@ class BasePermissionController extends MainController{
     /**
      * Creates or Updates group and permissions.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array
      */
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('Permissions','create')){
+        if(!User::hasAccess('Permissions', 'create')) {
             return $this->noPermission();
         }
         // custom messages for validation
@@ -83,14 +88,16 @@ class BasePermissionController extends MainController{
             'permissions.required' => 'Something is wrong, please contact your administrator.',
         );
         // validation
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make(
+            $request->all(), [
             'id' => 'required',
             'name' => 'required',
             'permissions' => 'required',
-        ], $messages);
+            ], $messages
+        );
         // if validation fails return json response
-        if($validator->fails()){
-            return $this->response( "Please check all required fields!", 400,null, false, false, true, $validator->errors());
+        if($validator->fails()) {
+            return $this->response("Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
         $id = $request->id;
@@ -98,12 +105,14 @@ class BasePermissionController extends MainController{
         $permissions = $request->permissions;
         $globalPermissions = $request->globalPermissions;
 
-        if ($id == 0){
+        if ($id == 0) {
             $slug = str_slug($name, '-');
-            $group = \App\Models\UserGroup::create([
+            $group = \App\Models\UserGroup::create(
+                [
                 'name' => $name,
                 'slug' => $slug
-            ]);
+                ]
+            );
             $id = $group->groupID;
         }else{
             $postDeletion = DB::table('permissions')->where('groupID', $id)->delete();
@@ -113,9 +122,9 @@ class BasePermissionController extends MainController{
         $query = array_merge($query, Permission::createPermissions($permissions, $id));
 
         // make query
-        if (count($query)){
+        if (count($query)) {
             $permission = Permission::insert($query);
-            if ($permission){
+            if ($permission) {
                 return $this->response('Permissions updated');
             }
         }
@@ -124,16 +133,17 @@ class BasePermissionController extends MainController{
     /**
      * Bulk Delete groups and permissions, delete many groups in one request.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array
      */
-    public function bulkDelete(Request $request){
+    public function bulkDelete(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('Permissions','delete')){
+        if(!User::hasAccess('Permissions', 'delete')) {
             return $this->noPermission();
         }
         $data = $request->all();
-        if(isset($data['postTypes'])){
+        if(isset($data['postTypes'])) {
             unset($data['postTypes']);
         }
 
@@ -141,24 +151,25 @@ class BasePermissionController extends MainController{
         foreach ($data as $id){
             $page = \App\Models\UserGroup::findOrFail($id)->delete();
             if (!$page) {
-                return $this->response( 'Internal server error. Please try again later', 500);
+                return $this->response('Internal server error. Please try again later', 500);
             }
             DB::table('permissions')->where('groupID', $id)->delete();
         }
 
-        return $this->response( 'Groups are deleted');
+        return $this->response('Groups are deleted');
     }
 
     /**
      * USED to get list of models for custom permissions.
      * Returns array list from DB with primary key as array key and selected columns as value.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array
      */
-    public function getList(Request $request){
+    public function getList(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('permissions','read')){
+        if(!User::hasAccess('permissions', 'read')) {
             return $this->noPermission();
         }
         $className = 'App\\Models\\'.$request->customPermissions['model'];
@@ -166,15 +177,15 @@ class BasePermissionController extends MainController{
         $currentLang = App::getLocale();
         $obj = DB::table($class->table);
         // where clause
-        if (isset($request->customPermissions['keys'])){
+        if (isset($request->customPermissions['keys'])) {
             foreach ($request->customPermissions['keys'] as $clause){
                 $obj->where($clause['field'], $clause['operator'], $clause['value']);
             }
         }
         // order
-        if (isset($request->customPermissions['order'])){
+        if (isset($request->customPermissions['order'])) {
             foreach ($request->customPermissions['order'] as $orderKey => $order){
-                if(isset($order['isTranslatable']) && $order['isTranslatable']){
+                if(isset($order['isTranslatable']) && $order['isTranslatable']) {
                     $obj->orderBy($order['field'].'->'.$currentLang, $order['type']);
                 }else{
                     $obj->orderBy($order['field'], $order['type']);
@@ -182,7 +193,7 @@ class BasePermissionController extends MainController{
             }
         }
         // limit
-        if (isset($request->customPermissions['limit'])){
+        if (isset($request->customPermissions['limit'])) {
             $obj->limit($request->customPermissions['limit']);
         }
         // push primary key in selected
@@ -190,22 +201,24 @@ class BasePermissionController extends MainController{
         array_push($selected, $class->getKeyName());
         $list = $obj->select($selected)->get();
         // filter by language
-        $filteredArr = Language::filterRows($list, false );
+        $filteredArr = Language::filterRows($list, false);
 
         // construct result array
         $result = array();
         foreach ($filteredArr as $k => $filtered){
             $title = '';
             foreach ($filtered as $key => $value){
-                if(in_array($key, $request->customPermissions['select'])){
+                if(in_array($key, $request->customPermissions['select'])) {
                     $title .= ($title != '') ? ' ' : '';
                     $title .= $value;
                 }
             }
-            array_push($result, array(
+            array_push(
+                $result, array(
                 $class->primaryKey => $filtered[$class->getKeyName()],
                 'title' => $title
-            ));
+                )
+            );
 
         }
         return $result;
@@ -215,12 +228,13 @@ class BasePermissionController extends MainController{
     /**
      * Return all permission and values structured for frontend.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array
      */
-    public function getListValues(Request $request){
+    public function getListValues(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('permissions','read')){
+        if(!User::hasAccess('permissions', 'read')) {
             return $this->noPermission();
         }
         $permissionsValues = Permission::where('groupID', $request->ID)->get();
@@ -229,14 +243,14 @@ class BasePermissionController extends MainController{
         $permissionResult = array();
         $currentLang = App::getLocale();
         // make array with all apps of a group that have hasAll = true
-        $hasAllAppsObj = Permission::where('groupID', $request->ID)->where('key','categories')->where('hasAll',true)->select('app')->get()->toArray();
+        $hasAllAppsObj = Permission::where('groupID', $request->ID)->where('key', 'categories')->where('hasAll', true)->select('app')->get()->toArray();
         $hasAllAppsArr = [];
         foreach ($hasAllAppsObj as $hasAllAppObj){
             $hasAllAppsArr[] = $hasAllAppObj['app'];
         }
 
         // used to get the categories for posts types
-        $categories = Language::filterRows(\App\Models\Category::all()->toArray(),false);
+        $categories = Language::filterRows(\App\Models\Category::all()->toArray(), false);
         $categoryArr = [];
         foreach ($categories as $category){
             $categoryArr[$category['categoryID']] = $category;
@@ -250,38 +264,39 @@ class BasePermissionController extends MainController{
                 // all permission rows taken from DB of a app
                 foreach ($permissionsValues as $pemissionsValue) {
                     // get selected menu links ids
-                    if($appName == 'MenuLinks' && $pemissionsValue->app == 'MenuLinks' && $pemissionsValue->key == 'id'){
+                    if($appName == 'MenuLinks' && $pemissionsValue->app == 'MenuLinks' && $pemissionsValue->key == 'id') {
                         $app['selectedMenuLinks'] = json_decode($pemissionsValue->ids);
                     }
                     // populate global permission array
-                    if($pemissionsValue['app'] == 'global'){
+                    if($pemissionsValue['app'] == 'global') {
                         $globalPermissions[$pemissionsValue['key']] = true;
                     }
                     // if it is a CRUD permissions it means it's values should go to defaultPermissionsValues array
-                    if ($pemissionsValue->app == $appName){
-                        if($pemissionsValue->key == 'create' ||
-                            $pemissionsValue->key == 'update' ||
-                            $pemissionsValue->key == 'read' ||
-                            $pemissionsValue->key == 'delete'){
-                            if (!in_array($pemissionsValue->key, $app['defaultPermissionsValues'])){
+                    if ($pemissionsValue->app == $appName) {
+                        if($pemissionsValue->key == 'create' 
+                            || $pemissionsValue->key == 'update' 
+                            || $pemissionsValue->key == 'read' 
+                            || $pemissionsValue->key == 'delete'
+                        ) {
+                            if (!in_array($pemissionsValue->key, $app['defaultPermissionsValues'])) {
                                 $app['defaultPermissionsValues'][] = $pemissionsValue->key;
                             }
                         }
                         // Populate Categories Values
-                        if(isset($app['categoriesValues'])){
-                            if(count($app['categoriesValues']) != 0){
+                        if(isset($app['categoriesValues'])) {
+                            if(count($app['categoriesValues']) != 0) {
                                 continue;
                             }
-                            if(in_array($appName, $hasAllAppsArr)){
+                            if(in_array($appName, $hasAllAppsArr)) {
                                 $app['hasAll'] = true;
                                 $app['categoriesValues'] = [];
                             }else{
                                 $catIDsOBJ = json_decode($pemissionsValue->ids, true);
                                 $catIDs = array();
-                                if (is_object($catIDsOBJ) || is_array($catIDsOBJ)){
+                                if (is_object($catIDsOBJ) || is_array($catIDsOBJ)) {
                                     foreach ($catIDsOBJ as $id){
                                         $catIDs[] = $id;
-                                        if (isset($categoryArr[$id])){
+                                        if (isset($categoryArr[$id])) {
                                             array_push($app['categoriesValues'], $categoryArr[$id]);
                                         }
                                     }
@@ -289,13 +304,13 @@ class BasePermissionController extends MainController{
                             }
                         }
                         // if this app has custom permissions
-                        if(isset($app['customPermissionsValues'])){
+                        if(isset($app['customPermissionsValues'])) {
                             // loop throw the custom permissions
                             foreach ($app['customPermissionsValues'] as $customPermissionsValueKey => $customPermissionsValueValue){
-                                if(is_array($customPermissionsValueValue)){ // if custom permission is array (it means it takes a list from a other table in database)
-                                    if ($pemissionsValue->key == $customPermissionsValueKey){
+                                if(is_array($customPermissionsValueValue)) { // if custom permission is array (it means it takes a list from a other table in database)
+                                    if ($pemissionsValue->key == $customPermissionsValueKey) {
                                         // if the list is already set don't set it twice
-                                        if (isset($app['customPermissionsValues'][$pemissionsValue->key]) && count($app['customPermissionsValues'][$pemissionsValue->key]) != 0){
+                                        if (isset($app['customPermissionsValues'][$pemissionsValue->key]) && count($app['customPermissionsValues'][$pemissionsValue->key]) != 0) {
                                             continue;
                                         }
                                         $className = 'App\\Models\\'.$app['customPermissions'][$pemissionsValue->key]['value']['model'];
@@ -310,8 +325,8 @@ class BasePermissionController extends MainController{
                                             $title = '';
                                             $count = 0;
                                             foreach ($columns as $column){
-                                                if(is_object(json_decode($item->$column))){
-                                                    if(isset(json_decode($item->$column)->$currentLang)){
+                                                if(is_object(json_decode($item->$column))) {
+                                                    if(isset(json_decode($item->$column)->$currentLang)) {
                                                         $title .= json_decode($item->$column)->$currentLang;
                                                     }else{
                                                         $title .= '';
@@ -320,7 +335,7 @@ class BasePermissionController extends MainController{
                                                     $title .= $item->$column;
                                                 }
 
-                                                if(count($columns) == $count){
+                                                if(count($columns) == $count) {
                                                     $title .= ' ';
                                                 }
                                                 $count++;
@@ -333,7 +348,7 @@ class BasePermissionController extends MainController{
 
                                 }else{
                                     // if custom permission it's not a array it means it is a boolean
-                                    if ($pemissionsValue->key == $customPermissionsValueKey){
+                                    if ($pemissionsValue->key == $customPermissionsValueKey) {
                                         $app['customPermissionsValues'][$pemissionsValue->key] = true;
                                         break;
                                     }

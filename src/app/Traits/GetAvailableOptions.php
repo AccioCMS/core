@@ -12,7 +12,8 @@ trait GetAvailableOptions
      *
      * @return array
      */
-    protected function getDatabaseDrivers(){
+    protected function getDatabaseDrivers()
+    {
         // Use the function instead of PDO::getAvailableDrivers so it can be mocked
         $available = new Collection(pdo_drivers());
         return array_values($available->intersect(['mysql', 'pgsql', 'sqlite'])->all());
@@ -22,7 +23,8 @@ trait GetAvailableOptions
      *
      * @return array
      */
-    protected function getTimezoneRegions(){
+    protected function getTimezoneRegions()
+    {
         return [
             'UTC'        => DateTimeZone::UTC,
             'Africa'     => DateTimeZone::AFRICA,
@@ -45,7 +47,8 @@ trait GetAvailableOptions
      *
      * @see DateTimeZone
      */
-    protected function getTimezoneLocations($region){
+    protected function getTimezoneLocations($region)
+    {
         $locations = [];
         foreach (DateTimeZone::listIdentifiers($region) as $timezone) {
             $locations[] = substr($timezone, strpos($timezone, '/') + 1);

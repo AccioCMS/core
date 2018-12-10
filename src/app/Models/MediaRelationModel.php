@@ -5,7 +5,8 @@ namespace Accio\App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class MediaRelationModel extends Model{
+class MediaRelationModel extends Model
+{
     /**
      * The table associated with the model.
      *
@@ -32,7 +33,8 @@ class MediaRelationModel extends Model{
      *
      * @return BelongsTo
      */
-    public function media(){
-        return $this->belongsTo('App\Models\Media','mediaID','mediaID');
+    public function media()
+    {
+        return $this->belongsTo('App\Models\Media', 'mediaID', 'mediaID');
     }
 }

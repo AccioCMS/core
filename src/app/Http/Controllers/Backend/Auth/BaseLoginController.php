@@ -10,7 +10,8 @@ use Illuminate\Http\Request;
 use Accio\App\Http\Controllers\Backend\MainController;
 
 
-class BaseLoginController extends MainController {
+class BaseLoginController extends MainController
+{
     /*
     |--------------------------------------------------------------------------
     | Login Controller
@@ -27,9 +28,9 @@ class BaseLoginController extends MainController {
     /**
      * Create a new controller instance.
      * Only "logout" method is allowed to be accessed by guest
-     *
      */
-    public function __construct(){
+    public function __construct()
+    {
         $this->middleware('guest:admin', ['except' => 'logout']);
         parent::__construct();
     }
@@ -37,10 +38,11 @@ class BaseLoginController extends MainController {
     /**
      * Where to redirect users after login.
      *
-     * @var string
+     * @var    string
      * @return string
      */
-    protected function redirectTo(){
+    protected function redirectTo()
+    {
         return '/'.Config::get('project')['adminPrefix'].'?mode=menu';
     }
 
@@ -49,7 +51,8 @@ class BaseLoginController extends MainController {
      *
      * @return \Illuminate\Http\Response
      */
-    public function showLoginForm(){
+    public function showLoginForm()
+    {
         return view('accio::auth.login');
     }
 
@@ -66,7 +69,7 @@ class BaseLoginController extends MainController {
     /**
      * Log the user out of the application.
      *
-     * @param \Illuminate\Http\Request
+     * @param  \Illuminate\Http\Request
      * @return \Illuminate\Http\Response
      */
     public function logout(Request $request)

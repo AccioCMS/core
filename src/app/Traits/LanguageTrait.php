@@ -15,7 +15,8 @@ use Input;
 use Mockery\Exception;
 
 
-trait LanguageTrait{
+trait LanguageTrait
+{
 
     /**
      * Stores current language data
@@ -35,12 +36,13 @@ trait LanguageTrait{
     /**
      * Get data of the default language.
      *
-     * @param string $column Column Name of language
+     * @param  string $column Column Name of language
      * @return object|string|null
      * @throws Exception If unable to find default language data
      * */
-    public static function getDefault(string $column = ''){
-        if(isset(self::$default->$column)){
+    public static function getDefault(string $column = '')
+    {
+        if(isset(self::$default->$column)) {
             return self::$default->$column;
         }
         return self::$default;
@@ -49,12 +51,13 @@ trait LanguageTrait{
     /**
      * Get information of current language.
      *
-     * @param string $column Column Name of language
+     * @param  string $column Column Name of language
      * @return string|string
      * @throws Exception If unable to find current language's data
      * */
-    public static function current(string $column =''){
-        if(isset(self::$current->$column)){
+    public static function current(string $column ='')
+    {
+        if(isset(self::$current->$column)) {
             return self::$current->$column;
         }
         return self::$current;
@@ -66,11 +69,12 @@ trait LanguageTrait{
      *
      * @throws \Exception
      */
-    public static function setDefault(){
-        if(!self::$default){
+    public static function setDefault()
+    {
+        if(!self::$default) {
             $languages = Language::all();
             if($languages) {
-                $getDefault = $languages->where('isDefault',true);
+                $getDefault = $languages->where('isDefault', true);
 
                 if ($getDefault) {
                     self::$default = $getDefault->first();
@@ -91,10 +95,11 @@ trait LanguageTrait{
     /**
      * Set current language across all the environment.
      *
-     * @param string $languageSlug
+     * @param  string $languageSlug
      * @throws \Exception
      */
-    public static function setCurrent(string $languageSlug){
+    public static function setCurrent(string $languageSlug)
+    {
         $languageData  = self::findBySlug($languageSlug);
         if ($languageData) {
             App::setLocale($languageSlug);
@@ -112,7 +117,8 @@ trait LanguageTrait{
      * @param  \Illuminate\Http\Request $request
      * @return string|null
      */
-    public static function setFromURL(Request $request){
+    public static function setFromURL(Request $request)
+    {
         if(!\Request::route('lang')) {
             // language may be present in url without {param} defined
             $detectLanguageFromRequest = \App\Models\Language::detectLanguageFromRequest($request);
@@ -127,17 +133,22 @@ trait LanguageTrait{
     /**
      * Print list of languages.
      *
-     * @param string $customView
-     * @param string $ulClass
+     * @param  string $customView
+     * @param  string $ulClass
      * @return HtmlString
      * @throws \Exception
      */
-    public static function printLanguages($customView = '', $ulClass=''){
-        return new HtmlString(view()->make(($customView ? $customView : "vendor.languages.default"), [
-          'languages' => Language::all(),
-          'ulClass' => $ulClass,
+    public static function printLanguages($customView = '', $ulClass='')
+    {
+        return new HtmlString(
+            view()->make(
+                ($customView ? $customView : "vendor.languages.default"), [
+                'languages' => Language::all(),
+                'ulClass' => $ulClass,
 
-        ])->render());
+                ]
+            )->render()
+        );
     }
 
     /**
@@ -145,8 +156,9 @@ trait LanguageTrait{
      *
      * @return array Returns all labels from current language
      * */
-    public static function getLabels(){
-        if(!file_exists(accioPath('resources/lang/'.App::getLocale()))){
+    public static function getLabels()
+    {
+        if(!file_exists(accioPath('resources/lang/'.App::getLocale()))) {
             return json_encode([]);
         }
 
@@ -155,7 +167,7 @@ trait LanguageTrait{
 
         $labels = [];
         foreach ($translationFiles as $file) {
-            $fileName = str_replace('.php','',$file->getFilename());
+            $fileName = str_replace('.php', '', $file->getFilename());
             $labels[$fileName] = File::getRequire($file->getPathName());
         }
 
@@ -168,11 +180,12 @@ trait LanguageTrait{
     /**
      * Find language by slug.
      *
-     * @param  string $slug  The slug of language (ex. en)
+     * @param  string $slug The slug of language (ex. en)
      * @return array|null Returns an array with language's data if found, or null if not found
      * @throws \Exception
      * */
-    public static function findBySlug(string $slug){
+    public static function findBySlug(string $slug)
+    {
         return Language::all()->where('slug', $slug)->first();
     }
 
@@ -184,8 +197,9 @@ trait LanguageTrait{
      * @return boolean Returns true if found, false instead
      * @throws \Exception
      * */
-    public static function checkBySlug(string $slug){
-        if(Language::all()->where('slug', $slug)->count()){
+    public static function checkBySlug(string $slug)
+    {
+        if(Language::all()->where('slug', $slug)->count()) {
             return true;
         }
         return false;
@@ -200,25 +214,26 @@ trait LanguageTrait{
      * This function is only supposed to be used in Administration area, as it offers a wide list of options
      * for different scenarios.
      *
-     * @param  array   $rows The result of the query, the rows from database
-     * @param  boolean $justForInTable If it should filters columns for use in tables
-     * @param  array   $filterColumns Show only certain columns
-     * @param  boolean $withPagination If rows are generated from the pagination class, it gets rows from pagination's array
+     * @param array   $rows           The result of the query, the rows from database
+     * @param boolean $justForInTable If it should filters columns for use in tables
+     * @param array   $filterColumns  Show only certain columns
+     * @param boolean $withPagination If rows are generated from the pagination class, it gets rows from pagination's array
      *
      * @return array   Return filtered array
      * */
-    public static function filterRows($rows, $withPagination = true, $justForInTable = false, $filterColumns = array()){
+    public static function filterRows($rows, $withPagination = true, $justForInTable = false, $filterColumns = array())
+    {
         $filteredList = array();
         $temporaryList = array();
         $language = App::getLocale();
 
         if($withPagination) {
-            if(!is_array($rows)){
+            if(!is_array($rows)) {
                 $rows = $rows->toArray();
             }
             $list = $rows['data'];
         }else{
-            if(is_a($rows, 'Illuminate\Support\Collection')){
+            if(is_a($rows, 'Illuminate\Support\Collection')) {
                 $rows = $rows->toArray();
             }
             $list = $rows;
@@ -226,25 +241,25 @@ trait LanguageTrait{
 
         // loop throw the list
         foreach ($list as $rowKey => $row){
-            if(gettype($row) == "object" && in_array('Illuminate\Database\Eloquent\Model', class_parents($row))){
+            if(gettype($row) == "object" && in_array('Illuminate\Database\Eloquent\Model', class_parents($row))) {
                 $row = $row->getAttributes();
             }
             foreach ($row as $key => $value){
                 $jsonValue = true;
                 // Casts columns
-                if(is_object($value)){
+                if(is_object($value)) {
                     $jsonValue = $value;
-                }elseif(is_string($value) ){
+                }elseif(is_string($value) ) {
                     // non-casts columns
                     $jsonValue = json_decode($value);
                 }
 
-                if($justForInTable){
+                if($justForInTable) {
                     //fields like ID, postID, title and createdByUserID should always be shown in the list
-                    array_push($filterColumns,'postID','belongsToID','title','createdByUserID');
+                    array_push($filterColumns, 'postID', 'belongsToID', 'title', 'createdByUserID');
 
-                    if (in_array($key, $filterColumns)){
-                        if ($jsonValue && isset($jsonValue->$language)){
+                    if (in_array($key, $filterColumns)) {
+                        if ($jsonValue && isset($jsonValue->$language)) {
                             $temporaryList[$key] = $jsonValue->$language;
                             $temporaryList["original_object_".$key] = $value;
                         }else{
@@ -253,7 +268,7 @@ trait LanguageTrait{
                         }
                     }
                 }else{
-                    if ($jsonValue && isset($jsonValue->$language)){
+                    if ($jsonValue && isset($jsonValue->$language)) {
                         $temporaryList[$key] = $jsonValue->$language;
                         //store original object because we need it in vue js!
                         $temporaryList["original_object_".$key] = $value;
@@ -277,29 +292,32 @@ trait LanguageTrait{
     /**
      * Translate language fields from a list of objects.
      *
-     * @param  object $items The rows to be translated
-     * @param  string $languageSlug slug of language
+     * @param object $items        The rows to be translated
+     * @param string $languageSlug slug of language
      *
      * @return object Returns the list of translated items
      * */
-    public static function translateList($items, $languageSlug = ''){
+    public static function translateList($items, $languageSlug = '')
+    {
         if($items) {
             if(is_a($items, 'Illuminate\Database\Eloquent\Collection')) {
-                $translatedItems = $items->map(function ($post) use($languageSlug) {
-                    foreach ($post->getAttributes() as $key => $value) {
-                        $post->$key = self::translate($value,$languageSlug);
+                $translatedItems = $items->map(
+                    function ($post) use ($languageSlug) {
+                        foreach ($post->getAttributes() as $key => $value) {
+                            $post->$key = self::translate($value, $languageSlug);
+                        }
+                        return $post;
                     }
-                    return $post;
-                });
+                );
             } else {
                 $translatedItems = $items;
                 foreach($items as $key=>$value){
-                    $translatedItems->$key = self::translate($value,$languageSlug);
+                    $translatedItems->$key = self::translate($value, $languageSlug);
                 }
             }
 
             //if pagination
-            if(method_exists($items,"setCollection")){
+            if(method_exists($items, "setCollection")) {
                 $collection = new Collection($translatedItems);
                 return $items->setCollection($collection);
             }
@@ -311,12 +329,13 @@ trait LanguageTrait{
     /**
      * Gets current language value.
      *
-     * @param  array|object|string $value The rows to be translated
-     * @param  string $languageSlug   The slug of the language to be translated to. Default is taken from current menu link
+     * @param array|object|string $value        The rows to be translated
+     * @param string              $languageSlug The slug of the language to be translated to. Default is taken from current menu link
      *
      * @return mixed  Returns the translated value
      * */
-    public static function translate($value, $languageSlug = ''){
+    public static function translate($value, $languageSlug = '')
+    {
 
         if($value) {
             if (!$languageSlug) {
@@ -367,15 +386,16 @@ trait LanguageTrait{
     /**
      * Detect language slug from a request
      *
-     * @param Request $request
+     * @param  Request $request
      * @return bool
      * @throws \Exception
      */
-    public static function detectLanguageFromRequest(Request $request){
-        $splitURL = explode("/",$request->path());
-        if(isset($splitURL[0])){
+    public static function detectLanguageFromRequest(Request $request)
+    {
+        $splitURL = explode("/", $request->path());
+        if(isset($splitURL[0])) {
             // validate language
-            if(self::findBySlug($splitURL[0])){
+            if(self::findBySlug($splitURL[0])) {
                 return $splitURL[0];
             }
         }
@@ -387,20 +407,22 @@ trait LanguageTrait{
      *
      * @return string
      */
-    public function getHrefAttribute(){
+    public function getHrefAttribute()
+    {
         return url($this->slug);
     }
 
     /**
      * Set route lang attribute to all route request.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return void
      */
-    public static function setLangAttribute($request){
+    public static function setLangAttribute($request)
+    {
         // language may be present in url without {param} defined
         $languageSlug= self::setFromURL($request);
-        if(!$languageSlug){
+        if(!$languageSlug) {
             $languageSlug = App::getLocale();
         }
 
@@ -425,7 +447,8 @@ trait LanguageTrait{
      *
      * @return object
      */
-    public static function ISOlist(){
+    public static function ISOlist()
+    {
         $path = accioPath('resources/assets/json/languages.json');
         return json_decode(file_get_contents($path));
     }
@@ -433,10 +456,11 @@ trait LanguageTrait{
     /**
      * Get a ISO language by it slug.
      *
-     * @param string $slug
+     * @param  string $slug
      * @return object|null
      */
-    public static function getISOBySlug($slug){
+    public static function getISOBySlug($slug)
+    {
         $data = collect(self::ISOlist());
         return $data->where('slug', $slug)->first();
     }
@@ -444,10 +468,11 @@ trait LanguageTrait{
     /**
      * Get a ISO language by it name.
      *
-     * @param string $name
+     * @param  string $name
      * @return object|null
      */
-    public static function getISOByName($name){
+    public static function getISOByName($name)
+    {
         $data = collect(self::ISOlist());
         return $data->where('name', $name)->first();
     }

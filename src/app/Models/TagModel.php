@@ -12,7 +12,8 @@ use App\Models\PostType;
 use Accio\Support\Facades\Meta;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class TagModel extends Model{
+class TagModel extends Model
+{
 
     use
         Cachable,
@@ -76,7 +77,8 @@ class TagModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = []){
+    public function __construct(array $attributes = [])
+    {
         parent::__construct($attributes);
         Event::fire('tags:construct', [$this]);
     }
@@ -86,7 +88,8 @@ class TagModel extends Model{
      *
      * @return array
      */
-    public function menuLinkParameters(){
+    public function menuLinkParameters()
+    {
         $previousAutoTranslate = $this->getAutoTranslate();
         $this->setAutoTranslate(false);
         $postType = PostType::findByID($this->postTypeID);
@@ -106,8 +109,9 @@ class TagModel extends Model{
      *
      * @return boolean Returns true if found
      */
-    public function hasFeaturedImage(){
-        if($this->featuredImageID && $this->featuredImage){
+    public function hasFeaturedImage()
+    {
+        if($this->featuredImageID && $this->featuredImage) {
             return true;
         }
         return false;
@@ -115,10 +119,12 @@ class TagModel extends Model{
 
     /**
      * Featured image of a tag.
+     *
      * @return HasOne
      */
-    public function featuredImage(){
-        return $this->hasOne('App\Models\Media','mediaID','featuredImageID');
+    public function featuredImage()
+    {
+        return $this->hasOne('App\Models\Media', 'mediaID', 'featuredImageID');
     }
 
 
@@ -127,19 +133,22 @@ class TagModel extends Model{
      *
      * @return array
      */
-    public function metaData(){
+    public function metaData()
+    {
         Meta::setTitle($this->title)
             ->set("description", $this->about)
             ->set("og:type", "website", "property")
             ->set("og:title", $this->title, "property")
             ->set("og:description", $this->description, "property")
-            ->set("og:url",$this->href, "property")
+            ->set("og:url", $this->href, "property")
             ->setImageOG(($this->hasFeaturedImage() ? $this->featuredImage : null))
             ->setCanonical($this->href)
-            ->setWildcards([
+            ->setWildcards(
+                [
                 '{{title}}' => $this->title,
                 '{{sitename}}' => settings('siteTitle')
-            ]);
+                ]
+            );
     }
 
     /**
@@ -147,7 +156,8 @@ class TagModel extends Model{
      *
      * @return string
      */
-    public function getHrefAttribute(){
+    public function getHrefAttribute()
+    {
         return $this->href();
     }
 
@@ -156,22 +166,24 @@ class TagModel extends Model{
      * Generate a custom URL to a tag.
      *
      * @param string $routeName
-     * @param array $customAttributes
+     * @param array  $customAttributes
      *
      * @return string
      */
-    public function href($routeName = 'tag.single', $customAttributes = []){
+    public function href($routeName = 'tag.single', $customAttributes = [])
+    {
         $params = ['tagSlug'=>$this->slug];
-        if($customAttributes){
+        if($customAttributes) {
             $params = array_merge($customAttributes, $params);
         }
-        return route($routeName,$params);
+        return route($routeName, $params);
     }
 
     /**
      * Destruct model instance
      */
-    public function __destruct(){
+    public function __destruct()
+    {
         Event::fire('tag:destruct', [$this]);
     }
 }

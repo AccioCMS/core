@@ -21,7 +21,8 @@ use App\Models\User;
 use Mockery\Exception;
 
 
-trait MenuLinkTrait{
+trait MenuLinkTrait
+{
 
     /**
      * Current MenuLink data.
@@ -51,11 +52,12 @@ trait MenuLinkTrait{
      * While the same MenuLink can be linked to different Menus and they have the same params and routeName,
      * there is currently no way to identify which of them is active, therefore all of their IDs are returned.
      *
-     * @param bool $reset
+     * @param  bool $reset
      * @throws \Exception
      */
-    public static function setActiveIDs($reset = false){
-        if(!self::$activeIDs || $reset){
+    public static function setActiveIDs($reset = false)
+    {
+        if(!self::$activeIDs || $reset) {
             // Get current Menu Link
             $currentRoute = \Request::route();
 
@@ -69,7 +71,7 @@ trait MenuLinkTrait{
                     $menuLinkRoute = Route::getRoutes()->getByName($menuLink->routeName);
                 }
 
-                if($menuLinkRoute){                //route is found|
+                if($menuLinkRoute) {                //route is found|
                     self::matchRoute($currentMenuLinkIDs, $menuLink, $currentRoute, $menuLinkRoute);
                     self::checkCategoryMatch($currentMenuLinkIDs, $menuLink);
                 }
@@ -84,13 +86,14 @@ trait MenuLinkTrait{
     /**
      * Match route based on current menulink and route
      *
-     * @param array $currentMenuLinkIDs
-     * @param object $menuLink
-     * @param object $currentRoute
-     * @param object $menuLinkRoute
+     * @param  array  $currentMenuLinkIDs
+     * @param  object $menuLink
+     * @param  object $currentRoute
+     * @param  object $menuLinkRoute
      * @throws \Exception
      */
-    private static function matchRoute(&$currentMenuLinkIDs, $menuLink, $currentRoute, $menuLinkRoute){
+    private static function matchRoute(&$currentMenuLinkIDs, $menuLink, $currentRoute, $menuLinkRoute)
+    {
         $menuLinksParams = self::decodeParams($menuLink->params);
 
         //add language parameter on non-default languages
@@ -104,15 +107,12 @@ trait MenuLinkTrait{
         if ($menuLinkRoute->parameterNames()) {
             $paramsMatch = false;
             foreach ($menuLinkRoute->parameterNames() as $parameter) {
-                if (
-                    // Current route parameter is present in MenuLink route
-                  isset($menuLinksParams[$parameter]) &&
-
-                  // Route uri match
-                  $currentRoute->uri() == $menuLinkRoute->uri() &&
-
-                  // Current route Parameter match the parameter from Menu Link
-                  \Request::route()->parameter($parameter) == $menuLinksParams[$parameter]
+                if (// Current route parameter is present in MenuLink route
+                    isset($menuLinksParams[$parameter]) 
+                    // Route uri match
+                    && $currentRoute->uri() == $menuLinkRoute->uri() 
+                    // Current route Parameter match the parameter from Menu Link
+                    && \Request::route()->parameter($parameter) == $menuLinksParams[$parameter]
                 ) {
                     $paramsMatch = true;
                 } else {
@@ -143,19 +143,20 @@ trait MenuLinkTrait{
     /**
      * Check if the menulink has a category linked to currrent Meta model data
      *
-     * @param array $currentMenuLinkIDs
-     * @param $menuLink
+     * @param  array    $currentMenuLinkIDs
+     * @param  $menuLink
      * @throws \Exception
      */
-    private static function checkCategoryMatch(&$currentMenuLinkIDs, $menuLink){
+    private static function checkCategoryMatch(&$currentMenuLinkIDs, $menuLink)
+    {
         // check for category match
         if (Meta::getModelData()
-          && isset($menuLink->params->categoryID)
-          && isset(Meta::getModelData()->categories)
-          && count(Meta::getModelData()->categories)
+            && isset($menuLink->params->categoryID)
+            && isset(Meta::getModelData()->categories)
+            && count(Meta::getModelData()->categories)
         ) {
             foreach(Meta::getModelData()->categories as $category){
-                if($category->categoryID === $menuLink->params->categoryID){
+                if($category->categoryID === $menuLink->params->categoryID) {
                     array_push($currentMenuLinkIDs, $menuLink->menuLinkID);
 
                     // append its parents too
@@ -174,9 +175,10 @@ trait MenuLinkTrait{
      * @return mixed|void
      * @throws \Exception
      */
-    public static function getActive(){
+    public static function getActive()
+    {
         self::setActiveIDs();
-        if(self::getActiveIDs()){
+        if(self::getActiveIDs()) {
             return MenuLink::findByID(current(self::getActiveIDs()));
         }
         return;
@@ -187,7 +189,8 @@ trait MenuLinkTrait{
      *
      * @return array
      */
-    public static function getActiveIDs(){
+    public static function getActiveIDs()
+    {
         return self::$activeIDs;
     }
 
@@ -196,17 +199,19 @@ trait MenuLinkTrait{
      *
      * @param array $menuLinkData MenuLink data
      */
-    public static function setCurrent($menuLinkData){
+    public static function setCurrent($menuLinkData)
+    {
         self::$currentMenuLink = $menuLinkData;
     }
 
     /**
      * Get current MenuLink ID
      *
-     * @param string $columnName Column of page to be returned
+     * @param  string $columnName Column of page to be returned
      * @return int|null Returns MenuLinkID if found, null instead
      */
-    public static function getCurrent($columnName = ''){
+    public static function getCurrent($columnName = '')
+    {
         if ($columnName) {
             if (isset(self::$currentMenuLink->$columnName)) {
                 return self::$currentMenuLink->$columnName;
@@ -219,10 +224,11 @@ trait MenuLinkTrait{
     /**
      * Get a param from current MenuLink
      *
-     * @param string $paramKey
+     * @param  string $paramKey
      * @return string|null
      */
-    public static  function getCurrentParam($paramKey){
+    public static  function getCurrentParam($paramKey)
+    {
         if(self::$currentMenuLink) {
             if (isset(self::$currentMenuLink->params->$paramKey)) {
                 return self::$currentMenuLink->params->$paramKey;
@@ -240,12 +246,15 @@ trait MenuLinkTrait{
      * @return bool|mixed
      * @throws \Exception
      */
-    public static function findBySlug($slug,$languageSlug = ""){
-        $getMenuLink = array_where(MenuLink::all(), function ($value)  use($slug){
-            return ($value['slug'] == $slug);
-        });
+    public static function findBySlug($slug,$languageSlug = "")
+    {
+        $getMenuLink = array_where(
+            MenuLink::all(), function ($value) use ($slug) {
+                return ($value['slug'] == $slug);
+            }
+        );
 
-        if($getMenuLink){
+        if($getMenuLink) {
             return array_first($getMenuLink);
         }
         return false;
@@ -254,13 +263,14 @@ trait MenuLinkTrait{
     /**
      * Get MenuLink by ID.
      *
-     * @param $menuLinkID
-     * @param string $languageSlug
+     * @param  $menuLinkID
+     * @param  string     $languageSlug
      * @return mixed
      * @throws \Exception
      */
-    public static function findByID($menuLinkID, $languageSlug=""){
-        return MenuLink::all()->where('menuLinkID',$menuLinkID)->first();
+    public static function findByID($menuLinkID, $languageSlug="")
+    {
+        return MenuLink::all()->where('menuLinkID', $menuLinkID)->first();
     }
 
     /**
@@ -269,12 +279,13 @@ trait MenuLinkTrait{
      * @params string $class
      * @return bool|string Returns true, false or the given class name
      */
-    public function isActive($class = ''){
+    public function isActive($class = '')
+    {
         $isActive = false;
-        if(in_array($this->menuLinkID, self::getActiveIDs())){
+        if(in_array($this->menuLinkID, self::getActiveIDs())) {
             $isActive = true;
         }
-        if($isActive && $class){
+        if($isActive && $class) {
             return $class;
         }
 
@@ -284,13 +295,14 @@ trait MenuLinkTrait{
     /**
      * Get all parents IDs of a MenuLink
      *
-     * @param int $menuLinkID
+     * @param  int $menuLinkID
      * @return array
      * @throws \Exception
      */
-    public static function parentID($menuLinkID){
+    public static function parentID($menuLinkID)
+    {
         $parentIDs = [];
-        while($menuLinkID != NULL){
+        while($menuLinkID != null){
             $parentObj = MenuLink::all()->where('menuLinkID', $menuLinkID)->first();
             if ($parentObj) {
                 $menuLinkID = $parentObj->parent;
@@ -299,7 +311,7 @@ trait MenuLinkTrait{
                 }
             }
             if ($parentObj || !$menuLinkID) {
-                $menuLinkID = NULL;
+                $menuLinkID = null;
             }
         }
         return $parentIDs;
@@ -310,23 +322,24 @@ trait MenuLinkTrait{
      *
      * @throws \Exception
      */
-    public static function redirectToDefaultLanguage(){
+    public static function redirectToDefaultLanguage()
+    {
         $getCurrentPath = Request::path();
-        $explodePath = explode('/',$getCurrentPath);
+        $explodePath = explode('/', $getCurrentPath);
 
         //only proceed if there is a language found in first path and that's default language
-        if(App::getLocale() == Language::getDefault("slug")){
+        if(App::getLocale() == Language::getDefault("slug")) {
             $countPaths = count($explodePath);
             $getLanguage = Language::findBySlug($explodePath[0]);
 
             if($getLanguage) {
-                if($getLanguage->isDefault){
-                    if($countPaths >= 2 && $explodePath[0] && $explodePath[1]){
+                if($getLanguage->isDefault) {
+                    if($countPaths >= 2 && $explodePath[0] && $explodePath[1]) {
                         $urlAfterLanguage = substr($getCurrentPath, 3);
                         Redirect::to($urlAfterLanguage, 301)->send();
                     }
                     //that's shall be default language
-                    else if($countPaths == 1 && $explodePath[0]){
+                    else if($countPaths == 1 && $explodePath[0]) {
                         Redirect::to('/', 301)->send();
                     }
                 }
@@ -337,52 +350,61 @@ trait MenuLinkTrait{
     /**
      * Generate action of a link and its params, as defined in Routes.
      *
-     * @param object $menuLink
+     * @param  object $menuLink
      * @return string|void
      * @throws \Exception
      */
-    public static function getActionOfLink($menuLink){
+    public static function getActionOfLink($menuLink)
+    {
         //post type
-        if($menuLink->belongsTo == "post_type"){
-            return route('backend.post.index', [
-              'post_type' => "post_".$menuLink->params->postTypeSlug,
-              'view' => 'list'
-            ]);
+        if($menuLink->belongsTo == "post_type") {
+            return route(
+                'backend.post.index', [
+                'post_type' => "post_".$menuLink->params->postTypeSlug,
+                'view' => 'list'
+                ]
+            );
         }
         // posts
-        else if(substr($menuLink->belongsTo, 0, 5) == "post_" && $menuLink->belongsTo != "post_type"){
+        else if(substr($menuLink->belongsTo, 0, 5) == "post_" && $menuLink->belongsTo != "post_type") {
             //handle single post
-            if(isset($menuLink->params->postSlug)){
-                return route('backend.post.single', [
-                  'post_type' => $menuLink->belongsTo,
-                  'view' => 'update',
-                  'id' => $menuLink->belongsToID
-                ]);
+            if(isset($menuLink->params->postSlug)) {
+                return route(
+                    'backend.post.single', [
+                    'post_type' => $menuLink->belongsTo,
+                    'view' => 'update',
+                    'id' => $menuLink->belongsToID
+                    ]
+                );
             }
             //posts list
             else{
                 $postType = PostType::findByID($menuLink->belongsToID);
                 if($postType) {
-                    return route('backend.post.index', [
-                      'post_type' => $postType->slug,
-                      'view' => 'list'
-                    ]);
+                    return route(
+                        'backend.post.index', [
+                        'post_type' => $postType->slug,
+                        'view' => 'list'
+                        ]
+                    );
                 }
             }
 
         }
 
         //categories
-        else if($menuLink->belongsTo == "category" || $menuLink->belongsTo == "categories"){
+        else if($menuLink->belongsTo == "category" || $menuLink->belongsTo == "categories") {
             $category = Category::findByID($menuLink->belongsToID);
             if($category) {
                 $postType = PostType::findByID($category->postTypeID);
                 if ($postType) {
-                    return route('backend.post.index', [
-                      'post_type' => $postType->slug,
-                      'view' => 'list',
-                      'categoryID' => $menuLink->belongsToID
-                    ]);
+                    return route(
+                        'backend.post.index', [
+                        'post_type' => $postType->slug,
+                        'view' => 'list',
+                        'categoryID' => $menuLink->belongsToID
+                        ]
+                    );
                 }
             }
         }
@@ -395,7 +417,8 @@ trait MenuLinkTrait{
      * @return array
      * @throws \Exception
      */
-    public static function cmsMenus(){
+    public static function cmsMenus()
+    {
         $result = [];
         foreach(Menu::all() as $menu){
             $result[$menu->slug] = [
@@ -410,26 +433,27 @@ trait MenuLinkTrait{
     /**
      * Get MenuLinks to be shown in Admin Panel
      *
-     * @param array $menuLinks
+     * @param  array $menuLinks
      * @return array
      * @throws \Exception
      */
-    public static function cmsMenuLinks($menuLinks = []){
+    public static function cmsMenuLinks($menuLinks = [])
+    {
         $links = [];
         $count = 0;
 
-        if($menuLinks){
+        if($menuLinks) {
             foreach($menuLinks as $menuLink){
-                if($menuLink->belongsTo == "post_type"){
+                if($menuLink->belongsTo == "post_type") {
                     $permission = User::hasAccess($menuLink->slug, "read");
-                }elseif($menuLink->belongsTo == "category"){
+                }elseif($menuLink->belongsTo == "category") {
                     $permission = User::hasAccess("Category", "read");
                 }else{
                     $permission = User::hasAccess($menuLink->slug, "update");
                 }
 
                 $routeURL = self::getActionOfLink($menuLink);
-                if($routeURL){
+                if($routeURL) {
                     $links[$count] = [
                         'label' => $menuLink->label,
                         'menuLinkID' => $menuLink->menuLinkID,
@@ -442,7 +466,7 @@ trait MenuLinkTrait{
                 }
             }
         }
-        if(!count($links)){
+        if(!count($links)) {
             return [];
         }
         return $links;
@@ -451,19 +475,20 @@ trait MenuLinkTrait{
     /**
      * Translate menulinks params to a single dimensional array and returns only current language params
      *
-     * @param string $params
+     * @param  string $params
      * @return array
      */
-    public static function decodeParams($params){
-        if(!$params){
+    public static function decodeParams($params)
+    {
+        if(!$params) {
             return [];
         }
-        $paramsArrayList = json_decode(json_encode($params),true);
+        $paramsArrayList = json_decode(json_encode($params), true);
         $decodedParams = [];
         foreach($paramsArrayList as $paramKey=>$paramValue){
-            if(is_array($paramValue)){
+            if(is_array($paramValue)) {
                 foreach($paramValue as $languageSlug=>$langParamValue){
-                    if($languageSlug == App::getLocale()){
+                    if($languageSlug == App::getLocale()) {
                         $decodedParams[$paramKey] = $langParamValue;
                         break;
                     }else{
@@ -481,10 +506,11 @@ trait MenuLinkTrait{
     /**
      * Find which params belongs to an action and gets their values from Menu Links Params
      *
-     * @param object $menuLink
+     * @param  object $menuLink
      * @return array Returns final params with values
      */
-    private static function setParams($menuLink){
+    private static function setParams($menuLink)
+    {
         $menuLinkParams = self::decodeParams($menuLink->params);
         $routeParams = Route::getRoutes()->getByName($menuLink->routeName)->parameterNames();
         $params = [];
@@ -496,8 +522,9 @@ trait MenuLinkTrait{
         return $params;
     }
 
-    public static function removeDomainFromLink($link){
-        return str_replace(Request::getSchemeAndHttpHost(),"", $link);
+    public static function removeDomainFromLink($link)
+    {
+        return str_replace(Request::getSchemeAndHttpHost(), "", $link);
     }
 
     /**
@@ -506,11 +533,12 @@ trait MenuLinkTrait{
      * @return array
      * @throws \Exception
      */
-    public static function applicationMenuLinks(){
+    public static function applicationMenuLinks()
+    {
         $applicationMenuLinks = [
           [
             'label' => 'Menu',
-            'link' => self::removeDomainFromLink(action(Routes::backend("MenuController@single"),['lang' =>  App::getLocale(), 'view' => 'list', 'menuID' => Menu::getPrimaryMenuID()])),
+            'link' => self::removeDomainFromLink(action(Routes::backend("MenuController@single"), ['lang' =>  App::getLocale(), 'view' => 'list', 'menuID' => Menu::getPrimaryMenuID()])),
             'module' =>  'menu',
             'icon' => 'fa fa-bars',
             'access' => User::hasAccess("Menu", "read"),
@@ -525,21 +553,21 @@ trait MenuLinkTrait{
             'children' => [
               [
                 'label' => 'List',
-                'link' => self::removeDomainFromLink(action(Routes::backend("UserController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
+                'link' => self::removeDomainFromLink(action(Routes::backend("UserController@index"), ['lang' =>  App::getLocale(), 'view' => 'list'])),
                 'icon' => '',
                 'access' => User::hasAccess("User", "read"),
                 'children' => '',
               ],
               [
                 'label' => 'Add new',
-                'link' => self::removeDomainFromLink(action(Routes::backend("UserController@index"),['lang' =>  App::getLocale(), 'view' => 'create'])),
+                'link' => self::removeDomainFromLink(action(Routes::backend("UserController@index"), ['lang' =>  App::getLocale(), 'view' => 'create'])),
                 'icon' => '',
                 'access' => User::hasAccess("User", "create"),
                 'children' => '',
               ],
               [
                 'label' => 'Permissions',
-                'link' => self::removeDomainFromLink(action(Routes::backend("PermissionController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
+                'link' => self::removeDomainFromLink(action(Routes::backend("PermissionController@index"), ['lang' =>  App::getLocale(), 'view' => 'list'])),
                 'icon' => '',
                 'access' => User::hasAccess('Permission', "read"),
                 'children' => '',
@@ -555,14 +583,14 @@ trait MenuLinkTrait{
             'children' => [
               [
                 'label' => 'List',
-                'link' => self::removeDomainFromLink(action(Routes::backend("PostTypeController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
+                'link' => self::removeDomainFromLink(action(Routes::backend("PostTypeController@index"), ['lang' =>  App::getLocale(), 'view' => 'list'])),
                 'icon' => '',
                 'access' => User::hasAccess("PostType", "read"),
                 'children' => '',
               ],
               [
                 'label' => 'Add new',
-                'link' =>  self::removeDomainFromLink(action(Routes::backend("PostTypeController@index"),['lang' =>  App::getLocale(), 'view' => 'create'])),
+                'link' =>  self::removeDomainFromLink(action(Routes::backend("PostTypeController@index"), ['lang' =>  App::getLocale(), 'view' => 'create'])),
                 'icon' => '',
                 'access' => User::hasAccess("PostType", "create"),
                 'children' => '',
@@ -578,14 +606,14 @@ trait MenuLinkTrait{
             'children' => [
               [
                 'label' => 'List',
-                'link' => self::removeDomainFromLink(action(Routes::backend("CustomFieldController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
+                'link' => self::removeDomainFromLink(action(Routes::backend("CustomFieldController@index"), ['lang' =>  App::getLocale(), 'view' => 'list'])),
                 'icon' => '',
                 'access' => User::hasAccess("CustomField", "read"),
                 'children' => '',
               ],
               [
                 'label' => 'Add new',
-                'link' =>  self::removeDomainFromLink(action(Routes::backend("CustomFieldController@index"),['lang' =>  App::getLocale(), 'view' => 'create'])),
+                'link' =>  self::removeDomainFromLink(action(Routes::backend("CustomFieldController@index"), ['lang' =>  App::getLocale(), 'view' => 'create'])),
                 'icon' => '',
                 'access' => User::hasAccess("CustomField", "create"),
                 'children' => '',
@@ -602,7 +630,7 @@ trait MenuLinkTrait{
           ],
           [
             'label' => 'Settings',
-            'link' => self::removeDomainFromLink(action(Routes::backend("SettingsController@index"),['lang' =>  App::getLocale(), 'view' => 'general'])),
+            'link' => self::removeDomainFromLink(action(Routes::backend("SettingsController@index"), ['lang' =>  App::getLocale(), 'view' => 'general'])),
             'module' => 'project-settings',
             'icon' => 'fa fa-cogs',
             'access' => User::hasAccess('Settings', "read"),
@@ -610,7 +638,7 @@ trait MenuLinkTrait{
           ],
           [
             'label' => 'Language',
-            'link' => self::removeDomainFromLink(action(Routes::backend("LanguageController@index"),['lang' =>  App::getLocale(), 'view' => 'list'])),
+            'link' => self::removeDomainFromLink(action(Routes::backend("LanguageController@index"), ['lang' =>  App::getLocale(), 'view' => 'list'])),
             'icon' => 'fa fa-language',
             'module' => 'language',
             'access' => User::hasAccess('Language', "read"),
@@ -619,7 +647,7 @@ trait MenuLinkTrait{
         ];
 
         foreach (PostType::all() as $postType){
-            if(!$postType->isVisible){
+            if(!$postType->isVisible) {
                 continue;
             }
 
@@ -628,32 +656,32 @@ trait MenuLinkTrait{
               'link' =>  '',
               'module' => $postType['slug'],
               'icon' => 'fa fa-thumb-tack',
-              'access' => User::hasAccess($postType['slug'],"read"),
+              'access' => User::hasAccess($postType['slug'], "read"),
               'children' => [
                 [
                   'label' => 'List',
-                  'link' =>  self::removeDomainFromLink(action(Routes::backend("PostController@postsIndex"),['lang' =>  App::getLocale(), 'post_type' => $postType['slug'], 'view' => 'list' ])),
+                  'link' =>  self::removeDomainFromLink(action(Routes::backend("PostController@postsIndex"), ['lang' =>  App::getLocale(), 'post_type' => $postType['slug'], 'view' => 'list' ])),
                   'icon' => '',
                   'access' => User::hasAccess($postType['slug'], "read"),
                   'children' => '',
                 ],
                 [
                   'label' => 'Add new',
-                  'link' => self::removeDomainFromLink(action(Routes::backend("PostController@postsIndex"),['lang' =>  App::getLocale(), 'post_type' => $postType['slug'], 'view' => 'create' ])),
+                  'link' => self::removeDomainFromLink(action(Routes::backend("PostController@postsIndex"), ['lang' =>  App::getLocale(), 'post_type' => $postType['slug'], 'view' => 'create' ])),
                   'icon' => '',
                   'access' => User::hasAccess($postType['slug'], "create"),
                   'children' => '',
                 ],
                 [
                   'label' => 'Categories',
-                  'link' => self::removeDomainFromLink(action(Routes::backend("PostTypeController@single"),['lang' =>  App::getLocale(), 'view' => 'categorylist', 'id' => $postType['postTypeID'] ])),
+                  'link' => self::removeDomainFromLink(action(Routes::backend("PostTypeController@single"), ['lang' =>  App::getLocale(), 'view' => 'categorylist', 'id' => $postType['postTypeID'] ])),
                   'icon' => '',
                   'access' => (User::hasAccess('Category', "read") && $postType['hasCategories']),
                   'children' => '',
                 ],
                 [
                   'label' => 'Tags',
-                  'link' => self::removeDomainFromLink(action(Routes::backend("PostTypeController@single"),['lang' =>  App::getLocale(), 'view' => 'taglist', 'id' => $postType['postTypeID'] ])),
+                  'link' => self::removeDomainFromLink(action(Routes::backend("PostTypeController@single"), ['lang' =>  App::getLocale(), 'view' => 'taglist', 'id' => $postType['postTypeID'] ])),
                   'icon' => '',
                   'access' => (User::hasAccess('Tag', "read") && $postType['hasTags']),
                   'children' => '',
@@ -699,18 +727,19 @@ trait MenuLinkTrait{
     /**
      * Get children of a menu link.
      *
-     * @param  array $menuLinks the list of menuLinks of a Menu
-     * @param  INT   $parentID the ID of menuLinkID that serves as a parentID to its children
-     * @param  INT   $level What is the level of the menu. It automatically increases +1 for each child
+     * @param array $menuLinks the list of menuLinks of a Menu
+     * @param INT   $parentID  the ID of menuLinkID that serves as a parentID to its children
+     * @param INT   $level     What is the level of the menu. It automatically increases +1 for each child
      *
      * @return object|array Returns all childrens of a given list of MenuLinks
      * */
-    public static function children($menuLinks, $parentID = 0, $level = 1){
+    public static function children($menuLinks, $parentID = 0, $level = 1)
+    {
 
-        if($level == 1){
-            $fetchMenuList = $menuLinks->where('parent',null);
+        if($level == 1) {
+            $fetchMenuList = $menuLinks->where('parent', null);
         }else{
-            $fetchMenuList = $menuLinks->where('parent',$parentID);
+            $fetchMenuList = $menuLinks->where('parent', $parentID);
         }
 
         //order List
@@ -742,11 +771,12 @@ trait MenuLinkTrait{
      * @return string
      * @throws \Exception
      */
-    public function getHrefAttribute(){
-        if(Route::getRoutes()->getByName($this->routeName)){
-            if($this->params){
+    public function getHrefAttribute()
+    {
+        if(Route::getRoutes()->getByName($this->routeName)) {
+            if($this->params) {
                 $params = self::setParams($this);
-                $url = route($this->routeName,$params);
+                $url = route($this->routeName, $params);
             }else{
                 $url = route($this->routeName);
             }
@@ -760,16 +790,17 @@ trait MenuLinkTrait{
     /**
      * Initialize MenuLink.
      *
-     * @param $request
+     * @param  $request
      * @throws \Exception
      */
-    public static function initialize($request){
+    public static function initialize($request)
+    {
         Menu::setPrimaryMenuID();
 
         //Backend
-        if (isInAdmin()){
-            $menuLinkID = (is_numeric(Input::get('menu_link_id')) ? Input::get('menu_link_id') : FALSE);
-            if($menuLinkID){
+        if (isInAdmin()) {
+            $menuLinkID = (is_numeric(Input::get('menu_link_id')) ? Input::get('menu_link_id') : false);
+            if($menuLinkID) {
                 self::setCurrent(self::findByID($menuLinkID));
             }
         }else{ // frontend
@@ -780,15 +811,15 @@ trait MenuLinkTrait{
 
             // Set home page MenuLink if home page is requested
             $getCurrentPath = Request::path();
-            if($getCurrentPath == '/' || $getCurrentPath == App::getLocale()){
+            if($getCurrentPath == '/' || $getCurrentPath == App::getLocale()) {
                 self::setCurrent(Post::gethomepage());
-            }else if(self::getActiveIDs()){
-            //or if any other menulink is active
+            }else if(self::getActiveIDs()) {
+                //or if any other menulink is active
                 self::setCurrent(self::findByID(array_first(self::getActiveIDs())));
             }
 
             // Front page should not have duplicate urls
-            if(Request::route('postSlug') && Request::route('postSlug') == Post::gethomepage()->slug){
+            if(Request::route('postSlug') && Request::route('postSlug') == Post::gethomepage()->slug) {
                 Redirect::to('/', 301)->send();
             }
         }

@@ -32,7 +32,6 @@ class Cronjobs extends Command
     protected $scriptParser;
     
     /**
-     *
      * Create a new command instance.
      *
      * @return void
@@ -48,17 +47,20 @@ class Cronjobs extends Command
      *
      * @throws \Exception
      */
-    public function handle(){
-        if(config('deploy.cron')){
+    public function handle()
+    {
+        if(config('deploy.cron')) {
             $this->comment("\nCreating cron jobs");
             foreach(config('deploy.cron') as $cronCommand){
-                $output = $this->scriptParser->parseFile('createCronJobs', [
-                  'command' => $cronCommand,
-                  'base_path' => base_path(),
-                  'env' => $this->option('env')
-                ])->run($this);
+                $output = $this->scriptParser->parseFile(
+                    'createCronJobs', [
+                    'command' => $cronCommand,
+                    'base_path' => base_path(),
+                    'env' => $this->option('env')
+                    ]
+                )->run($this);
                 
-                if(!$output){
+                if(!$output) {
                     return false;
                 }
             }

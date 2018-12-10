@@ -48,12 +48,14 @@ class PurgeOldReleaseAfter extends Command
     {
         $commands = config('deploy.commands.purge_old_releases.after');
         foreach($commands as $command){
-            $output = $this->scriptParser->parseString($command, [
-              'base_path' => base_path(),
-              'env' => $this->option('env')
-            ])->run($this);
+            $output = $this->scriptParser->parseString(
+                $command, [
+                'base_path' => base_path(),
+                'env' => $this->option('env')
+                ]
+            )->run($this);
 
-            if(!$output){
+            if(!$output) {
                 return false;
             }
         }

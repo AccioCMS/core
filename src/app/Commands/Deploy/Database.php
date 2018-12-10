@@ -55,12 +55,12 @@ class Database extends Command
     public function handle()
     {
         $deploymentsPath = $this->option('path');
-        if(!$deploymentsPath){
+        if(!$deploymentsPath) {
             $deploymentsPath = base_path($this->deploymentsPath);
         }
 
         // Drop tables
-        if($this->option('drop')){
+        if($this->option('drop')) {
             $tables = DB::select('SHOW TABLES');
             if($tables) {
                 $this->comment("\nDropping current tables");
@@ -101,7 +101,7 @@ class Database extends Command
     /**
      * Drop all of the database tables.
      *
-     * @param  string  $database
+     * @param  string $database
      * @return void
      */
     protected function dropAllTables()

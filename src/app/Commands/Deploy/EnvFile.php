@@ -42,19 +42,19 @@ class EnvFile extends Command
         $this->comment("\nRenaming env file");
 
         // detect .env file name based on environment
-        if($this->option('env') === 'test'){
+        if($this->option('env') === 'test') {
             $nevFileName = '.env.test';
         }else{
             $nevFileName = '.env.production';
         }
 
         // Ensure .env file exists
-        if(!file_exists(base_path($nevFileName))){
+        if(!file_exists(base_path($nevFileName))) {
             throw new \Exception(".env file could not be found on '".$this->option('env')."' environment");
         }else{
 
             // Delete default .env if it exists
-            if(file_exists(base_path('.env'))){
+            if(file_exists(base_path('.env'))) {
                 unlink(base_path('.env'));
             }
 

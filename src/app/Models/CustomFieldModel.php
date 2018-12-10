@@ -3,7 +3,8 @@
  * Custom Fields Model
  *
  * It handles Custom Fields mainly used for posts
- * @author Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
+ *
+ * @author  Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
  * @version 1.0
  */
 
@@ -13,7 +14,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
 use Accio\App\Traits;
 
-class CustomFieldModel extends Model{
+class CustomFieldModel extends Model
+{
 
     use
       Traits\CustomFieldTrait,
@@ -101,7 +103,8 @@ class CustomFieldModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = []){
+    public function __construct(array $attributes = [])
+    {
         parent::__construct($attributes);
         Event::fire('customField:construct', [$this]);
     }
@@ -112,28 +115,32 @@ class CustomFieldModel extends Model{
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function group(){
+    public function group()
+    {
         return $this->belongsTo('App\Models\CustomFieldGroup', 'customFieldGroupID');
     }
 
     /**
      * @return array
      */
-    public function getMedia(): array{
+    public function getMedia(): array
+    {
         return $this->media;
     }
 
     /**
      * @return array
      */
-    public function getCustomFieldValues(): array{
+    public function getCustomFieldValues(): array
+    {
         return $this->customFieldValues;
     }
 
     /**
      * Destruct model instance
      */
-    public function __destruct(){
+    public function __destruct()
+    {
         Event::fire('customField:destruct', [$this]);
     }
 }

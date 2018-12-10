@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Event;
 use Accio\App\Traits;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class PluginModel extends Model{
+class PluginModel extends Model
+{
 
     use
       Traits\PluginTrait,
@@ -76,7 +77,8 @@ class PluginModel extends Model{
     /**
      * Destruct model instance.
      */
-    public function __destruct(){
+    public function __destruct()
+    {
         Event::fire('plugin:destruct', [$this]);
     }
 }

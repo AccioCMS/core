@@ -24,6 +24,7 @@ class Script
 
     /**
      * File path
+     *
      * @var
      */
     private $filePath;
@@ -50,9 +51,11 @@ class Script
     {
         $values = array_values($tokens);
 
-        $tokens = array_map(function ($token) {
-            return '{{' . strtolower($token) . '}}';
-        }, array_keys($tokens));
+        $tokens = array_map(
+            function ($token) {
+                return '{{' . strtolower($token) . '}}';
+            }, array_keys($tokens)
+        );
 
 
         $this->script = str_replace($tokens, $values, $script);
@@ -83,10 +86,11 @@ class Script
     /**
      * Run command
      *
-     * @param Command $command
+     * @param  Command $command
      * @return bool
      */
-    public function run(Command $command){
+    public function run(Command $command)
+    {
         if($this->script) {
             $process = new Process($command);
             $process->setCommandLine($this->script);
