@@ -385,11 +385,7 @@ trait UserTrait{
      * @return string The Gravatar image url of the given email
      * */
     public static function getGravatarFromEmail($email ,$width = 80){
-        $size = $width;
-        $d = 'mm';
-        $r = 'g';
-
-        $gravatarURL = "https://gravatar.com/avatar/".md5( strtolower( trim( $email ) ) )."?s=$size&d=$d&r=$r";
+        $gravatarURL = "https://gravatar.com/avatar/".md5( strtolower( trim( $email ) ) ).($width ? '?s='.$width : "");
 
         return $gravatarURL;
     }

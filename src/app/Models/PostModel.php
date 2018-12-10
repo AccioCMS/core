@@ -257,17 +257,6 @@ abstract class PostModel extends Model{
     }
 
     /**
-     * Scope a query to only include published posts.
-     *
-     * @return $this
-     */
-    public function published(){
-        return $this
-            ->where('published_at', '<=', date('Y-m-d H:i:s'))
-            ->where('status->'. App::getLocale(),'published');
-    }
-
-    /**
      * Get only published posts for the post paginate object
      *
      * @param $paginateObj
@@ -477,7 +466,7 @@ abstract class PostModel extends Model{
     public static function _saved($post){
         self::updateMenulink($post);
     }
-
+    
     /**
      * Scope a query to only include published posts.
      *
@@ -491,7 +480,7 @@ abstract class PostModel extends Model{
 
         return $query
             ->where('status->'.$languageSlug, 'published')
-            ->where('published_at', '<=', new DateTime());
+            ->where('published_at', '<=', date('Y-m-d H:i:s'));
     }
 
     /**
@@ -506,7 +495,7 @@ abstract class PostModel extends Model{
         }
         return $query
             ->where('status->' . $languageSlug, '!=', 'published')
-            ->where('published_at', '>=', new DateTime());
+            ->where('published_at', '>=', date('Y-m-d H:i:s'));
     }
 
 
