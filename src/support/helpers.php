@@ -303,7 +303,7 @@ if(!function_exists('metaTags')) {
         }
 
         // Get meta data from events
-        event('meta:add', [$modelData]);
+        event('meta:add', [$modelData, $customData]);
 
         \Accio\Support\Facades\Meta::printMetaTags();
     }
