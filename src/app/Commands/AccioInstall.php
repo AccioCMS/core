@@ -383,23 +383,23 @@ class AccioInstall extends Command
         $this->advanceBar();
 
         $this->info("Creating default post types...");
-        (new \DefaultPostTypesDevSeeder())->run();
+        (new \PostTypeSeeder())->createDefaultPostTypes();
         $this->advanceBar();
 
         // Create tags example
         $this->info("Creating example tags...");
-        (new \TagDevSeeder())->run(20, null, true);
+        (new \TagSeeder())->run(20, null, true);
         $this->advanceBar();
 
         // Create a category
         $this->info("Creating an example category...");
-        $categoryObj = new \CategoryDevSeeder();
+        $categoryObj = new \CategorySeeder();
         $categoryObj->exampleTitles = true;
         $categoryObj->run(3, null);
         $this->advanceBar();
 
         $this->info("Creating example posts...");
-        (new \PostDevSeeder())->run(0, 5, '', 0, 0, 0, false);
+        (new \PostSeeder())->run(0, 5, '', 0, 0, 0, false);
         $this->advanceBar();
 
         // Create default permalinks
