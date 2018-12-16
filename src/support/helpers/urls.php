@@ -3,7 +3,7 @@
 if (! function_exists('assetUrl')) {
 
     /**
-     * Prints url to the assets directory, if filename is not empty it will be added to the result string
+     * Prints the absolute url of an asset.
      *
      * @param  string $fileName
      * @return string
