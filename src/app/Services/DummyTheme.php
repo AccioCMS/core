@@ -106,7 +106,7 @@ class DummyTheme
      */
     private function getAttribute($key)
     {
-        return (isset($this->attributes[$key])) ? $this->attributes[$key] : '';
+        return (isset($this->attributes[$key]) && $this->attributes[$key]) ? $this->attributes[$key] : '';
     }
 
     /**
