@@ -403,6 +403,17 @@ if (! function_exists('isTablet')) {
         return \Riverskies\Laravel\MobileDetect\Facades\MobileDetect::isTablet();
     }
 }
+if (! function_exists('themeNamespace')) {
+    /**
+     * Get current theme namespace.
+     *
+     * @return mixed
+     */
+    function themeNamespace()
+    {
+        return \App\Models\Theme::controllersNameSpace();
+    }
+}
 
 if (! function_exists('categoriesRelationTable')) {
     function categoriesRelationTable($postTypeSlug)
