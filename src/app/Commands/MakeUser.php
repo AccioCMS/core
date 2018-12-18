@@ -57,11 +57,11 @@ class MakeUser extends Command
 
         // Fill user data
         $data = [
-            'email' => $email,
-            'password' => Hash::make($password),
-            'isActive' => $activate,
-            'firstName' => $firstName,
-            'lastName' => $lastName,
+          'email' => $email,
+          'password' => Hash::make($password),
+          'isActive' => $activate,
+          'firstName' => $firstName,
+          'lastName' => $lastName,
         ];
 
         // Create the user
@@ -69,9 +69,15 @@ class MakeUser extends Command
 
         // Assign the role
         if($user) {
-            $user->assignRoles($groupID);
+            if($user->assignRoles($groupID, true)){
+                $this->info("User created successfully!");
+            }else{
+                $this->error("User Permission could not be created!");
+            }
+
+        }else{
+            $this->error("User could not be created!");
         }
 
-        $this->info("User created successfully!");
     }
 }

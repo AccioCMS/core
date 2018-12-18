@@ -26,7 +26,7 @@ trait UserTrait
 
     /**
      * $permissions Stores permissions of the user that is logged in admin panel.
-     * 
+     *
      * @var array
      */
     protected  static $permissions = [];
@@ -43,9 +43,9 @@ trait UserTrait
         if($ownershipPostID) {
             if(isPostType($app)) {
                 $checkDB = DB::table($app)
-                    ->where('postID', $ownershipPostID)
-                    ->where('createdByUserID', Auth::user()->userID)
-                    ->count();
+                  ->where('postID', $ownershipPostID)
+                  ->where('createdByUserID', Auth::user()->userID)
+                  ->count();
             }else{
                 $class = 'App\\Models\\'.$app;
                 $object = new $class();
@@ -94,10 +94,10 @@ trait UserTrait
                 //if app is an allowed app or is a post type, pass the appPermission check
                 if(($isAllowedApp
                     || $isPostType                    )
-                    //is a language
-                    || ($app == "Language" && $key == "id" && $id)
-                    // User can manage his own data
-                    || $userSelfDataAccess
+                  //is a language
+                  || ($app == "Language" && $key == "id" && $id)
+                  // User can manage his own data
+                  || $userSelfDataAccess
                 ) {
                     $appPermission = true;
                     $hasSinglePermission = true;
@@ -110,16 +110,16 @@ trait UserTrait
 
                 //if app is an allowed ap or is a post type, pass the appPermission check
                 if($isAllowedApp
-                    || $isPostType
-                    //authors have read access into all Categories, Tags and Languages
-                    || (in_array($app, array("Category", "Tags", "Language"))
+                  || $isPostType
+                  //authors have read access into all Categories, Tags and Languages
+                  || (in_array($app, array("Category", "Tags", "Language"))
                     && (
-                    //is a specific id (used for listing in dropdown in create)
-                    ($key == "id" && $id || $id === 'hasAll')
-                    //has only read access
-                    || in_array($key, array("read")))                    )
-                    // User can manage his own data
-                    || $userSelfDataAccess
+                        //is a specific id (used for listing in dropdown in create)
+                      ($key == "id" && $id || $id === 'hasAll')
+                      //has only read access
+                      || in_array($key, array("read")))                    )
+                  // User can manage his own data
+                  || $userSelfDataAccess
                 ) {
                     $appPermission = true;
                     $hasSinglePermission = true;
@@ -309,15 +309,15 @@ trait UserTrait
     public function avatarImage($width = null, $height = null, $returnGravatarIfNotFound = false)
     {
         return new HtmlString(
-            view()->make(
-                "vendor.user.avatar", [
-                'width'=>$width,
-                'height'=>$height,
-                'returnGravatarIfNotFound'=>$returnGravatarIfNotFound,
-                'imageURL'=>$this->avatar($width, $height, $returnGravatarIfNotFound),
-                'user'=>$this
-                ]
-            )->render()
+          view()->make(
+            "vendor.user.avatar", [
+              'width'=>$width,
+              'height'=>$height,
+              'returnGravatarIfNotFound'=>$returnGravatarIfNotFound,
+              'imageURL'=>$this->avatar($width, $height, $returnGravatarIfNotFound),
+              'user'=>$this
+            ]
+          )->render()
         );
     }
 
@@ -332,15 +332,15 @@ trait UserTrait
     public function gavatarImage($width = null, $height = null)
     {
         return new HtmlString(
-            view()->make(
-                "vendor.user.avatar", [
-                'width' => $width,
-                'height' => $height,
-                'returnGravatarIfNotFound'=>true,
-                'imageURL'=> asset($this->gravatar),
-                'user' => $this
-                ]
-            )->render()
+          view()->make(
+            "vendor.user.avatar", [
+              'width' => $width,
+              'height' => $height,
+              'returnGravatarIfNotFound'=>true,
+              'imageURL'=> asset($this->gravatar),
+              'user' => $this
+            ]
+          )->render()
         );
     }
 

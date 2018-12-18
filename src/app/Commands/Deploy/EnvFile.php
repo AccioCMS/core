@@ -42,8 +42,8 @@ class EnvFile extends Command
         $this->comment("\nRenaming env file");
 
         // detect .env file name based on environment
-        if($this->option('env') === 'test') {
-            $nevFileName = '.env.test';
+        if($this->option('env') === 'testing') {
+            $nevFileName = '.env.testing';
         }else{
             $nevFileName = '.env.production';
         }
