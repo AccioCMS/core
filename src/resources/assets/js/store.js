@@ -98,7 +98,7 @@ export const store = new Vuex.Store({
          * @param object
          */
         setList(context, responseBody){
-            context.dispatch('filterTranslatedValues', responseBody)
+            context.dispatch('filterTranslatedValues', {input: responseBody});
         },
 
         /**
