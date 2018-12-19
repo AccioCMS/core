@@ -9,14 +9,16 @@ use Closure;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 
-class Backend{
+class Backend
+{
     /**
-     * @param $request
-     * @param Closure $next
+     * @param  $request
+     * @param  Closure $next
      * @return \Illuminate\Http\Response|mixed
      * @throws \Exception
      */
-    public  function handle($request, Closure $next){
+    public  function handle($request, Closure $next)
+    {
         if (isInAdmin()) {
             if (Auth::guard("admin")->check()) {
                 // get all permissions

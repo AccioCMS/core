@@ -42,7 +42,7 @@ class MakeUser extends Command
     public function handle()
     {
 
-        if(config('app.env') == 'production'){
+        if(config('app.env') == 'production') {
             return $this->error('Opps! You can\'t create users while in production! ');
         }
 
@@ -53,25 +53,31 @@ class MakeUser extends Command
         $email = $this->ask('Email');
         $password = $this->secret('Password');
         $groupID = $this->ask('Role', UserGroup::getEditorGroup()->groupID);
-        $activate = $this->confirm('Do you want to activate the user now?',true);
+        $activate = $this->confirm('Do you want to activate the user now?', true);
 
         // Fill user data
         $data = [
-            'email' => $email,
-            'password' => Hash::make($password),
-            'isActive' => $activate,
-            'firstName' => $firstName,
-            'lastName' => $lastName,
+          'email' => $email,
+          'password' => Hash::make($password),
+          'isActive' => $activate,
+          'firstName' => $firstName,
+          'lastName' => $lastName,
         ];
 
         // Create the user
         $user = factory(User::class)->create($data);
 
         // Assign the role
-        if($user){
-            $user->assignRoles($groupID);
+        if($user) {
+            if($user->assignRoles($groupID, true)){
+                $this->info("User created successfully!");
+            }else{
+                $this->error("User Permission could not be created!");
+            }
+
+        }else{
+            $this->error("User could not be created!");
         }
 
-        $this->info("User created successfully!");
     }
 }

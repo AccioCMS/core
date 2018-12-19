@@ -42,7 +42,7 @@
     <div class="content">
         <div class="title">404</div>
         <?php
-        if(isset($message)){
+        if(isset($message)) {
             print "<p>".$message."</p>";
         }
         ?>

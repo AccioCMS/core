@@ -3,6 +3,7 @@
 namespace Accio\App\Http\Controllers\Api;
 
 
-class Post extends MainController{
+class Post extends MainController
+{
 
 }

@@ -27,7 +27,8 @@ use Accio\App\Traits\OutputStyles;
 use Illuminate\Config\Repository as ConfigRepository;
 use Symfony\Component\Process\Process;
 
-class AccioInstall extends Command{
+class AccioInstall extends Command
+{
 
     use OutputStyles, GetAvailableOptions;
 
@@ -47,84 +48,105 @@ class AccioInstall extends Command{
 
     /**
      * if cms is installed
+     *
      * @var
      */
     private $isInstalled = false;
 
     /**
      * App name
+     *
      * @var string
      */
     private $APP_NAME;
 
     /**
      * APP URL
+     *
      * @var string
      */
     private $APP_URL;
 
-    /** Database type
+    /**
+     * Database type
+     *
      * @var string
      */
     private $DB_TYPE;
 
-    /** Database Host
+    /**
+     * Database Host
+     *
      * @var string
      */
     private $DB_HOST;
 
-    /** Database Port
+    /**
+     * Database Port
+     *
      * @var int
      */
     private $DB_PORT;
 
-    /** Database Name
+    /**
+     * Database Name
+     *
      * @var string
      */
     private $DB_DATABASE;
 
-    /** Database Username
+    /**
+     * Database Username
+     *
      * @var string
      */
     private $DB_USERNAME;
 
-    /** Database Password
+    /**
+     * Database Password
+     *
      * @var string
      */
     private $DB_PASSWORD;
 
     /**
      * Time zone
+     *
      * @var string $TIMEZONE
      */
     private $TIMEZONE;
 
     /**
      * ADMin first name
+     *
      * @var string $ADMIN_FIRST_NAME
      */
     private $ADMIN_FIRST_NAME;
 
     /**
      * Admin last name
+     *
      * @var string $ADMIN_LAST_NAME
      */
     private $ADMIN_LAST_NAME;
 
     /**
      * Admin email
+     *
      * @var string $ADMIN_EMAIL
      */
     private $ADMIN_EMAIL;
 
     /**
      * Admin password
+     *
      * @var string $ADMIN_PASSWORD
      */
     private $ADMIN_PASSWORD;
 
     /**
      * Site's primary language
+     *
      * @var object $PRIMARY_LANGUAGE
      */
     private $PRIMARY_LANGUAGE;
@@ -158,14 +180,14 @@ class AccioInstall extends Command{
      * AccioInstall constructor.
      *
      * @param Requirements $requirements
-     * @param Environment $environment
-     * @param Filesystem $filesystem
+     * @param Environment  $environment
+     * @param Filesystem   $filesystem
      */
     public function __construct(
-      Requirements $requirements,
-      Environment $environment,
-      Filesystem $filesystem
-    ){
+        Requirements $requirements,
+        Environment $environment,
+        Filesystem $filesystem
+    ) {
         parent::__construct();
 
         $this->requirements = $requirements;
@@ -180,32 +202,33 @@ class AccioInstall extends Command{
      *
      * @throws \Exception
      */
-    public function handle(){
-        set_time_limit ( 900 );
+    public function handle()
+    {
+        set_time_limit(900);
 
         $this->clearCaches();
 
-        if($this->isInstalled()){
+        if($this->isInstalled()) {
             return false;
         }
 
-        if(!$this->requirements->check($this)){
+        if(!$this->requirements->check($this)) {
             return false;
         }
 
         $this
-          ->welcomeMessage()
-          ->setBar()
-          ->askInstallingQuestions()
-          ->renameEnvFile()
-          ->setEnvValues()
-          ->saveConfiguration()
-          ->generateKey()
-          ->deleteUploads()
-          ->runMigration()
-          ->createDummyContent()
-          ->createDefaultTheme()
-          ->successfullyInstalled();
+            ->welcomeMessage()
+            ->setBar()
+            ->askInstallingQuestions()
+            ->renameEnvFile()
+            ->setEnvValues()
+            ->saveConfiguration()
+            ->generateKey()
+            ->deleteUploads()
+            ->runMigration()
+            ->createDummyContent()
+            ->createDefaultTheme()
+            ->successfullyInstalled();
         return;
     }
 
@@ -216,24 +239,27 @@ class AccioInstall extends Command{
      * @throws \Cz\Git\GitException
      * @throws \Exception
      */
-    private function createDefaultTheme(){
+    private function createDefaultTheme()
+    {
         $this->info("Creating default theme...");
 
         // Delete default theme, so we later get the latest version from git
         $defaultThemePath = base_path('themes/'.config('project.defaultTheme'));
 
-        if(file_exists($defaultThemePath)){
+        if(file_exists($defaultThemePath)) {
             File::deleteDirectory($defaultThemePath);
         }else{
-            (new DummyTheme([
-              'title' => 'Default Theme',
-              'namespace' => 'DefaultTheme',
-              'organisation' => 'Manaferra',
-              'authorName' => 'Faton Sopa',
-              'authorEmail' => 'fatom.sopa@manaferra.com',
-              'auth' => true,
-              'activate' => true,
-            ]))->make();
+            (new DummyTheme(
+                [
+                'title' => 'Default Theme',
+                'namespace' => 'DefaultTheme',
+                'organisation' => 'Manaferra',
+                'authorName' => 'Faton Sopa',
+                'authorEmail' => 'fatom.sopa@manaferra.com',
+                'auth' => true,
+                'activate' => true,
+                ]
+            ))->make();
         }
 
         $this->advanceBar();
@@ -243,11 +269,12 @@ class AccioInstall extends Command{
     /**
      * Set progress bar
      *
-     * @param int $steps
+     * @param  int $steps
      * @return $this
      */
-    private function setBar($steps = 14){
-        if($this->option('deleteUploads')){
+    private function setBar($steps = 14)
+    {
+        if($this->option('deleteUploads')) {
             $steps++;
         }
 
@@ -260,7 +287,8 @@ class AccioInstall extends Command{
      *
      * @return $this
      */
-    private function welcomeMessage(){
+    private function welcomeMessage()
+    {
         $this->block(' -- Welcome to CMS -- ', 'fg=white;bg=green;options=bold');
         $this->line('');
         $this->line('Please answer the following questions:');
@@ -270,9 +298,11 @@ class AccioInstall extends Command{
     }
     /**
      * The response when accio is installed sucessfully
+     *
      * @return $this
      */
-    private function successfullyInstalled(){
+    private function successfullyInstalled()
+    {
         $this->line('');
         $this->block('Success! Accio is now installed', 'fg=black;bg=green');
         $this->line('');
@@ -298,9 +328,10 @@ class AccioInstall extends Command{
      *
      * @return $this
      */
-    private function runMigration(){
+    private function runMigration()
+    {
         $this->info("Running database migration...");
-        $this->call('migrate',['--force' => true]);
+        $this->call('migrate', ['--force' => true]);
 
         $this->line('');
         $this->advanceBar();
@@ -310,10 +341,12 @@ class AccioInstall extends Command{
     }
     /**
      * Delete uploads
+     *
      * @return $this
      */
-    private function deleteUploads(){
-        if($this->option('deleteUploads')){
+    private function deleteUploads()
+    {
+        if($this->option('deleteUploads')) {
             $this->info("Deleting uploads...");
             File::deleteDirectory(public_path('uploads'), true);
             $this->advanceBar();
@@ -327,7 +360,8 @@ class AccioInstall extends Command{
      * @return $this
      * @throws \Exception
      */
-    private function createDummyContent(){
+    private function createDummyContent()
+    {
         $this->info("Creating default roles...");
         UserGroup::createDefaultRoles();
         $this->advanceBar();
@@ -338,32 +372,34 @@ class AccioInstall extends Command{
 
         // Create Default Language
         $this->info("Creating default language...");
-        factory(\App\Models\Language::class)->create([
-          'name' => $this->PRIMARY_LANGUAGE->name,
-          'nativeName' => $this->PRIMARY_LANGUAGE->nativeName,
-          'slug' => $this->PRIMARY_LANGUAGE->slug,
-          'isDefault' => true
-        ]);
+        factory(\App\Models\Language::class)->create(
+            [
+            'name' => $this->PRIMARY_LANGUAGE->name,
+            'nativeName' => $this->PRIMARY_LANGUAGE->nativeName,
+            'slug' => $this->PRIMARY_LANGUAGE->slug,
+            'isDefault' => true
+            ]
+        );
         $this->advanceBar();
 
         $this->info("Creating default post types...");
-        (new \DefaultPostTypesDevSeeder())->run();
+        (new \PostTypeSeeder())->createDefaultPostTypes();
         $this->advanceBar();
 
         // Create tags example
         $this->info("Creating example tags...");
-        (new \TagDevSeeder())->run(20, null, true);
+        (new \TagSeeder())->run(20, null, true);
         $this->advanceBar();
 
         // Create a category
         $this->info("Creating an example category...");
-        $categoryObj = new \CategoryDevSeeder();
+        $categoryObj = new \CategorySeeder();
         $categoryObj->exampleTitles = true;
         $categoryObj->run(3, null);
         $this->advanceBar();
 
         $this->info("Creating example posts...");
-        (new \PostDevSeeder())->run(0, 5,'', 0, 0, 0, false);
+        (new \PostSeeder())->run(0, 5, '', 0, 0, 0, false);
         $this->advanceBar();
 
         // Create default permalinks
@@ -395,24 +431,27 @@ class AccioInstall extends Command{
      * @return $this
      * @throws \Exception
      */
-    private function saveConfiguration(){
+    private function saveConfiguration()
+    {
         $this->info("Writing configuration file...");
 
         // Save in .env file
-        $this->env->setEnv([
-          'APP_URL' => $this->APP_URL,
-          'DB_CONNECTION' => $this->DB_TYPE,
-          'DB_HOST' => $this->DB_HOST,
-          'DB_PORT' => $this->DB_PORT,
-          'DB_DATABASE' => $this->DB_DATABASE,
-          'DB_USERNAME' => $this->DB_USERNAME,
-          'DB_PASSWORD' => $this->DB_PASSWORD,
-        ]);
+        $this->env->setEnv(
+            [
+            'APP_URL' => $this->APP_URL,
+            'DB_CONNECTION' => $this->DB_TYPE,
+            'DB_HOST' => $this->DB_HOST,
+            'DB_PORT' => $this->DB_PORT,
+            'DB_DATABASE' => $this->DB_DATABASE,
+            'DB_USERNAME' => $this->DB_USERNAME,
+            'DB_PASSWORD' => $this->DB_PASSWORD,
+            ]
+        );
 
         // save in runtime
 
         config(['app.url' => $this->APP_URL]);
-        config(['app.name' => str_replace(' ','_',$this->APP_NAME)]);
+        config(['app.name' => str_replace(' ', '_', $this->APP_NAME)]);
         config(['database.connections.mysql.driver' => $this->DB_TYPE]);
         config(['database.connections.mysql.host' => $this->DB_HOST]);
         config(['database.connections.mysql.port' => $this->DB_PORT]);
@@ -423,9 +462,10 @@ class AccioInstall extends Command{
         // save in app.config
         $content = File::get(config_path('app.php'));
         $newContent = str_replace(
-          "'name' => '".config('app.name')."'",
-          "'name' => '".$this->APP_NAME."'",
-          $content);
+            "'name' => '".config('app.name')."'",
+            "'name' => '".$this->APP_NAME."'",
+            $content
+        );
 
         FILe::put(config_path('app.php'), $newContent);
 
@@ -442,7 +482,8 @@ class AccioInstall extends Command{
      * @return $this
      * @throws \Exception
      */
-    private function askInstallingQuestions(){
+    private function askInstallingQuestions()
+    {
         // Database information
         $this->DB_TYPE = $this->ask('Your Database type', config('database.default'));
         $this->DB_HOST = $this->ask('Your DB_HOST', config('database.connections.'.$this->DB_TYPE.'.host'));
@@ -479,9 +520,11 @@ class AccioInstall extends Command{
 
     /**
      * Set CMS Settings
+     *
      * @return void
      */
-    private function setSettings(){
+    private function setSettings()
+    {
         Settings::setSetting('siteTitle', $this->APP_NAME);
         Settings::setSetting('adminEmail', $this->ADMIN_EMAIL);
         Settings::setSetting('defaultUserRole', 'admin');
@@ -500,17 +543,19 @@ class AccioInstall extends Command{
     }
     /**
      * Forks a process to create the admin user.
-     *
      */
-    private function createAdminUser(){
-        $user = factory(User::class)->create([
-          'firstName' => $this->ADMIN_FIRST_NAME,
-          'lastName' => $this->ADMIN_LAST_NAME,
-          'slug' => str_slug($this->ADMIN_FIRST_NAME.'-'.$this->ADMIN_LAST_NAME),
-          'email' => $this->ADMIN_EMAIL,
-          'password' => Hash::make($this->ADMIN_PASSWORD),
-          'isActive' => true
-        ]);
+    private function createAdminUser()
+    {
+        $user = factory(User::class)->create(
+            [
+            'firstName' => $this->ADMIN_FIRST_NAME,
+            'lastName' => $this->ADMIN_LAST_NAME,
+            'slug' => str_slug($this->ADMIN_FIRST_NAME.'-'.$this->ADMIN_LAST_NAME),
+            'email' => $this->ADMIN_EMAIL,
+            'password' => Hash::make($this->ADMIN_PASSWORD),
+            'isActive' => true
+            ]
+        );
 
         // assign role
         $user->assignRoles(UserGroup::getAdminGroup()->groupID, true);
@@ -550,15 +595,16 @@ class AccioInstall extends Command{
     *
     * @return $this
     */
-    private function renameEnvFile(){
+    private function renameEnvFile()
+    {
         // delete current .env file
-        if(file_exists(app()->environmentFilePath())){
+        if(file_exists(app()->environmentFilePath())) {
             File::delete(app()->environmentFilePath());
         }
 
         // get .env.example or stub file
         $envTemplate = base_path('.env.example');
-        if(!file_exists($envTemplate)){
+        if(!file_exists($envTemplate)) {
             $envTemplate = stubPath('.env');
         }
 
@@ -566,7 +612,7 @@ class AccioInstall extends Command{
         File::put(app()->environmentFilePath(), File::get($envTemplate));
 
         // remove .env.example
-        if(file_exists(base_path('.env.example'))){
+        if(file_exists(base_path('.env.example'))) {
             File::delete(base_path('.env.example'));
         }
 
@@ -576,7 +622,8 @@ class AccioInstall extends Command{
     /**
      * Set env values
      */
-    private function setEnvValues(){
+    private function setEnvValues()
+    {
         config(['app.key' => 'SomeRandomString']);
         config(['app.env' => 'local']);
         return $this;
@@ -584,10 +631,12 @@ class AccioInstall extends Command{
 
     /**
      * Validate Database
+     *
      * @return void
      * @throws Exception
      */
-    private function validateDatabase(){
+    private function validateDatabase()
+    {
         /*
         * Check Database Connection
         */
@@ -619,61 +668,64 @@ class AccioInstall extends Command{
 
     /**
      * Create db connection command for PDO
+     *
      * @return string
      */
-    private function DBConnectComand(){
+    private function DBConnectComand()
+    {
         /*
         * Check Database Connection
         */
         switch ($this->DB_TYPE){
-            case 'sqlite':
-                $dsn = 'sqlite:'.$this->DB_DATABASE;
-                $this->validateSqliteFile($this->DB_DATABASE);
-                break;
+        case 'sqlite':
+            $dsn = 'sqlite:'.$this->DB_DATABASE;
+            $this->validateSqliteFile($this->DB_DATABASE);
+            break;
 
-            case 'pgsql':
-                $dsn ='pgsql:host='.$this->DB_HOST.';dbname='.$this->DB_DATABASE.';port='.$this->DB_PORT;
-                break;
+        case 'pgsql':
+            $dsn ='pgsql:host='.$this->DB_HOST.';dbname='.$this->DB_DATABASE.';port='.$this->DB_PORT;
+            break;
 
-            case 'sqlsrv':
-                $availableDrivers = \PDO::getAvailableDrivers();
-                if (in_array('dblib', $availableDrivers)) {
-                    $dsn = 'dblib:host='.$this->DB_HOST.$this->DB_PORT.';dbname='.$this->DB_DATABASE;
-                }
-                else {
-                    $dsn = 'sqlsrv:Server='.$this->DB_HOST.$this->DB_PORT.';Database='.$this->DB_DATABASE;
-                }
-                break;
+        case 'sqlsrv':
+            $availableDrivers = \PDO::getAvailableDrivers();
+            if (in_array('dblib', $availableDrivers)) {
+                $dsn = 'dblib:host='.$this->DB_HOST.$this->DB_PORT.';dbname='.$this->DB_DATABASE;
+            }
+            else {
+                $dsn = 'sqlsrv:Server='.$this->DB_HOST.$this->DB_PORT.';Database='.$this->DB_DATABASE;
+            }
+            break;
 
-            default:
-                $dsn = 'mysql:host='.$this->DB_HOST.';dbname='.$this->DB_DATABASE.';port='.$this->DB_PORT;
-                break;
+        default:
+            $dsn = 'mysql:host='.$this->DB_HOST.';dbname='.$this->DB_DATABASE.';port='.$this->DB_PORT;
+            break;
         }
 
         return $dsn;
     }
 
     /**
-     * @param \PDO $DBConnection
+     * @param  \PDO $DBConnection
      * @return mixed
      */
-    private function checkDatabase($DBConnection){
+    private function checkDatabase($DBConnection)
+    {
         switch ($this->DB_TYPE){
-            case 'sqlite':
-                $fetch = $DBConnection->query("select name from sqlite_master where type='table'", \PDO::FETCH_NUM);
-                break;
+        case 'sqlite':
+            $fetch = $DBConnection->query("select name from sqlite_master where type='table'", \PDO::FETCH_NUM);
+            break;
 
-            case 'pgsql':
-                $fetch = $DBConnection->query("select table_name from information_schema.tables where table_schema = 'public'", \PDO::FETCH_NUM);
-                break;
+        case 'pgsql':
+            $fetch = $DBConnection->query("select table_name from information_schema.tables where table_schema = 'public'", \PDO::FETCH_NUM);
+            break;
 
-            case 'sqlsrv':
-                $fetch = $DBConnection->query("select [table_name] from information_schema.tables", \PDO::FETCH_NUM);
-                break;
+        case 'sqlsrv':
+            $fetch = $DBConnection->query("select [table_name] from information_schema.tables", \PDO::FETCH_NUM);
+            break;
 
-            default:
-                $fetch = $DBConnection->query('show tables', \PDO::FETCH_NUM);
-                break;
+        default:
+            $fetch = $DBConnection->query('show tables', \PDO::FETCH_NUM);
+            break;
         }
 
         return $fetch;
@@ -681,7 +733,8 @@ class AccioInstall extends Command{
 
     /**
      * Validate that sql file exist
-     * @param string $DB_DATABASE
+     *
+     * @param  string $DB_DATABASE
      * @return void
      */
     protected function validateSqliteFile($DB_DATABASE)
@@ -689,8 +742,9 @@ class AccioInstall extends Command{
         if (!file_exists($DB_DATABASE)) {
 
             $directory = dirname($DB_DATABASE);
-            if (!is_dir($directory))
+            if (!is_dir($directory)) {
                 mkdir($directory, 0644, true);
+            }
 
             new \PDO('sqlite:' . $DB_DATABASE);
         }
@@ -698,7 +752,8 @@ class AccioInstall extends Command{
 
     }
 
-    private function advanceBar(){
+    private function advanceBar()
+    {
         $this->bar->advance();
         $this->line('');
         $this->line('');
@@ -707,14 +762,15 @@ class AccioInstall extends Command{
     /**
      * @return bool
      */
-    private function isInstalled(){
+    private function isInstalled()
+    {
 
-        if(config('app.key') && config('app.key') !== 'SomeRandomString')
-        {
+        if(config('app.key') && config('app.key') !== 'SomeRandomString') {
             $this->failure(
-              'You have already installed CMS!',
-              'If you were trying to update CMS, please use "php artisan app:update" or run "php artisan app:uninstall" to delete current instalation.',
-              'If you were trying to reinstall CMS, you have to first uninstall it by running php artisan app::uninstall');
+                'You have already installed CMS!',
+                'If you were trying to update CMS, please use "php artisan app:update" or run "php artisan app:uninstall" to delete current instalation.',
+                'If you were trying to reinstall CMS, you have to first uninstall it by running php artisan app::uninstall'
+            );
 
             return true;
         }
@@ -723,9 +779,11 @@ class AccioInstall extends Command{
 
     /**
      * Ask about default langauge
+     *
      * @throws \Exception
      */
-    private function askAboutDefaultLanguage(){
+    private function askAboutDefaultLanguage()
+    {
         $languageList = [];
         foreach(Language::ISOlist() as $language){
             $languageList[] = $language->name;
@@ -733,7 +791,7 @@ class AccioInstall extends Command{
 
         $languageName = $this->anticipate('What is your site\'s primary language?', $languageList, 'English');
         $this->PRIMARY_LANGUAGE = Language::getISOByName($languageName);
-        if(!$this->PRIMARY_LANGUAGE){
+        if(!$this->PRIMARY_LANGUAGE) {
             throw  new \Exception('Langauge could not be found in ISO 639.1 list!');
         }
     }

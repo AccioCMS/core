@@ -12,7 +12,7 @@ export default {
             state.subFields = subFields;
         },
         addSubCustomField(state, obj){
-            if(obj.lang !== undefined){
+            if(obj.lang !== undefined) {
                 state.subFields[obj.key][obj.lang].push(obj.value);
             }else{
                 state.subFields[obj.key].push(obj.value);

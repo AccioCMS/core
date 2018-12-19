@@ -68,7 +68,8 @@ class PermalinkModel extends Model
     /**
      * Destruct model instance.
      */
-    public function __destruct(){
+    public function __destruct()
+    {
         Event::fire('permalink:destruct', [$this]);
     }
 }

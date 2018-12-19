@@ -9,10 +9,12 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
-class BaseMainController extends BaseController{
+class BaseMainController extends BaseController
+{
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
-    public function __construct(){
+    public function __construct()
+    {
         // As route middlewares are not called when routes are cached
         // we need to call them manually
         if(App::routesAreCached()) {
@@ -24,15 +26,16 @@ class BaseMainController extends BaseController{
     /**
      * Get getMenuLinkRoutes from a controller
      *
-     * @param string $controller
+     * @param  string $controller
      * @return array
      */
-    public static function getMenuLinkRoutes($controller){
+    public static function getMenuLinkRoutes($controller)
+    {
         $controllerClass = Theme::getNamespace().'\\Controllers\\'.$controller;
 
         $routes = [];
 
-        if(class_exists($controllerClass) && method_exists($controllerClass, 'menuLinkRoutes' )){
+        if(class_exists($controllerClass) && method_exists($controllerClass, 'menuLinkRoutes')) {
             $routes = array_merge($routes, $controllerClass::menuLinkRoutes());
         }
 

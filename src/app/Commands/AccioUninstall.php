@@ -50,7 +50,7 @@ class AccioUninstall extends Command
         // Make sure app is not installed
         // Ask to confirm
         $response = $this->ask('If you app is currently installed all your data will be deleted. Type DELETE if you really want to proceed!');
-        if($response != 'DELETE'){
+        if($response != 'DELETE') {
             $this->comment('Reinstall process abandoned!');
             return;
         }
@@ -82,10 +82,11 @@ class AccioUninstall extends Command
      *
      * @return void
      */
-    private function cleanDirectories(){
+    private function cleanDirectories()
+    {
         // Clean uploads
         $success = File::cleanDirectory(uploadsPath());
-        if(!$success){
+        if(!$success) {
             $this->info("Directory ".uploadsPath()." could not be deleted. Please delete it manually!");
         }
 
@@ -95,7 +96,7 @@ class AccioUninstall extends Command
     /**
      * Drop all of the database tables.
      *
-     * @param  string  $database
+     * @param  string $database
      * @return void
      */
     protected function dropAllTables()

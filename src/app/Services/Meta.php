@@ -10,12 +10,14 @@ class  Meta
 {
     /**
      * Meta data list
+     *
      * @var array
      */
     private $metaList = [];
 
     /**
      * Which meta tags are allowed to be duplicate?
+     *
      * @var array
      */
     private $allowedDuplicateMeta = [
@@ -25,30 +27,35 @@ class  Meta
 
     /**
      * Meta title
+     *
      * @var string
      */
     private $metaTitle;
 
     /**
      * Canonical
+     *
      * @var string
      */
     private $canonical;
 
     /**
      * Extra mata data needed to be used in wild cards
+     *
      * @var array $extraMetaData
      */
     private $wildcardData = [];
 
     /**
      * Href lang alternate
+     *
      * @var array  $hreflang
      */
     private $hreflang = [];
 
     /**
      * A single model data
+     *
      * @var object $modelData
      */
     private $modelData;
@@ -57,13 +64,14 @@ class  Meta
 
     /**
      * Define new lines in meta tags
+     *
      * @var string $newLines
      */
     private $newLines = "\n";
 
     public function __construct()
     {
-        if(config('htmlmin.blade')){
+        if(config('htmlmin.blade')) {
             $this->newLines = '';
         }
     }
@@ -71,13 +79,14 @@ class  Meta
     /**
      * Set meta
      *
-     * @param $name
-     * @param $content
-     * @param string $metaType
-     * @param boolean $overwrite Overwrite previous defined meta
+     * @param  $name
+     * @param  $content
+     * @param  string  $metaType
+     * @param  boolean $overwrite Overwrite previous defined meta
      * @return $this
      */
-    public function set($name, $content, $metaType="name", $overwrite = true){
+    public function set($name, $content, $metaType="name", $overwrite = true)
+    {
         if($content) {
             // strip html tags and encode html entities
             $content = htmlspecialchars(strip_tags($content));
@@ -107,29 +116,33 @@ class  Meta
     /**
      * Get meta
      *
-     * @param $name
+     * @param  $name
      * @return mixed
      */
-    public function get($name){
+    public function get($name)
+    {
         return (isset($this->metaList[$name]) ? $this->metaList[$name] : []);
     }
 
     /**
      * Get meta tags
+     *
      * @return array
      */
-    public function getMetaTags(){
+    public function getMetaTags()
+    {
         return $this->metaList;
     }
 
     /**
      * Get meta tags
      *
-     * @param string $name
+     * @param  string $name
      * @return $this
      */
-    public function removeMetaTag($name){
-        if(isset($this->metaList[$name])){
+    public function removeMetaTag($name)
+    {
+        if(isset($this->metaList[$name])) {
             unset($this->metaList[$name]);
         }
         return $this;
@@ -138,20 +151,22 @@ class  Meta
     /**
      * Checks if a meta tag exist
      *
-     * @param $name
+     * @param  $name
      * @return bool
      */
-    public function metaExists($name){
+    public function metaExists($name)
+    {
         return (isset($this->metaList[$name]) ? true : false);
     }
 
     /**
      * Set title
      *
-     * @param string $title
+     * @param  string $title
      * @return $this
      */
-    public function setTitle($title){
+    public function setTitle($title)
+    {
         $this->metaTitle = $title;
         return $this;
     }
@@ -161,7 +176,8 @@ class  Meta
      *
      * @return string
      */
-    public function getTitle(){
+    public function getTitle()
+    {
         return $this->metaTitle;
     }
 
@@ -170,7 +186,8 @@ class  Meta
      *
      * @return $this
      */
-    public function removeTitle(){
+    public function removeTitle()
+    {
         $this->setTitle(null);
         return $this;
     }
@@ -178,14 +195,15 @@ class  Meta
     /**
      * Set meta description
      *
-     * @param object $objectData
-     * @param array $customData
+     * @param  object $objectData
+     * @param  array  $customData
      * @return $this
      */
-    public function setDescription($objectData, $customData = []){
+    public function setDescription($objectData, $customData = [])
+    {
         $this->set('description', $customData['description']);
         // Custom description
-        if(isset($customData['description'])){
+        if(isset($customData['description'])) {
             $this->set('description', $customData['description']);
         }else{
             // Avoid duplicate meta tags
@@ -201,10 +219,11 @@ class  Meta
     /**
      * Set canonical
      *
-     * @param string $url
+     * @param  string $url
      * @return $this
      */
-    public function setCanonical($url){
+    public function setCanonical($url)
+    {
         $this->canonical = $url;
         return $this;
     }
@@ -214,7 +233,8 @@ class  Meta
      *
      * @return string
      */
-    public function getCanonical(){
+    public function getCanonical()
+    {
         return $this->canonical;
     }
 
@@ -223,21 +243,24 @@ class  Meta
      *
      * @return $this
      */
-    public function removeCanonical(){
+    public function removeCanonical()
+    {
         $this->setCanonical(false);
         return $this;
     }
 
     /**
      * Set profile open graph
-     * @param object $profileObj
+     *
+     * @param  object $profileObj
      * @return $this
      */
-    public function setProfileOG($profileObj){
-        Meta::set("profile:first_name",$profileObj->firstName, "property");
-        Meta::set("profile:last_name",$profileObj->lastName, "property");
-        if(isset($profileObj->gender)){
-            Meta::set("profile:gender",$profileObj->gender, "property");
+    public function setProfileOG($profileObj)
+    {
+        Meta::set("profile:first_name", $profileObj->firstName, "property");
+        Meta::set("profile:last_name", $profileObj->lastName, "property");
+        if(isset($profileObj->gender)) {
+            Meta::set("profile:gender", $profileObj->gender, "property");
         }
         return $this;
     }
@@ -246,10 +269,11 @@ class  Meta
     /**
      * Set article open graph
      *
-     * @param object $postObj
+     * @param  object $postObj
      * @return $this
      */
-    public function setArticleOG($postObj){
+    public function setArticleOG($postObj)
+    {
         Meta::set("article:published_time", $postObj->created_at->format('c'), "propery");// When the article was first published.
         Meta::set("article:modified_time", $postObj->updated_at->format('c'), "propery");// When the article was last changed.
 
@@ -264,7 +288,7 @@ class  Meta
         }
 
         // Tags
-        if($postObj->hasTags()){
+        if($postObj->hasTags()) {
             foreach($postObj->tags as $tag){
                 Meta::set("article:tag", $tag->title, "propery");// Tag words associated with this article.
             }
@@ -275,15 +299,16 @@ class  Meta
     /**
      * Set image open graph
      *
-     * @param object $imageObj
+     * @param  object $imageObj
      * @return $this
      */
-    public function setImageOG($imageObj){
+    public function setImageOG($imageObj)
+    {
         if($imageObj) {
             Meta::set("og:image", asset($imageObj->url), "property");
             Meta::set("og:image:type", $imageObj->type."/".str_replace("jpg", "jpeg", $imageObj->extension), "property");
             if($imageObj->description) {
-                Meta::set("og:image:alt",$imageObj->description, "property");
+                Meta::set("og:image:alt", $imageObj->description, "property");
             }
 
             if($imageObj->dimensions) {
@@ -297,10 +322,12 @@ class  Meta
 
     /**
      * Print meta html
+     *
      * @return $this
      */
-    public function printMetaTags(){
-        if(!$this->getMetaIsPrinted()){
+    public function printMetaTags()
+    {
+        if(!$this->getMetaIsPrinted()) {
             $this->printTitle();
             $this->printMetaTagsList();
             $this->printCanonical();
@@ -313,14 +340,16 @@ class  Meta
     /**
      * Set if media is printed
      */
-    public function setMetaIsPrinted(){
+    public function setMetaIsPrinted()
+    {
         $this->metaIsPrinted = true;
     }
 
     /**
      * Get if media is printed
      */
-    public function getMetaIsPrinted(){
+    public function getMetaIsPrinted()
+    {
         return $this->metaIsPrinted;
     }
 
@@ -328,21 +357,25 @@ class  Meta
 
     /**
      * Print title
+     *
      * @return $this
      */
-    private function printTitle(){
-        if($this->getTitle()){
+    private function printTitle()
+    {
+        if($this->getTitle()) {
             print '<title>'.$this->getTitle().'</title>'.$this->newLines;
         }
         return $this;
     }
     /**
      * Print meta tags list
+     *
      * @return $this
      */
-    private function printMetaTagsList(){
+    private function printMetaTagsList()
+    {
         foreach($this->metaList as $metaName=>$metaData){
-            if(in_array($metaName, $this->allowedDuplicateMeta)){
+            if(in_array($metaName, $this->allowedDuplicateMeta)) {
                 foreach($metaData as $duplicateMetaData){
                     print '<meta '.$duplicateMetaData['type'].'="'.$metaName.'" content="'.$duplicateMetaData['content'].'" />'.$this->newLines;
                 }
@@ -356,10 +389,12 @@ class  Meta
 
     /**
      * Print canonical
+     *
      * @return $this
      */
-    private function printCanonical(){
-        if($this->getCanonical()){
+    private function printCanonical()
+    {
+        if($this->getCanonical()) {
             print '<link rel="canonical" href="'.$this->getCanonical().'" />'.$this->newLines;
         }
         return $this;
@@ -367,10 +402,12 @@ class  Meta
 
     /**
      * Parse a list of array as meta tags
-     * @param array $attributes
+     *
+     * @param  array $attributes
      * @return string in form of param="value"
      */
-    public function parseAttributes($attributes){
+    public function parseAttributes($attributes)
+    {
         if($attributes) {
             $htmlMeta = ' ';
             foreach ($attributes as $key => $value) {
@@ -390,24 +427,28 @@ class  Meta
             return $htmlMeta;
 
         }
-      return;
+        return;
     }
 
     /**
      * Set wildcards
-     * @param $wildcardList
+     *
+     * @param  $wildcardList
      * @return $this
      */
-    public function setWildcards($wildcardList){
+    public function setWildcards($wildcardList)
+    {
         $this->wildcardData = $wildcardList;
         return $this;
     }
 
     /**
      * Set wildcards
+     *
      * @return array
      */
-    public function getWildcards(){
+    public function getWildcards()
+    {
         return $this->wildcardData;
     }
 
@@ -420,7 +461,8 @@ class  Meta
      * @return boolean
      * @throws Exception
      */
-    public function validateWildCards($input, $errorClass = ''){
+    public function validateWildCards($input, $errorClass = '')
+    {
         preg_match_all('@\{.*?\}}@',  $input, $matches);
         $notDefined = [];
 
@@ -434,8 +476,8 @@ class  Meta
             }
         }
 
-        if($notDefined){
-            throw new \Exception('Not defined wildcards "'.implode($notDefined,', ').'". '.($errorClass ? 'Please declare them on "metaData" method of "'.$errorClass.'".' : ''));
+        if($notDefined) {
+            throw new \Exception('Not defined wildcards "'.implode($notDefined, ', ').'". '.($errorClass ? 'Please declare them on "metaData" method of "'.$errorClass.'".' : ''));
         }
 
         return true;
@@ -444,11 +486,12 @@ class  Meta
     /**
      * Replace wildcards
      *
-     * @param string $input
-     * @param string $errorClass the class where the wildcard should be defined (if validation doesn't pass)
+     * @param  string $input
+     * @param  string $errorClass the class where the wildcard should be defined (if validation doesn't pass)
      * @return string
      */
-    public function replaceWildcards($input, $errorClass = ''){
+    public function replaceWildcards($input, $errorClass = '')
+    {
         if ($this->validateWildCards($input, $errorClass)) {
             return str_replace(array_keys($this->getWildcards()), array_values($this->getWildcards()), $input);
         }
@@ -459,7 +502,8 @@ class  Meta
      *
      * @return array
      */
-    public function getHrefLang(){
+    public function getHrefLang()
+    {
         return $this->hreflang;
     }
 
@@ -471,7 +515,8 @@ class  Meta
      *
      * @return $this
      */
-    public function setHrefLang($url, $hreflang){
+    public function setHrefLang($url, $hreflang)
+    {
         if($url && $hreflang) {
             $this->hreflang[] = [
               'url' => $url,
@@ -481,7 +526,8 @@ class  Meta
         return $this;
     }
 
-    public function printHrefLang(){
+    public function printHrefLang()
+    {
         if(config('project.multilanguage') ) {
             foreach ($this->getHrefLang() as $hreflang) {
                 print '<link rel="alternate" href="' . $hreflang['url'] . '" hreflang="' . $hreflang['lang'] . '" />' . $this->newLines;
@@ -492,10 +538,11 @@ class  Meta
     /**
      * Set href lang data
      *
-     * @param object $model
+     * @param  object $model
      * @return $this
      */
-    public function setHrefLangData($model, $routeName = ''){
+    public function setHrefLangData($model, $routeName = '')
+    {
         foreach(Language::getVisibleList() as $language){
             Meta::setHrefLang($model->translate($language->slug)->href($routeName), $language->slug);
         }
@@ -505,10 +552,11 @@ class  Meta
     /**
      * Set model data
      *
-     * @param $modelData
+     * @param  $modelData
      * @return $this;
      */
-    public function setModelData($modelData){
+    public function setModelData($modelData)
+    {
         $this->modelData = $modelData;
         return $this;
     }
@@ -518,7 +566,8 @@ class  Meta
      *
      * @return object
      */
-    public function getModelData(){
+    public function getModelData()
+    {
         return $this->modelData;
     }
 }

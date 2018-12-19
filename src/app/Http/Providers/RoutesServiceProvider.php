@@ -31,9 +31,11 @@ class RoutesServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('Routes', function () {
-            return new Routes();
-        });
+        $this->app->singleton(
+            'Routes', function () {
+                return new Routes();
+            }
+        );
     }
 
     /**

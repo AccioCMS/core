@@ -32,6 +32,7 @@ class PluginInstall extends Command
 
     /**
      * Saves plugin namespace
+     *
      * @var string $pluginNamespace
      */
     protected $pluginInstance;
@@ -58,6 +59,7 @@ class PluginInstall extends Command
 
     /**
      * Installing plugin's config content
+     *
      * @var object $configContent
      */
     protected $configContent;
@@ -73,26 +75,26 @@ class PluginInstall extends Command
     }
 
     /**
-     *
      * Execute the console command.
      *
      * @return mixed
      * @throws \Exception
      */
-    public function handle(){
+    public function handle()
+    {
         // Ensure there are no caches
         $this->callSilent('cache:clear');
 
         // Install plugin from a zip source
-        if(substr($this->argument('source'),-3) === 'zip'){
+        if(substr($this->argument('source'), -3) === 'zip') {
             $this
-              ->getZip()
-              ->extractZip()
-              ->readConfigFile()
-              ->copySourceContent();
+                ->getZip()
+                ->extractZip()
+                ->readConfigFile()
+                ->copySourceContent();
         }
         // clone from git
-        elseif(strstr($this->argument('source'),'git')){
+        elseif(strstr($this->argument('source'), 'git')) {
             $this->cloneFromGit()->readConfigFile()->copySourceContent();
         }else{
             $this->pluginNamespace = $this->argument('source');
@@ -121,7 +123,8 @@ class PluginInstall extends Command
      * @throws \Cz\Git\GitException
      * @return $this;
      */
-    private function cloneFromGit(){
+    private function cloneFromGit()
+    {
         $this->tmpDirectory = tmpPath().'/'.time();
         GitRepository::cloneRepository($this->argument('source'), $this->tmpDirectory);
         return $this;
@@ -133,11 +136,12 @@ class PluginInstall extends Command
      * @return bool
      * @throws \Exception
      */
-    private function canInstall(){
+    private function canInstall()
+    {
         $this->info("Validating");
 
         // Exists as a directory
-        if(!file_exists(pluginsPath($this->pluginNamespace))){
+        if(!file_exists(pluginsPath($this->pluginNamespace))) {
             throw new \Exception("Plugin ".$this->pluginNamespace." not found in plugins directory!");
         }
 
@@ -148,31 +152,33 @@ class PluginInstall extends Command
         $this->callSilent('clear-compiled');
 
         // Plugin class exists
-        $fullNamespace =  'Plugins\\'.str_replace('/','\\', $this->pluginNamespace.'\\Plugin');
+        $fullNamespace =  'Plugins\\'.str_replace('/', '\\', $this->pluginNamespace.'\\Plugin');
 
-        if(!class_exists($fullNamespace)){
+        if(!class_exists($fullNamespace)) {
             // When composer autoload was generated, we didn't have this plugin's classes
             // that's why we have to autoload all Plugin' classes manually
-            spl_autoload_register(function ($class) {
-                $class = str_replace("\\", "/", $class);
-                $class = str_replace("Plugins", "plugins", $class);
-                include base_path().'/' . $class. '.php';
-            });
+            spl_autoload_register(
+                function ($class) {
+                    $class = str_replace("\\", "/", $class);
+                    $class = str_replace("Plugins", "plugins", $class);
+                    include base_path().'/' . $class. '.php';
+                }
+            );
         }
 
         // Make sure Plugin namespace class exist
-        if(!class_exists($fullNamespace)){
+        if(!class_exists($fullNamespace)) {
             throw new \Exception("Class $fullNamespace not found!");
         }
 
         // Plugin needs to have an "install" method
         $this->pluginInstance = new $fullNamespace();
-        if(!method_exists($this->pluginInstance, 'install')){
+        if(!method_exists($this->pluginInstance, 'install')) {
             throw new \Exception("Plugin ".$this->pluginNamespace." does not have an install method!");
         }
 
         // Plugin should not be in DB Table
-        if(Plugin::where('namespace',$this->pluginNamespace)->first()){
+        if(Plugin::where('namespace', $this->pluginNamespace)->first()) {
             throw new \Exception("Plugin ".$this->pluginNamespace." already exists in DB!");
         }
 
@@ -189,24 +195,25 @@ class PluginInstall extends Command
      * @return $this
      * @throws \Exception
      */
-    private function copySourceContent(){
+    private function copySourceContent()
+    {
         // Move plugin to Plugin's directory
         $this->info("Copying source to plugins directory");
-        $this->pluginNamespace = str_replace('\\','/',$this->configContent->namespace);
+        $this->pluginNamespace = str_replace('\\', '/', $this->configContent->namespace);
 
-        if(file_exists(pluginsPath($this->pluginNamespace))){
+        if(file_exists(pluginsPath($this->pluginNamespace))) {
             $this->cleanTmp();
             throw new \Exception('A plugin with the same namespace already exists in plugins directory');
         }
 
         // Created organisation directory if it doesn't exist
-        $explodeNamespace = explode('/',$this->pluginNamespace);
+        $explodeNamespace = explode('/', $this->pluginNamespace);
         if(!file_exists(pluginsPath($explodeNamespace[0]))) {
             File::makeDirectory(pluginsPath($explodeNamespace[0]), 0755, true);
         }
 
         // Delete created directory if rename can not be executed
-        if(!File::move($this->tmpDirectory, pluginsPath($this->pluginNamespace))){
+        if(!File::move($this->tmpDirectory, pluginsPath($this->pluginNamespace))) {
             $this->cleanTmp();
             throw new \Exception('Source could not be moved to plugins directory!');
         }
@@ -216,9 +223,11 @@ class PluginInstall extends Command
 
     /**
      * Clean tmp directories
+     *
      * @return $this
      */
-    private function cleanTmp(){
+    private function cleanTmp()
+    {
         $directories = File::directories(tmpPath());
         foreach($directories as $directory){
             File::deleteDirectory($directory);
@@ -233,12 +242,13 @@ class PluginInstall extends Command
      * @return $this
      * @throws \Exception
      */
-    private function readConfigFile(){
+    private function readConfigFile()
+    {
         // Check config.json exists
         $this->info("Reading config");
 
         // look for config in main directory
-        if(file_exists($this->tmpDirectory.'/config.json')){
+        if(file_exists($this->tmpDirectory.'/config.json')) {
             $this->configContent = json_decode(File::get($this->tmpDirectory.'/config.json'));
             return $this;
         }
@@ -261,10 +271,12 @@ class PluginInstall extends Command
 
     /**
      * Get zip from source
+     *
      * @return $this
      * @throws \Exception
      */
-    private function getZip(){
+    private function getZip()
+    {
         $this->info("Downloading");
 
         $sourceContent = file_get_contents($this->argument('source'));
@@ -276,7 +288,7 @@ class PluginInstall extends Command
         $this->tmpZipFile = tmpPath($this->tmpRandomName.'.zip');
 
         // Save zip to tmp directory
-        if(!file_put_contents($this->tmpZipFile, $sourceContent)){
+        if(!file_put_contents($this->tmpZipFile, $sourceContent)) {
             File::delete($this->tmpZipFile);
             throw new \Exception('Could not copy source file to path '.$this->tmpZipFile);
         }
@@ -285,9 +297,11 @@ class PluginInstall extends Command
     }
     /**
      * Read zip file
+     *
      * @return $this
      */
-    private function extractZip(){
+    private function extractZip()
+    {
         $this->info("Extracting");
         $this->tmpDirectory = tmpPath($this->tmpRandomName);
 
@@ -299,7 +313,7 @@ class PluginInstall extends Command
 
         // zip creates a parent directory on extract, pass it
         $directories = File::directories($this->tmpDirectory);
-        if(isset($directories[0])){
+        if(isset($directories[0])) {
             $this->tmpDirectory = $directories[0];
         }
 
@@ -309,10 +323,11 @@ class PluginInstall extends Command
     /**
      * Add plugin in database
      *
-     * @param string $namespace
+     * @param  string $namespace
      * @return mixed
      */
-    private function addPluginInDB(){
+    private function addPluginInDB()
+    {
         $configContent = Plugin::config($this->pluginNamespace);
 
         $plugin = new Plugin();

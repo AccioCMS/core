@@ -7,7 +7,8 @@ use Illuminate\Routing\Controller;
 use Illuminate\Foundation\Auth\ResetsPasswords;
 use Illuminate\Support\Facades\Auth;
 
-class BaseResetPasswordController extends MainController {
+class BaseResetPasswordController extends MainController
+{
     /*
     |--------------------------------------------------------------------------
     | Password Reset Controller
@@ -26,7 +27,8 @@ class BaseResetPasswordController extends MainController {
      *
      * @return void
      */
-    public function __construct(){
+    public function __construct()
+    {
         $this->middleware('guest');
         parent::__construct();
     }
@@ -46,8 +48,8 @@ class BaseResetPasswordController extends MainController {
      *
      * If no token is present, display the link request form.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  string|null  $token
+     * @param  \Illuminate\Http\Request $request
+     * @param  string|null              $token
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function showResetForm(Request $request, $token = null)

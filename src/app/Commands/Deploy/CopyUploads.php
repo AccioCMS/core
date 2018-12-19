@@ -54,15 +54,16 @@ class CopyUploads extends Command
      * @return $this
      * @throws \Exception
      */
-    private function doCopyUplaods(){
-        if(config('deploy.uploads.from') && config('deploy.uploads.to')){
+    private function doCopyUplaods()
+    {
+        if(config('deploy.uploads.from') && config('deploy.uploads.to')) {
             $from = config('deploy.uploads.from');
             $fromNoAsterix = str_replace('/*', '', $from);
             $to = config('deploy.uploads.to');
             $toNoAsterix = str_replace('/*', '', $to);
 
             // both directories exist
-            if(file_exists($fromNoAsterix) && file_exists($toNoAsterix)){
+            if(file_exists($fromNoAsterix) && file_exists($toNoAsterix)) {
                 $this->comment("\nCopying local uploads");
                 $command = 'cp -R -u -p '.$from.' '.$to; // copy only when the SOURCE file is newer than the destination file or when the destination file is missing
 

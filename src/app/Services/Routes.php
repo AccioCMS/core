@@ -4,7 +4,8 @@
  * Routes
  *
  * Handle Front-end and Backend Route
- * @author Faton Sopa <faton.sopa@manaferra.com>
+ *
+ * @author  Faton Sopa <faton.sopa@manaferra.com>
  * @version 1.0
  */
 namespace Accio\App\Services;
@@ -19,9 +20,12 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use App\Models\Language;
 
-class Routes{
+class Routes
+{
 
-    /** @var array $getRoute The List of current routes.*/
+    /**
+     * @var array $getRoute The List of current routes.
+     */
     public $routes;
 
     public function __construct()
@@ -54,17 +58,20 @@ class Routes{
      *
      * @return $this
      */
-    public function mapBackendRoutes(){
+    public function mapBackendRoutes()
+    {
         $directory = __DIR__.'/../../routes/backend';
         if(is_dir($directory)) {
             $routeFiles = File::files($directory);
-            \Route::group([
-              'middleware' => $this->middleware['backend'],
-            ], function () use ($routeFiles) {
-                foreach ($routeFiles as $file) {
-                    require $file;
+            \Route::group(
+                [
+                'middleware' => $this->middleware['backend'],
+                ], function () use ($routeFiles) {
+                    foreach ($routeFiles as $file) {
+                        include $file;
+                    }
                 }
-            });
+            );
         }
         return $this;
     }
@@ -76,23 +83,26 @@ class Routes{
      *
      * @return $this
      */
-    public function mapFrontendRoutes(){
+    public function mapFrontendRoutes()
+    {
         $directory = base_path('routes');
         if(is_dir($directory)) {
             $routeFiles = File::files($directory);
 
             $excludeRoutes = ['base.php', 'api.php'];
 
-            Route::group([
-              'middleware' => $this->middleware['frontend'],
-            ], function () use ($routeFiles, $excludeRoutes) {
-                foreach ($routeFiles as $file) {
-                    // Base.php is loaded from FrontendBaseRoutes method
-                    if (!in_array($file->getFilename(), $excludeRoutes)) {
-                        require $file;
+            Route::group(
+                [
+                'middleware' => $this->middleware['frontend'],
+                ], function () use ($routeFiles, $excludeRoutes) {
+                    foreach ($routeFiles as $file) {
+                        // Base.php is loaded from FrontendBaseRoutes method
+                        if (!in_array($file->getFilename(), $excludeRoutes)) {
+                            include $file;
+                        }
                     }
                 }
-            });
+            );
         }
         return $this;
     }
@@ -104,7 +114,8 @@ class Routes{
      *
      * @return $this
      */
-    public function mapThemeRoutes(){
+    public function mapThemeRoutes()
+    {
         $this->getRoutsFromTheme(Theme::getActiveTheme());
         return $this;
     }
@@ -115,34 +126,37 @@ class Routes{
      * @return $this
      * @throws \Exception
      */
-    public function mapFrontendBaseRoutes(){
+    public function mapFrontendBaseRoutes()
+    {
         $projectConfig = Config::get('project');
         $baseFile = base_path('routes/base.php');
 
-        \Route::group([
-          'middleware' => $this->middleware['frontend'],
-        ], function () use($baseFile) {
-            require $baseFile;
-        });
+        \Route::group(
+            [
+            'middleware' => $this->middleware['frontend'],
+            ], function () use ($baseFile) {
+                include $baseFile;
+            }
+        );
 
 
         // Find base route
         // getByName() method is currently not working for any strange reason
         $baseRoute = null;
         foreach(Route::getRoutes() as $route){
-            if($route->getName() == 'base.homepage'){
+            if($route->getName() == 'base.homepage') {
                 $baseRoute = $route;
                 break;
             }
         }
 
-        if($baseRoute && $projectConfig['multilanguage']){
+        if($baseRoute && $projectConfig['multilanguage']) {
             // Only proced base route that has translate as a middleware
             // base.homepage routes is handled in a separate method, for language purposes
-            if($baseRoute->getName() == 'base.homepage' && in_array("translate",$baseRoute->middleware())){
+            if($baseRoute->getName() == 'base.homepage' && in_array("translate", $baseRoute->middleware())) {
                 foreach(Language::all() as $language){
                     // Create default language routes
-                    $newRoute = Route::get($baseRoute->uri().'/'.$language->slug,$baseRoute->getActionName());
+                    $newRoute = Route::get($baseRoute->uri().'/'.$language->slug, $baseRoute->getActionName());
 
                     //set name
                     $newRoute->name($baseRoute->getName().'.'.$language->slug);
@@ -169,20 +183,21 @@ class Routes{
      *
      * @return $this
      */
-    public function getRoutsFromTheme($themeName){
+    public function getRoutsFromTheme($themeName)
+    {
         if(Theme::ifExists($themeName)) {
             $routeDir = base_path('themes/' . $themeName . '/routes');
             if (is_dir($routeDir)) {
                 $routeFiles = File::files($routeDir);
 
-//                \Route::group([
-//                    'middleware' => 'frontend', // TODO add theme middleware
-//                    'namespace' => Theme::getNamespaceOf(Theme::getActiveTheme()),
-//                ], function () use ($routeFiles) {
-//                    foreach ($routeFiles as $file) {
-//                        require_once $file;
-//                    }
-//                });
+                //                \Route::group([
+                //                    'middleware' => 'frontend', // TODO add theme middleware
+                //                    'namespace' => Theme::getNamespaceOf(Theme::getActiveTheme()),
+                //                ], function () use ($routeFiles) {
+                //                    foreach ($routeFiles as $file) {
+                //                        require_once $file;
+                //                    }
+                //                });
             }
         }
         return $this;
@@ -195,20 +210,23 @@ class Routes{
      *
      * @return $this
      */
-    public function mapPluginsBackendRoutes(){
+    public function mapPluginsBackendRoutes()
+    {
         foreach(Plugin::activePlugins() as $plugin){
             $backendRoutes = $plugin->backendRoutes();
-            if($backendRoutes){
-                \Route::group([
-                  'middleware' => $this->middleware['backend'],
-                  'as' => 'Backend.'.$plugin->namespaceWithDot().".",
-                  'namespace' => $plugin->parseNamespace().'\Controllers',
-                  'prefix' => Config::get('project')['adminPrefix']."/".$plugin->backendURLPrefix()
-                ], function () use($backendRoutes) {
-                    foreach($backendRoutes as $file){
-                        require $file->getPathname();
+            if($backendRoutes) {
+                \Route::group(
+                    [
+                    'middleware' => $this->middleware['backend'],
+                    'as' => 'Backend.'.$plugin->namespaceWithDot().".",
+                    'namespace' => $plugin->parseNamespace().'\Controllers',
+                    'prefix' => Config::get('project')['adminPrefix']."/".$plugin->backendURLPrefix()
+                    ], function () use ($backendRoutes) {
+                        foreach($backendRoutes as $file){
+                            include $file->getPathname();
+                        }
                     }
-                });
+                );
             }
         }
         return $this;
@@ -221,20 +239,23 @@ class Routes{
      *
      * @return $this
      */
-    public function mapPluginsFrontendRoutes(){
+    public function mapPluginsFrontendRoutes()
+    {
         foreach(Plugin::activePlugins() as $plugin){
             // Frontend routes
             $frontendRoutes = $plugin->frontendRoutes();
-            if($frontendRoutes){
-                \Route::group([
-                  'middleware' => $this->middleware['frontend'],
-                  'as' => $plugin->namespaceWithDot().".",
-                  'namespace' => $plugin->parseNamespace().'\Controllers',
-                ], function () use($frontendRoutes) {
-                    foreach($frontendRoutes as $file){
-                        require $file->getPathname();
+            if($frontendRoutes) {
+                \Route::group(
+                    [
+                    'middleware' => $this->middleware['frontend'],
+                    'as' => $plugin->namespaceWithDot().".",
+                    'namespace' => $plugin->parseNamespace().'\Controllers',
+                    ], function () use ($frontendRoutes) {
+                        foreach($frontendRoutes as $file){
+                            include $file->getPathname();
+                        }
                     }
-                });
+                );
             }
         }
         return $this;
@@ -243,12 +264,13 @@ class Routes{
     /**
      * Generate an full http/s link to easily create links in front-end whether the project is multilanguage or not
      *
-     * @param  string $link The suffix of a link after the domain  (ex. "/about-us/")
-     * @param  string $baseURL The link of the domain to be added before the $link (ex. http://www.mywebsite.com). If empty, current project URL will be used
+     * @param string $link    The suffix of a link after the domain  (ex. "/about-us/")
+     * @param string $baseURL The link of the domain to be added before the $link (ex. http://www.mywebsite.com). If empty, current project URL will be used
      *
      * @return string
      * */
-    public function url($link = '',$baseURL = ''){
+    public function url($link = '',$baseURL = '')
+    {
         $projectConfig = Config::get('project');
 
         $language = '';
@@ -257,7 +279,7 @@ class Routes{
             $language .= App::getLocale().'/';
         }
 
-        if($baseURL){
+        if($baseURL) {
             return $baseURL.$language.$link.'/';
         }else{
             return url($language.$link);
@@ -269,15 +291,16 @@ class Routes{
      *
      * It uses Laravel's action method
      *
-     * @param  string  $action ex. PostController@single
-     * @param  array   $parameters
-     * @param  bool    $absolute
+     * @param  string $action     ex. PostController@single
+     * @param  array  $parameters
+     * @param  bool   $absolute
      * @return string
      */
-    public function action($action, $parameters = [], $absolute = true){
+    public function action($action, $parameters = [], $absolute = true)
+    {
         $getProjectConfig = Config::get('project');
         //add language if current language
-        if($getProjectConfig['multilanguage'] && App::getLocale() != Language::getDefault('slug')){
+        if($getProjectConfig['multilanguage'] && App::getLocale() != Language::getDefault('slug')) {
             $langParameter = array('lang'=> App::getLocale() );
         }else{
             $langParameter = array('lang'=>"");
@@ -285,7 +308,7 @@ class Routes{
 
         $parameters = array_merge($langParameter, $parameters);
         $method = Theme::getNamespace().$action;
-        $url = action($method,$parameters);
+        $url = action($method, $parameters);
         return $url;
     }
 
@@ -296,7 +319,8 @@ class Routes{
      *
      * @return $this
      */
-    public  function addLanguagePrefix(){
+    public  function addLanguagePrefix()
+    {
         $projectConfig = Config::get('project');
         if($projectConfig['multilanguage']) {
             foreach (Route::getRoutes() as $route) {
@@ -304,7 +328,7 @@ class Routes{
 
                     // Only proceed routes that have translate as a middleware
                     // base.homepage routes is handled in a separate method, for language purposes
-                    if($method !== 'HEAD' && in_array("translate",$route->middleware()) && strpos($route->getName(),'base.homepage') === false){
+                    if($method !== 'HEAD' && in_array("translate", $route->middleware()) && strpos($route->getName(), 'base.homepage') === false) {
                         $method = strtolower($method);
 
                         /**
@@ -336,10 +360,11 @@ class Routes{
     /**
      * Get a method of backend
      *
-     * @param string $method
+     * @param  string $method
      * @return string
      */
-    public function backend($method){
+    public function backend($method)
+    {
         return '\App\Http\Controllers\Backend\\'.$method;
     }
 
@@ -351,7 +376,8 @@ class Routes{
      *
      * @return void
      */
-    public function sortRoutes(){
+    public function sortRoutes()
+    {
         $originalRoutes = \Route::getRoutes();
         $routesByMethod = $originalRoutes->getRoutesByMethod();
 
@@ -364,7 +390,7 @@ class Routes{
                 $sort = (substr_count($uri, '/'));
 
                 //front page has the higher priority
-                if($uri == '/'){
+                if($uri == '/') {
                     $sort = 0;
                 }
                 else {

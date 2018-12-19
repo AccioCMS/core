@@ -3,8 +3,9 @@
  * Menu Links Model
  *
  * It handles MenuLinks of the site
- * @author Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
- * @author Faton Sopa <faton.sopa@manaferra.com>
+ *
+ * @author  Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
+ * @author  Faton Sopa <faton.sopa@manaferra.com>
  * @version 1.0
  */
 namespace Accio\App\Models;
@@ -21,7 +22,8 @@ use Illuminate\Support\Facades\Event;
 use Accio\App\Traits;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class MenuLinkModel extends Model{
+class MenuLinkModel extends Model
+{
 
     use
         Cachable,
@@ -40,6 +42,7 @@ class MenuLinkModel extends Model{
 
     /**
      * The attributes that should be cast to native types.
+     *
      * @var array
      */
     protected $casts = [
@@ -90,7 +93,8 @@ class MenuLinkModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = []){
+    public function __construct(array $attributes = [])
+    {
         parent::__construct($attributes);
         Event::fire('menuLink:construct', [$this]);
     }
@@ -98,7 +102,8 @@ class MenuLinkModel extends Model{
     /**
      * Destruct model instance.
      */
-    public function __destruct(){
+    public function __destruct()
+    {
         Event::fire('menuLink:destruct', [$this]);
     }
 
@@ -107,20 +112,23 @@ class MenuLinkModel extends Model{
      *
      * @return void;
      */
-    public function metaData(){
+    public function metaData()
+    {
         Meta::setTitle($this->label)
-//            ->set("og:type", "article", "property")
-//            ->set("og:title", $this->label, "property")
-//            ->set("og:description", $this->content(), "property")
-            ->set("og:url",$this->href, "property")
-//            ->setImageOG(($this->hasFeaturedImage() ? $this->featuredImage : null))
-//            ->setArticleOG($this)
-//            ->setHrefLangData($this)
+        //            ->set("og:type", "article", "property")
+        //            ->set("og:title", $this->label, "property")
+        //            ->set("og:description", $this->content(), "property")
+            ->set("og:url", $this->href, "property")
+        //            ->setImageOG(($this->hasFeaturedImage() ? $this->featuredImage : null))
+        //            ->setArticleOG($this)
+        //            ->setHrefLangData($this)
             ->setCanonical($this->href)
-            ->setWildcards([
+            ->setWildcards(
+                [
                 '{{title}}' => $this->label,
                 '{{sitename}}' => settings('siteTitle')
-            ]);
+                ]
+            );
 
         return;
     }

@@ -3,16 +3,18 @@
  * User permissions
  *
  * Handle permissions of user groups
- * @author Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
- * @author Faton Sopa <faton.sopa@manaferra.com>
-  * @version 1.0
+ *
+ * @author  Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
+ * @author  Faton Sopa <faton.sopa@manaferra.com>
+ * @version 1.0
  */
 namespace Accio\App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Accio\App\Traits;
 
-class PermissionModel extends Model{
+class PermissionModel extends Model
+{
 
     use Traits\PermissionTrait;
 
@@ -47,11 +49,12 @@ class PermissionModel extends Model{
     /**
      * Sets permission to a role (User Group).
      *
-     * @param int $groupID
-     * @param array $permission
+     * @param  int   $groupID
+     * @param  array $permission
      * @return boolean
      */
-    public function assertPermission($groupID, $permission){
+    public function assertPermission($groupID, $permission)
+    {
         $this->groupID = $groupID;
         $this->app = $permission['app'];
         $this->key = $permission['key'];

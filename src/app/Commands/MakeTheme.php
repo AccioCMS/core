@@ -35,6 +35,7 @@ class MakeTheme extends Command
 
     /**
      * Replacement strings are saved here
+     *
      * @var array $dummyReplacements
      */
     private $dummyReplacements = [];
@@ -56,15 +57,17 @@ class MakeTheme extends Command
 
         $this->info("Creating theme...");
 
-        $dummyTheme = new DummyTheme([
-          'title' => $title,
-          'namespace' => $namespace,
-          'organisation' => $organisation,
-          'authorName' => $authorName,
-          'authorEmail' => $authorEmail,
-          'auth' => $authEnabled,
-          'activate' => $setAsActive,
-        ]);
+        $dummyTheme = new DummyTheme(
+            [
+            'title' => $title,
+            'namespace' => $namespace,
+            'organisation' => $organisation,
+            'authorName' => $authorName,
+            'authorEmail' => $authorEmail,
+            'auth' => $authEnabled,
+            'activate' => $setAsActive,
+            ]
+        );
 
         $dummyTheme->make();
 

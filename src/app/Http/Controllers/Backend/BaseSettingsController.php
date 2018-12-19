@@ -11,7 +11,8 @@ use App\Models\UserGroup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class BaseSettingsController extends MainController{
+class BaseSettingsController extends MainController
+{
 
     /**
      * Get list of all settings and corresponding data, languages for language images etc.
@@ -19,18 +20,19 @@ class BaseSettingsController extends MainController{
      * @return array
      * @throws \Exception
      */
-    public function getSettings(){
+    public function getSettings()
+    {
         $settings = Settings::all()->keyBy('settingsKey');
 
         $settings['defaultLanguage'] = (object) array('value' => Language::getDefault()->languageID);
 
-        if(isset($settings['logo'])){
-            $media = Media::where('mediaID',$settings['logo']->value)->select("mediaID", "type", "filename", "fileDirectory")->first();
-            if ($media){
+        if(isset($settings['logo'])) {
+            $media = Media::where('mediaID', $settings['logo']->value)->select("mediaID", "type", "filename", "fileDirectory")->first();
+            if ($media) {
                 $settings['logo']['media'] = $media;
             }
-            $watermark = Media::where('mediaID',$settings['watermark']->value)->select("mediaID", "type", "filename", "fileDirectory")->first();
-            if ($watermark){
+            $watermark = Media::where('mediaID', $settings['watermark']->value)->select("mediaID", "type", "filename", "fileDirectory")->first();
+            if ($watermark) {
                 $settings['watermark']['media'] = $watermark;
             }
         }
@@ -53,41 +55,44 @@ class BaseSettingsController extends MainController{
     /**
      * API -- Used to take theme configs.
      *
-     * @param string $lang
+     * @param  string $lang
      * @return array
      * @throws \Exception
      */
-    public function getThemeConfigs($lang){
+    public function getThemeConfigs($lang)
+    {
         return Theme::configs();
     }
 
     /**
      * Store all settings in the database.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array
      */
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         // insert key and value in settings table
         $settings = Settings::all()->keyBy('settingsKey')->toArray();
 
         foreach ($request->form as $key => $value){
-            if(!isset($settings[$key])){
+            if(!isset($settings[$key])) {
                 $settings[$key] = ["settingsKey" => $key, "value" => $value];
             }
             $settings[$key]['value'] = ($value ? $value : null);
         }
 
-        if(Settings::truncate()){
+        if(Settings::truncate()) {
             Settings::insert($settings);
         }
 
         // if request is being made from general settings
-        if($request->settingsType == 'general'){
-            if(isset($settings['defaultLanguage']) &&
-                ((int) $settings['defaultLanguage']['value'] !== Language::getDefault()->languageID)){
+        if($request->settingsType == 'general') {
+            if(isset($settings['defaultLanguage']) 
+                && ((int) $settings['defaultLanguage']['value'] !== Language::getDefault()->languageID)
+            ) {
                     // remove the current default language ( set it to non-default ) if this new one is the default
-                    Language::where('isDefault',1)->update(['isDefault' => 0]);
+                    Language::where('isDefault', 1)->update(['isDefault' => 0]);
                     // set the new default language
                     $defaultLanguage = $request->form['defaultLanguage'];
                     Language::find($defaultLanguage)->update(['isDefault' => 1]);
@@ -95,28 +100,30 @@ class BaseSettingsController extends MainController{
 
         }
 
-        return $this->response( 'Settings are saved' , 200);
+        return $this->response('Settings are saved', 200);
     }
 
 
     /**
      * Get list of all permalinks.
      *
-     * @param $lang
+     * @param  $lang
      * @return mixed
      * @throws \Exception
      */
-    public function getPermalinks($lang){
+    public function getPermalinks($lang)
+    {
         return Permalink::all();
     }
 
     /**
      * Store permalinks in database.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array
      */
-    public function storePermalinks(Request $request){
+    public function storePermalinks(Request $request)
+    {
         $data = $request->all();
 
         $tmp = [];
@@ -124,12 +131,12 @@ class BaseSettingsController extends MainController{
             $tmp = array_merge($tmp, $permalinks);
         }
 
-        if(Permalink::truncate()){
-            if(Permalink::insert($tmp)){
-                return $this->response( 'Permalinks are saved' , 200);
+        if(Permalink::truncate()) {
+            if(Permalink::insert($tmp)) {
+                return $this->response('Permalinks are saved', 200);
             }
         }
 
-        return $this->response( 'Permalinks could not be saved. Please try again later.', 500);
+        return $this->response('Permalinks could not be saved. Please try again later.', 500);
     }
 }

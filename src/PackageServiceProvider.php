@@ -34,11 +34,13 @@ use Accio\App\Commands\MakeTheme;
 use Accio\App\Commands\MakeUser;
 use Accio\App\Commands\PluginInstall;
 
-class PackageServiceProvider extends ServiceProvider{
+class PackageServiceProvider extends ServiceProvider
+{
 
     /**
      * List Package Service Providers
      * Example: 'Accio\App\Providers\ClassNameServiceProvider',
+     *
      * @var array
      */
     protected $providers = [];
@@ -46,6 +48,7 @@ class PackageServiceProvider extends ServiceProvider{
     /**
      * List Package bindings
      * Example: 'ClassName' => 'Accio\App\Services\ClassName',
+     *
      * @var array
      */
     public $bindings = [];
@@ -81,6 +84,7 @@ class PackageServiceProvider extends ServiceProvider{
     /**
      * List Package Aliases
      * Example: 'ClassName' => 'Accio\App\Services\ClassName',
+     *
      * @var array
      */
     protected $aliases = [
@@ -98,32 +102,36 @@ class PackageServiceProvider extends ServiceProvider{
      */
     protected function mapRoutes()
     {
-         if (!$this->app->routesAreCached()) {
-            Route::group(['middleware' => ['web']], function () {
-                $routes = new Routes();
+        if (!$this->app->routesAreCached()) {
+            Route::group(
+                ['middleware' => ['web']], function () {
+                    $routes = new Routes();
 
-                // Backend Routes
-                $routes->mapBackendRoutes()
-                  ->mapPluginsBackendRoutes();
+                    // Backend Routes
+                    $routes->mapBackendRoutes()
+                        ->mapPluginsBackendRoutes();
 
-                // Frontend Routes
-                $routes->mapFrontendBaseRoutes()
-                  ->mapFrontendRoutes()
-                  ->mapThemeRoutes()
-                  ->mapPluginsFrontendRoutes();
+                    // Frontend Routes
+                    $routes->mapFrontendBaseRoutes()
+                        ->mapFrontendRoutes()
+                        ->mapThemeRoutes()
+                        ->mapPluginsFrontendRoutes();
 
-                // Add Language {lang} prefix
-                $routes->addLanguagePrefix()
-                  ->sortRoutes();
-            });
+                    // Add Language {lang} prefix
+                    $routes->addLanguagePrefix()
+                        ->sortRoutes();
+                }
+            );
         }
     }
 
     /**
      * Format https scheme
+     *
      * @param $url
      */
-    private function forceHTTPSScheme($url){
+    private function forceHTTPSScheme($url)
+    {
         if(env('FORCE_HTTPS_SCHEME')) {
             $url->formatScheme('https');
             $this->app['request']->server->set('HTTPS', true);
@@ -133,10 +141,11 @@ class PackageServiceProvider extends ServiceProvider{
     /**
      * Boot Accio.
      *
-     * @param UrlGenerator $url
+     * @param  UrlGenerator $url
      * @throws \Exception
      */
-    public function boot(UrlGenerator $url){
+    public function boot(UrlGenerator $url)
+    {
         /**
          * Register commands, so you may execute them using the Artisan CLI.
          */
@@ -204,14 +213,15 @@ class PackageServiceProvider extends ServiceProvider{
      *
      * @return void
      */
-    public function register(){
+    public function register()
+    {
 
         /**
          * Merge configurations
          * Config::get('accio.test')
          */
         $this->mergeConfigFrom(
-          __DIR__.'/config/app.php', 'accio'
+            __DIR__.'/config/app.php', 'accio'
         );
 
         /**
@@ -226,9 +236,11 @@ class PackageServiceProvider extends ServiceProvider{
          * Bind classes
          */
         foreach ($this->bindings as $name=>$namespace){
-            $this->app->bind($name, function($namespace){
-                return $this->app->make($namespace);
-            });
+            $this->app->bind(
+                $name, function ($namespace) {
+                    return $this->app->make($namespace);
+                }
+            );
         }
 
         Event::fire('system:register', [$this]);
@@ -238,10 +250,12 @@ class PackageServiceProvider extends ServiceProvider{
     /**
      * Check if app is installed
      * It currently only checks if permalinks table exist
+     *
      * @TODO find a better way to detect if app is installed
      */
-    public static function isInstalled(){
-        if(!File::exists(app()->environmentFilePath()) || !config('app.key') || config('app.key') == 'SomeRandomString'){
+    public static function isInstalled()
+    {
+        if(!File::exists(app()->environmentFilePath()) || !config('app.key') || config('app.key') == 'SomeRandomString') {
             return false;
         }
         return true;

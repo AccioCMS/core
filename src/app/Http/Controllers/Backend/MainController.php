@@ -16,10 +16,12 @@ use App\Models\User;
 use App\Models\Language;
 use ImageOptimizer;
 
-class MainController extends Controller{
+class MainController extends Controller
+{
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
-    public function __construct(){
+    public function __construct()
+    {
         if(App::routesAreCached()) {
             $this->middleware('application');
             $this->middleware('backend');
@@ -30,17 +32,18 @@ class MainController extends Controller{
     /**
      * Returns view with no ID param, like create etc.
      *
-     * @param string $lang
-     * @param string $view
+     * @param  string $lang
+     * @param  string $view
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function index($lang = "", $view = ""){
+    public function index($lang = "", $view = "")
+    {
         $classNameArr = explode("\\", get_class($this));
-        $className = str_replace("Controller","",$classNameArr[4]);
+        $className = str_replace("Controller", "", $classNameArr[4]);
         // check if user has permissions to access this link
         $key = ($view == 'list' || $view == '') ? 'read' : $view;
-        if(!User::hasAccess($className,$key)){
-            return view('errors.permissions', compact('lang','view'));
+        if(!User::hasAccess($className, $key)) {
+            return view('errors.permissions', compact('lang', 'view'));
         }
         return view('content');
     }
@@ -48,17 +51,18 @@ class MainController extends Controller{
     /**
      * Returns the list of specific model.
      *
-     * @param string $lang
+     * @param  string $lang
      * @return \Illuminate\Contracts\Pagination\Paginator
      */
-    public function getAll($lang = ""){
+    public function getAll($lang = "")
+    {
         $classNameArr = explode("\\", get_class($this));
-        $className = "App\\Models\\".str_replace("Controller","",$classNameArr[4]);
+        $className = "App\\Models\\".str_replace("Controller", "", $classNameArr[4]);
         $rowsPerPage = $className::$rowsPerPage;
         $class = new $className();
 
         $obj = DB::table($class->table);
-        if(isset($_GET['order']) && isset($_GET['type'])){
+        if(isset($_GET['order']) && isset($_GET['type'])) {
             $obj = $obj->orderBy($_GET['order'], $_GET['type']);
         }
         return $obj->simplePaginate($rowsPerPage);
@@ -67,37 +71,38 @@ class MainController extends Controller{
     /**
      * Return views for a specific model LIKE update, reset password etc.
      *
-     * @param string $lang
-     * @param string $view
-     * @param int $id
+     * @param  string $lang
+     * @param  string $view
+     * @param  int    $id
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function single($lang, $view, $id){
+    public function single($lang, $view, $id)
+    {
         $classNameArr = explode("\\", get_class($this));
-        $className = str_replace("Controller","",$classNameArr[4]);
+        $className = str_replace("Controller", "", $classNameArr[4]);
         // if we are accessing Post Type check if we are are in category or tags and repair the class name and key for them
         $key = $view;
-        if($className === "PostType"){
-            if(strpos($key, 'category') !== false){
+        if($className === "PostType") {
+            if(strpos($key, 'category') !== false) {
                 $className = 'Categories';
                 // make categorylist to list, categoryupdate to update etc
-                $key = str_replace('category','',$key);
-            }else if(strpos($key, 'tag') !== false){
+                $key = str_replace('category', '', $key);
+            }else if(strpos($key, 'tag') !== false) {
                 // make taglist to list, tagupdate to update etc
                 $className = 'Tags';
-                $key = str_replace('tag','',$key);
+                $key = str_replace('tag', '', $key);
             }
         }
 
         $key = ($key == "list" || $key == "posts") ? 'read' : $key;
         // check if user has permissions to access this link
-        if($key == 'read'){
-            if(!User::hasAccess($className,$key)){
-                return view('errors.permissions', compact('lang','view','id'));
+        if($key == 'read') {
+            if(!User::hasAccess($className, $key)) {
+                return view('errors.permissions', compact('lang', 'view', 'id'));
             }
         }else{
-            if(!User::hasAccess($className,$key, $id, true)){
-                return view('errors.permissions', compact('lang','view','id'));
+            if(!User::hasAccess($className, $key, $id, true)) {
+                return view('errors.permissions', compact('lang', 'view', 'id'));
             }
         }
 
@@ -107,25 +112,26 @@ class MainController extends Controller{
     /**
      * Handles sort ( updates order column ).
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array
      */
-    public function sort(Request $request){
+    public function sort(Request $request)
+    {
         $classNameArr = explode("\\", get_class($this));
-        $className = str_replace("Controller","",$classNameArr[4]);
+        $className = str_replace("Controller", "", $classNameArr[4]);
         $class = "App\\".$className;
 
         $count = 1;
         $req = $request->all();
         unset($req['postTypes']);
         foreach($req as $key => $id){
-            $id = (integer) str_replace("ID","", $id);
+            $id = (integer) str_replace("ID", "", $id);
             $object = $class::find($id);
             $object->order = $count;
             $object->save();
             $count++;
         }
-        return $this->response( 'Items are re-ordered successfully');
+        return $this->response('Items are re-ordered successfully');
     }
 
     /**
@@ -137,12 +143,13 @@ class MainController extends Controller{
      *
      * Exmp. (ModelName)Controller -- UserController.
      *
-     * @param string $lang
+     * @param  string $lang
      * @return mixed
      */
-    public function getAllWithoutPagination($lang = ""){
+    public function getAllWithoutPagination($lang = "")
+    {
         $classNameArr = explode("\\", get_class($this));
-        $className = "App\\Models\\".str_replace("Controller","",$classNameArr[4]);
+        $className = "App\\Models\\".str_replace("Controller", "", $classNameArr[4]);
         $class = new $className();
         return $class->all();
     }
@@ -152,32 +159,33 @@ class MainController extends Controller{
      * This function creates the slug for a row of a model and makes sure that
      * slugs it is not being used from a other post.
      *
-     * @param string $title
-     * @param string $tableName
-     * @param int $primaryKey
-     * @param string $languageSlug
-     * @param int $id
-     * @param bool $translatable
-     * @param bool $hasVirtualSlug
-     * @param string $delimiter
+     * @param  string $title
+     * @param  string $tableName
+     * @param  int    $primaryKey
+     * @param  string $languageSlug
+     * @param  int    $id
+     * @param  bool   $translatable
+     * @param  bool   $hasVirtualSlug
+     * @param  string $delimiter
      * @return string
      */
     public function generateSlug($title, $tableName, $primaryKey, $languageSlug = '', $id = 0, $translatable = false,
-                                 $hasVirtualSlug = false, $delimiter = "-"){
+        $hasVirtualSlug = false, $delimiter = "-"
+    ) {
         $count = 0;
         $found = true;
         $originalSlug = str_slug($title, $delimiter);
 
         while($found){
-            if($count != 0){
+            if($count != 0) {
                 $slug = $originalSlug.$delimiter.$count;
             }else{
                 $slug = $originalSlug;
             }
 
             $countObj = DB::table($tableName);
-            if ($translatable){
-                if($hasVirtualSlug){
+            if ($translatable) {
+                if($hasVirtualSlug) {
                     $countObj->where('slug_'.$languageSlug, $slug);
                 }else{
                     $countObj->where('slug->'.$languageSlug, $slug);
@@ -185,12 +193,12 @@ class MainController extends Controller{
             }else{
                 $countObj->where('slug', $slug);
             }
-            if($id){
-                $countObj->where($primaryKey, '!=' ,$id);
+            if($id) {
+                $countObj->where($primaryKey, '!=', $id);
             }
             $countPosts = $countObj->count();
 
-            if(!$countPosts){
+            if(!$countPosts) {
                 return $slug;
             }
             $count++;
@@ -204,14 +212,15 @@ class MainController extends Controller{
      * Gets query params and performs where clauses.
      * TODO: implement ElasticSearch
      *
-     * @param string $lang
-     * @param string $term
+     * @param  string $lang
+     * @param  string $term
      * @return array
      */
-    public function makeSearchParent($lang, $term){
+    public function makeSearchParent($lang, $term)
+    {
         // get the current model of the request
         $classNameArr = explode("\\", get_class($this));
-        $className = str_replace("Controller","",$classNameArr[4]);
+        $className = str_replace("Controller", "", $classNameArr[4]);
         $class = "App\\Models\\".$className;
         $object = new $class();
         $rowsPerPage = $class::$rowsPerPage;
@@ -220,13 +229,13 @@ class MainController extends Controller{
         $orderBy    = '';
         $orderType  = '';
         $pagination = '';
-        if(isset($_GET['pagination'])){
+        if(isset($_GET['pagination'])) {
             $pagination = $_GET['pagination'];
         }
-        if(isset($_GET['order'])){
+        if(isset($_GET['order'])) {
             $orderBy = $_GET['order'];
         }
-        if(isset($_GET['type'])){
+        if(isset($_GET['type'])) {
             $orderType = $_GET['type'];
         }
 
@@ -238,14 +247,15 @@ class MainController extends Controller{
     /**
      * Used in Vuejs to redirect user after a save (in Create or Update forms).
      *
-     * @param string $redirectChoice what kind of redirection to make
-     * @param string $belongsTo in which app to redirect
-     * @param integer $id if link has a id
-     * @param array $customViews (optional) if vuejs part needs custom views
+     * @param string  $redirectChoice what kind of redirection to make
+     * @param string  $belongsTo      in which app to redirect
+     * @param integer $id             if link has a id
+     * @param array   $customViews    (optional) if vuejs part needs custom views
      *
      * @return array redirectUrl the url where it will be redirected to, view and the view in which it will be redirected to (used in vuejs)
      * */
-    public function redirectParams($redirectChoice, $belongsTo = '', $id = 0, $customViews = []){
+    public function redirectParams($redirectChoice, $belongsTo = '', $id = 0, $customViews = [])
+    {
         $adminPrefix = Config::get('project')['adminPrefix'];
 
         // default views
@@ -253,26 +263,26 @@ class MainController extends Controller{
         $listView = 'list';
         $createView = 'create';
         // if custom views are set overwrite the default ones
-        if(count($customViews)){
-            if(isset($customViews['update'])){
+        if(count($customViews)) {
+            if(isset($customViews['update'])) {
                 $updateView = $customViews['update'];
             }
-            if(isset($customViews['list'])){
+            if(isset($customViews['list'])) {
                 $listView = $customViews['list'];
             }
-            if(isset($customViews['create'])){
+            if(isset($customViews['create'])) {
                 $createView = $customViews['create'];
             }
         }
 
         //get base path
-        $splitRoot = explode('/',\Request::root());
+        $splitRoot = explode('/', \Request::root());
         $basePath = (end($splitRoot) ? "/".end($splitRoot) : "");
 
-        if($redirectChoice == 'save'){
+        if($redirectChoice == 'save') {
             $redirectUrl = $basePath."/".$adminPrefix."/".App::getLocale()."/$belongsTo/$updateView/".$id;
             $view = $updateView;
-        }else if($redirectChoice == 'close'){
+        }else if($redirectChoice == 'close') {
             $redirectUrl = $basePath."/".$adminPrefix."/".App::getLocale()."/$belongsTo/$listView";
             $view = $listView;
         }else{
@@ -286,20 +296,22 @@ class MainController extends Controller{
     /**
      * Handle ajax responses (mainly used by view vue js.
      *
-     * @param  integer $code HTTP response code
-     * @param  string  $message The message to be shown along the error
-     * @param  int     $itemID The ID of the editing item
-     * @param  string  $redirectToView The view to be redirected to if ajax response is successful
-     * @param  string  $redirectUrl The URL to be redirected to if ajax response is successful
+     * @param  integer $code              HTTP response code
+     * @param  string  $message           The message to be shown along the error
+     * @param  int     $itemID            The ID of the editing item
+     * @param  string  $redirectToView    The view to be redirected to if ajax response is successful
+     * @param  string  $redirectUrl       The URL to be redirected to if ajax response is successful
      * @param  boolean $returnInputErrors If true, it handle input errors
-     * @param  array   $errorsList The list of errors in array, ex. ["field_name" => array("Error 1","Error 2")]
-     * @param  array   $noty Custom notifications list
+     * @param  array   $errorsList        The list of errors in array, ex. ["field_name" => array("Error 1","Error 2")]
+     * @param  array   $noty              Custom notifications list
      * @return array
      * */
-    protected  function response($message, $code = 200, $itemID = null, $redirectToView = '', $redirectUrl = '', $returnInputErrors = false, $errorsList = [], $noty = []){
+    protected  function response($message, $code = 200, $itemID = null, $redirectToView = '', $redirectUrl = '', $returnInputErrors = false, $errorsList = [], $noty = [])
+    {
         // if we have input errors in the validator
-        if($returnInputErrors){
-            return response()->json(array(
+        if($returnInputErrors) {
+            return response()->json(
+                array(
                     'code' =>           400,
                     'id'                => $itemID,
                     'errors'            => $errorsList,
@@ -328,7 +340,8 @@ class MainController extends Controller{
      *
      * @return array
      */
-    protected function noPermission(){
+    protected function noPermission()
+    {
         return $this->response("You don't have permissions to perform this action", 403);
     }
 

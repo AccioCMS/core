@@ -20,19 +20,21 @@ use App\Models\User;
 use App\Models\PostType;
 use Illuminate\Http\Request;
 
-class BaseUserController extends MainController{
+class BaseUserController extends MainController
+{
 
     /**
      * Return views for search component.
      *
-     * @param string $lang
-     * @param string $term
+     * @param  string $lang
+     * @param  string $term
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      * @throws \Exception
      */
-    public function search($lang, $term){
+    public function search($lang, $term)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('User','read')){
+        if(!User::hasAccess('User', 'read')) {
             return view('errors.permissions');
         }
 
@@ -42,12 +44,13 @@ class BaseUserController extends MainController{
     /**
      * Make simple search with a search term.
      *
-     * @param $term
+     * @param  $term
      * @return array
      */
-    public function makeSearch($term){
+    public function makeSearch($term)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('User','read')){
+        if(!User::hasAccess('User', 'read')) {
             return $this->noPermission();
         }
 
@@ -66,18 +69,19 @@ class BaseUserController extends MainController{
         );
 
         $excludeColumns = array('remember_token', 'created_at', 'updated_at');
-        return Search::searchByTerm('users',$term, 1, true, array(), $excludeColumns, $orderBy, $orderType, $joins);
+        return Search::searchByTerm('users', $term, 1, true, array(), $excludeColumns, $orderBy, $orderType, $joins);
     }
 
     /**
      * Get the list of all users.
      *
-     * @param string $lang Language slug (ex. en)
+     * @param  string $lang Language slug (ex. en)
      * @return array
      * */
-    public function getAll($lang = ""){
+    public function getAll($lang = "")
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('User','read')){
+        if(!User::hasAccess('User', 'read')) {
             return $this->noPermission();
         }
 
@@ -96,9 +100,10 @@ class BaseUserController extends MainController{
      *
      * @return UserGroup[]|array|\Illuminate\Database\Eloquent\Collection
      */
-    public function getGroups(){
+    public function getGroups()
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('User','read')){
+        if(!User::hasAccess('User', 'read')) {
             return $this->noPermission();
         }
         return UserGroup::all();
@@ -107,12 +112,13 @@ class BaseUserController extends MainController{
     /**
      * Store user in Database.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array
      */
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('user',(isset($request->user['id'])) ? 'update' : 'create')){
+        if(!User::hasAccess('user', (isset($request->user['id'])) ? 'update' : 'create')) {
             return $this->noPermission();
         }
         // custom messages for validation
@@ -128,12 +134,12 @@ class BaseUserController extends MainController{
             'groups' => 'required',
         ];
 
-        if(isset($request->user['id'])){
+        if(isset($request->user['id'])) {
             // update user
             $user = App\Models\User::findOrFail($request->user['id']);
             $user->isActive = $request->user['isActive'];
             $currentID = $request->user['id'];
-            if($user->email == $request->user['email']){
+            if($user->email == $request->user['email']) {
                 unset($validatorFields['email']);
             }
         }else{
@@ -151,12 +157,12 @@ class BaseUserController extends MainController{
         $validator = Validator::make($request->user, $validatorFields, $messages);
 
         // if validation fails return json response
-        if($validator->fails()){
+        if($validator->fails()) {
             return $this->response("Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
         // if image is not set make it 0
-        if (!isset($request->user['profileImageID']) || $request->user['profileImageID'] == ""){
+        if (!isset($request->user['profileImageID']) || $request->user['profileImageID'] == "") {
             $profileImageID = null;
         }else{
             $profileImageID = $request->user['profileImageID'];
@@ -174,15 +180,15 @@ class BaseUserController extends MainController{
         $user->profileImageID = $profileImageID;
         $user->gravatar = User::getGravatarFromEmail($request->user['email']);
 
-        if($user->save()){
+        if($user->save()) {
             // Add roles permissions
             $user->assignRoles($request->user['groups']);
 
             $redirectParams = parent::redirectParams($request->redirect, 'user', $user->userID);
-            $result = $this->response( 'User stored successfully', 200, $user->userID, $redirectParams['view'], $redirectParams['redirectUrl']);
+            $result = $this->response('User stored successfully', 200, $user->userID, $redirectParams['view'], $redirectParams['redirectUrl']);
             $result['data'] = $user;
         }else{
-            $result = $this->response( 'User could not be stored. Internal server error. Please try again later', 500);
+            $result = $this->response('User could not be stored. Internal server error. Please try again later', 500);
         }
         return $result;
     }
@@ -191,12 +197,13 @@ class BaseUserController extends MainController{
     /**
      * Change users profile image.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array|false|string
      */
-    public function storeProfileImage(Request $request){
+    public function storeProfileImage(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('user','update')){
+        if(!User::hasAccess('user', 'update')) {
             return $this->noPermission();
         }
         return $path = $request->file('profileImageID')->storeAs('images', 'filename.jpg');
@@ -205,15 +212,16 @@ class BaseUserController extends MainController{
     /**
      * Delete user.
      *
-     * @param string $lang
-     * @param int $id
+     * @param  string $lang
+     * @param  int    $id
      * @return array
      */
-    public function delete($lang, $id){
-        if ($this->deleteUser($id)){
+    public function delete($lang, $id)
+    {
+        if ($this->deleteUser($id)) {
             $result = $this->response('User is deleted');
         }else{
-            $result = $this->response( 'Internal server error. Please try again later', 500);
+            $result = $this->response('Internal server error. Please try again later', 500);
         }
         return $result;
     }
@@ -222,31 +230,32 @@ class BaseUserController extends MainController{
      * Deletes user,
      * called from bulkDelete and delete functions.
      *
-     * @param int $id
+     * @param  int $id
      * @return array|bool
      */
-    private function deleteUser($id){
+    private function deleteUser($id)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('user','delete')){
+        if(!User::hasAccess('user', 'delete')) {
             return $this->noPermission();
         }
 
         $user = User::find($id);
         // user can't be deleted if it has related data to him, like posts, categories ect
-        if($user->hasRelatedData()){
+        if($user->hasRelatedData()) {
             $user->isActive = false;
-            if($user->save()){
+            if($user->save()) {
                 return true;
             }
         }
 
         // Delete all roles relations
-        $roles = RoleRelationsModel::where('userID',$id);
-        if($roles){
+        $roles = RoleRelationsModel::where('userID', $id);
+        if($roles) {
             $roles->delete();
         }
 
-        if ($user && $user->delete()){
+        if ($user && $user->delete()) {
             return true;
         }
 
@@ -258,24 +267,26 @@ class BaseUserController extends MainController{
      *
      * @params array of user IDs
      * */
-    public function bulkDelete(Request $request){
+    public function bulkDelete(Request $request)
+    {
         foreach ($request->all() as $id){
             if (!$this->deleteUser($id)) {
-                return $this->response('Internal server error. Please try again later', 500 );
+                return $this->response('Internal server error. Please try again later', 500);
             }
         }
-        return $this->response( 'Users are deleted');
+        return $this->response('Users are deleted');
     }
 
 
     /**
      * JSON object with details for a specific user.
      *
-     * @param string $lang
-     * @param int $id
+     * @param  string $lang
+     * @param  int    $id
      * @return array
      */
-    public function detailsJSON($lang, $id){
+    public function detailsJSON($lang, $id)
+    {
         // check if user has permissions to access this link
         if(\Illuminate\Support\Facades\Auth::user()->userID != $id) {
             if (!User::hasAccess('User', 'read')) {
@@ -283,7 +294,7 @@ class BaseUserController extends MainController{
             }
         }
 
-        $user = App\Models\User::with('roles','profileImage')->find($id)->appendLanguageKeys();
+        $user = App\Models\User::with('roles', 'profileImage')->find($id)->appendLanguageKeys();
         $final = [
           'details' => $user,
           'allGroups' => UserGroup::all()
@@ -297,30 +308,35 @@ class BaseUserController extends MainController{
     /**
      * Reset users password.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array
      */
-    public function resetPassword(Request $request){
+    public function resetPassword(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('user','update')){
+        if(!User::hasAccess('user', 'update')) {
             return $this->noPermission();
         }
         // validation
-        $validator = Validator::make($request->all(), [
-          'password' => 'required|same:confpassword',
-          'id' => 'required',
-        ]);
+        $validator = Validator::make(
+            $request->all(), [
+            'password' => 'required|same:confpassword',
+            'id' => 'required',
+            ]
+        );
 
         // if validation fails return json response
         if ($validator->fails()) {
-            return $this->response( "Please check all required fields!", 400,null, false, false, true, $validator->errors());
+            return $this->response("Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
-        $user = User::where('userID', $request->id)->update([
-          'password' => $password = Hash::make($request->password)
-        ]);
+        $user = User::where('userID', $request->id)->update(
+            [
+            'password' => $password = Hash::make($request->password)
+            ]
+        );
 
-        if ($user){
+        if ($user) {
             $result = $this->response('Password is updated');
         }else{
             $result = $this->response('Internal server error. Please try again later', 500);
@@ -331,12 +347,13 @@ class BaseUserController extends MainController{
     /**
      * Get the array of fields for advanced search.
      *
-     * @param string $lang
+     * @param  string $lang
      * @return array
      */
-    public function getAdvancedSearchFields($lang = ""){
+    public function getAdvancedSearchFields($lang = "")
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('User','read')){
+        if(!User::hasAccess('User', 'read')) {
             return $this->noPermission();
         }
         return User::$advancedSearchFields;
@@ -345,12 +362,13 @@ class BaseUserController extends MainController{
     /**
      * Get the result of advanced search.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array
      */
-    public function getAdvancedSearchFieldsResults(Request $request){
+    public function getAdvancedSearchFieldsResults(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('User','read')){
+        if(!User::hasAccess('User', 'read')) {
             return $this->noPermission();
         }
         // join parameters for the query
@@ -363,19 +381,20 @@ class BaseUserController extends MainController{
             'whereTable2' => "mediaID",
           ]
         );
-        return Search::advanced('users',$request, User::$rowsPerPage, $request->page, $joins);
+        return Search::advanced('users', $request, User::$rowsPerPage, $request->page, $joins);
     }
 
     /**
      * When the page is refreshed in while advanced search is done.
      *
-     * @param string $lang
+     * @param  string $lang
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function searchAdvanced($lang){
+    public function searchAdvanced($lang)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('User','read')){
-            return view('errors.permissions', compact('lang','view','adminPrefix'));
+        if(!User::hasAccess('User', 'read')) {
+            return view('errors.permissions', compact('lang', 'view', 'adminPrefix'));
         }
         return view('content');
     }

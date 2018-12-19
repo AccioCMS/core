@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
 
-class AccioCollection extends Collection {
+class AccioCollection extends Collection
+{
 
     /**
      * @var
@@ -26,10 +27,11 @@ class AccioCollection extends Collection {
      *
      * @return AccioCollection
      */
-    public function published(){
+    public function published()
+    {
         return $this
             ->where('published_at', '<=', date('Y-m-d H:i:s'))
-            ->where('status','published');
+            ->where('status', 'published');
     }
 
     /**
@@ -37,22 +39,24 @@ class AccioCollection extends Collection {
      * 
      * @return AccioCollection
      */
-    public function unpublished(){
+    public function unpublished()
+    {
         return $this
-          ->where('published_at', '>', date('Y-m-d H:i:s'))
-          ->where('status','published');
+            ->where('published_at', '>', date('Y-m-d H:i:s'))
+            ->where('status', 'published');
     }
 
     /**
      * Create a pagination of items from array or collection.
      *
-     * @param int $perPage
-     * @param null $page
-     * @param array $options
-     * @param null $setPath
+     * @param  int   $perPage
+     * @param  null  $page
+     * @param  array $options
+     * @param  null  $setPath
      * @return LengthAwarePaginator
      */
-    public function paginate($perPage = 15, $page = null, $options = [], $setPath = null){
+    public function paginate($perPage = 15, $page = null, $options = [], $setPath = null)
+    {
         $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
         $items = ($this instanceof Collection || $this instanceof PostCollection) ? $this : Collection::make($this);
         $paginator = new LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, $options);
@@ -70,24 +74,26 @@ class AccioCollection extends Collection {
      * Perform order by.
      * It performs similar to sortBy method of collection but simplifies parameter order.
      *
-     * @param $key
-     * @param string $mode
-     * @param int $options
+     * @param  $key
+     * @param  string $mode
+     * @param  int    $options
      * @return PostCollection
      */
-    public function orderBy($key, $mode = 'ASC', $options = SORT_REGULAR){
+    public function orderBy($key, $mode = 'ASC', $options = SORT_REGULAR)
+    {
         return $this->sortBy($key, $options, ($mode === 'DESC' ? true : false));
     }
 
     /**
      * Where json operator.
      *
-     * @param $key
-     * @param $operator
-     * @param null $value
+     * @param  $key
+     * @param  $operator
+     * @param  null     $value
      * @return PostCollection
      */
-    public function whereJson($key, $operator, $value = null){
+    public function whereJson($key, $operator, $value = null)
+    {
         return $this->filter($this->jsonOperator(...func_get_args()));
     }
 
@@ -95,12 +101,13 @@ class AccioCollection extends Collection {
      * Where json operator.
      * It currently supports only level of json depth.
      *
-     * @param $key
-     * @param $operator
-     * @param null $value
+     * @param  $key
+     * @param  $operator
+     * @param  null     $value
      * @return \Closure
      */
-    public function jsonOperator($key, $operator, $value = null){
+    public function jsonOperator($key, $operator, $value = null)
+    {
         if (func_num_args() === 2) {
             $value = $operator;
             $operator = '=';
@@ -108,7 +115,7 @@ class AccioCollection extends Collection {
 
         return function ($item) use ($key, $operator, $value) {
             $column = $key;
-            if(Str::contains($key, '->')){
+            if(Str::contains($key, '->')) {
                 $explodeKey = explode('->', $key);
                 $column = $explodeKey[0];
                 $key = $explodeKey[1];
@@ -116,26 +123,36 @@ class AccioCollection extends Collection {
 
             $retrieved = data_get($item, $column.'.'.$key, null, true);
 
-            $strings = array_filter([$retrieved, $value], function ($value) {
-                return is_string($value) || (is_object($value) && method_exists($value, '__toString'));
-            });
+            $strings = array_filter(
+                [$retrieved, $value], function ($value) {
+                    return is_string($value) || (is_object($value) && method_exists($value, '__toString'));
+                }
+            );
 
             if (count($strings) < 2 && count(array_filter([$retrieved, $value], 'is_object')) == 1) {
                 return in_array($operator, ['!=', '<>', '!==']);
             }
 
             switch ($operator) {
-                default:
-                case '=':
-                case '==':  return $retrieved == $value;
-                case '!=':
-                case '<>':  return $retrieved != $value;
-                case '<':   return $retrieved < $value;
-                case '>':   return $retrieved > $value;
-                case '<=':  return $retrieved <= $value;
-                case '>=':  return $retrieved >= $value;
-                case '===': return $retrieved === $value;
-                case '!==': return $retrieved !== $value;
+            default:
+            case '=':
+            case '==':  
+                return $retrieved == $value;
+            case '!=':
+            case '<>':  
+                return $retrieved != $value;
+            case '<':   
+                return $retrieved < $value;
+            case '>':   
+                return $retrieved > $value;
+            case '<=':  
+                return $retrieved <= $value;
+            case '>=':  
+                return $retrieved >= $value;
+            case '===': 
+                return $retrieved === $value;
+            case '!==': 
+                return $retrieved !== $value;
             }
         };
     }
@@ -145,12 +162,13 @@ class AccioCollection extends Collection {
      * It is similar to laravel's get_data helper method,
      * with a bug fix on missing return statems on two conditions
      *
-     * @param  mixed   $target
-     * @param  string|array  $key
-     * @param  mixed   $default
+     * @param  mixed        $target
+     * @param  string|array $key
+     * @param  mixed        $default
      * @return mixed
      */
-    public function dataGet($target, $key, $default = null){
+    public function dataGet($target, $key, $default = null)
+    {
         if (is_null($key)) {
             return $target;
         }
@@ -185,11 +203,12 @@ class AccioCollection extends Collection {
     /**
      * Set model path and table to be appended later on cache items.
      *
-     * @param $pathToClass
-     * @param $table
+     * @param  $pathToClass
+     * @param  $table
      * @return $this
      */
-    public function setModel($eloquent, $table){
+    public function setModel($eloquent, $table)
+    {
         self::$_pathToClass = $eloquent;
         self::$_modelTable = $table;
 
@@ -199,15 +218,16 @@ class AccioCollection extends Collection {
     /**
      * Appends a model to each of cache items.
      *
-     * @param null $pathToClass
-     * @param null $table
+     * @param  null $pathToClass
+     * @param  null $table
      * @return AccioCollection|\Illuminate\Support\Collection
      */
-    public function getItems($pathToClass = null, $table = null){
-        if(!$pathToClass){
+    public function getItems($pathToClass = null, $table = null)
+    {
+        if(!$pathToClass) {
             $pathToClass = self::$_pathToClass;
         }
-        if(!$table){
+        if(!$table) {
             $table = self::$_modelTable;
         }
         // TODO nese ne nje collection query e thirr nje collection tjeter, proprties
@@ -215,23 +235,26 @@ class AccioCollection extends Collection {
         // keshtu qe duhet me ja gjet nje zgjidhje. Rasti i select categories me postTypeID
 
         $backtrace = debug_backtrace();
-        return $this->map(function ($item) use($pathToClass,$table) {
-            $modelInstance = (new $pathToClass())->setTable($table);
-            $modelInstance->disableCasts = true;
-            return $modelInstance->newFromBuilder($item);
-        })->values();
+        return $this->map(
+            function ($item) use ($pathToClass,$table) {
+                $modelInstance = (new $pathToClass())->setTable($table);
+                $modelInstance->disableCasts = true;
+                return $modelInstance->newFromBuilder($item);
+            }
+        )->values();
     }
 
     /**
      * Add, update or remove an item from cache.
      *
-     * @param $cacheName
-     * @param $item
-     * @param $mode
-     * @param $limitCache
+     * @param  $cacheName
+     * @param  $item
+     * @param  $mode
+     * @param  $limitCache
      * @return $this
      */
-    public function refreshState($cacheName, $item, $mode, $limitCache){
+    public function refreshState($cacheName, $item, $mode, $limitCache)
+    {
         $cachedItems = $this->all();
 
         // check if this item exists
@@ -248,7 +271,7 @@ class AccioCollection extends Collection {
         }
 
         // DELETE
-        if($mode == 'deleted'){
+        if($mode == 'deleted') {
             if ($currentItemKey) {
                 unset($cachedItems[key($currentItemKey)]);
             }
@@ -276,7 +299,7 @@ class AccioCollection extends Collection {
         }
 
         // Save cache
-        Cache::forever($cacheName,$cachedItems);
+        Cache::forever($cacheName, $cachedItems);
 
         return $this;
     }

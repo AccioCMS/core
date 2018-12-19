@@ -4,8 +4,9 @@
  * Language Model
  *
  * It handles Languages management
- * @author Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
- * @author Faton Sopa <faton.sopa@manaferra.com>
+ *
+ * @author  Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
+ * @author  Faton Sopa <faton.sopa@manaferra.com>
  * @version 1.0
  */
 
@@ -20,7 +21,8 @@ use Illuminate\Database\Eloquent\Model;
 use Accio\App\Traits;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class LanguageModel extends Model{
+class LanguageModel extends Model
+{
 
     use
 
@@ -109,7 +111,8 @@ class LanguageModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = []){
+    public function __construct(array $attributes = [])
+    {
         parent::__construct($attributes);
         Event::fire('language:construct', [$this]);
     }
@@ -117,7 +120,8 @@ class LanguageModel extends Model{
     /**
      * Destruct model instance
      */
-    public function __destruct(){
+    public function __destruct()
+    {
         Event::fire('language:destruct', [$this]);
     }
 
@@ -126,7 +130,8 @@ class LanguageModel extends Model{
      *
      * @throws \Exception
      */
-    public static function getVisibleList(){
+    public static function getVisibleList()
+    {
         return Language::where('isVisible', true)->get();
     }
 

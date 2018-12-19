@@ -18,7 +18,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 
-class BaseMenuController extends MainController{
+class BaseMenuController extends MainController
+{
     private $newMenuLinks = [];
     private $existingMenuLinks = [];
     private $tmpMenuLinkInfo = [];
@@ -28,21 +29,22 @@ class BaseMenuController extends MainController{
     /**
      * Save (Create or updates) the menu and his menu links.
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array response for frontend
      * @throws \Exception
      */
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('Menu','create')){
+        if(!User::hasAccess('Menu', 'create')) {
             return $this->noPermission();
         }
 
         // delete menu links from database
-        if ($request->deletedMenuLinks){
+        if ($request->deletedMenuLinks) {
             $ids = [];
             foreach ($request->deletedMenuLinks as $menuLinkID){
-                if (!strstr($menuLinkID, 'NEW')){
+                if (!strstr($menuLinkID, 'NEW')) {
                     $ids[] = $menuLinkID;
                 }
             }
@@ -50,7 +52,7 @@ class BaseMenuController extends MainController{
         }
 
         // create menu if it doesn't exist
-        if (!$request->selectedMenuID){
+        if (!$request->selectedMenuID) {
             $slug = self::generateSlug($request->selectedMenu['title'], 'menus', 'menuID');
 
             $menu = new Menu();
@@ -58,7 +60,7 @@ class BaseMenuController extends MainController{
             $menu->slug = $slug;
             $menu->isPrimary = 0;
 
-            if($menu->save()){
+            if($menu->save()) {
                 $menuID = $menu->menuID;
             }else{
                 throw new \Exception("New MenuLinks could not be saved. Please contact your administrator!");
@@ -70,7 +72,7 @@ class BaseMenuController extends MainController{
             $menu = Menu::findOrFail($menuID);
             $menu->title = $request->selectedMenu['title'];
 
-            if(!$menu->save()){
+            if(!$menu->save()) {
                 throw new \Exception("New MenuLinks could not be saved. Please contact your administrator!");
             }
         }
@@ -86,15 +88,19 @@ class BaseMenuController extends MainController{
 
             //if parent is a new link get his id from $newMenuLinksID
             $isParentNewLink = strstr($menuLink['parent'], 'NEW');
-            if($isParentNewLink){
+            if($isParentNewLink) {
                 $menuLink['parent'] = $newMenuLinksID[$menuLink['parent']];
             }
 
             //we don't need these anymore
-            if(isset($menuLink['menuLinkID'])){ unset($menuLink['menuLinkID']); }
-            if(isset($menuLink['routeList'])){ unset($menuLink['routeList']); }
-            if(isset($menuLink['href'])){ unset($menuLink['href']); }
-            if(isset($menuLink['belongsToData'])){ unset($menuLink['belongsToData']); }
+            if(isset($menuLink['menuLinkID'])) { unset($menuLink['menuLinkID']); 
+            }
+            if(isset($menuLink['routeList'])) { unset($menuLink['routeList']); 
+            }
+            if(isset($menuLink['href'])) { unset($menuLink['href']); 
+            }
+            if(isset($menuLink['belongsToData'])) { unset($menuLink['belongsToData']); 
+            }
 
             $this->newMenuLinks[$menuLinkKey] = self::objectsToJson($menuLink);
         }
@@ -105,7 +111,7 @@ class BaseMenuController extends MainController{
         // insert menulinks
         $insertMenuLinks = DB::table('menu_links')->insert($this->newMenuLinks);
 
-        if($insertMenuLinks){
+        if($insertMenuLinks) {
             // Fire event
             Event::fire('menuLink:created', [$insertMenuLinks, $request]);
         }else{
@@ -117,10 +123,14 @@ class BaseMenuController extends MainController{
         foreach($existingMenuLinks as $menuLink){
             $menuLink = self::objectsToJson($menuLink);
             $menuLinkID = $menuLink['menuLinkID'];
-            if(isset($menuLink['menuLinkID'])){ unset($menuLink['menuLinkID']); }
-            if(isset($menuLink['routeList'])){ unset($menuLink['routeList']); }
-            if(isset($menuLink['href'])){ unset($menuLink['href']); }
-            if(isset($menuLink['routes'])){ unset($menuLink['routes']); }
+            if(isset($menuLink['menuLinkID'])) { unset($menuLink['menuLinkID']); 
+            }
+            if(isset($menuLink['routeList'])) { unset($menuLink['routeList']); 
+            }
+            if(isset($menuLink['href'])) { unset($menuLink['href']); 
+            }
+            if(isset($menuLink['routes'])) { unset($menuLink['routes']); 
+            }
 
             // Fire event
             Event::fire('menuLink:updating', [$menuLink, $request]);
@@ -131,20 +141,21 @@ class BaseMenuController extends MainController{
             Event::fire('menuLink:updated', [$menuLink, $request]);
         }
 
-        return $this->response( 'Menu is successfully saved', 200, $menuID);
+        return $this->response('Menu is successfully saved', 200, $menuID);
 
     }
 
     /**
      * encode a list of object or arrays as json.
      *
-     * @param array $objectArray list of data
+     * @param  array $objectArray list of data
      * @return array encoded data
      */
-    public static function objectsToJson($objectArray){
+    public static function objectsToJson($objectArray)
+    {
         $tmp = [];
         foreach ($objectArray as $key => $item){
-            if (is_object($item) || is_array($item)){
+            if (is_object($item) || is_array($item)) {
                 $item = json_encode($item);
             }
             $tmp[$key] = $item;
@@ -156,12 +167,13 @@ class BaseMenuController extends MainController{
      * Converts multidimensional menu link array to one dimension. Removes children of each
      * menu link and but sets their parent ID. Stores array in $this->tmpMenuLinkInfo class instance.
      *
-     * @param array $unOrderedLinkList array of menu links
-     * @param integer $parent id of parent
+     * @param array   $unOrderedLinkList array of menu links
+     * @param integer $parent            id of parent
      * */
-    private function convertTo1Dimension($unOrderedLinkList, $parent = 0){
+    private function convertTo1Dimension($unOrderedLinkList, $parent = 0)
+    {
         foreach ($unOrderedLinkList as $key => $menuLink){
-            if(isset($menuLink['children'])){
+            if(isset($menuLink['children'])) {
                 $children = $menuLink['children'];
                 unset($menuLink['children']);
                 unset($menuLink['routeList']);
@@ -178,15 +190,16 @@ class BaseMenuController extends MainController{
      * Prepares two arrays of new menu links to store in database ($this->newMenuLinks class instance)
      * and existing menu links to be updated ($this->existingMenuLinks class instance).
      *
-     * @param array|object $orderedLinkList
-     * @param array|object $unOrderedLinkList
-     * @param int $menuID
-     * @param int $parent
+     * @param  array|object $orderedLinkList
+     * @param  array|object $unOrderedLinkList
+     * @param  int          $menuID
+     * @param  int          $parent
      * @throws \Exception
      */
-    private function prepareArrayForStore($orderedLinkList, $unOrderedLinkList, $menuID, $parent = 0){
+    private function prepareArrayForStore($orderedLinkList, $unOrderedLinkList, $menuID, $parent = 0)
+    {
         foreach ($orderedLinkList as $menuLink){
-            if (isset($menuLink['id'])){
+            if (isset($menuLink['id'])) {
                 $id = $menuLink['id'];
             }else{
                 $id = $menuLink['menuLinkID'];
@@ -197,14 +210,14 @@ class BaseMenuController extends MainController{
             $tmp['parent'] = $parent;
             $tmp['menuID'] = $menuID;
 
-            if ($isNew){
+            if ($isNew) {
                 $this->newMenuLinks[] = $tmp;
             }else{
                 $this->existingMenuLinks[] = $tmp;
             }
             $this->order++;
 
-            if (isset($menuLink['children'])){
+            if (isset($menuLink['children'])) {
                 $this->prepareArrayForStore($menuLink['children'], $unOrderedLinkList, $menuID, $id);
             }
         }
@@ -213,14 +226,15 @@ class BaseMenuController extends MainController{
     /**
      * Search menu link using it's ID.
      *
-     * @param array|object $list
-     * @param int $id
+     * @param  array|object $list
+     * @param  int          $id
      * @return mixed
      * @throws \Exception
      */
-    private function searchMenuLinkUsingID($list, $id){
+    private function searchMenuLinkUsingID($list, $id)
+    {
         foreach ($list as $menuLink){
-            if($menuLink['menuLinkID'] == $id){
+            if($menuLink['menuLinkID'] == $id) {
                 return $menuLink;
             }
         }
@@ -231,14 +245,15 @@ class BaseMenuController extends MainController{
      * Used to replace the parent of menu links that exists in DB but have parent a new menu link.
      * So after inserting the new menu links in database we get their ID and use them if their are parents of existing menu links.
      *
-     * @param array $newMenuLinksID ids of new menu links inserted in database
+     * @param  array $newMenuLinksID ids of new menu links inserted in database
      * @return array Returns menu links that exist in db with updated parents
      * */
-    private function setParentID($newMenuLinksID){
+    private function setParentID($newMenuLinksID)
+    {
         $tmp = [];
         foreach ($this->existingMenuLinks as $menuLink){
             $isParentNewLink = strstr($menuLink['parent'], 'NEW');
-            if($isParentNewLink){
+            if($isParentNewLink) {
                 $menuLink['parent'] = $newMenuLinksID[$menuLink['parent']];
             }
             $tmp[] = $menuLink;
@@ -252,7 +267,8 @@ class BaseMenuController extends MainController{
      * @return array
      * @throws \Exception
      */
-    protected function getAllMenuLinkRoutes(){
+    protected function getAllMenuLinkRoutes()
+    {
         if(!$this->allMenuLinkRoutes) {
             $menuLinkRoutes = [];
             if(file_exists(Theme::getPath() . '/controllers')) {
@@ -276,7 +292,7 @@ class BaseMenuController extends MainController{
             $postTypeControllerName = ucfirst(camel_case($postType->slug)).'Controller';
 
             // add default post_pages routes if they are not defined
-            if($postType->slug == 'post_pages'){
+            if($postType->slug == 'post_pages') {
                 // ad single post route route
                 if(!isset($this->allMenuLinkRoutes['PagesController'])) {
                     $this->allMenuLinkRoutes['PagesController'] = Post::getDefaultPostRoutes($postType);
@@ -290,7 +306,7 @@ class BaseMenuController extends MainController{
                     $this->allMenuLinkRoutes[$postTypeControllerName]['post_type'][$postType->slug] = Post::getDefaultPostTypeRoutes($postType);
                 }
                 // default post routes
-                if(!isset($this->allMenuLinkRoutes[$postTypeControllerName][$postType->slug])){
+                if(!isset($this->allMenuLinkRoutes[$postTypeControllerName][$postType->slug])) {
                     $this->allMenuLinkRoutes[$postTypeControllerName][$postType->slug] = Post::getDefaultPostRoutes($postType);
                 }
             }else{ // Define postType route if not defined in PostController
@@ -300,7 +316,7 @@ class BaseMenuController extends MainController{
                     $this->allMenuLinkRoutes['PostController']['post_type'][$postType->slug] = Post::getDefaultPostTypeRoutes($postType);
                 }
                 // default post routes
-                if(!isset($this->allMenuLinkRoutes['PostController'][$postType->slug])){
+                if(!isset($this->allMenuLinkRoutes['PostController'][$postType->slug])) {
                     $this->allMenuLinkRoutes['PostController'][$postType->slug] = Post::getDefaultPostRoutes($postType);
                 }
             }
@@ -316,7 +332,8 @@ class BaseMenuController extends MainController{
      * @return array
      * @throws \Exception
      */
-    public function menuLinkPanels(){
+    public function menuLinkPanels()
+    {
         $this->getAllMenuLinkRoutes();
         $models = File::files(base_path('app/Models'));
         $panels = [];
@@ -324,10 +341,10 @@ class BaseMenuController extends MainController{
             $modelName = str_replace('.php', '', $file->getFileName()); // extract model name
             $modelClass ='App\\Models\\'.$modelName;
 
-            if(method_exists($modelClass, 'menuLinkPanel' )){
+            if(method_exists($modelClass, 'menuLinkPanel')) {
                 $menuPanels = $modelClass::menuLinkPanel();
                 // handle one dimension menuLinkRoutes
-                if(isset($menuPanels['items'])){
+                if(isset($menuPanels['items'])) {
                     $menuPanels['routes'] = $this->getMenuLinkRoutes($menuPanels['controller'], (isset($menuPanels['belongsTo']) ? $menuPanels['belongsTo'] : ''));
                     $panels[] = $menuPanels;
                 }else{
@@ -344,19 +361,20 @@ class BaseMenuController extends MainController{
     /**
      * Get menu Link Routes by post type or return default ones.
      *
-     * @param string $controller
-     * @param string $belongsTo
+     * @param  string $controller
+     * @param  string $belongsTo
      * @return array|mixed
      * @throws \Exception
      */
-    public function getMenuLinkRoutes($controller, $belongsTo = ''){
+    public function getMenuLinkRoutes($controller, $belongsTo = '')
+    {
         $this->getAllMenuLinkRoutes();
 
         $routes = [];
         // Get routes of this post type
-        if(isset($this->allMenuLinkRoutes[$controller][$belongsTo])){
+        if(isset($this->allMenuLinkRoutes[$controller][$belongsTo])) {
             $routes = $this->allMenuLinkRoutes[$controller][$belongsTo];
-        }else if(isset($this->allMenuLinkRoutes[$controller])){
+        }else if(isset($this->allMenuLinkRoutes[$controller])) {
             $routes = $this->allMenuLinkRoutes[$controller];
         }
         return $routes;
@@ -365,14 +383,15 @@ class BaseMenuController extends MainController{
     /**
      * Create a menu link parent child relation array.
      *
-     * @param string $lang
-     * @param int $id
+     * @param  string $lang
+     * @param  int    $id
      * @return array
      * @throws \Exception
      */
-    public function detailsJSON($lang, $id){
+    public function detailsJSON($lang, $id)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('Menu','read')){
+        if(!User::hasAccess('Menu', 'read')) {
             return $this->noPermission();
         }
         // get selected menu
@@ -399,11 +418,12 @@ class BaseMenuController extends MainController{
      * Converts the one dimensional array of menu links to multidimensional array where each parent link has a object with
      * key 'children' where his children are stored.
      *
-     * @param array|object $menuLinks
+     * @param  array|object $menuLinks
      * @return array
      * @throws \Exception
      */
-    private function convertToParentChild($menuLinks){
+    private function convertToParentChild($menuLinks)
+    {
         $tmp = [];
         $count = 0;
         foreach($menuLinks as $key => $menuLink){
@@ -411,22 +431,22 @@ class BaseMenuController extends MainController{
             // Append menuLink Routes to each menu link
             if($menuLink['routeName']) {
                 $route = Route::getRoutes()->getByName($menuLink['routeName']);
-                if($route){
+                if($route) {
                     $controller = Arr::last(explode('\\', get_class($route->getController())));
                     $routes = $this->getMenuLinkRoutes($controller, $menuLink['belongsTo']);
 
                     // Category
-                    if($menuLink['belongsTo'] == 'category'){
+                    if($menuLink['belongsTo'] == 'category') {
                         $routeName = 'backend.postType.single';
                         $menuLink['href'] = route($routeName, ['view' => 'categoryupdate', 'id' => $menuLink['belongsToID']]);
                         $menuLink['routeList'] = $routes['list'];
-                    }else if($menuLink['belongsTo'] == 'post_type'){
+                    }else if($menuLink['belongsTo'] == 'post_type') {
                         // Post Types
                         $routeName = 'backend.postType.single';
                         $menuLink['href'] = route($routeName, ['view' => 'update', 'id' => $menuLink['belongsToID']]);
 
                         $slugArr = array_first((array)$menuLink['slug']);
-                        if($slugArr){
+                        if($slugArr) {
                             $menuLink['routeList'] = $routes[$slugArr]['list'];
                         }
                     }else{
@@ -441,7 +461,7 @@ class BaseMenuController extends MainController{
 
             $tmp[$count] = $menuLink;
             $children = $this->getChildren($menuLink['menuLinkID']);
-            if(count($children)){
+            if(count($children)) {
                 $tmp[$count]['children'] = $this->convertToParentChild($children);
             }
             $count++;
@@ -452,14 +472,15 @@ class BaseMenuController extends MainController{
     /**
      * Get all children of a menu link.
      *
-     * @param int $parentID
+     * @param  int $parentID
      * @return array
      */
-    private function getChildren($parentID){
+    private function getChildren($parentID)
+    {
         $tmp = [];
         $count = 0;
         foreach($this->existingMenuLinks as $key => $menuLink){
-            if ($menuLink['parent'] == $parentID){
+            if ($menuLink['parent'] == $parentID) {
                 $tmp[$count] = $menuLink;
                 $count++;
             }
@@ -470,13 +491,14 @@ class BaseMenuController extends MainController{
     /**
      * Remove children links from first dimension of array.
      *
-     * @param array|object $menuLinks
+     * @param  array|object $menuLinks
      * @return array
      */
-    private function filterParents($menuLinks){
+    private function filterParents($menuLinks)
+    {
         $tmp = [];
         foreach($menuLinks as $key => $menuLink){
-            if(isset($menuLink['parent']) && !$menuLink['parent']){
+            if(isset($menuLink['parent']) && !$menuLink['parent']) {
                 $tmp[$key] = $menuLink;
             }
         }
@@ -487,22 +509,23 @@ class BaseMenuController extends MainController{
     /**
      * Delete menu with his menu links.
      *
-     * @param string $lang
-     * @param int $menuID
+     * @param  string $lang
+     * @param  int    $menuID
      * @return array
      */
-    public function deleteMenu($lang, $menuID){
+    public function deleteMenu($lang, $menuID)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('Menu','delete')){
+        if(!User::hasAccess('Menu', 'delete')) {
             return $this->noPermission();
         }
 
         $menu = Menu::find($menuID);
-        if(!$menu){
+        if(!$menu) {
             return $this->response("Menu doesn't exist", 400);
         }
 
-        if(!$menu->isPrimary){
+        if(!$menu->isPrimary) {
             $menuLinks = MenuLink::where('menuID', $menuID);
             $menuLinks->delete();
             $menu->delete();

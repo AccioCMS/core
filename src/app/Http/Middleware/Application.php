@@ -11,14 +11,16 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 
-class Application{
+class Application
+{
     /**
-     * @param $request
-     * @param Closure $next
+     * @param  $request
+     * @param  Closure $next
      * @return \Illuminate\Http\Response|mixed
      * @throws \Exception
      */
-    public  function handle($request, Closure $next){
+    public  function handle($request, Closure $next)
+    {
         // Set default language
         Language::setDefault();
 
@@ -39,7 +41,7 @@ class Application{
 
         // Initialize Theme
         // When routes are not cached, theme is initialized in Routes
-        if(App::routesAreCached()){
+        if(App::routesAreCached()) {
             new Theme();
         }
 

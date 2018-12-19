@@ -9,9 +9,10 @@ trait OutputStyles
      * A wrapper around symfony's formatter helper to output a block.
      *
      * @param string|array $messages Messages to output
-     * @param string $type The type of message to output
+     * @param string       $type     The type of message to output
      */
-    public function block($messages, $type = 'error'){
+    public function block($messages, $type = 'error')
+    {
         $output = [];
         if (!is_array($messages)) {
             $messages = (array) $messages;
@@ -27,7 +28,8 @@ trait OutputStyles
      *
      * @param string $header The text to output
      */
-    protected function header($header){
+    protected function header($header)
+    {
         $this->block($header, 'question');
     }
 
@@ -36,7 +38,8 @@ trait OutputStyles
      * @param string $line2
      * @param string $line3
      */
-    protected function failure($line1, $line2 = '', $line3 = ''){
+    protected function failure($line1, $line2 = '', $line3 = '')
+    {
         $this->block([$line1, PHP_EOL, $line2, PHP_EOL, $line3]);
     }
 }
