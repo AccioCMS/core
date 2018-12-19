@@ -95,17 +95,17 @@ export const store = new Vuex.Store({
         /**
          * Set list.
          * @param context
-         * @param object
+         * @param responseBody
          */
         setList(context, responseBody){
             context.dispatch('filterTranslatedValues', {input: responseBody});
         },
 
         /**
-         * Get data from current langauge.
+         * Get data from current language.
          *
-         * @param items
-         * @param languageSlug
+         * @param context
+         * @param data
          * @returns {Array}
          */
         filterTranslatedValues(context, data){
