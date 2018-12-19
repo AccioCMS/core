@@ -92,7 +92,7 @@ export const postForm = {
                     /**
                      * Categories options
                      */
-                    let categoriesOptions = this.$store.dispatch('filterTranslatedValues',resp.body.categories,this.currentLanguage);
+                    let categoriesOptions = this.$store.dispatch('filterTranslatedValues', {input: resp.body.categories, languageSlug: this.currentLanguage});
                     Promise.all([categoriesOptions]).then(([values]) => {
                         this.categoriesOptions = values
 
@@ -327,9 +327,9 @@ export const postForm = {
                     /**
                      * Categories options
                      */
-                    let categoriesOptions = this.$store.dispatch('filterTranslatedValues',resp.body.categories,this.currentLanguage)
+                    let categoriesOptions = this.$store.dispatch('filterTranslatedValues', {input: resp.body.categories, languageSlug: this.currentLanguage});
                     Promise.all([categoriesOptions]).then(([values]) => {
-                        this.categoriesOptions = values
+                        this.categoriesOptions = values;
                     })
 
                 }).then((resp) => {
