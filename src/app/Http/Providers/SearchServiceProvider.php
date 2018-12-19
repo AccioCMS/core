@@ -31,9 +31,11 @@ class SearchServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('Search', function () {
-            return new Search();
-        });
+        $this->app->singleton(
+            'Search', function () {
+                return new Search();
+            }
+        );
     }
 
     /**

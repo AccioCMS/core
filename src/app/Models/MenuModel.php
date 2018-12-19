@@ -3,7 +3,8 @@
  * Menu Model
  *
  * It handles site's Menus
- * @author Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
+ *
+ * @author  Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
  * @version 1.0
  */
 
@@ -16,7 +17,8 @@ use Illuminate\Support\Facades\Event;
 use Accio\App\Traits;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class MenuModel extends Model{
+class MenuModel extends Model
+{
 
     use
         Traits\MenuTrait,
@@ -87,7 +89,8 @@ class MenuModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = []){
+    public function __construct(array $attributes = [])
+    {
         parent::__construct($attributes);
         Event::fire('menu:construct', [$this]);
     }
@@ -97,17 +100,20 @@ class MenuModel extends Model{
      *
      * @return bool
      */
-    public static function createPrimaryMenu(){
+    public static function createPrimaryMenu()
+    {
         $check = Menu::where('slug', 'primary')->get()->first();
-        if(!$check){
+        if(!$check) {
 
-            $create = factory(Menu::class)->create([
+            $create = factory(Menu::class)->create(
+                [
                 'title' => 'Primary',
                 'slug' => 'primary',
                 'isPrimary' => true,
-            ]);
+                ]
+            );
 
-            if($create){
+            if($create) {
                 return true;
             }
         }
@@ -117,7 +123,8 @@ class MenuModel extends Model{
     /**
      * Destruct model instance.
      */
-    public function __destruct(){
+    public function __destruct()
+    {
         Event::fire('menu:destruct', [$this]);
     }
 }

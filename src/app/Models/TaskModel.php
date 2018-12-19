@@ -5,7 +5,8 @@ namespace Accio\App\Models;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Model;
 
-class TaskModel extends Model {
+class TaskModel extends Model
+{
     /**
      * @var string table name
      */
@@ -19,12 +20,13 @@ class TaskModel extends Model {
     /**
      * Create new task
      *
-     * @param string $belongsTo
-     * @param string $type
+     * @param string       $belongsTo
+     * @param string       $type
      * @param object|array $data
-     * @param array $attributes
+     * @param array        $attributes
      */
-    public static function create($belongsTo, $type, $data, $attributes = []){
+    public static function create($belongsTo, $type, $data, $attributes = [])
+    {
         $obj = new Task();
         $obj->belongsTo = $belongsTo;
         $obj->type = $type;
@@ -38,16 +40,18 @@ class TaskModel extends Model {
      *
      * @return array
      */
-    public static function get(){
+    public static function get()
+    {
         return self::all();
     }
 
     /**
      * @return mixed
      */
-    public static function has(){
-        if(self::count()){
-           return true;
+    public static function has()
+    {
+        if(self::count()) {
+            return true;
         }
         return false;
     }
@@ -55,7 +59,8 @@ class TaskModel extends Model {
     /**
      * Clear tasks from database
      */
-    public static function clear(){
+    public static function clear()
+    {
         self::truncate();
     }
 

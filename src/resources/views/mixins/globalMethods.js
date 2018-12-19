@@ -11,7 +11,7 @@ export const globalMethods = {
             return this.getHasPermission; // This is causing a loop @todo
         },
         redirect(name, id = '', params = '', query = {}){
-            if(id === undefined || id === ''){
+            if(id === undefined || id === '') {
                 this.$router.push({ name: name, query: query });
             }else{
                 this.$router.push({ name: name, params: {id: id}, query: query});
@@ -20,7 +20,7 @@ export const globalMethods = {
 
         isAdmin(){
             //admin has access into all permissions
-            if(this.getGlobalPermissions.global.admin !== undefined){
+            if(this.getGlobalPermissions.global.admin !== undefined) {
                 return true;
             }
             return false;
@@ -28,11 +28,11 @@ export const globalMethods = {
 
         // used to filter where to redirect depending which store btn is clicked
         onStoreBtnClicked(routeNamePrefix, redirectChoice, id){
-            if(redirectChoice == 'save'){
+            if(redirectChoice == 'save') {
                 this.redirect(routeNamePrefix+'update',id);
-            }else if(redirectChoice == 'close'){
+            }else if(redirectChoice == 'close') {
                 this.redirect(routeNamePrefix+'list');
-            }else if(redirectChoice == 'new'){
+            }else if(redirectChoice == 'new') {
                 this.redirect(routeNamePrefix+'create', '', '', this.$route.query);
             }else{
                 alert("Some error occurred");
@@ -40,13 +40,15 @@ export const globalMethods = {
         },
         // this function displays a noty message
         noty(type, layout, message, timeout){
-            new Noty({
-                type: type,
-                layout: 'bottomLeft',
-                text: message,
-                timeout: timeout,
-                closeWith: ['button']
-            }).show();
+            new Noty(
+                {
+                    type: type,
+                    layout: 'bottomLeft',
+                    text: message,
+                    timeout: timeout,
+                    closeWith: ['button']
+                }
+            ).show();
         },
         // repair url with the base
         generateUrl(url){
@@ -55,17 +57,18 @@ export const globalMethods = {
 
         /**
          * get the urls for the media files ()
+         *
          * @param media
          */
         constructMediaUrl(image, imgSize = "200x200"){
             var url = "";
-            if(image.type == "image"){
+            if(image.type == "image") {
                 url = "/"+image.fileDirectory + "/"+imgSize+"/" + image.filename;
-            }else if(image.type == "document"){
+            }else if(image.type == "document") {
                 url = this.documentIconUrl;
-            }else if(image.type == "video"){
+            }else if(image.type == "video") {
                 url = this.videoIconUrl;
-            }else if(image.type == "audio"){
+            }else if(image.type == "audio") {
                 url = this.audioIconUrl;
             }
             return this.baseURL+url;
@@ -77,25 +80,27 @@ export const globalMethods = {
         // used to generate a array of plugins panel names for the current view
         getPluginsPanel(app,type){
             let global = this;
-            this.pluginsConfigs.map(function(config, key){
-                let prefix = config.namespace.replace("/","_");
-                let panels = [];
+            this.pluginsConfigs.map(
+                function (config, key) {
+                    let prefix = config.namespace.replace("/","_");
+                    let panels = [];
 
-                for(let panelKey in config.panels){
-                    let panel = config.panels[panelKey];
-                    if((app.indexOf(panelKey) != -1 && panel.placement == type) || (app.indexOf(panelKey) != -1 && panel.placement =='all')){
-                        panels.push(prefix+"_"+panel.name);
-                        global.pluginsData[prefix+"_"+panel.name] = {};
+                    for(let panelKey in config.panels){
+                        let panel = config.panels[panelKey];
+                        if((app.indexOf(panelKey) != -1 && panel.placement == type) || (app.indexOf(panelKey) != -1 && panel.placement =='all')) {
+                            panels.push(prefix+"_"+panel.name);
+                            global.pluginsData[prefix+"_"+panel.name] = {};
+                        }
+                    }
+                    if(panels.length) {
+                        global.pluginsPanels.push({ name: config.title, panels: panels});
                     }
                 }
-                if(panels.length){
-                    global.pluginsPanels.push({ name: config.title, panels: panels});
-                }
-            });
+            );
         },
         // toggle the action bar in tables (when listing items)
         toggleListActionBar(index){
-            if(this.openedItemActionBar === index){
+            if(this.openedItemActionBar === index) {
                 this.openedItemActionBar = '';
             }else{
                 this.openedItemActionBar = index;
@@ -104,13 +109,13 @@ export const globalMethods = {
         // this function checks if user has permissions to a specific language
         hasPermissionForLang(langID){
             // if is admin return true
-            if(this.getGlobalPermissions.global !== undefined && this.getGlobalPermissions.global.isDefault !== undefined){
+            if(this.getGlobalPermissions.global !== undefined && this.getGlobalPermissions.global.isDefault !== undefined) {
                 return true;
             }
             // check language permission if user is not admin
-            if(this.getGlobalPermissions.Language !== undefined && this.getGlobalPermissions.Language.id){
+            if(this.getGlobalPermissions.Language !== undefined && this.getGlobalPermissions.Language.id) {
                 let allowedLanguageIDs = this.getGlobalPermissions.Language.id.value;
-                if(allowedLanguageIDs.indexOf(langID) === -1){
+                if(allowedLanguageIDs.indexOf(langID) === -1) {
                     return false;
                 }
             }

@@ -30,6 +30,7 @@ class SetWritePermissions extends Command
 
     /**
      * List of writable directories
+     *
      * @var array
      */
     private $writableDirectories = [
@@ -71,7 +72,7 @@ class SetWritePermissions extends Command
      */
     private function setPermissions()
     {
-        if (!App::environment('production') || $this->option('force')){
+        if (!App::environment('production') || $this->option('force')) {
             $this->comment("Setting write permissions");
             foreach ($this->writableDirectories as $path) {
                 $this->process->setCommandLine('chmod -R 0777 ' . base_path($path));

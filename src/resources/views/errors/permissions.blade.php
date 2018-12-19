@@ -21,11 +21,11 @@
                 <div class="content">
                     <div class="title">
                         <?php
-                            if (!isset($message)){
-                                echo "You don't have sufficient permissions to perform this action!";
-                            }else{
-                                echo $message;
-                            }
+                        if (!isset($message)) {
+                            echo "You don't have sufficient permissions to perform this action!";
+                        }else{
+                            echo $message;
+                        }
                         ?>
                     </div>
                 </div>

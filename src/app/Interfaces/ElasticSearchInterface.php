@@ -1,7 +1,8 @@
 <?php
 namespace Accio\App\Interfaces;
 
-interface ElasticSearchInterface{
+interface ElasticSearchInterface
+{
     /**
      * Create index and set mapping
      *

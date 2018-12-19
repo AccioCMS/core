@@ -5,19 +5,21 @@ namespace Accio\App\Traits;
 
 use App\Models\Media;
 
-trait CustomFieldsValuesTrait{
+trait CustomFieldsValuesTrait
+{
 
     /**
      * Get custom field value by key.
      *
-     * @param string $key
+     * @param  string $key
      * @return mixed
      */
-    public function customFieldValue($key){
+    public function customFieldValue($key)
+    {
         $value = null;
         if($this->hasCustomField($key)) {
             //if translate is enabled in a specific language
-            if(isset($this->customFields->$key->{$this->getTranslateLanguage()})){
+            if(isset($this->customFields->$key->{$this->getTranslateLanguage()})) {
                 $value = $this->customFields->$key->{$this->getTranslateLanguage()};
             }
             else {
@@ -34,12 +36,13 @@ trait CustomFieldsValuesTrait{
     /**
      * Check if a given key is a custom field.
      *
-     * @param string $key
+     * @param  string $key
      * @return bool
      */
-    public function hasCustomField($key){
-        if($key !== 'customFields' && !array_key_exists($key, $this->getAttributes())){
-            if(isset($this->customFields->$key)){
+    public function hasCustomField($key)
+    {
+        if($key !== 'customFields' && !array_key_exists($key, $this->getAttributes())) {
+            if(isset($this->customFields->$key)) {
                 return true;
             }
         }
@@ -50,15 +53,16 @@ trait CustomFieldsValuesTrait{
     /**
      * Replaces mediaIDs eith the actuall media object.
      *
-     * @param array ...$slugs slugs of media in custom field group
+     * @param  array ...$slugs slugs of media in custom field group
      * @return array
      */
-    public function getMediaFromCustomFields($customFields, ...$slugs){
+    public function getMediaFromCustomFields($customFields, ...$slugs)
+    {
         $mediaIDs = [];
         foreach($customFields as $fields){
             foreach($fields as $field => $value){
-                if(in_array($field, $slugs)){
-                    if(!is_array($value)){
+                if(in_array($field, $slugs)) {
+                    if(!is_array($value)) {
                         $mediaIDs[] = $value;
                     }else{
                         foreach($value as $subValue){
@@ -75,8 +79,8 @@ trait CustomFieldsValuesTrait{
         if(count($media)) {
             foreach ($customFields as $fields) {
                 foreach($fields as $field => $value){
-                    if(in_array($field, $slugs)){
-                        if($value && isset($media[$value])){
+                    if(in_array($field, $slugs)) {
+                        if($value && isset($media[$value])) {
                             $tmp = [];
                             if (!is_array($value)) {
                                 $fields->$field = new Media($media[$value]);

@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Request;
 use Mockery\Exception;
 
-trait PluginTrait{
+trait PluginTrait
+{
 
     /**
      * Registered Plugins.
@@ -35,11 +36,12 @@ trait PluginTrait{
     /**
      * Get plugin data.
      *
-     * @param null $namespace
+     * @param  null $namespace
      * @return PluginTrait|null|object
      * @throws Exception
      */
-    public function getData($namespace = null){
+    public function getData($namespace = null)
+    {
         if(!self::$pluginData) {
             // try to find the model via namespace
             if (!$namespace) {
@@ -52,7 +54,7 @@ trait PluginTrait{
                     try{
                         $reflector = new \ReflectionClass(self::class);
                         $fn = $reflector->getFileName();
-                        $explode = explode('plugins/', str_replace('\\','/', dirname($fn)));
+                        $explode = explode('plugins/', str_replace('\\', '/', dirname($fn)));
                         if (isset($explode[1])) {
                             $pluginNamespace = str_replace('/Controllers', '', $explode[1]);
                             self::$pluginData = Plugin::where('namespace', $pluginNamespace)->first();
@@ -80,8 +82,9 @@ trait PluginTrait{
      *
      * @return string
      */
-    public function basePath(){
-        return pluginsPath(str_replace("\\","/",$this->namespace));
+    public function basePath()
+    {
+        return pluginsPath(str_replace("\\", "/", $this->namespace));
     }
 
     /**
@@ -89,7 +92,8 @@ trait PluginTrait{
      *
      * @return string
      */
-    public function resourcesPath(){
+    public function resourcesPath()
+    {
         return $this->basePath().'/resources';
     }
 
@@ -98,17 +102,19 @@ trait PluginTrait{
      *
      * @return string
      */
-    public function translationsPath(){
+    public function translationsPath()
+    {
         return $this->resourcesPath().'/lang';
     }
 
     /**
      * Get resources path of the plugin.
      *
-     * @param string $path
+     * @param  string $path
      * @return string
      */
-    public function viewsPath($path = ''){
+    public function viewsPath($path = '')
+    {
         //'plugins.'.str_replace("\\","/",$this->namespace).'.resources.views'.($path ? '/'.$path : '');
         return $this->resourcesPath().'/views'.($path ? '/'.$path : '');
     }
@@ -118,20 +124,22 @@ trait PluginTrait{
      *
      * @return string
      */
-    public function assetsPath(){
+    public function assetsPath()
+    {
         return $this->resourcesPath().'/assets';
     }
 
     /**
      * Get config of a plugin
      *
-     * @param $namespace
+     * @param  $namespace
      * @return mixed
      * @throws \Exception
      */
-    public static function config($namespace){
+    public static function config($namespace)
+    {
         $configPath = pluginsPath($namespace.'/config.json');
-        if(file_exists($configPath)){
+        if(file_exists($configPath)) {
             return json_decode(File::get($configPath));
         }
         throw  new \Exception("No config.json file found for plugin ".$configPath);
@@ -142,8 +150,9 @@ trait PluginTrait{
      *
      * @return string
      */
-    public function parseNamespace(){
-        return "Plugins\\".str_replace("/","\\",$this->namespace);
+    public function parseNamespace()
+    {
+        return "Plugins\\".str_replace("/", "\\", $this->namespace);
     }
 
     /**
@@ -153,10 +162,11 @@ trait PluginTrait{
      *
      * @return array
      */
-    public static function activePlugins(){
+    public static function activePlugins()
+    {
         $plugins = self::where('isActive', true)->get();
         // Plugin table must exist first
-        if($plugins){
+        if($plugins) {
             return $plugins;
         }
         return [];
@@ -167,8 +177,9 @@ trait PluginTrait{
      *
      * @return string
      */
-    public function namespaceWithDot(){
-        return str_replace(["\\",'/'],".",$this->namespace);
+    public function namespaceWithDot()
+    {
+        return str_replace(["\\",'/'], ".", $this->namespace);
     }
 
     /**
@@ -176,8 +187,9 @@ trait PluginTrait{
      *
      * @return string
      */
-    public function namespaceWithUnderline(){
-        return str_replace(["\\",'/'],"_",$this->namespace);
+    public function namespaceWithUnderline()
+    {
+        return str_replace(["\\",'/'], "_", $this->namespace);
     }
 
     /**
@@ -186,8 +198,9 @@ trait PluginTrait{
      * @return \Illuminate\Contracts\Routing\UrlGenerator|string
      * @throws \Exception
      */
-    public function fullBackendUrl(){
-        return url(Config::get('project')['adminPrefix'].'/'.App::getLocale()."/plugins/".str_replace("\\","/",self::config($this->namespace)->baseURL));
+    public function fullBackendUrl()
+    {
+        return url(Config::get('project')['adminPrefix'].'/'.App::getLocale()."/plugins/".str_replace("\\", "/", self::config($this->namespace)->baseURL));
     }
 
     /**
@@ -196,8 +209,9 @@ trait PluginTrait{
      * @return string
      * @throws \Exception
      */
-    public function backendURLPrefix(){
-        return "{lang}/plugins/".str_replace("\\","/",self::config($this->namespace)->baseURL);
+    public function backendURLPrefix()
+    {
+        return "{lang}/plugins/".str_replace("\\", "/", self::config($this->namespace)->baseURL);
     }
 
     /**
@@ -205,9 +219,10 @@ trait PluginTrait{
      *
      * @return array
      */
-    public function backendRoutes(){
+    public function backendRoutes()
+    {
         $path = $this->basePath() . '/routes/backend';
-        if($this->isActive && file_exists($path)){
+        if($this->isActive && file_exists($path)) {
             return File::files($path);
         }
         return [];
@@ -218,7 +233,8 @@ trait PluginTrait{
      *
      * @return array
      */
-    public function frontendRoutes(){
+    public function frontendRoutes()
+    {
         $path = $this->basePath() . '/routes/frontend';
         if($this->isActive() && file_exists($path)) {
             return File::files($path);
@@ -231,15 +247,16 @@ trait PluginTrait{
      *
      * @return void
      */
-    public function autoloadPlugins(){
+    public function autoloadPlugins()
+    {
         foreach(self::activePlugins() as $plugin){
             // plugin composer autoload
             if(File::exists($plugin->basePath().'/vendor/autoload.php')) {
-                require $plugin->basePath() . '/vendor/autoload.php';
+                include $plugin->basePath() . '/vendor/autoload.php';
             }
             // plugin helpers
             if(File::exists($plugin->basePath().'/support/helpers.php')) {
-                require $plugin->basePath() . '/support/helpers.php';
+                include $plugin->basePath() . '/support/helpers.php';
             }
         }
         return;
@@ -250,7 +267,8 @@ trait PluginTrait{
      *
      * @return void
      */
-    public function registerPlugins(){
+    public function registerPlugins()
+    {
         foreach($this->activePlugins() as $plugin){
             $className = $plugin->parseNamespace()."\\Plugin";
             if(class_exists($className)) {
@@ -269,7 +287,8 @@ trait PluginTrait{
      *
      * @return void
      */
-    public function bootPlugins(){
+    public function bootPlugins()
+    {
         foreach($this->activePlugins() as $plugin){
             $className = $plugin->parseNamespace()."\\Plugin";
             if(class_exists($className)) {
@@ -288,7 +307,8 @@ trait PluginTrait{
      *
      * @return array
      */
-    public function getRegisteredPlugins(){
+    public function getRegisteredPlugins()
+    {
         return $this->registeredPlugins;
     }
 
@@ -297,7 +317,8 @@ trait PluginTrait{
      *
      * @return array
      */
-    public function getBootedPlugins(){
+    public function getBootedPlugins()
+    {
         return $this->bootedPlugins;
     }
 
@@ -306,11 +327,12 @@ trait PluginTrait{
      *
      * @return array of file config
      */
-    public static function configs(){
+    public static function configs()
+    {
         $files = File::allFiles(base_path().'/plugins');
         $result = [];
         foreach ($files as $file){
-            if($file->getBasename() == "config.json"){
+            if($file->getBasename() == "config.json") {
                 $result[] = json_decode(File::get($file->getPathname()));
             }
         }
@@ -320,16 +342,17 @@ trait PluginTrait{
     /**
      * Get plugin's panel data from Request/Form.
      *
-     * @param string $panelKey Name of the panel where dhe data should be requested from
-     * @param string $field
+     * @param  string $panelKey Name of the panel where dhe data should be requested from
+     * @param  string $field
      * @return mixed
      */
-    public function getPanelData($panelKey, $field = ''){
+    public function getPanelData($panelKey, $field = '')
+    {
         $request = Request::instance();
 
         if(isset($request->pluginsData[$panelKey])) {
             $panel = $request->pluginsData[$panelKey];
-            if($field){
+            if($field) {
                 if (isset($panel[$field])) {
                     return $panel[$field];
                 }
@@ -346,7 +369,8 @@ trait PluginTrait{
      *
      * @return array
      */
-    public static function getAllLabels(){
+    public static function getAllLabels()
+    {
         // Load Plugin translations
         $labels = [];
         foreach(self::activePlugins() as $plugin){
@@ -358,11 +382,11 @@ trait PluginTrait{
                     $pluginNamespace = explode(".", $plugin->namespaceWithDot());
 
                     // set a array key for each plugin author
-                    if(!isset($labels[$pluginNamespace[0]])){
+                    if(!isset($labels[$pluginNamespace[0]])) {
                         $labels[$pluginNamespace[0]] = [];
                     }
                     // set a array key for each plugin
-                    if(!isset($labels[$pluginNamespace[0]][$pluginNamespace[1]])){
+                    if(!isset($labels[$pluginNamespace[0]][$pluginNamespace[1]])) {
                         $labels[$pluginNamespace[0]][$pluginNamespace[1]] = [];
                     }
 
@@ -377,13 +401,14 @@ trait PluginTrait{
     /**
      * Get a plugin namespace
      *
-     * @param string $namespace
+     * @param  string $namespace
      * @return null
      * @throws \Exception
      */
-    public static function getByNamespace($namespace){
+    public static function getByNamespace($namespace)
+    {
         $plugin = Plugin::where('namespace', $namespace)->first();
-        if($plugin){
+        if($plugin) {
             return $plugin;
         }
         return null;
@@ -392,19 +417,20 @@ trait PluginTrait{
     /**
      * Check if a plugin is installed
      *
-     * @param string $namespace
+     * @param  string $namespace
      * @return bool
      * @throws \Exception
      */
-    public static function isInstalled($namespace){
+    public static function isInstalled($namespace)
+    {
 
         // Exists as a directory
-        if(!File::isDirectory(pluginsPath($namespace))){
+        if(!File::isDirectory(pluginsPath($namespace))) {
             return false;
         }
 
         // Exists as a table plugin
-        if(!self::getByNamespace($namespace)){
+        if(!self::getByNamespace($namespace)) {
             return false;
         }
 
@@ -417,18 +443,19 @@ trait PluginTrait{
      * @return bool
      * @throws \Exception
      */
-    public function isActive(){
+    public function isActive()
+    {
         // wee need a namespace first
-        if(!isset($this->namespace)){
+        if(!isset($this->namespace)) {
             return false;
         }
 
         // Plugin is not active is it's not installed
-        if(!self::isInstalled($this->namespace)){
+        if(!self::isInstalled($this->namespace)) {
             return false;
         }
 
-        if(!$this->isActive){
+        if(!$this->isActive) {
             return false;
         }
         return true;
@@ -439,7 +466,8 @@ trait PluginTrait{
      *
      * return void
      */
-    public function addViewsPaths(){
+    public function addViewsPaths()
+    {
         foreach($this->activePlugins() as $plugin){
             view()->addNamespace($plugin->namespaceWithDot(), $plugin->viewsPath());
         }

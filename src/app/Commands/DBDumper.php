@@ -60,15 +60,15 @@ class DBDumper extends Command
     {
         $exportPath = $this->option('path');
 
-        if($exportPath){
-            if(!file_exists($exportPath)){
+        if($exportPath) {
+            if(!file_exists($exportPath)) {
                 throw new \Exception('Path '.$exportPath. ' does not exists!');
             }
         }else{
             $exportPath = storage_path('app/dumper');
 
             // create dumper directory
-            if(!file_exists($exportPath)){
+            if(!file_exists($exportPath)) {
                 File::makeDirectory($exportPath, 0755);
             }
         }
@@ -78,36 +78,36 @@ class DBDumper extends Command
         $this->comment("Starting database dump...");
 
         switch (config('database.default')){
-            case 'mysql':
-                MySql::create()
-                  ->setDbName(config('database.connections.mysql.database'))
-                  ->setHost(config('database.connections.mysql.host'))
-                  ->setUserName(config('database.connections.mysql.username'))
-                  ->setPassword(config('database.connections.mysql.password'))
-                  ->dumpToFile($filePath);
-                break;
+        case 'mysql':
+            MySql::create()
+                ->setDbName(config('database.connections.mysql.database'))
+                ->setHost(config('database.connections.mysql.host'))
+                ->setUserName(config('database.connections.mysql.username'))
+                ->setPassword(config('database.connections.mysql.password'))
+                ->dumpToFile($filePath);
+            break;
 
-            case 'pgsql':
-                PostgreSql::create()
-                  ->setDbName(config('database.connections.pgsql.database'))
-                  ->setUserName(config('database.connections.pgsql.username'))
-                  ->setPassword(config('database.connections.pgsql.password'))
-                  ->dumpToFile($filePath);
-                break;
+        case 'pgsql':
+            PostgreSql::create()
+                ->setDbName(config('database.connections.pgsql.database'))
+                ->setUserName(config('database.connections.pgsql.username'))
+                ->setPassword(config('database.connections.pgsql.password'))
+                ->dumpToFile($filePath);
+            break;
 
-            case 'sqlite':
-                Sqlite::create()
-                  ->setDbName(config('database.connections.sqlite.database'))
-                  ->dumpToFile($filePath);
-                break;
+        case 'sqlite':
+            Sqlite::create()
+                ->setDbName(config('database.connections.sqlite.database'))
+                ->dumpToFile($filePath);
+            break;
 
-            case 'mongodb':
-                MongoDb::create()
-                  ->setDbName(config('database.connections.mongodb.database'))
-                  ->setUserName(config('database.connections.mongodb.username'))
-                  ->setPassword(config('database.connections.mongodb.password'))
-                  ->dumpToFile($filePath);
-                break;
+        case 'mongodb':
+            MongoDb::create()
+                ->setDbName(config('database.connections.mongodb.database'))
+                ->setUserName(config('database.connections.mongodb.username'))
+                ->setPassword(config('database.connections.mongodb.password'))
+                ->dumpToFile($filePath);
+            break;
         }
 
         $this->info("Database successfully dumped to ".$filePath);

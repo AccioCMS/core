@@ -9,13 +9,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 
 
-class BasePluginController extends MainController {
+class BasePluginController extends MainController
+{
     /**
      * Return view for plugin.
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function pluginView(){
+    public function pluginView()
+    {
         return view('content');
     }
 

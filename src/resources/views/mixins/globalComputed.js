@@ -101,12 +101,12 @@ export const globalComputed = {
             let length = Object.keys(this.$route.query).length;
             for(let k in this.$route.query){
                 queryPath += k+"="+this.$route.query[k];
-                if(count < length){
+                if(count < length) {
                     queryPath += "&";
                 }
                 count++;
             }
-            if(length){
+            if(length) {
                 return queryPath;
             }
             return "";
@@ -117,7 +117,7 @@ export const globalComputed = {
             let fields = [];
             let count = 0;
             for(let k in params){
-                if(k.includes('field')){
+                if(k.includes('field')) {
                     var options = params[k].split(',');
                     fields[count] = {
                         type: {

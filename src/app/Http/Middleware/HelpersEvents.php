@@ -8,20 +8,24 @@ class HelpersEvents
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param  \Illuminate\Http\Request $request
+     * @param  \Closure                 $next
      * @return mixed
      */
     public function handle($request, Closure $next)
     {
-        Event::listen('theme:body_start', function(){
-            print googleAnalytics();
-            print googleTagManager();
-        });
+        Event::listen(
+            'theme:body_start', function () {
+                print googleAnalytics();
+                print googleTagManager();
+            }
+        );
 
-        Event::listen('theme:body_end', function(){
-            print googleTagManagerBody();
-        });
+        Event::listen(
+            'theme:body_end', function () {
+                print googleTagManagerBody();
+            }
+        );
 
         return $next($request);
     }

@@ -10,17 +10,19 @@ use Illuminate\Support\Facades\File;
 use \App\Models\Theme;
 use Illuminate\Support\Facades\Request;
 
-trait PostTypeTrait{
+trait PostTypeTrait
+{
     /**
      * Check if a post type has posts.
      *
-     * @param  string  $postTypeSlug  The name of the post type. ex. service
+     * @param  string $postTypeSlug The name of the post type. ex. service
      * @return boolean Returns true if there is any post
      */
-    public static function hasPosts($postTypeSlug){
+    public static function hasPosts($postTypeSlug)
+    {
         $getPostType = self::findBySlug($postTypeSlug);
-        if($getPostType){
-            if(DB::table($getPostType['slug'])->count() > 0){
+        if($getPostType) {
+            if(DB::table($getPostType['slug'])->count() > 0) {
                 return true;
             }
         }
@@ -30,11 +32,12 @@ trait PostTypeTrait{
     /**
      * Get post type by slug.
      *
-     * @param  string $postTypeSlug  The slug of Post Type
+     * @param string $postTypeSlug The slug of Post Type
      *
      * @return object Returns requested post type if found, null instead
      * */
-    public static function findBySlug($postTypeSlug){
+    public static function findBySlug($postTypeSlug)
+    {
         $postTypeSlug = 'post_' . cleanPostTypeSlug($postTypeSlug);
         $postTypes = self::all()->where("slug", $postTypeSlug)->first();
         return $postTypes;
@@ -43,11 +46,12 @@ trait PostTypeTrait{
     /**
      * Check if post type is being used as menulink
      *
-     * @param int $postTypeID
+     * @param  int $postTypeID
      * @return bool
      * @throws \Exception
      */
-    public static function isInMenuLinks($postTypeID){
+    public static function isInMenuLinks($postTypeID)
+    {
         $menulinks = MenuLink::where('belongsToID', $postTypeID)->where('belongsTo', 'post_type')->count();
         if($menulinks) {
             return true;
@@ -58,31 +62,33 @@ trait PostTypeTrait{
     /**
      * Get post type by ID.
      *
-     * @param int $postTypeID
+     * @param  int $postTypeID
      * @return mixed
      */
-    public static function findByID($postTypeID){
+    public static function findByID($postTypeID)
+    {
         return PostType::all()->where("postTypeID", $postTypeID)->first();
     }
 
     /**
      * Get current post type slug.
      *
-     * @param bool $removePrefix It revmoes "post_" from slug
+     * @param  bool $removePrefix It revmoes "post_" from slug
      * @return \Illuminate\Config\Repository|mixed
      */
-    public static function getSlug($removePrefix = false){
+    public static function getSlug($removePrefix = false)
+    {
         // get it from route
         $postTypeSlug = \Request::route('postTypeSlug');
 
-        if(!$postTypeSlug){
+        if(!$postTypeSlug) {
 
             // get it from url
-            $url = explode('/',Request::route()->uri());
+            $url = explode('/', Request::route()->uri());
 
-            if(isset($url[0]) && $url[0]){
+            if(isset($url[0]) && $url[0]) {
                 $postType = PostType::findBySlug($url[0]);
-                if($postType){
+                if($postType) {
                     $postTypeSlug = $postType->slug;
                 }
             }
@@ -92,8 +98,8 @@ trait PostTypeTrait{
             }
         }
 
-        if($removePrefix){
-            return str_replace('post_','',$postTypeSlug);
+        if($removePrefix) {
+            return str_replace('post_', '', $postTypeSlug);
         }
 
         return $postTypeSlug;
@@ -102,14 +108,15 @@ trait PostTypeTrait{
     /**
      * Get fields of a post type.
      *
-     * @param string $post_type
+     * @param  string $post_type
      * @return array
      * @throws \Exception
      */
-    public static function getFields($post_type){
+    public static function getFields($post_type)
+    {
         $postType = PostType::all()->where('slug', $post_type)->first();
 
-        if($postType){
+        if($postType) {
             return $postType->fields;
         }
         
@@ -122,9 +129,10 @@ trait PostTypeTrait{
      *
      * @return bool
      */
-    public function hasCustomController(){
-        $controllerName = ucfirst(str_replace('post_','',$this->slug));
-        if(File::exists(Theme::getPath().'/controllers/'.$controllerName.'Controller.php')){
+    public function hasCustomController()
+    {
+        $controllerName = ucfirst(str_replace('post_', '', $this->slug));
+        if(File::exists(Theme::getPath().'/controllers/'.$controllerName.'Controller.php')) {
             return true;
         }
         return false;
@@ -135,8 +143,9 @@ trait PostTypeTrait{
      *
      * @return string
      */
-    public function getCustomController(){
-        $controllerName = ucfirst(str_replace('post_','',$this->slug));
+    public function getCustomController()
+    {
+        $controllerName = ucfirst(str_replace('post_', '', $this->slug));
         return $controllerName.'Controller';
     }
 }

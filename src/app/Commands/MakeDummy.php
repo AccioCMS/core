@@ -59,27 +59,30 @@ class MakeDummy extends Command
     /**
      * Set total dummy nr per app
      *
-     * @param string $app
-     * @param int $value
+     * @param  string $app
+     * @param  int    $value
      * @return $this
      */
-    private function setDefaultOption(string $app, int $value){
+    private function setDefaultOption(string $app, int $value)
+    {
         $this->defaultsOptions[$app] = $value;
         return $this;
     }
 
     /**
      * Get Total Dummy Per App
-     * @param string $app
+     *
+     * @param  string $app
      * @return array|mixed|string
      * @throws \Exception
      */
-    public function getDefaultOption(string $app){
-        if($this->option($app)){
+    public function getDefaultOption(string $app)
+    {
+        if($this->option($app)) {
             return $this->option($app);
         }
 
-        if(!isset($this->defaultsOptions[$app])){
+        if(!isset($this->defaultsOptions[$app])) {
             throw new \Exception('Option '.$app.' is not configured');
         }
 
@@ -100,11 +103,11 @@ class MakeDummy extends Command
             Language::setDefault();
 
             $this->createUsers()
-              ->createPostTypes()
-              ->createMedia()
-              ->createCategory()
-              ->createTags()
-              ->createPosts();
+                ->createPostTypes()
+                ->createMedia()
+                ->createCategory()
+                ->createTags()
+                ->createPosts();
 
             Cache::flush();
         }
@@ -115,31 +118,32 @@ class MakeDummy extends Command
      *
      * @return bool
      */
-    private function validateRequirements(){
+    private function validateRequirements()
+    {
         // enough options to proceed
         if(!$this->option('all')) {
             $enoughOptions = false;
             foreach ($this->defaultsOptions as $app => $nr) {
-                if($this->option($app)){
+                if($this->option($app)) {
                     $enoughOptions = true;
                     break;
                 }
             }
 
-            if(!$enoughOptions){
+            if(!$enoughOptions) {
                 $this->error('No options given! Write --all=1 to create dummy for all default apps, or write --{APP NAME}={NUMBER OF DUMMIES TO CREATE} to proceed!');
                 return false;
             }
         }
 
         // Ensure there is at least one user
-        if(!User::count()){
+        if(!User::count()) {
             $this->error('No Users found. Create a user with "make:user {email} {password}" command to proceed!');
             return false;
         }
 
         // Ensure there is at least one langauge
-        if(!Language::count()){
+        if(!Language::count()) {
             $this->error('No languages found. Create a langauge manually via Admin interface to proceed!');
             return false;
         }
@@ -153,21 +157,21 @@ class MakeDummy extends Command
      * @return $this
      * @throws \Exception
      */
-    private function createUsers(){
-        if(
-          $this->option('users')
-          || $this->option('users_per_role')
-          || $this->option('all')
+    private function createUsers()
+    {
+        if($this->option('users')
+            || $this->option('users_per_role')
+            || $this->option('all')
         ) {
 
             $this->comment('Creating dummy users...');
-            $output = (new \UserDevSeeder())
-              ->setCommand($this)
-              ->run(
-                $this->getDefaultOption('users'),
-                $this->getDefaultOption('users_per_role'),
-                $this->getDefaultOption('role_id')
-              );
+            $output = (new \UserSeeder())
+                ->setCommand($this)
+                ->run(
+                    $this->getDefaultOption('users'),
+                    $this->getDefaultOption('users_per_role'),
+                    $this->getDefaultOption('role_id')
+                );
             $this->info($output);
         }
         return $this;
@@ -178,12 +182,13 @@ class MakeDummy extends Command
      *
      * @return $this
      */
-    private function createPostTypes(){
+    private function createPostTypes()
+    {
         if(!$this->option('posts') && ($this->option('post_types') || $this->option('all'))) {
             $this->comment('Creating dummy Post Types...');
-            $output = (new \PostTypeDevSeeder())
-              ->setCommand($this)
-              ->run($this->getDefaultOption('post_types'));
+            $output = (new \PostTypeSeeder())
+                ->setCommand($this)
+                ->run($this->getDefaultOption('post_types'));
             $this->info($output);
         }
         return $this;
@@ -194,12 +199,13 @@ class MakeDummy extends Command
      *
      * @return $this
      */
-    private function createMedia(){
+    private function createMedia()
+    {
         if($this->option('media') || $this->option('all')) {
             $this->comment('Creating dummy media...');
-            $output = (new \MediaDevSeeder())
-              ->setCommand($this)
-              ->run($this->getDefaultOption('media'));
+            $output = (new \MediaSeeder())
+                ->setCommand($this)
+                ->run($this->getDefaultOption('media'));
             $this->info($output);
         }
         return $this;
@@ -211,17 +217,18 @@ class MakeDummy extends Command
      * @return $this
      * @throws \Exception
      */
-    private function createCategory(){
+    private function createCategory()
+    {
         if($this->option('categories') || $this->option('categories_per_post_type') || $this->option('all')) {
             $this->comment('Creating dummy categories...');
 
-            $output = (new \CategoryDevSeeder())
-              ->setCommand($this)
-              ->run(
-                ($this->getDefaultOption('categories_per_post_type') ? $this->getDefaultOption('categories_per_post_type') : $this->getDefaultOption('categories')),
-                $this->getDefaultOption('post_type'),
-                ($this->getDefaultOption('categories_per_post_type') ? true : false)
-              );
+            $output = (new \CategorySeeder())
+                ->setCommand($this)
+                ->run(
+                    ($this->getDefaultOption('categories_per_post_type') ? $this->getDefaultOption('categories_per_post_type') : $this->getDefaultOption('categories')),
+                    $this->getDefaultOption('post_type'),
+                    ($this->getDefaultOption('categories_per_post_type') ? true : false)
+                );
 
             $this->info($output);
         }
@@ -230,20 +237,22 @@ class MakeDummy extends Command
 
     /**
      * Create tags
+     *
      * @return $this
      * @throws \Exception
      */
-    private function createTags(){
+    private function createTags()
+    {
         if($this->option('tags') || $this->option('tags_per_post_type') || $this->option('all')) {
             $this->comment('Creating dummy tags...');
 
-            $output = (new \TagDevSeeder())
-              ->setCommand($this)
-              ->run(
-                ($this->getDefaultOption('tags_per_post_type') ? $this->getDefaultOption('tags_per_post_type') : $this->getDefaultOption('tags')),
-                $this->getDefaultOption('post_type'),
-                ($this->getDefaultOption('tags_per_post_type') ? true : false)
-              );
+            $output = (new \TagSeeder())
+                ->setCommand($this)
+                ->run(
+                    ($this->getDefaultOption('tags_per_post_type') ? $this->getDefaultOption('tags_per_post_type') : $this->getDefaultOption('tags')),
+                    $this->getDefaultOption('post_type'),
+                    ($this->getDefaultOption('tags_per_post_type') ? true : false)
+                );
 
             $this->info($output);
         }
@@ -257,22 +266,22 @@ class MakeDummy extends Command
      * @return $this
      * @throws \Exception
      */
-    private function createPosts(){
+    private function createPosts()
+    {
         if($this->option('posts') || $this->option('posts_per_category') || $this->option('all')) {
             $this->comment('Creating dummy posts...');
 
-            $output = (new \PostDevSeeder())
-              ->setCommand($this)
-              ->run(
-                $this->getDefaultOption('posts'),
-                $this->getDefaultOption('posts_per_category'),
-                $this->getDefaultOption('post_type'),
-                $this->getDefaultOption('media'),
-                $this->getDefaultOption('tags'),
-                $this->getDefaultOption('category'),
-                ($this->getDefaultOption('post_types') == 'all' ? true : false)
-
-              );
+            $output = (new \PostSeeder())
+                ->setCommand($this)
+                ->run(
+                    $this->getDefaultOption('posts'),
+                    $this->getDefaultOption('posts_per_category'),
+                    $this->getDefaultOption('post_type'),
+                    $this->getDefaultOption('media'),
+                    $this->getDefaultOption('tags'),
+                    $this->getDefaultOption('category'),
+                    ($this->getDefaultOption('post_types') == 'all' ? true : false)
+                );
             $this->info($output);
         }
         return $this;

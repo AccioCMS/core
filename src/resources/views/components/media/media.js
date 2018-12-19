@@ -84,7 +84,7 @@ export default {
             state.mediaSelectedFiles = {};
             let result = {};
             for(let k in tmpFiles){
-                if(k != key){
+                if(k != key) {
                     result[k] = tmpFiles[k];
                 }
             }

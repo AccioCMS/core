@@ -4,8 +4,9 @@
  * Post Type model
  *
  * Handle permissions of user groups
- * @author Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
- * @author Faton Sopa <faton.sopa@manaferra.com>
+ *
+ * @author  Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
+ * @author  Faton Sopa <faton.sopa@manaferra.com>
  * @version 1.0
  */
 namespace Accio\App\Models;
@@ -23,7 +24,8 @@ use Accio\App\Traits;
 use Illuminate\Support\Facades\File;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class PostTypeModel extends Model{
+class PostTypeModel extends Model
+{
 
     use
       Cachable,
@@ -86,14 +88,14 @@ class PostTypeModel extends Model{
     ];
 
     //TODO document it and remove it from here
-//    public static $customPermissions = [
-//        'service' => [
-//            'title' => [
-//                'type' => 'checkbox',
-//                'label' => 'Title',
-//            ],
-//        ]
-//    ];
+    //    public static $customPermissions = [
+    //        'service' => [
+    //            'title' => [
+    //                'type' => 'checkbox',
+    //                'label' => 'Title',
+    //            ],
+    //        ]
+    //    ];
 
 
     /**
@@ -121,7 +123,8 @@ class PostTypeModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = []){
+    public function __construct(array $attributes = [])
+    {
         parent::__construct($attributes);
         Event::fire('postType:construct', [$this]);
     }
@@ -129,12 +132,13 @@ class PostTypeModel extends Model{
     /**
      * Get a field by using it's slug.
      *
-     * @param string $fieldSlug
+     * @param  string $fieldSlug
      * @return mixed
      */
-    public function field(string $fieldSlug){
+    public function field(string $fieldSlug)
+    {
         foreach ($this->fields as $field){
-            if($field->slug == $fieldSlug){
+            if($field->slug == $fieldSlug) {
                 return $field;
             }
         }
@@ -144,29 +148,30 @@ class PostTypeModel extends Model{
     /**
      * Get Value of a multioptions field by using it's key.
      *
-     * @param string $fieldSlug
-     * @param string $key
+     * @param  string $fieldSlug
+     * @param  string $key
      * @return mixed
      * @throws \Exception
      */
-    public function getMultioptionFieldValue(string $fieldSlug, $key){
-        if(is_null($key)){
+    public function getMultioptionFieldValue(string $fieldSlug, $key)
+    {
+        if(is_null($key)) {
             return null;
         }
 
         $field = $this->field($fieldSlug);
-        if(!$field){
+        if(!$field) {
             throw new \Exception("No field with slug ".$fieldSlug);
         }
         $options = explode(",", $field->multioptionValues);
 
         foreach ($options as $option){
             $optionArr = explode(":", $option);
-            if($optionArr[0] == $key){
+            if($optionArr[0] == $key) {
                 $value  = $optionArr[1];
 
                 // remove comma
-                if(substr($value, -1) == ','){
+                if(substr($value, -1) == ',') {
                     $value = substr($value, 0, -1);
                 }
                 return $value;
@@ -179,7 +184,8 @@ class PostTypeModel extends Model{
      *
      * @return array
      */
-    protected static function menuLinkPanel(){
+    protected static function menuLinkPanel()
+    {
         return [
           'label' => 'Post Types',
           'controller' => 'PostController',
@@ -201,7 +207,8 @@ class PostTypeModel extends Model{
      *
      * @return array
      */
-    public  function menuLinkParameters(){
+    public  function menuLinkParameters()
+    {
         return [
           'postTypeID'    => $this->postTypeID,
           'postTypeSlug'  => cleanPostTypeSlug($this->slug)
@@ -211,17 +218,20 @@ class PostTypeModel extends Model{
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function categories(){
+    public function categories()
+    {
         return $this->hasMany('App\Models\Category', 'postTypeID');
     }
 
-    /** Validate a post type from url.
+    /**
+     * Validate a post type from url.
      *
-     * @param string $postTypeSlug
+     * @param  string $postTypeSlug
      * @return bool
      */
-    public static function validatePostType($postTypeSlug = ''){
-        if(!$postTypeSlug){
+    public static function validatePostType($postTypeSlug = '')
+    {
+        if(!$postTypeSlug) {
             $postTypeSlug = \Request::route('postTypeSlug');
         }
         return ($postTypeSlug && !PostType::findBySlug($postTypeSlug));
@@ -230,26 +240,28 @@ class PostTypeModel extends Model{
     /**
      * Destruct model instance.
      */
-    public function __destruct(){
+    public function __destruct()
+    {
         Event::fire('postType:destruct', [$this]);
     }
 
     /**
      * Generate slug of a field. Uses camel case to create the slug from a string.
      *
-     * @param string $slug
-     * @param array $usedSlugs
+     * @param  string $slug
+     * @param  array  $usedSlugs
      * @return string
      */
-    public static function generateSlug(string $slug, array $usedSlugs){
+    public static function generateSlug(string $slug, array $usedSlugs)
+    {
         $slug = camel_case($slug);
         $count = 1;
 
         // adds a number in the slug string if the specific slug allready exists
-        if (in_array($slug, $usedSlugs)){
+        if (in_array($slug, $usedSlugs)) {
             while(true){
                 $slug = camel_case($slug."_".$count);
-                if (!in_array($slug, $usedSlugs)){
+                if (!in_array($slug, $usedSlugs)) {
                     return $slug;
                 }
                 $count++;
@@ -263,68 +275,71 @@ class PostTypeModel extends Model{
     /**
      * Create table and his columns when post type is created.
      *
-     * @param $postTypeSlug
-     * @param $fields
+     * @param  $postTypeSlug
+     * @param  $fields
      * @return array
      */
-    public static function createTable($postTypeSlug, $fields = [], $hasCategories = false, $hasTags = false, $createRoutes = true, $controller = null){
+    public static function createTable($postTypeSlug, $fields = [], $hasCategories = false, $hasTags = false, $createRoutes = true, $controller = null)
+    {
         self::$customFieldsArray = [];
 
         // create new table for the posts of the post type
-        $isTableCreated = Schema::create($postTypeSlug, function ($table) use ($fields) {
-            // create general fields
-            $table->bigIncrements("postID");
-            $table->unsignedInteger("createdByUserID")->nullable();
-            $table->json("title")->nullable();
-            $table->json("content")->nullable();
-            $table->json("customFields")->nullable();
-            $table->unsignedInteger("featuredImageID")->nullable();
-            $table->unsignedInteger("featuredVideoID")->nullable();
-            $table->json("status")->nullable();
-            $table->datetime("published_at")->nullable()->index();
-            $table->json("slug")->nullable();
+        $isTableCreated = Schema::create(
+            $postTypeSlug, function ($table) use ($fields) {
+                // create general fields
+                $table->bigIncrements("postID");
+                $table->unsignedInteger("createdByUserID")->nullable();
+                $table->json("title")->nullable();
+                $table->json("content")->nullable();
+                $table->json("customFields")->nullable();
+                $table->unsignedInteger("featuredImageID")->nullable();
+                $table->unsignedInteger("featuredVideoID")->nullable();
+                $table->json("status")->nullable();
+                $table->datetime("published_at")->nullable()->index();
+                $table->json("slug")->nullable();
 
-            $table->foreign('createdByUserID')
-              ->references('userID')->on('users')
-              ->onDelete('cascade');
+                $table->foreign('createdByUserID')
+                    ->references('userID')->on('users')
+                    ->onDelete('cascade');
 
-            $table->foreign('featuredImageID')
-              ->references('mediaID')->on('media')
-              ->onDelete('set null');
+                $table->foreign('featuredImageID')
+                    ->references('mediaID')->on('media')
+                    ->onDelete('set null');
 
-            $table->foreign('featuredVideoID')
-              ->references('mediaID')->on('media')
-              ->onDelete('set null');
+                $table->foreign('featuredVideoID')
+                    ->references('mediaID')->on('media')
+                    ->onDelete('set null');
 
-            $post = new PostType();
-            $usedSlugs = [];
-            $usedSlugs = array_merge($usedSlugs, $post->fillable);
+                $post = new PostType();
+                $usedSlugs = [];
+                $usedSlugs = array_merge($usedSlugs, $post->fillable);
 
-            foreach($fields as $field){
-                // generate unique slugs for every field
-                if(!isset($field['slug']) || $field['slug'] == ""){
-                    $slug = self::generateSlug($field['name'], $usedSlugs);
-                }else{
-                    $slug = self::generateSlug($field['slug'], $usedSlugs);
+                foreach($fields as $field){
+                    // generate unique slugs for every field
+                    if(!isset($field['slug']) || $field['slug'] == "") {
+                        $slug = self::generateSlug($field['name'], $usedSlugs);
+                    }else{
+                        $slug = self::generateSlug($field['slug'], $usedSlugs);
+                    }
+                    $usedSlugs[] = $slug;
+
+                    $field['slug'] = $slug;
+                    array_push(self::$customFieldsArray, $field);
+
+                    // create other fields
+                    self::createDatabaseFields($table, $field, $slug);
                 }
-                $usedSlugs[] = $slug;
-
-                $field['slug'] = $slug;
-                array_push(self::$customFieldsArray, $field);
-
-                // create other fields
-                self::createDatabaseFields($table, $field, $slug);
+                $table->timestamps();
             }
-            $table->timestamps();
-        });
+        );
 
         self::createMediaRelationsTable($postTypeSlug);
 
-        if($hasCategories){
+        if($hasCategories) {
             self::createCategoryRelationsTable($postTypeSlug);
         }
 
-        if($hasTags){
+        if($hasTags) {
             self::createTagRelationsTable($postTypeSlug);
         }
 
@@ -340,10 +355,11 @@ class PostTypeModel extends Model{
     /**
      * Create virtual columns for slug in every language
      *
-     * @param string $postTypeSlug
+     * @param string       $postTypeSlug
      * @param array|string $languageSlugs
      */
-    public static function createVirtualColumnsForSlug(string $postTypeSlug, $languageSlugs = []){
+    public static function createVirtualColumnsForSlug(string $postTypeSlug, $languageSlugs = [])
+    {
         $languageSlugs = ($languageSlugs && !is_array($languageSlugs) ? explode(" ", $languageSlugs): $languageSlugs);
         $languageSlugs = ($languageSlugs ? $languageSlugs : Language::all()->pluck(['slug'])->toArray());
 
@@ -364,23 +380,26 @@ class PostTypeModel extends Model{
      *
      * @param $postTypeSlug
      */
-    private static function createMediaRelationsTable($postTypeSlug){
-        Schema::create($postTypeSlug."_media", function ($table) use($postTypeSlug){
-            // create general fields
-            $table->bigIncrements("mediaRelationID");
-            $table->bigInteger("postID")->unsigned()->nullable();
-            $table->unsignedInteger("mediaID")->nullable();
-            $table->json("language")->nullable();
-            $table->string("field", 60)->nullable();
+    private static function createMediaRelationsTable($postTypeSlug)
+    {
+        Schema::create(
+            $postTypeSlug."_media", function ($table) use ($postTypeSlug) {
+                // create general fields
+                $table->bigIncrements("mediaRelationID");
+                $table->bigInteger("postID")->unsigned()->nullable();
+                $table->unsignedInteger("mediaID")->nullable();
+                $table->json("language")->nullable();
+                $table->string("field", 60)->nullable();
 
-            $table->foreign('postID')
-              ->references('postID')->on($postTypeSlug)
-              ->onDelete('cascade');
+                $table->foreign('postID')
+                    ->references('postID')->on($postTypeSlug)
+                    ->onDelete('cascade');
 
-            $table->foreign('mediaID')
-              ->references('mediaID')->on("media")
-              ->onDelete('cascade');
-        });
+                $table->foreign('mediaID')
+                    ->references('mediaID')->on("media")
+                    ->onDelete('cascade');
+            }
+        );
     }
 
     /**
@@ -388,24 +407,27 @@ class PostTypeModel extends Model{
      *
      * @param $postTypeSlug
      */
-    private static function createCategoryRelationsTable($postTypeSlug){
+    private static function createCategoryRelationsTable($postTypeSlug)
+    {
         if(!Schema::hasTable($postTypeSlug."_categories")) {
-            Schema::create($postTypeSlug."_categories", function ($table)  use($postTypeSlug){
-                // create general fields
-                $table->bigIncrements("categoryRelationID");
-                $table->bigInteger("postID")->unsigned()->nullable();
-                $table->unsignedInteger("categoryID")->nullable();
+            Schema::create(
+                $postTypeSlug."_categories", function ($table) use ($postTypeSlug) {
+                    // create general fields
+                    $table->bigIncrements("categoryRelationID");
+                    $table->bigInteger("postID")->unsigned()->nullable();
+                    $table->unsignedInteger("categoryID")->nullable();
 
-                $table->foreign('postID')
-                  ->references('postID')->on($postTypeSlug)
-                  ->onDelete('cascade');
+                    $table->foreign('postID')
+                        ->references('postID')->on($postTypeSlug)
+                        ->onDelete('cascade');
 
-                $table->foreign('categoryID')
-                  ->references('categoryID')->on("categories")
-                  ->onDelete('cascade');
+                    $table->foreign('categoryID')
+                        ->references('categoryID')->on("categories")
+                        ->onDelete('cascade');
 
-                $table->unique(array('postID', 'categoryID'));
-            });
+                    $table->unique(array('postID', 'categoryID'));
+                }
+            );
         }
     }
 
@@ -414,70 +436,76 @@ class PostTypeModel extends Model{
      *
      * @param $postTypeSlug
      */
-    private static function createTagRelationsTable($postTypeSlug){
+    private static function createTagRelationsTable($postTypeSlug)
+    {
         if(!Schema::hasTable($postTypeSlug."_tags")) {
-            Schema::create($postTypeSlug."_tags", function ($table)  use($postTypeSlug){
-                // create general fields
-                $table->bigIncrements("tagRelationID");
-                $table->bigInteger("postID")->unsigned()->nullable();
-                $table->unsignedInteger("tagID")->nullable();
-                $table->string("language", 5)->nullable();
+            Schema::create(
+                $postTypeSlug."_tags", function ($table) use ($postTypeSlug) {
+                    // create general fields
+                    $table->bigIncrements("tagRelationID");
+                    $table->bigInteger("postID")->unsigned()->nullable();
+                    $table->unsignedInteger("tagID")->nullable();
+                    $table->string("language", 5)->nullable();
 
-                $table->foreign('postID')
-                  ->references('postID')->on($postTypeSlug)
-                  ->onDelete('cascade');
+                    $table->foreign('postID')
+                        ->references('postID')->on($postTypeSlug)
+                        ->onDelete('cascade');
 
-                $table->foreign('tagID')
-                  ->references('tagID')->on("tags")
-                  ->onDelete('cascade');
+                    $table->foreign('tagID')
+                        ->references('tagID')->on("tags")
+                        ->onDelete('cascade');
 
-                $table->unique(array('postID', 'tagID', 'language'));
-            });
+                    $table->unique(array('postID', 'tagID', 'language'));
+                }
+            );
         }
     }
 
     /**
      * Update post type table and add new columns.
      *
-     * @param $postTypeSlug
-     * @param $fields
+     * @param  $postTypeSlug
+     * @param  $fields
      * @return array
      */
-    public static function updateTable($postTypeSlug, $fields, $hasTags = false, $hasCategories = false){
+    public static function updateTable($postTypeSlug, $fields, $hasTags = false, $hasCategories = false)
+    {
         self::$customFieldsArray = [];
 
-        Schema::table($postTypeSlug, function($table) use($fields){
-            $post = new Post();
-            $usedSlugs = [];
-            $usedSlugs = array_merge($usedSlugs, $post->fillable);
+        Schema::table(
+            $postTypeSlug, function ($table) use ($fields) {
+                $post = new Post();
+                $usedSlugs = [];
+                $usedSlugs = array_merge($usedSlugs, $post->fillable);
 
-            foreach($fields as $field){
-                // generate unique slugs for every field
-                if(!isset($field['slug']) || $field['slug'] == ""){
-                    $slug = self::generateSlug($field['name'], $usedSlugs);
-                }else{
-                    $slug = self::generateSlug($field['slug'], $usedSlugs);
+                foreach($fields as $field){
+                    // generate unique slugs for every field
+                    if(!isset($field['slug']) || $field['slug'] == "") {
+                        $slug = self::generateSlug($field['name'], $usedSlugs);
+                    }else{
+                        $slug = self::generateSlug($field['slug'], $usedSlugs);
+                    }
+                    $usedSlugs[] = $slug;
+
+                    $field['slug'] = $slug;
+
+                    self::createDatabaseFields($table, $field, $slug, false);
+
+                    // unset the canBeRemoved from array
+                    if(isset($field['canBeRemoved']) && $field['canBeRemoved'] == true) {
+                        unset($field['canBeRemoved']);
+                    }
+
+                    array_push(self::$customFieldsArray, $field);
                 }
-                $usedSlugs[] = $slug;
-
-                $field['slug'] = $slug;
-
-                self::createDatabaseFields($table, $field, $slug, false);
-
-                // unset the canBeRemoved from array
-                if(isset($field['canBeRemoved']) && $field['canBeRemoved'] == true){
-                    unset($field['canBeRemoved']);
-                }
-
-                array_push(self::$customFieldsArray, $field);
             }
-        });
+        );
 
-        if($hasCategories){
+        if($hasCategories) {
             self::createCategoryRelationsTable($postTypeSlug);
         }
 
-        if($hasTags){
+        if($hasTags) {
             self::createTagRelationsTable($postTypeSlug);
         }
 
@@ -492,25 +520,26 @@ class PostTypeModel extends Model{
      * @param string $slug
      * @param string $isCreate
      */
-    private static function createDatabaseFields($table, $field, $slug, $isCreate = true){
+    private static function createDatabaseFields($table, $field, $slug, $isCreate = true)
+    {
         // insert column only if it is not already in the DB
-        if ($isCreate || (isset($field['canBeRemoved']) && $field['canBeRemoved'])){
+        if ($isCreate || (isset($field['canBeRemoved']) && $field['canBeRemoved'])) {
             // if field is translatable
-            if($field['translatable']){
+            if($field['translatable']) {
                 $table->json($slug)->nullable();
             }else{
-                if($field['type']['inputType'] == "text" || $field['type']['inputType'] == "email" || $field['type']['inputType'] == "checkbox" || $field['type']['inputType'] == "radio"){
+                if($field['type']['inputType'] == "text" || $field['type']['inputType'] == "email" || $field['type']['inputType'] == "checkbox" || $field['type']['inputType'] == "radio") {
                     $table->string($slug)->nullable();
-                }else if ($field['type']['inputType'] == "textarea" || $field['type']['inputType'] == "dropdown" || $field['type']['inputType'] == "editor"){
+                }else if ($field['type']['inputType'] == "textarea" || $field['type']['inputType'] == "dropdown" || $field['type']['inputType'] == "editor") {
                     $table->text($slug)->nullable();
-                }else if ($field['type']['inputType'] == "number"){
+                }else if ($field['type']['inputType'] == "number") {
                     $table->integer($slug)->nullable();
-                }else if ($field['type']['inputType'] == "date"){
+                }else if ($field['type']['inputType'] == "date") {
                     $table->dateTime($slug)->nullable();
-                }else if ($field['type']['inputType'] == "boolean"){
+                }else if ($field['type']['inputType'] == "boolean") {
                     $table->tinyInteger($slug)->nullable();
-                }else if ($field['type']['inputType'] == "db"){
-                    if($field['isMultiple']){
+                }else if ($field['type']['inputType'] == "db") {
+                    if($field['isMultiple']) {
                         $table->json($slug)->nullable();
                     }else{
                         $table->integer($slug)->nullable();
@@ -523,15 +552,16 @@ class PostTypeModel extends Model{
     /**
      * Creates route file for new post types.
      *
-     * @param string $slug
+     * @param  string $slug
      * @return mixed
      */
-    public static function createRouteFile(string $slug, $controller = 'PostController'){
+    public static function createRouteFile(string $slug, $controller = 'PostController')
+    {
         $stub =  File::get(stubPath('PostType'));
-        $route = str_replace('DummySlug',cleanPostTypeSlug($slug),$stub);
-        $route = str_replace('DummyController',$controller,$route);
+        $route = str_replace('DummySlug', cleanPostTypeSlug($slug), $stub);
+        $route = str_replace('DummyController', $controller, $route);
         $bytes_written = File::put(base_path().'/routes/'.$slug.'.php', $route);
-        if ($bytes_written === false){
+        if ($bytes_written === false) {
             die("Error writing to new route file");
         }
         return $route;

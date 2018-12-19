@@ -35,6 +35,7 @@ class Requirements
 
     /**
      * List of writable directories
+     *
      * @var array
      */
     private $writableDirectories = [
@@ -50,6 +51,7 @@ class Requirements
 
     /**
      * Requirements constructor.
+     *
      * @param Filesystem $filesystem
      */
     public function __construct(

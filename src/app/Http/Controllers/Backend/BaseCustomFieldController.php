@@ -14,24 +14,27 @@ use App\Models\CustomField;
 use Illuminate\Http\Request;
 use Accio\Support\Facades\Pagination;
 
-class BaseCustomFieldController extends MainController{
+class BaseCustomFieldController extends MainController
+{
 
     public $usedSlugs = [];
 
     /**
      * BaseCustomFieldController constructor.
      */
-    public function __construct(){
+    public function __construct()
+    {
         parent::__construct();
     }
 
     /**
      * Used to get the list of custom field groups.
      *
-     * @param string $lang language slug
+     * @param  string $lang language slug
      * @return array
      */
-    public function getAll($lang = ""){
+    public function getAll($lang = "")
+    {
         $orderBy = (isset($_GET['order'])) ? $orderBy = $_GET['order'] : 'customFieldGroupID';
         $orderType = (isset($_GET['type'])) ? $orderType = $_GET['type'] : 'DESC';
         return CustomFieldGroup::orderBy($orderBy, $orderType)->paginate(CustomFieldGroup::$rowsPerPage);
@@ -40,12 +43,13 @@ class BaseCustomFieldController extends MainController{
     /**
      * Use to store the custom field groups and custom fields in the database.
      *
-     * @param Request $request object with multi-dimensional array with values of custom fields
+     * @param  Request $request object with multi-dimensional array with values of custom fields
      * @return array ErrorHandler response
      */
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('custom_fields','create')){
+        if(!User::hasAccess('custom_fields', 'create')) {
             return $this->noPermission();
         }
         // custom messages for validation
@@ -56,24 +60,26 @@ class BaseCustomFieldController extends MainController{
         );
 
         // validation
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make(
+            $request->all(), [
             'title' => 'required',
             'slug' => 'required',
             'isActive' => 'required',
-        ], $messages);
+            ], $messages
+        );
 
         // if validation fails return json response
-        if($validator->fails()){
-            return $this->response( "Please check all required fields!", 400,null, false, false, true, $validator->errors());
+        if($validator->fails()) {
+            return $this->response("Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
         // update
-        if($request->id){
+        if($request->id) {
             $customFieldsGroup = CustomFieldGroup::findOrFail($request->id);
             $customFieldsDeletion = DB::table('custom_fields')->where('customFieldGroupID', $customFieldsGroup->customFieldGroupID)->delete();
             $slug = self::generateSlug($request->slug, 'custom_fields_groups', 'customFieldGroupID', '', $request->id, false, '_');
         }else{
-        // create
+            // create
             $customFieldsGroup = new CustomFieldGroup();
             $slug = self::generateSlug($request->slug, 'custom_fields_groups', 'customFieldGroupID', '', 0, false, '_');
         }
@@ -85,7 +91,7 @@ class BaseCustomFieldController extends MainController{
         $customFieldsGroup->conditions = $request->groupRules;
 
         // if custom field group is stored
-        if($customFieldsGroup->save()){
+        if($customFieldsGroup->save()) {
             $fields = $this->prepareCustomFieldArray($request->fields, $customFieldsGroup->customFieldGroupID);
             // store parents custom fields
             foreach ($fields['parents'] as $field){
@@ -94,12 +100,12 @@ class BaseCustomFieldController extends MainController{
                 $customFieldsID = DB::table('custom_fields')->insertGetId($field);
 
                 // if error in DB
-                if (!$customFieldsID){
-                    return $this->response('Internal server error. Please try again later',500);
+                if (!$customFieldsID) {
+                    return $this->response('Internal server error. Please try again later', 500);
                 }
 
                 // if field has sub fields
-                if (isset($fields['children'][$tmpID])){
+                if (isset($fields['children'][$tmpID])) {
                     $childArr = [];
                     foreach ($fields['children'][$tmpID] as $childField){
                         unset($childField['tmpID']);
@@ -108,8 +114,8 @@ class BaseCustomFieldController extends MainController{
                     }
                     $childFields = DB::table('custom_fields')->insert($childArr);
                     // if error in DB
-                    if (!$childFields){
-                        return $this->response( 'Internal server error. Please try again later', 500);
+                    if (!$childFields) {
+                        return $this->response('Internal server error. Please try again later', 500);
                     }
 
                 }
@@ -117,17 +123,18 @@ class BaseCustomFieldController extends MainController{
         }
 
         $redirectParams = parent::redirectParams($request->redirect, 'custom-fields', $customFieldsGroup->customFieldGroupID);
-        return $this->response( 'Custom fields are stored',200, $customFieldsGroup->customFieldGroupID, $redirectParams['view'], $redirectParams['redirectUrl']);
+        return $this->response('Custom fields are stored', 200, $customFieldsGroup->customFieldGroupID, $redirectParams['view'], $redirectParams['redirectUrl']);
     }
 
     /**
      * Used to prepare the custom field array to insert the fields in the database.
      *
-     * @param array $fields list of custom fields
-     * @param integer $groupID id of custom fields group
+     * @param  array   $fields  list of custom fields
+     * @param  integer $groupID id of custom fields group
      * @return array
      */
-    public function prepareCustomFieldArray($fields, $groupID){
+    public function prepareCustomFieldArray($fields, $groupID)
+    {
         $fieldsQuery = [];
         $count = 0;
         foreach($fields as $field){
@@ -178,15 +185,16 @@ class BaseCustomFieldController extends MainController{
     /**
      * Used to make null the empty values of custom field columns (like '[]', '""', '').
      *
-     * @param array $fieldsQuery multi-dimensional array with custom fields
+     * @param  array $fieldsQuery multi-dimensional array with custom fields
      * @return array
      */
-    public function emptyFields($fieldsQuery){
+    public function emptyFields($fieldsQuery)
+    {
         $result = [];
         $count = 0;
         foreach ($fieldsQuery as $field){
             foreach ($field as $key => $fieldValue){
-                if($fieldValue === "[]" || $fieldValue === "\"\"" || $fieldValue === "null" || $fieldValue === ""){
+                if($fieldValue === "[]" || $fieldValue === "\"\"" || $fieldValue === "null" || $fieldValue === "") {
                     $result[$count][$key] = null;
                 }else{
                     $result[$count][$key] = $fieldValue;
@@ -200,18 +208,19 @@ class BaseCustomFieldController extends MainController{
     /**
      * Divides Fields from sub fields in two different arrays.
      *
-     * @param array $customFieldsArr array of custom fields
+     * @param  array $customFieldsArr array of custom fields
      * @return array of custom fields
      */
-    public function divideParentFromChildren($customFieldsArr){
+    public function divideParentFromChildren($customFieldsArr)
+    {
         $parents = [];
         $children = [];
         for ($i = 0; $i < count($customFieldsArr); $i++){
 
-            if(!$customFieldsArr[$i]['parentID']){
+            if(!$customFieldsArr[$i]['parentID']) {
                 $parents[] = $customFieldsArr[$i];
             }else{
-                if(!isset($children[$customFieldsArr[$i]['parentID']])){
+                if(!isset($children[$customFieldsArr[$i]['parentID']])) {
                     $children[$customFieldsArr[$i]['parentID']] = [];
                 }
                 $children[$customFieldsArr[$i]['parentID']][] = $customFieldsArr[$i];
@@ -223,20 +232,21 @@ class BaseCustomFieldController extends MainController{
     /**
      * Delete a custom field group from database.
      *
-     * @param string $lang language slug
-     * @param integer $id custom fields group ID
+     * @param string  $lang language slug
+     * @param integer $id   custom fields group ID
      *
      * @return array ErrorHandler response
      */
-    public function delete($lang, $id){
-        if(!User::hasAccess('CustomField','delete')){
+    public function delete($lang, $id)
+    {
+        if(!User::hasAccess('CustomField', 'delete')) {
             return $this->noPermission();
         }
         $customFieldGroup = CustomFieldGroup::find($id);
 
         if($customFieldGroup) {
             $fields = CustomField::where('customFieldGroupID', $id);
-            if($fields){
+            if($fields) {
                 $fields->delete();
                 $customFieldGroup->delete();
 
@@ -244,27 +254,28 @@ class BaseCustomFieldController extends MainController{
             }
         }
 
-        return $this->response( 'Custom field group could not be deleted. Please try again later', 500);
+        return $this->response('Custom field group could not be deleted. Please try again later', 500);
     }
 
     /**
      * Bulk Delete custom fields groups and their custom fields.
      *
-     * @param Request $request array of custom fields IDs
+     * @param  Request $request array of custom fields IDs
      * @return array ErrorHandler response
      */
-    public function bulkDelete(Request $request){
+    public function bulkDelete(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('CustomField','delete')){
+        if(!User::hasAccess('CustomField', 'delete')) {
             return $this->noPermission();
         }
         $data = $request->all();
         foreach ($data as $id){
             $customFieldsGroup = CustomFieldGroup::find($id)->delete();
             if (!$customFieldsGroup) {
-                return $this->response( 'Internal server error. Please try again later', 500);
+                return $this->response('Internal server error. Please try again later', 500);
             }else{
-                CustomField::where('customFieldGroupID',$id)->delete();
+                CustomField::where('customFieldGroupID', $id)->delete();
                 // TODO me i fshi vlerat e custom fildave neper poste, users dhe category
             }
         }
@@ -274,13 +285,14 @@ class BaseCustomFieldController extends MainController{
     /**
      * JSON object with all details for a specific custom field (used in update form).
      *
-     * @param string $lang
-     * @param int $id
+     * @param  string $lang
+     * @param  int    $id
      * @return array
      */
-    public function detailsJSON($lang, $id){
+    public function detailsJSON($lang, $id)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('CustomField','read')){
+        if(!User::hasAccess('CustomField', 'read')) {
             return $this->noPermission();
         }
         $customFieldGroup = CustomFieldGroup::find($id);
@@ -296,10 +308,11 @@ class BaseCustomFieldController extends MainController{
     /**
      * Get all data of a table (for custom field purposes in front-end).
      *
-     * @param Request $request
+     * @param  Request $request
      * @return array
      */
-    public function getTableData(Request $request){
+    public function getTableData(Request $request)
+    {
         $table = $request->all()['name'];
         return Language::filterRows(DB::table($table)->get(), false);
     }
@@ -308,22 +321,24 @@ class BaseCustomFieldController extends MainController{
      * This function creates the slug for a custom field group and makes sure that slugs it is not being used from
      * a other group.
      *
-     * @param string $lang language slug
+     * @param string $lang  language slug
      * @param string $title the string to be slug
      *
      * @return string generated slug
      * */
-    public function getSlug($lang, $title){
+    public function getSlug($lang, $title)
+    {
         return self::generateSlug($title, 'custom_fields_groups', 'customFieldGroupID', $lang, 0, false, "_");
     }
 
     /**
      * Catches the post request from frontend.
      *
-     * @param Request $request data of the request
+     * @param  Request $request data of the request
      * @return string generated key
      */
-    public function generateFieldSlugRequest(Request $request){
+    public function generateFieldSlugRequest(Request $request)
+    {
         $id = $request->id;
         $title = $request->title;
         $keys = $request->keys;
@@ -334,29 +349,30 @@ class BaseCustomFieldController extends MainController{
     /**
      * This function generates the slug/key for a custom field by using a chosen value.
      *
-     * @param string $lang language slug
-     * @param string $key text to be made slug
-     * @param integer $id id of the current custom field
+     * @param  string  $lang language slug
+     * @param  string  $key  text to be made slug
+     * @param  integer $id   id of the current custom field
      * @return string generated key
      */
-    public function generateFieldSlug($lang, $key, $id, $keys){
+    public function generateFieldSlug($lang, $key, $id, $keys)
+    {
         $count = 1;
         $found = true;
         $slug = str_slug($key, '_');
 
         $keysArray = array();
         foreach ($keys as $key){
-            if($id != $key['id']){
+            if($id != $key['id']) {
                 $keysArray[] = $key['slug'];
             }
         }
 
-        if(!in_array($slug, $keysArray) && !in_array($slug, $this->usedSlugs)){
+        if(!in_array($slug, $keysArray) && !in_array($slug, $this->usedSlugs)) {
             return $slug;
         }else{
             while ($found){
                 $newSlug = $slug.'_'.$count;
-                if(!in_array($newSlug, $keysArray) && !in_array($newSlug, $this->usedSlugs)){
+                if(!in_array($newSlug, $keysArray) && !in_array($newSlug, $this->usedSlugs)) {
                     $found = false;
                     $this->usedSlugs[] = $newSlug;
                     return $newSlug;
@@ -371,13 +387,14 @@ class BaseCustomFieldController extends MainController{
     /**
      * Return all custom fields of a app/module.
      *
-     * @param string $module module/app
+     * @param string $module   module/app
      * @param string $formType (create, update)
-     * @param int $id (optional) id of the item
+     * @param int    $id       (optional) id of the item
      *
      * @return array of custom fields by group
      */
-    public function getByApp($lang, $module, $formType, $id, $postType = ""){
+    public function getByApp($lang, $module, $formType, $id, $postType = "")
+    {
         return CustomFieldGroup::findGroups($module, $formType, $id, $postType);
     }
 

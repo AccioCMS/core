@@ -23,7 +23,8 @@ use App\Models\PostType;
 use App\Models\Post;
 use Accio\App\Traits;
 
-abstract class PostModel extends Model{
+abstract class PostModel extends Model
+{
     use
         Cachable,
         Traits\PostTrait,
@@ -174,16 +175,17 @@ abstract class PostModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = []){
+    public function __construct(array $attributes = [])
+    {
         parent::__construct($attributes);
         Event::fire('post:construct', [$this]);
 
         // create elastic instance if model is using elastic search
-        if($this->hasElastic){
+        if($this->hasElastic) {
             $this->elastic = ClientBuilder::create()->build();
         }
 
-        if(self::$useTmpTable && self::$_tmptable){
+        if(self::$useTmpTable && self::$_tmptable) {
             $this->table = self::$_tmptable;
         }
     }
@@ -191,10 +193,11 @@ abstract class PostModel extends Model{
     /**
      * Set the table associated with the model.
      *
-     * @param  string  $table
+     * @param  string $table
      * @return $this
      */
-    public function setTable($table){
+    public function setTable($table)
+    {
         $this->table = 'post_'.cleanPostTypeSlug($table);
         self::$_tmptable = $this->table;
         return $this;
@@ -203,7 +206,8 @@ abstract class PostModel extends Model{
     /**
      * Configure if post model has dynamic tables or pre-declared table
      */
-    public function setHasDynamicTable($hasDynamicTable){
+    public function setHasDynamicTable($hasDynamicTable)
+    {
         $this->hasDynamicTable = $hasDynamicTable;
     }
 
@@ -212,14 +216,15 @@ abstract class PostModel extends Model{
      * The default "with" method initializes a model with pre-defined table new.
      * The table name of a post type is saved in a static variable which is than appended to the model.
      *
-     * @param  array|string  $relations
+     * @param  array|string $relations
      * @return \Illuminate\Database\Eloquent\Builder|static
      * @throws \ReflectionException
      */
-    public static function with($relations){
+    public static function with($relations)
+    {
         $model = (new static());
 
-        if(!$model->hasDynamicTable){
+        if(!$model->hasDynamicTable) {
             return parent::with($relations);
         }
 
@@ -229,7 +234,7 @@ abstract class PostModel extends Model{
         $class = explode("\\", $method->class);
 
         if ($class[count($class)-1] != class_basename($model)) {
-            if(self::$_tmptable){
+            if(self::$_tmptable) {
                 $model->setTable(self::$_tmptable);
             }
             $model->bind(config("database.default"), self::$_tmptable);
@@ -242,12 +247,14 @@ abstract class PostModel extends Model{
 
     }
 
-    public function bind(string $connection, string $table){
+    public function bind(string $connection, string $table)
+    {
         $this->setConnection($connection);
         $this->setTable($table);
     }
 
-    public function newInstance($attributes = [], $exists = false){
+    public function newInstance($attributes = [], $exists = false)
+    {
         // Overridden in order to allow for late table binding.
 
         $model = parent::newInstance($attributes, $exists);
@@ -257,27 +264,18 @@ abstract class PostModel extends Model{
     }
 
     /**
-     * Scope a query to only include published posts.
-     *
-     * @return $this
-     */
-    public function published(){
-        return $this
-            ->where('published_at', '<=', date('Y-m-d H:i:s'))
-            ->where('status->'. App::getLocale(),'published');
-    }
-
-    /**
      * Get only published posts for the post paginate object
      *
-     * @param $paginateObj
+     * @param  $paginateObj
      * @return mixed
      */
-    public static function filterPublished($paginateObj){
+    public static function filterPublished($paginateObj)
+    {
         $paginateObj->setCollection(
             $paginateObj
                 ->where('published_at', '<=', date('Y-m-d H:i:s'))
-                ->where('status','published'));
+                ->where('status', 'published')
+        );
         return $paginateObj;
     }
 
@@ -287,7 +285,8 @@ abstract class PostModel extends Model{
      * @return array
      * @throws \Exception
      */
-    protected static function menuLinkPanel(){
+    protected static function menuLinkPanel()
+    {
         // List one menu panel for each post type
         $panels =[];
         foreach(PostType::all() as $postType){
@@ -314,14 +313,15 @@ abstract class PostModel extends Model{
      *
      * @return array
      */
-    public function menuLinkParameters(){
+    public function menuLinkParameters()
+    {
         $previousAutoTranslate = $this->getAutoTranslate();
         $this->setAutoTranslate(false);
 
         $data = [
             'postID'        => $this->postID,
             'postSlug'      => $this->slug,
-            'date'          => date('Y-m-d',strtotime($this->created_at)),
+            'date'          => date('Y-m-d', strtotime($this->created_at)),
             'postTypeSlug'  => cleanPostTypeSlug($this->getTable())
         ];
 
@@ -332,9 +332,10 @@ abstract class PostModel extends Model{
     /**
      * Sets up the cache for the most read articles
      */
-    public static function setMostReadCache(){
+    public static function setMostReadCache()
+    {
         // check if a article has been read
-        if(Cache::has("most_read_articles_ids")){
+        if(Cache::has("most_read_articles_ids")) {
             // current date and time
             $currentDate = new DateTime();
 
@@ -348,14 +349,14 @@ abstract class PostModel extends Model{
             $currentMostReadIDs = Cache::get("most_read_articles_ids");
             foreach($currentMostReadIDs as $key => $post){
                 $diff = (int) $currentDate->diff($post['date'])->format("%d");
-                if($diff <= 2){
+                if($diff <= 2) {
                     $mostReadIDs[$key] = $post;
                     $postByCount[$key] = $post['count'];
                 }
             }
 
             // save most read id
-            Cache::forever("most_read_articles_ids",$mostReadIDs);
+            Cache::forever("most_read_articles_ids", $mostReadIDs);
 
             // @TODO cache duhet em u gjeneru prej cron-it, jo çdo here sa te hapet nje artikull me ba kete query
             if(false && $postByCount) {
@@ -388,9 +389,10 @@ abstract class PostModel extends Model{
      *
      * @return array
      */
-    public static function getMostReadCache(){
+    public static function getMostReadCache()
+    {
         $mostRead = Cache::get("most_read_articles");
-        if(!$mostRead || $mostRead == null || $mostRead->isEmpty()){
+        if(!$mostRead || $mostRead == null || $mostRead->isEmpty()) {
             return [];
         }
         return $mostRead;
@@ -399,8 +401,9 @@ abstract class PostModel extends Model{
     /**
      * @param int $days
      */
-    public function markAsReadCache($days = 2){
-        if(!Cache::has("most_read_articles_ids")){
+    public function markAsReadCache($days = 2)
+    {
+        if(!Cache::has("most_read_articles_ids")) {
             Cache::forever("most_read_articles_ids", []);
         }
 
@@ -410,11 +413,11 @@ abstract class PostModel extends Model{
         $diff = (int) $currentDate->diff($publishedDate)->format("%d");
 
         // only save article if is newser than 2 days
-        if($diff <= $days){
+        if($diff <= $days) {
             $posts = Cache::get("most_read_articles_ids");
 
             // add post in list
-            if(!isset($posts[$this->postID])){
+            if(!isset($posts[$this->postID])) {
                 $posts[$this->postID] = [
                     'date' => $publishedDate,
                     'count' => 0
@@ -431,24 +434,25 @@ abstract class PostModel extends Model{
     /**
      * Get cache relations.
      *
-     * @param $postType
+     * @param  $postType
      * @return array
      */
-    public function getDefaultRelations($postType){
+    public function getDefaultRelations($postType)
+    {
         $relations = [];
 
-        if(count($this->autoCacheRelations)){
+        if(count($this->autoCacheRelations)) {
             return $this->autoCacheRelations;
         }
 
 
         // Tags
-        if($postType->hasTags){
+        if($postType->hasTags) {
             $relations[] = 'tags';
         }
 
         // Categories
-        if($postType->hasCategories){
+        if($postType->hasCategories) {
             $relations[] = 'categories';
         }
 
@@ -461,12 +465,15 @@ abstract class PostModel extends Model{
     /**
      * Handle callback of insert, update, delete.
      * */
-    protected static function boot(){
+    protected static function boot()
+    {
         parent::boot();
 
-        self::saved(function($post){
-            Post::_saved($post);
-        });
+        self::saved(
+            function ($post) {
+                Post::_saved($post);
+            }
+        );
     }
 
     /**
@@ -474,39 +481,42 @@ abstract class PostModel extends Model{
      *
      * @param array $post Saved post
      * */
-    public static function _saved($post){
+    public static function _saved($post)
+    {
         self::updateMenulink($post);
     }
-
+    
     /**
      * Scope a query to only include published posts.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopePublished($query, $languageSlug = ''){
-        if(!$languageSlug){
+    public function scopePublished($query, $languageSlug = '')
+    {
+        if(!$languageSlug) {
             $languageSlug = App::getLocale();
         }
 
         return $query
             ->where('status->'.$languageSlug, 'published')
-            ->where('published_at', '<=', new DateTime());
+            ->where('published_at', '<=', date('Y-m-d H:i:s'));
     }
 
     /**
      * Scope a query to only include published posts.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeUnpublished($query, $languageSlug = ''){
+    public function scopeUnpublished($query, $languageSlug = '')
+    {
         if (!$languageSlug) {
             $languageSlug = App::getLocale();
         }
         return $query
             ->where('status->' . $languageSlug, '!=', 'published')
-            ->where('published_at', '>=', new DateTime());
+            ->where('published_at', '>=', date('Y-m-d H:i:s'));
     }
 
 
@@ -514,36 +524,37 @@ abstract class PostModel extends Model{
      * Scope a query to include posts by a specific date.
      *
      * @param Builder $query
-     * @param string $year
-     * @param string $month
-     * @param string $day
+     * @param string  $year
+     * @param string  $month
+     * @param string  $day
      *
      * @return mixed
      */
-    public function scopeDate($query, $year = '', $month ='', $day =''){
-        if($year){
+    public function scopeDate($query, $year = '', $month ='', $day ='')
+    {
+        if($year) {
             $query->whereMonth($this->getTable().'.created_at', $year);
         }
 
-        if($month){
+        if($month) {
             $query->whereYear($this->getTable().'.created_at', $month);
         }
 
-        if($day){
+        if($day) {
             $query->whereDay($this->getTable().'.created_at', $day);
         }
         return $query;
     }
 
     /**
-     *
      * Get Home Page's data.
      * Home is supposed to be served form post_pages post type.
      *
      * @return object
      * @throws \Exception
      */
-    public static function setHomepage(){
+    public static function setHomepage()
+    {
         if(!self::$homepage) {
             $findHomePage = null;
             if (settings('homepageID')) {
@@ -557,7 +568,7 @@ abstract class PostModel extends Model{
                 $findHomePage = (new Post())->setTable("post_pages")->first();
             }
 
-            if(!$findHomePage){
+            if(!$findHomePage) {
                 throw new \Exception("No homepage found. Please add a page post!");
             }
             self::$homepage = $findHomePage;
@@ -574,9 +585,10 @@ abstract class PostModel extends Model{
      *
      * @return array|string|null Returns the data of the primary Menu if found, null instead
      */
-    public static function getHomepage($columnName = ''){
-        if($columnName){
-            if(isset(self::$homepage->$columnName)){
+    public static function getHomepage($columnName = '')
+    {
+        if($columnName) {
+            if(isset(self::$homepage->$columnName)) {
                 return self::$homepage->$columnName;
             }
             return null;
@@ -590,21 +602,23 @@ abstract class PostModel extends Model{
      * @return string
      * @throws \Exception
      */
-    public function getHrefAttribute(){
+    public function getHrefAttribute()
+    {
         return $this->href();
     }
 
     /**
      * Generate a custom URL to a post.
      *
-     * @param string $routeName
-     * @param array $customAttributes
+     * @param  string $routeName
+     * @param  array  $customAttributes
      * @return string
      * @throws \Exception
      */
-    public function href($routeName = '', $customAttributes = []){
+    public function href($routeName = '', $customAttributes = [])
+    {
         if(!$routeName) {
-            $routeName = cleanPostTypeSlug($this->getTable(),'post.') . '.single';
+            $routeName = cleanPostTypeSlug($this->getTable(), 'post.') . '.single';
         }
 
         $getRoute = Route::getRoutes()->getByName($routeName);
@@ -612,7 +626,7 @@ abstract class PostModel extends Model{
             $routeParams = Route::getRoutes()->getByName($routeName)->parameterNames();
 
             // translating language
-            if($this->getTranslateLanguage()){
+            if($this->getTranslateLanguage()) {
                 $languageSlug = $this->getTranslateLanguage();
             }else{
                 $languageSlug = App::getLocale();
@@ -623,32 +637,32 @@ abstract class PostModel extends Model{
             foreach ($routeParams as $name) {
 
                 switch ($name) {
-                    case 'postTypeSlug';
-                        $params['postTypeSlug'] = cleanPostTypeSlug($this->getTable());
-                        break;
+                case 'postTypeSlug';
+                    $params['postTypeSlug'] = cleanPostTypeSlug($this->getTable());
+                    break;
 
-                    case 'postSlug';
-                        $params['postSlug'] = $this->slug;
-                        break;
+                case 'postSlug';
+                    $params['postSlug'] = $this->slug;
+                    break;
 
-                    case 'date';
-                        $params['date'] = $this->created_at;
-                        break;
+                case 'date';
+                    $params['date'] = $this->created_at;
+                    break;
 
-                    case 'postID';
-                        $params['postID'] = $this->postID;
-                        break;
+                case 'postID';
+                    $params['postID'] = $this->postID;
+                    break;
 
-                    case 'lang';
-                        //don't show language slug on default language
-                        if(config('project.hideDefaultLanguageInURL') && $languageSlug !=  Language::getDefault('slug')) {
-                            $params['lang'] = $languageSlug;
-                        }
-                        break;
+                case 'lang';
+                    //don't show language slug on default language
+                    if(config('project.hideDefaultLanguageInURL') && $languageSlug !=  Language::getDefault('slug')) {
+                        $params['lang'] = $languageSlug;
+                    }
+                    break;
                 }
             }
 
-            if($customAttributes){
+            if($customAttributes) {
                 $params = array_merge($customAttributes, $params);
             }
             return route($routeName, $params);
@@ -662,23 +676,26 @@ abstract class PostModel extends Model{
      *
      * @return void;
      */
-    public function metaData(){
+    public function metaData()
+    {
         Meta::setTitle($this->title)
             ->set("description", $this->content())
-            ->set("author", ($this->user ? $this->user->firstName." ".$this->user->lastName : null) )
+            ->set("author", ($this->user ? $this->user->firstName." ".$this->user->lastName : null))
             ->set("og:type", "article", "property")
             ->set("og:title", $this->title, "property")
             ->set("og:description", $this->content(), "property")
-            ->set("og:url",$this->href, "property")
+            ->set("og:url", $this->href, "property")
             ->setImageOG(($this->hasFeaturedImage() ? $this->featuredImage : null))
             ->setArticleOG($this)
             ->setHrefLangData($this)
             ->setCanonical($this->href)
-            ->setWildcards([
+            ->setWildcards(
+                [
                 '{{categoryTitle}}'=>($this->hasCategory() ? $this->category->title :  null),
                 '{{title}}' => $this->title,
                 '{{sitename}}' => settings('siteTitle')
-            ]);
+                ]
+            );
 
         return;
     }
@@ -689,9 +706,10 @@ abstract class PostModel extends Model{
      * @return Collection|mixed
      * @throws \Exception
      */
-    public function getMediaAttribute(){
+    public function getMediaAttribute()
+    {
         $items = $this->getRelationValue('media');
-        if(is_null($items)){
+        if(is_null($items)) {
             return collect([]);
         }
 
@@ -701,11 +719,12 @@ abstract class PostModel extends Model{
     /**
      * Get media of a specific field.
      *
-     * @param $field
+     * @param  $field
      * @return object|null
      */
-    public function mediaField($field){
-        if(count($this->media)){
+    public function mediaField($field)
+    {
+        if(count($this->media)) {
             $results = $this->media->where('field', $field);
             if(count($results)) {
                 return $results;
@@ -718,10 +737,11 @@ abstract class PostModel extends Model{
     /**
      * Set Media field.
      *
-     * @param string $mediaField
+     * @param  string $mediaField
      * @return $this
      */
-    public function withMediaField($mediaField){
+    public function withMediaField($mediaField)
+    {
         $this->mediaField = $mediaField;
         return $this;
     }
@@ -731,11 +751,12 @@ abstract class PostModel extends Model{
      *
      * @return HasManyThrough
      */
-    public function media(){
-        $query =  $this->customHasManyThrough('App\Models\Media', 'App\Models\MediaRelation','postID','mediaID','postID', 'mediaID', $this->getTable()."_media");
+    public function media()
+    {
+        $query =  $this->customHasManyThrough('App\Models\Media', 'App\Models\MediaRelation', 'postID', 'mediaID', 'postID', 'mediaID', $this->getTable()."_media");
 
-        if($this->mediaField){
-            $query->where($this->getTable().'_media.field',$this->mediaField);
+        if($this->mediaField) {
+            $query->where($this->getTable().'_media.field', $this->mediaField);
         }
 
         // We also need 'field' from media relations, so we can select media based on field name
@@ -747,15 +768,16 @@ abstract class PostModel extends Model{
     /**
      *
      *
-     * @param $related
-     * @param $through
-     * @param null $firstKey
-     * @param null $secondKey
-     * @param null $localKey
-     * @param null $secondLocalKey
+     * @param  $related
+     * @param  $through
+     * @param  null    $firstKey
+     * @param  null    $secondKey
+     * @param  null    $localKey
+     * @param  null    $secondLocalKey
      * @return HasManyThrough
      */
-    public function customHasManyThrough($related, $through, $firstKey = null, $secondKey = null, $localKey = null, $secondLocalKey = null, $table = null){
+    public function customHasManyThrough($related, $through, $firstKey = null, $secondKey = null, $localKey = null, $secondLocalKey = null, $table = null)
+    {
         $instance = (new $related);
 
         $through = (new $through)->setTable($table);
@@ -773,7 +795,8 @@ abstract class PostModel extends Model{
      * @return array|Collection|mixed
      * @throws \Exception
      */
-    public function getCategoriesAttribute(){
+    public function getCategoriesAttribute()
+    {
         // Request category only if post type uses categories
         $getPostType = getPostType($this->getTable());
 
@@ -788,8 +811,9 @@ abstract class PostModel extends Model{
      *
      * @return string
      */
-    public function getCategoryAttribute(){
-        if(!is_null($this->categories)){
+    public function getCategoryAttribute()
+    {
+        if(!is_null($this->categories)) {
             return $this->categories->first();
         }
         return;
@@ -801,8 +825,9 @@ abstract class PostModel extends Model{
      * @return mixed|null
      * @throws \Exception
      */
-    public function getUserAttribute(){
-        if($this->createdByUserID){
+    public function getUserAttribute()
+    {
+        if($this->createdByUserID) {
 
             // search in cache
             $user = User::where('userID', $this->createdByUserID)->first();
@@ -822,7 +847,8 @@ abstract class PostModel extends Model{
      * @return mixed
      * @throws \Exception
      */
-    public function getFeaturedImageAttribute(){
+    public function getFeaturedImageAttribute()
+    {
         if($this->featuredImageID) {
             return $this->getRelationValue('featuredimage');
         }
@@ -834,8 +860,9 @@ abstract class PostModel extends Model{
      *
      * @return HasOne
      */
-    public function featuredImage(){
-        return $this->hasOne('App\Models\Media','mediaID','featuredImageID');
+    public function featuredImage()
+    {
+        return $this->hasOne('App\Models\Media', 'mediaID', 'featuredImageID');
     }
 
     /**
@@ -843,16 +870,18 @@ abstract class PostModel extends Model{
      *
      * @return HasOne
      */
-    public function featuredVideo(){
-        return $this->hasOne('App\Models\Media','mediaID','featuredVideoID');
+    public function featuredVideo()
+    {
+        return $this->hasOne('App\Models\Media', 'mediaID', 'featuredVideoID');
     }
 
 
     /**
      * The users that belong to the role.
      */
-    public function users(){
-        return $this->belongsTo('App\Models\User', 'createdByUserID','userID');
+    public function users()
+    {
+        return $this->belongsTo('App\Models\User', 'createdByUserID', 'userID');
     }
 
     /**
@@ -861,14 +890,17 @@ abstract class PostModel extends Model{
      * @return HasManyThrough
      * @throws \Exception
      */
-    public function categories(){
+    public function categories()
+    {
         $findPostType = PostType::findBySlug($this->getTable());
-        if(!$findPostType){
+        if(!$findPostType) {
             throw new \Exception("Categories  relations could not be made because the post type of the post #".$this->postID." could ont be found!");
         }
-        return $this->customHasManyThrough('App\Models\Category', 'App\Models\CategoryRelation',
-            'postID','categoryID','postID','categoryID', $this->getTable()."_categories")
-            ->where('postTypeID',$findPostType->postTypeID);
+        return $this->customHasManyThrough(
+            'App\Models\Category', 'App\Models\CategoryRelation',
+            'postID', 'categoryID', 'postID', 'categoryID', $this->getTable()."_categories"
+        )
+            ->where('postTypeID', $findPostType->postTypeID);
     }
 
     /**
@@ -877,40 +909,44 @@ abstract class PostModel extends Model{
      * @return HasManyThrough
      * @throws \Exception
      */
-    public function tags(){
+    public function tags()
+    {
         $findPostType = PostType::findBySlug($this->getTable());
-        if(!$findPostType){
+        if(!$findPostType) {
             throw new \Exception("Tag relations could not be made because the post type of the post #".$this->postID." could ont be found!");
         }
-        return $this->customHasManyThrough('App\Models\Tag', 'App\Models\TagRelation',
-            'postID','tagID','postID','tagID', $this->getTable()."_tags")
-            ->where('postTypeID',$findPostType->postTypeID);
+        return $this->customHasManyThrough(
+            'App\Models\Tag', 'App\Models\TagRelation',
+            'postID', 'tagID', 'postID', 'tagID', $this->getTable()."_tags"
+        )
+            ->where('postTypeID', $findPostType->postTypeID);
     }
 
 
     /**
      * Get data relation for fields (Dropdown from DB).
      *
-     * @param string $fieldSlug
+     * @param  string $fieldSlug
      * @return array
      * @throws \Exception
      */
-    public function getFieldRelations(string $fieldSlug){
+    public function getFieldRelations(string $fieldSlug)
+    {
         $postType = PostType::where("slug", $this->getTable())->first();
-        if($postType){
+        if($postType) {
             // get the specific field
             $field = $postType->field($fieldSlug);
-            if($field->type->inputType == "db"){
+            if($field->type->inputType == "db") {
                 // get table of the field (table for relation)
                 $table = $field->dbTable->name;
                 $belongsTo = $field->dbTable->belongsTo;
 
                 // get the model and the primary key
-                if($belongsTo == "PostType"){
+                if($belongsTo == "PostType") {
                     $id = "postID";
                     $obj = new Post();
                     $obj->setTable($table);
-                }elseif($belongsTo == "User"){
+                }elseif($belongsTo == "User") {
                     $id = "userID";
                     $obj = new User();
                 }
@@ -918,8 +954,8 @@ abstract class PostModel extends Model{
                 $relationData = [];
 
                 // if multiple use whereIn if not multiple use where
-                if($field->isMultiple){
-                    if(gettype($this->$fieldSlug) == "string"){
+                if($field->isMultiple) {
+                    if(gettype($this->$fieldSlug) == "string") {
                         $ids = json_decode($this->$fieldSlug);
                     }else{
                         $ids = $this->$fieldSlug;
@@ -937,7 +973,8 @@ abstract class PostModel extends Model{
     /**
      * Destruct model instance
      */
-    public function __destruct(){
+    public function __destruct()
+    {
         Event::fire('post:destruct', [$this]);
     }
 }

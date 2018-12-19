@@ -16,36 +16,40 @@ export const froalaMixin = {
             // make add image command for each editor on the app
             $.FroalaEditor.DefineIconTemplate('file-image-o', '<i class="fa fa-[NAME]"></i>'); // define the media icon
             $.FroalaEditor.DefineIcon('addImage', { NAME: 'file-image-o'}); // add media icon
-            $.FroalaEditor.RegisterCommand('addImage', { // create add media button
-                title: 'Add image',
-                focus: true,
-                undo: true,
-                icon: 'addImage',
-                refreshAfterCallback: false,
-                // open media when this button is clicked
-                callback: function (e) {
-                    this.selection.save()
-                    let id = $(this.el.parentNode).parents(2).find('textarea').attr('id')
+            $.FroalaEditor.RegisterCommand(
+                'addImage', { // create add media button
+                    title: 'Add image',
+                    focus: true,
+                    undo: true,
+                    icon: 'addImage',
+                    refreshAfterCallback: false,
+                    // open media when this button is clicked
+                    callback: function (e) {
+                        this.selection.save()
+                        let id = $(this.el.parentNode).parents(2).find('textarea').attr('id')
 
-                    global.$store.commit('setOpenMediaOptions', { format : 'image', inputName: id, langSlug: '',  froalaInstance:this });
-                    global.$store.commit('setIsMediaOpen', true);
+                        global.$store.commit('setOpenMediaOptions', { format : 'image', inputName: id, langSlug: '',  froalaInstance:this });
+                        global.$store.commit('setIsMediaOpen', true);
+                    }
                 }
-            });
+            );
 
             // Define a button.
-            $.FroalaEditor.RegisterQuickInsertButton('addImage', {
-                icon: 'addImage',
-                title: 'Add image',
-                undo: true,
-                // Callback for the button.
-                callback: function (e) {
-                    this.selection.save()
-                    let id = $(this.el.parentNode).parents(2).find('textarea').attr('id')
+            $.FroalaEditor.RegisterQuickInsertButton(
+                'addImage', {
+                    icon: 'addImage',
+                    title: 'Add image',
+                    undo: true,
+                    // Callback for the button.
+                    callback: function (e) {
+                        this.selection.save()
+                        let id = $(this.el.parentNode).parents(2).find('textarea').attr('id')
 
-                    global.$store.commit('setOpenMediaOptions', { format : 'image', inputName: id, langSlug: '',  froalaInstance:this });
-                    global.$store.commit('setIsMediaOpen', true);
+                        global.$store.commit('setOpenMediaOptions', { format : 'image', inputName: id, langSlug: '',  froalaInstance:this });
+                        global.$store.commit('setIsMediaOpen', true);
+                    }
                 }
-            });
+            );
         },
 
         // Add video commands for the froala editor (Custom buttons of editors button panel)
@@ -55,50 +59,57 @@ export const froalaMixin = {
             // make add image command for each editor on the app
             $.FroalaEditor.DefineIconTemplate('file-video-o', '<i class="fa fa-[NAME]"></i>'); // define the media icon
             $.FroalaEditor.DefineIcon('addVideo', { NAME: 'file-video-o'}); // add media icon
-            $.FroalaEditor.RegisterCommand('addVideo', { // create add media button
-                title: 'Add video',
-                focus: false,
-                undo: true,
-                icon: 'addVideo',
-                refreshAfterCallback: false,
-                // open media when this button is clicked
-                callback: function (e) {
-                    this.selection.save()
-                    let id = $(this.el.parentNode).parents(2).find('textarea').attr('id')
+            $.FroalaEditor.RegisterCommand(
+                'addVideo', { // create add media button
+                    title: 'Add video',
+                    focus: false,
+                    undo: true,
+                    icon: 'addVideo',
+                    refreshAfterCallback: false,
+                    // open media when this button is clicked
+                    callback: function (e) {
+                        this.selection.save()
+                        let id = $(this.el.parentNode).parents(2).find('textarea').attr('id')
 
-                    global.$store.commit('setOpenMediaOptions', { format : 'video', inputName: id, langSlug: '',  this:froalaInstance });
-                    global.$store.commit('setIsMediaOpen', true);
-                },
-            });
+                        global.$store.commit('setOpenMediaOptions', { format : 'video', inputName: id, langSlug: '',  this:froalaInstance });
+                        global.$store.commit('setIsMediaOpen', true);
+                    },
+                }
+            );
 
             // Define a button.
-            $.FroalaEditor.RegisterQuickInsertButton('addVideo', {
-                icon: 'addVideo',
-                title: 'Add video',
-                // Save changes to undo stack.
-                undo: true,
-                // Callback for the button.
-                callback: function (e) {
-                    this.selection.save()
-                    let id = $(this.el.parentNode).parents(2).find('textarea').attr('id')
+            $.FroalaEditor.RegisterQuickInsertButton(
+                'addVideo', {
+                    icon: 'addVideo',
+                    title: 'Add video',
+                    // Save changes to undo stack.
+                    undo: true,
+                    // Callback for the button.
+                    callback: function (e) {
+                        this.selection.save()
+                        let id = $(this.el.parentNode).parents(2).find('textarea').attr('id')
 
-                    global.$store.commit('setOpenMediaOptions', { format : 'video', inputName: id, langSlug: '',  froalaInstance:this });
-                    global.$store.commit('setIsMediaOpen', true);
+                        global.$store.commit('setOpenMediaOptions', { format : 'video', inputName: id, langSlug: '',  froalaInstance:this });
+                        global.$store.commit('setIsMediaOpen', true);
+                    }
                 }
-            });
+            );
         },
 
         // insert embed plugin
         froalaEmbedPlugin(){
             // Define popup template.
-            $.extend($.FroalaEditor.POPUP_TEMPLATES, {
-                "embedPlugin.popup": '[_CUSTOM_LAYER_][_BUTTONS_]'
-            });
+            $.extend(
+                $.FroalaEditor.POPUP_TEMPLATES, {
+                    "embedPlugin.popup": '[_CUSTOM_LAYER_][_BUTTONS_]'
+                }
+            );
 
             // The custom popup is defined inside a plugin (new or existing).
             $.FroalaEditor.PLUGINS.embedPlugin = function (editor) {
                 // Create custom popup.
-                function initPopup () {
+                function initPopup()
+                {
                     // Popup buttons.
                     var popup_buttons = '';
 
@@ -120,14 +131,16 @@ export const froalaMixin = {
                 }
 
                 // Show the popup
-                function showPopup () {
+                function showPopup()
+                {
                     // Get the popup object defined above.
                     var $popup = editor.popups.get('embedPlugin.popup');
 
                     // If popup doesn't exist then create it.
                     // To improve performance it is best to create the popup when it is first needed
                     // and not when the editor is initialized.
-                    if (!$popup) $popup = initPopup();
+                    if (!$popup) { $popup = initPopup();
+                    }
                     // Set the editor toolbar as the popup's container.
                     editor.popups.setContainer('embedPlugin.popup', editor.$tb);
                     // This custom popup is opened by pressing a button from the editor's toolbar.
@@ -144,7 +157,8 @@ export const froalaMixin = {
                 }
 
                 // Hide the custom popup.
-                function hidePopup () {
+                function hidePopup()
+                {
                     editor.popups.hide('embedPlugin.popup');
                 }
 
@@ -157,75 +171,84 @@ export const froalaMixin = {
 
             // Define an icon and command for the button that opens the custom popup.
             $.FroalaEditor.DefineIcon('buttonIcon', { NAME: 'star'});
-            $.FroalaEditor.RegisterCommand('embedBtn', {
-                title: 'Embed code',
-                icon: 'buttonIcon',
-                undo: false,
-                focus: false,
-                plugin: 'embedPlugin',
-                callback: function () {
-                    //this.selection.save();
-                    this.embedPlugin.showPopup();
+            $.FroalaEditor.RegisterCommand(
+                'embedBtn', {
+                    title: 'Embed code',
+                    icon: 'buttonIcon',
+                    undo: false,
+                    focus: false,
+                    plugin: 'embedPlugin',
+                    callback: function () {
+                        //this.selection.save();
+                        this.embedPlugin.showPopup();
+                    }
                 }
-            });
+            );
 
             // Define custom popup 1.
             $.FroalaEditor.DefineIcon('insertEmbedCode', { NAME: 'Insert', template: 'text' });
-            $.FroalaEditor.RegisterCommand('insertEmbedCode', {
-                title: 'Insert Embed Code',
-                undo: true,
-                focus: true,
-                refreshAfterCallback: true,
-                callback: function () {
+            $.FroalaEditor.RegisterCommand(
+                'insertEmbedCode', {
+                    title: 'Insert Embed Code',
+                    undo: true,
+                    focus: true,
+                    refreshAfterCallback: true,
+                    callback: function () {
 
-                    let embedCode = this.popups.get('embedPlugin.popup').find('.embed-code-input').val();
-                    this.popups.get('embedPlugin.popup').find('.embed-code-input').val("");
-                    let id = $(".embed-container").length + (Math.floor(Math.random() * (999 - 1)) + 1);
+                        let embedCode = this.popups.get('embedPlugin.popup').find('.embed-code-input').val();
+                        this.popups.get('embedPlugin.popup').find('.embed-code-input').val("");
+                        let id = $(".embed-container").length + (Math.floor(Math.random() * (999 - 1)) + 1);
 
-                    this.html.insert(
-                        "<div class='embed-container' contenteditable='false'>" +
-                        "<div class='embed-wrapper' id='embed-wrapper-"+id+"'></div>" +
-                        embedCode +
-                        "</div><p></p>\n"
-                    );
+                        this.html.insert(
+                            "<div class='embed-container' contenteditable='false'>" +
+                            "<div class='embed-wrapper' id='embed-wrapper-"+id+"'></div>" +
+                            embedCode +
+                            "</div><p></p>\n"
+                        );
 
-                    // set html
-                    //this.html.set(this.html.get());
-                    this.undo.saveStep();
+                        // set html
+                        //this.html.set(this.html.get());
+                        this.undo.saveStep();
 
-                    this.selection.setAtEnd(0);
-                    this.selection.restore();
+                        this.selection.setAtEnd(0);
+                        this.selection.restore();
 
-                    this.embedPlugin.hidePopup();
+                        this.embedPlugin.hidePopup();
+                    }
                 }
-            });
+            );
         },
 
         // insert plugin for removing embed code container
         froalaRemoveEmbed(){
             // Define custom popup 1.
             $.FroalaEditor.DefineIcon('deleteEmbedCode', { NAME: 'Delete', template: 'text' });
-            $.FroalaEditor.RegisterCommand('deleteEmbedCode', {
-                title: 'Delete Embed Code',
-                undo: false,
-                focus: false,
-                refreshAfterCallback: true,
-                callback: function () {
-                    $(".embed-wrapper.selected").parents(".embed-container").remove();
-                    this.removeEmbedPlugin.hidePopup();
+            $.FroalaEditor.RegisterCommand(
+                'deleteEmbedCode', {
+                    title: 'Delete Embed Code',
+                    undo: false,
+                    focus: false,
+                    refreshAfterCallback: true,
+                    callback: function () {
+                        $(".embed-wrapper.selected").parents(".embed-container").remove();
+                        this.removeEmbedPlugin.hidePopup();
+                    }
                 }
-            });
+            );
 
             // Define popup template.
-            $.extend($.FroalaEditor.POPUP_TEMPLATES, {
-                "removeEmbedPlugin.popup": '[_BUTTONS_]'
-            });
+            $.extend(
+                $.FroalaEditor.POPUP_TEMPLATES, {
+                    "removeEmbedPlugin.popup": '[_BUTTONS_]'
+                }
+            );
 
 
             // The custom popup is defined inside a plugin (new or existing).
             $.FroalaEditor.PLUGINS.removeEmbedPlugin = function (editor) {
                 // Create custom popup.
-                function initPopup () {
+                function initPopup()
+                {
                     // Popup buttons.
                     var popup_buttons = '';
 
@@ -246,14 +269,16 @@ export const froalaMixin = {
                 }
 
                 // Show the popup
-                function showPopup (left, top) {
+                function showPopup(left, top)
+                {
                     // Get the popup object defined above.
                     var $popup = editor.popups.get('removeEmbedPlugin.popup');
 
                     // If popup doesn't exist then create it.
                     // To improve performance it is best to create the popup when it is first needed
                     // and not when the editor is initialized.
-                    if (!$popup) $popup = initPopup();
+                    if (!$popup) { $popup = initPopup();
+                    }
 
                     // Set the editor toolbar as the popup's container.
                     editor.popups.setContainer('removeEmbedPlugin.popup', editor.$tb);
@@ -272,7 +297,8 @@ export const froalaMixin = {
                 }
 
                 // Hide the custom popup.
-                function hidePopup () {
+                function hidePopup()
+                {
                     editor.popups.hide('removeEmbedPlugin.popup');
                 }
 
@@ -290,86 +316,100 @@ export const froalaMixin = {
          */
         froalaPrepare(){
             // remove selected class on the embed wrapper when elsewhere is clicked
-            $(document).click(function(e){
-                if(e.target.className !== "embed-wrapper" && e.target.className !== "embed-wrapper selected"){
-                    $(".embed-wrapper").removeClass("selected");
-                }
-            });
-
-            var initializedEditorsIDs = [];
-            var interval = setInterval(function(){
-                var editorsCount = $(".froala").length;
-                if( editorsCount > 0){
-                    editorsCount++;
-
-                    $('.froala').each(function(e){
-                        var id = $(this).attr("id");
-                        var editor = $('#'+id);
-
-                        if(initializedEditorsIDs.indexOf(id) == -1){
-
-                            // click even to select embed wraper and show popup delete button for embed code
-                            editor.on('froalaEditor.click', function (e, editor, clickEvent) {
-                                var clickedClass = clickEvent.target.className;
-                                let id = clickEvent.target.id;
-                                if(clickedClass == 'embed-wrapper'){
-                                    $(".embed-wrapper").removeClass("selected");
-                                    $("#"+id).addClass("selected");
-                                    editor.removeEmbedPlugin.showPopup(clickEvent.pageX, clickEvent.pageY);
-                                }else{
-                                    $(".embed-wrapper").removeClass("selected");
-                                }
-                            });
-
-                            // create new line paragraph when enter is clicked in figcaption etc
-                            editor.froalaEditor('events.on', 'keydown', (e) => {
-                                if(e.keyCode == 13) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    e.stopImmediatePropagation();
-
-                                    var newLine = false;
-                                    var blocks = $(this).froalaEditor('selection.blocks');
-
-                                    if(blocks[0] !== undefined && blocks[0].nodeName == "FIGURE"){
-                                        var afterElement = $(this).froalaEditor('selection.get').anchorNode;
-                                        newLine = true;
-                                    }else if(blocks[0] !== undefined && blocks[0].nodeName == "FIGCAPTION"){
-                                        if(blocks[0].innerText == "\n" || blocks[0].innerText == "<br>"){
-                                            var afterElement = $(this).froalaEditor('selection.get').anchorNode.parentNode;
-                                        }else{
-                                            var afterElement = $(this).froalaEditor('selection.get').anchorNode.parentElement.parentNode;
-                                        }
-                                        newLine = true;
-                                    }
-                                    //should we create an empty paragraph at dhe end of the element
-                                    if(newLine) {
-                                        $(this).froalaEditor('selection.setAfter', afterElement);
-                                        $(this).froalaEditor('selection.restore');
-                                        $(this).froalaEditor('html.insert', '<p></p>');
-                                        return false;
-                                    }
-                                }
-                            }, true);
-
-                            // remove figure when the images is being deleted
-                            $('.froala').each(function(e){
-                                var id = $(this).attr("id");
-                                $('#'+id).on('froalaEditor.image.beforeRemove', function (e, editor, $img) {
-                                    $img.closest("figure").remove();
-                                });
-                            });
-                        }
-
-                        initializedEditorsIDs.push(id);
-
-                    });
-
-                    if(editorsCount === initializedEditorsIDs.length){
-                        clearInterval(interval);
+            $(document).click(
+                function (e) {
+                    if(e.target.className !== "embed-wrapper" && e.target.className !== "embed-wrapper selected") {
+                        $(".embed-wrapper").removeClass("selected");
                     }
                 }
-            }, 1000);
+            );
+
+            var initializedEditorsIDs = [];
+            var interval = setInterval(
+                function () {
+                    var editorsCount = $(".froala").length;
+                    if(editorsCount > 0) {
+                        editorsCount++;
+
+                        $('.froala').each(
+                            function (e) {
+                                var id = $(this).attr("id");
+                                var editor = $('#'+id);
+
+                                if(initializedEditorsIDs.indexOf(id) == -1) {
+
+                                    // click even to select embed wraper and show popup delete button for embed code
+                                    editor.on(
+                                        'froalaEditor.click', function (e, editor, clickEvent) {
+                                            var clickedClass = clickEvent.target.className;
+                                            let id = clickEvent.target.id;
+                                            if(clickedClass == 'embed-wrapper') {
+                                                $(".embed-wrapper").removeClass("selected");
+                                                $("#"+id).addClass("selected");
+                                                editor.removeEmbedPlugin.showPopup(clickEvent.pageX, clickEvent.pageY);
+                                            }else{
+                                                $(".embed-wrapper").removeClass("selected");
+                                            }
+                                        }
+                                    );
+
+                                    // create new line paragraph when enter is clicked in figcaption etc
+                                    editor.froalaEditor(
+                                        'events.on', 'keydown', (e) => {
+                                            if(e.keyCode == 13) {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                e.stopImmediatePropagation();
+
+                                                var newLine = false;
+                                                var blocks = $(this).froalaEditor('selection.blocks');
+
+                                                if(blocks[0] !== undefined && blocks[0].nodeName == "FIGURE") {
+                                                    var afterElement = $(this).froalaEditor('selection.get').anchorNode;
+                                                    newLine = true;
+                                                    }else if(blocks[0] !== undefined && blocks[0].nodeName == "FIGCAPTION") {
+                                                    if(blocks[0].innerText == "\n" || blocks[0].innerText == "<br>") {
+                                                        var afterElement = $(this).froalaEditor('selection.get').anchorNode.parentNode;
+                                                    }else{
+                                                        var afterElement = $(this).froalaEditor('selection.get').anchorNode.parentElement.parentNode;
+                                                    }
+                                                    newLine = true;
+                                                    }
+                                                //should we create an empty paragraph at dhe end of the element
+                                            if(newLine) {
+                                                $(this).froalaEditor('selection.setAfter', afterElement);
+                                                $(this).froalaEditor('selection.restore');
+                                                $(this).froalaEditor('html.insert', '<p></p>');
+                                                return false;
+                                            }
+                                            }
+                                        }, true
+                                    );
+
+                                    // remove figure when the images is being deleted
+                                    $('.froala').each(
+                                        function (e) {
+                                            var id = $(this).attr("id");
+                                            $('#'+id).on(
+                                                'froalaEditor.image.beforeRemove', function (e, editor, $img) {
+                                                    $img.closest("figure").remove();
+                                                }
+                                            );
+                                        }
+                                    );
+                                }
+
+                                initializedEditorsIDs.push(id);
+
+                            }
+                        );
+
+                        if(editorsCount === initializedEditorsIDs.length) {
+                            clearInterval(interval);
+                        }
+                    }
+                }, 1000
+            );
         }
     }
 };

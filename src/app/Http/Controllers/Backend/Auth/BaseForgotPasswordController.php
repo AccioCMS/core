@@ -7,7 +7,8 @@ use Illuminate\Routing\Controller;
 use Illuminate\Foundation\Auth\SendsPasswordResetEmails;
 use Illuminate\Support\Facades\Auth;
 
-class BaseForgotPasswordController extends MainController {
+class BaseForgotPasswordController extends MainController
+{
     /*
     |--------------------------------------------------------------------------
     | Password Reset Controller
@@ -26,7 +27,8 @@ class BaseForgotPasswordController extends MainController {
      *
      * @return void
      */
-    public function __construct(){
+    public function __construct()
+    {
         $this->middleware('guest');
         parent::__construct();
     }
@@ -37,7 +39,8 @@ class BaseForgotPasswordController extends MainController {
      *
      * @return mixed
      */
-    protected function guard(){
+    protected function guard()
+    {
         return Auth::guard('admin');
     }
 

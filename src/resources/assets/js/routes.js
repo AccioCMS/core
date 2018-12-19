@@ -60,13 +60,13 @@ export var routes = [
         { path: 'details/:id', component: UsersDetails, name: 'user-details', meta: { module: 'user' } },
         { path: 'reset-password/:id', component: UsersResetPassword, name: 'user-reset', meta: { module: 'user' } },
         { path: 'search/:term', component: UsersAll, name: 'user-search', meta: { module: 'user' } },
-    ]},
+        ]},
 
     { path: globalProjectDirectory+'/:adminPrefix/:lang/language', component: Language, children: [
         { path: 'list', component: LanguageAll, name: 'language-list', meta: { module: 'language' } },
         { path: 'create', component: LanguageCreate, name: 'language-create', meta: { module: 'language' } },
         { path: 'update/:id', component: LanguageUpdate, name: 'language-update', meta: { module: 'language' } },
-    ]},
+        ]},
 
     { path: globalProjectDirectory+'/:adminPrefix/:lang/post-type', component: PostType, children: [
         { path: 'list', component: PostTypeAll, name: 'post-type-list', meta: { module: 'post-type' } },
@@ -80,36 +80,36 @@ export var routes = [
         { path: 'tags/:id/search/:term', component: TagList, name: 'tag-search', meta: { module: 'posts' } },
         { path: 'tagcreate/:id', component: TagCreate, name: 'tag-create', meta: { module: 'posts' } },
         { path: 'tagupdate/:id', component: TagUpdate, name: 'tag-update', meta: { module: 'posts' } },
-    ]},
+        ]},
 
     { path: globalProjectDirectory+'/:adminPrefix/:lang/media/:view', component: Media, meta: { module: 'media' } },
 
     { path: globalProjectDirectory+'/:adminPrefix/:lang/permissions', component: Permissions, children: [
         { path: 'list', component: PermissionsAll, name: 'permission-list', meta: { module: 'settings' } },
         { path: 'edit/:id', component: PermissionsEdit, name: 'permission-edit', meta: { module: 'settings' } },
-    ]},
+        ]},
 
     { path: globalProjectDirectory+'/:adminPrefix/:lang/menu', component: Menu, children: [
         { path: 'list/:id', component: MenuAll, name: 'menu-list', meta: { module: 'menu' } } ,
-    ]},
+        ]},
 
     { path: globalProjectDirectory+'/:adminPrefix/:lang/posts', component: Post, children: [
         { path: ':post_type/list', component: PostAll, name: 'post-list', meta: { module: 'posts' } },
         { path: 'search/:post_type/:term', component: PostAll, name: 'post-search', meta: { module: 'posts' } },
         { path: ':post_type/create', component: PostCreate, name: 'post-create', meta: { module: 'posts' } },
         { path: ':post_type/update/:id', component: PostUpdate, name: 'post-update', meta: { module: 'posts' } },
-    ]},
+        ]},
 
     { path: globalProjectDirectory+'/:adminPrefix/:lang/custom-fields', component: CustomFields, children: [
         { path: 'list', component: CustomFieldsAll, name: 'custom-fields-list', meta: { module: 'custom-fields' } },
         { path: 'create', component: CustomFieldsEdit, name: 'custom-fields-create', meta: { module: 'custom-fields' } },
         { path: 'update/:id', component: CustomFieldsEdit, name: 'custom-fields-update', meta: { module: 'custom-fields' } },
-    ]},
+        ]},
 
     { path: globalProjectDirectory+'/:adminPrefix/:lang/settings', component: ProjectSettings, children: [
         { path: 'general', component: ProjectSettingsGeneral, name: 'project-settings-general', meta: { module: 'project-settings' } },
         { path: 'permalinks', component: ProjectSettingsPermalinks, name: 'project-settings-permalinks', meta: { module: 'project-settings' } },
         { path: 'notifications', component: ProjectSettingsNotifications, name: 'project-settings-notifications', meta: { module: 'project-settings' } },
         { path: 'analytics', component: ProjectSettingsAnalytics, name: 'project-settings-analytics', meta: { module: 'project-settings' } },
-    ]},
-];
+        ]},
+    ];

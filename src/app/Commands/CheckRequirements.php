@@ -44,12 +44,12 @@ class CheckRequirements extends Command
     /**
      * Execute the console command.
      *
-     * @param Requirements $requirements
+     * @param  Requirements $requirements
      * @return mixed
      */
     public function handle(Requirements $requirements)
     {
-        if($requirements->check($this)){
+        if($requirements->check($this)) {
             $this->block(' -- You are all set :) -- ', 'fg=white;bg=green;options=bold');
             $this->line('');
         }

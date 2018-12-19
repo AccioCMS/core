@@ -32,9 +32,11 @@ class MetaServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('Pagination', function () {
-            return new Meta();
-        });
+        $this->app->singleton(
+            'Pagination', function () {
+                return new Meta();
+            }
+        );
     }
 
     /**

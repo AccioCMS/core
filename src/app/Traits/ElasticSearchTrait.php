@@ -4,7 +4,8 @@ namespace Accio\App\Traits;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Input;
 
-trait ElasticSearchTrait{
+trait ElasticSearchTrait
+{
 
     protected $elasticQuery = [];
 
@@ -13,18 +14,20 @@ trait ElasticSearchTrait{
      *
      * @return array
      */
-    public function getMapping() : array{
+    public function getMapping() : array
+    {
         return $this->elastic->indices()->getMapping();
     }
 
     /**
      * Get all data from elastic index.
      *
-     * @param string $sortBy
-     * @param string $sortType
+     * @param  string $sortBy
+     * @param  string $sortType
      * @return mixed
      */
-    public function getAllES(string $sortBy = "", string $sortType = "ASC"){
+    public function getAllES(string $sortBy = "", string $sortType = "ASC")
+    {
         $data = $this->getESItems(10000, 0, $sortBy, $sortType);
         return $data['items'];
     }
@@ -32,14 +35,15 @@ trait ElasticSearchTrait{
     /**
      * Get data as pagination from elastic index.
      *
-     * @param int $size
-     * @param string $sortBy
-     * @param string $sortType
-     * @param int|null $page
+     * @param  int      $size
+     * @param  string   $sortBy
+     * @param  string   $sortType
+     * @param  int|null $page
      * @return LengthAwarePaginator
      */
-    public function paginateES(int $size = 20, string $sortBy = "", string $sortType = "ASC", int $page = null) : LengthAwarePaginator {
-        if(!$page){
+    public function paginateES(int $size = 20, string $sortBy = "", string $sortType = "ASC", int $page = null) : LengthAwarePaginator
+    {
+        if(!$page) {
             $page = (Input::get("page") ? Input::get("page") : 1);
         }
 
@@ -52,18 +56,19 @@ trait ElasticSearchTrait{
     /**
      * Used to get data and return them as Elequent.
      *
-     * @param $size
-     * @param $from
-     * @param string $sortBy
-     * @param string $sortType
+     * @param  $size
+     * @param  $from
+     * @param  string $sortBy
+     * @param  string $sortType
      * @return array
      */
-    private function getESItems($size, $from, string $sortBy = "", string $sortType = "ASC"){
+    private function getESItems($size, $from, string $sortBy = "", string $sortType = "ASC")
+    {
         $query = [
             "match_all" => (object) []
         ];
 
-        if($this->elasticQuery){
+        if($this->elasticQuery) {
             $query = [
                 "bool" => [
                     "must" => $this->elasticQuery
@@ -81,7 +86,7 @@ trait ElasticSearchTrait{
             ]
         ];
 
-        if($sortBy){
+        if($sortBy) {
             $params['body']['sort'] = [
                 [
                     $sortBy => [ "order" => strtoupper($sortType) ]
@@ -107,12 +112,13 @@ trait ElasticSearchTrait{
     /**
      * Multi match, match query in multiple fields
      *
-     * @param string $query
-     * @param array $fields
-     * @param string $fuzziness
+     * @param  string $query
+     * @param  array  $fields
+     * @param  string $fuzziness
      * @return $this
      */
-    public function whereMultiMatch(string $query, array $fields, $fuzziness = "auto") {
+    public function whereMultiMatch(string $query, array $fields, $fuzziness = "auto")
+    {
         $param = [
             "multi_match" => [
                 "query" => $query,
@@ -127,13 +133,14 @@ trait ElasticSearchTrait{
     /**
      * Where query matches field
      *
-     * @param string $field
-     * @param string $query
-     * @param string $operator
-     * @param int $fuzziness
+     * @param  string $field
+     * @param  string $query
+     * @param  string $operator
+     * @param  int    $fuzziness
      * @return $this
      */
-    public function whereMatch(string $field, string $query, $operator = "or", $fuzziness = 0){
+    public function whereMatch(string $field, string $query, $operator = "or", $fuzziness = 0)
+    {
         $param = [
             "match" => [
                 $field => [
@@ -151,11 +158,12 @@ trait ElasticSearchTrait{
     /**
      * Where field uses multiple terms
      *
-     * @param string $field
-     * @param array $query
+     * @param  string $field
+     * @param  array  $query
      * @return $this
      */
-    public function whereTerms(string $field, array $query){
+    public function whereTerms(string $field, array $query)
+    {
         $param = [
             "terms" => [
                 $field => $query
@@ -169,11 +177,12 @@ trait ElasticSearchTrait{
     /**
      * Where field uses single term
      *
-     * @param string $field
-     * @param $term
+     * @param  string $field
+     * @param  $term
      * @return $this
      */
-    public function whereTerm(string $field, $term){
+    public function whereTerm(string $field, $term)
+    {
         $param = [
             "term" => [
                 $field => $term
@@ -187,27 +196,28 @@ trait ElasticSearchTrait{
     /**
      * Applies range search in query
      *
-     * @param string $field
-     * @param null $gt
-     * @param null $lt
-     * @param null $format
-     * @param string $gtConfig
-     * @param string $ltConfig
+     * @param  string $field
+     * @param  null   $gt
+     * @param  null   $lt
+     * @param  null   $format
+     * @param  string $gtConfig
+     * @param  string $ltConfig
      * @return $this
      */
-    public function whereRange(string $field, $gt = null, $lt = null, $format = null, $gtConfig = "gte", $ltConfig = "lte"){
-        if($gt && $lt){
+    public function whereRange(string $field, $gt = null, $lt = null, $format = null, $gtConfig = "gte", $ltConfig = "lte")
+    {
+        if($gt && $lt) {
             $field = [];
 
-            if($gt){
+            if($gt) {
                 $field[$gtConfig] = $gt;
             }
 
-            if($lt){
+            if($lt) {
                 $field[$ltConfig] = $lt;
             }
 
-            if($format){
+            if($format) {
                 $field["format"] = $format;
             }
 
@@ -225,7 +235,8 @@ trait ElasticSearchTrait{
 
 
 
-    public function addItemOnES(array $item, int $id)  : bool{
+    public function addItemOnES(array $item, int $id)  : bool
+    {
         $this->elasticFieldsConfig = array_merge($this->elasticFieldsConfig, $this->casts);
 
         $params = [
@@ -238,29 +249,34 @@ trait ElasticSearchTrait{
         $this->elastic->index($params);
     }
 
-    public function addItemsOnElastic(string $index, array $items)  : bool{
+    public function addItemsOnElastic(string $index, array $items)  : bool
+    {
 
     }
 
-    public function hasElasticConnection() : bool{
+    public function hasElasticConnection() : bool
+    {
 
     }
 
-    public function deleteES($id){
+    public function deleteES($id)
+    {
 
     }
 
-    public function deleteWithIDES($id){
+    public function deleteWithIDES($id)
+    {
 
     }
 
     /**
      * Used to change data to the selected elequent
      *
-     * @param array $attributes
+     * @param  array $attributes
      * @return ElasticSearchTrait
      */
-    private function toElequent(array $attributes){
+    private function toElequent(array $attributes)
+    {
         $obj = new static();
         $casts = $obj->casts;
         $obj->casts = [];

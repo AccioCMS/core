@@ -48,12 +48,14 @@ class ActivateNewReleaseBefore extends Command
     {
         $commands = config('deploy.commands.activate_new_release.before');
         foreach($commands as $command){
-            $output = $this->scriptParser->parseString($command, [
-              'base_path' => base_path(),
-              'env' => $this->option('env')
-            ])->run($this);
+            $output = $this->scriptParser->parseString(
+                $command, [
+                'base_path' => base_path(),
+                'env' => $this->option('env')
+                ]
+            )->run($this);
 
-            if(!$output){
+            if(!$output) {
                 return false;
             }
         }

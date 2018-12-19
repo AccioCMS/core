@@ -53,8 +53,9 @@ class CreateSymlinks extends Command
      *
      * @return $this
      */
-    private function doSymLinks(){
-        if(config('deploy.symlinks')){
+    private function doSymLinks()
+    {
+        if(config('deploy.symlinks')) {
 
             $this->comment("\n\nCreating symlinks");
             foreach(config('deploy.symlinks') as $target => $link){

@@ -46,7 +46,8 @@ class MainController extends Controller
      *
      * @return \Illuminate\Contracts\Validation\Validator
      */
-    protected function validateQuery(){
+    protected function validateQuery()
+    {
         return Validator::make(request()->all(), $this->defaultQueryParameters);
     }
 
@@ -55,10 +56,11 @@ class MainController extends Controller
      *
      * @return $this
      */
-    protected function queryValues(){
+    protected function queryValues()
+    {
         foreach($this->defaultQueryParameters as $parameter => $validator){
             $value = request($parameter);
-            if($value){
+            if($value) {
                 $this->{$parameter} = $value;
             }
         }
@@ -69,18 +71,19 @@ class MainController extends Controller
     /**
      * Setup error response.
      *
-     * @param mixed $errors
-     * @param string $message
+     * @param  mixed  $errors
+     * @param  string $message
      * @return \Illuminate\Http\JsonResponse
      */
-    protected function error($errors = null, string $message = ''){
+    protected function error($errors = null, string $message = '')
+    {
 
-        if(!$errors){
+        if(!$errors) {
             $errors = ['Your request has not been validated by the system. Please check your request URL and parameters!'];
         }
 
         // make it array
-        else if(!is_array($errors)){
+        else if(!is_array($errors)) {
             $errors = [$errors];
         }
 

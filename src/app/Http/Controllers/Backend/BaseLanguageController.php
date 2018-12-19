@@ -15,8 +15,10 @@ use Response;
 
 use Illuminate\Http\Request;
 
-class BaseLanguageController extends MainController{
-    public function __construct(){
+class BaseLanguageController extends MainController
+{
+    public function __construct()
+    {
         parent::__construct();
     }
 
@@ -24,12 +26,13 @@ class BaseLanguageController extends MainController{
      * Returns language list from cache.
      * Overwrites getAll method form MainController.
      *
-     * @param string $lang
+     * @param  string $lang
      * @return array|\Illuminate\Contracts\Pagination\Paginator
      * @throws \Exception
      */
-    public function getAll($lang = ""){
-        if(!User::hasAccess('Language','read')){
+    public function getAll($lang = "")
+    {
+        if(!User::hasAccess('Language', 'read')) {
             return $this->noPermission();
         }
         return ['data' => Language::all()];
@@ -40,23 +43,27 @@ class BaseLanguageController extends MainController{
      *
      * @param $slug
      */
-    private function deleteDirectory($slug){
-        if(is_dir(accioPath("resources/lang/".$slug)))
+    private function deleteDirectory($slug)
+    {
+        if(is_dir(accioPath("resources/lang/".$slug))) {
             File::deleteDirectory(accioPath("resources/lang/".$slug));
-        if(is_dir(base_path("resources/lang/".$slug)))
+        }
+        if(is_dir(base_path("resources/lang/".$slug))) {
             File::deleteDirectory(base_path("resources/lang/".$slug));
+        }
     }
 
     /**
      * Delete language.
      * Removes language directory used for labels.
      *
-     * @param string $lang
-     * @param int $id
+     * @param  string $lang
+     * @param  int    $id
      * @return array
      */
-    public function delete($lang, $id){
-        if(!User::hasAccess('Language','delete')){
+    public function delete($lang, $id)
+    {
+        if(!User::hasAccess('Language', 'delete')) {
             return $this->noPermission();
         }
         $language = Language::find($id);
@@ -66,7 +73,7 @@ class BaseLanguageController extends MainController{
                 return $this->response("You can't delete the default language!", 403);
             }
 
-            if($language->delete()){
+            if($language->delete()) {
                 // create virutal column for slug of every post type in the created language
                 $allPostTypes = PostType::all();
                 foreach ($allPostTypes as $postType){
@@ -85,16 +92,18 @@ class BaseLanguageController extends MainController{
      * Bulk Delete languages.
      *
      * Delete many languages
+     *
      * @params array Language IDs
      * */
-    public function bulkDelete(Request $request){
-        if(!User::hasAccess('Language','delete')){
+    public function bulkDelete(Request $request)
+    {
+        if(!User::hasAccess('Language', 'delete')) {
             return $this->noPermission();
         }
 
         // Ensure a selection has taken place
         if (count($request->all()) <= 0) {
-            return $this->response( 'Please select some languages to be deleted', 500);
+            return $this->response('Please select some languages to be deleted', 500);
         }
 
         $allPostTypes = PostType::all();
@@ -104,11 +113,11 @@ class BaseLanguageController extends MainController{
             $language = Language::find($id);
 
             if ($language->isDefault) {
-                return $this->response( "You can't delete the default language!", 403);
+                return $this->response("You can't delete the default language!", 403);
             }
 
-            if(!$language->delete()){
-                return $this->response( 'The language '.$language->languageID.' was not deleted so the deleting process has stopped. Please try again later', 500);
+            if(!$language->delete()) {
+                return $this->response('The language '.$language->languageID.' was not deleted so the deleting process has stopped. Please try again later', 500);
             }else{
                 // create virutal column for slug of every post type in the created language
                 foreach ($allPostTypes as $postType){
@@ -118,19 +127,20 @@ class BaseLanguageController extends MainController{
                 $this->deleteDirectory($language->slug);
             }
         }
-        return $this->response( 'Languages are deleted');
+        return $this->response('Languages are deleted');
     }
 
     /**
      * Save (Create or Update) language in database.
      * If the language is set to be default, the previous one is updated and set to non-default.
      *
-     * @param Request $request all language data
+     * @param  Request $request all language data
      * @return array response
      * */
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         // check if user has permissions to access this link
-        if(!User::hasAccess('Language',(isset($request->id)) ? 'update' : 'create')){
+        if(!User::hasAccess('Language', (isset($request->id)) ? 'update' : 'create')) {
             return $this->noPermission();
         }
         // custom messages for validation
@@ -144,25 +154,28 @@ class BaseLanguageController extends MainController{
             'isVisible' => 'required',
             'slug' => 'required|max:500|unique:languages',
         ];
-        if(isset($request->id))
+        if(isset($request->id)) {
             unset($validatorValues['slug']);
-
-        // validation
-        $validator = Validator::make($request->all(), $validatorValues , $messages);
-        // if validation fails return json response
-        if ($validator->fails()) {
-            return $this->response( "Please check all required fields!", 400, null, false, false, true, $validator->errors());
         }
 
-        if($request->isDefault == true){
+        // validation
+        $validator = Validator::make($request->all(), $validatorValues, $messages);
+        // if validation fails return json response
+        if ($validator->fails()) {
+            return $this->response("Please check all required fields!", 400, null, false, false, true, $validator->errors());
+        }
+
+        if($request->isDefault == true) {
             // remove the current default language ( set it to non-default ) if this new one is the default
-            Language::where('isDefault',1)->update([
+            Language::where('isDefault', 1)->update(
+                [
                 'isDefault'    => 0,
-            ]);
+                ]
+            );
         }
 
         // createdByUserID, slug and nativeName don't need to be updated
-        if(isset($request->id)){
+        if(isset($request->id)) {
             $language = Language::findOrFail($request->id);
         }else{
             $language = new Language();
@@ -174,7 +187,7 @@ class BaseLanguageController extends MainController{
         $language->isDefault = $request->isDefault;
         $language->isVisible = $request->isVisible;
 
-        if($language->save()){
+        if($language->save()) {
             // create virutal column for slug of every post type in the created language
             $allPostTypes = PostType::all();
             foreach ($allPostTypes as $postType){
@@ -182,13 +195,14 @@ class BaseLanguageController extends MainController{
             }
 
             // create labels
-            if(!isset($request->id))
+            if(!isset($request->id)) {
                 $this->createNewLanguageLabels($language->slug);
+            }
 
             $redirectParams = parent::redirectParams($request->redirect, 'language', $language->languageID);
-            $result = $this->response( 'Language is stored', 200, $language->languageID, $redirectParams['view'], $redirectParams['redirectUrl']);
+            $result = $this->response('Language is stored', 200, $language->languageID, $redirectParams['view'], $redirectParams['redirectUrl']);
         }else{
-            $result = $this->response( 'Language could not be stored. Internal server error. Please try again later', 500);
+            $result = $this->response('Language could not be stored. Internal server error. Please try again later', 500);
         }
         return $result;
 
@@ -200,15 +214,16 @@ class BaseLanguageController extends MainController{
      *
      * @param string $slug
      */
-    private function createNewLanguageLabels(string $slug){
+    private function createNewLanguageLabels(string $slug)
+    {
         $defaultLangPathLibrary = accioPath("resources/lang/".Language::getDefault()->slug);
         $defaultLangPath = base_path("resources/lang/".Language::getDefault()->slug);
 
-        if(is_dir($defaultLangPathLibrary)){
+        if(is_dir($defaultLangPathLibrary)) {
             File::copyDirectory($defaultLangPathLibrary, accioPath("resources/lang/".$slug));
         }
 
-        if(is_dir($defaultLangPath)){
+        if(is_dir($defaultLangPath)) {
             File::copyDirectory($defaultLangPath, base_path("resources/lang/".$slug));
         }
     }
@@ -219,8 +234,9 @@ class BaseLanguageController extends MainController{
      * @return array with details for a specific language
      * @params language ID
      * */
-    public function detailsJSON($lang, $id){
-        if(!User::hasAccess('Language','read')){
+    public function detailsJSON($lang, $id)
+    {
+        if(!User::hasAccess('Language', 'read')) {
             return $this->noPermission();
         }
 

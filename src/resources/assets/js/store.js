@@ -108,11 +108,14 @@ export const store = new Vuex.Store({
          * @param languageSlug
          * @returns {Array}
          */
-        filterTranslatedValues(context, input, languageSlug){
+        filterTranslatedValues(context, data){
             let translatedData = []
             let response = []
             let li = 0
             let items = {}
+
+            let input = data.input;
+            let languageSlug = data.languageSlug;
 
             if(languageSlug == null){
                 languageSlug = context.getters.get_route.params.lang

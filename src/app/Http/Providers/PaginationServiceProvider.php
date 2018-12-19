@@ -31,9 +31,11 @@ class PaginationServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('Pagination', function () {
-            return new Pagination();
-        });
+        $this->app->singleton(
+            'Pagination', function () {
+                return new Pagination();
+            }
+        );
     }
 
     /**

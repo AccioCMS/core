@@ -4,7 +4,8 @@ namespace Accio\App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CustomFieldGroupModel extends Model{
+class CustomFieldGroupModel extends Model
+{
     /**
      * Fields that can be filled in CRUD.
      *
@@ -61,20 +62,22 @@ class CustomFieldGroupModel extends Model{
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fields(){
+    public function fields()
+    {
         return $this->hasMany('App\Models\CustomField', 'customFieldGroupID');
     }
 
     /**
      * Returns custom fields by group of a specific module/app.
      *
-     * @param string $module
-     * @param string $formType
-     * @param int $id
-     * @param string $postType
+     * @param  string $module
+     * @param  string $formType
+     * @param  int    $id
+     * @param  string $postType
      * @return array
      */
-    public static function findGroups($module, $formType, $id = 0, $postType = ''){
+    public static function findGroups($module, $formType, $id = 0, $postType = '')
+    {
         $customFieldGroups = self::with('fields')->get();
         $result = [];
 
@@ -87,9 +90,9 @@ class CustomFieldGroupModel extends Model{
                 // loop throw conditions of each group
                 foreach($conditionGroup as $condition){
                     // if wrong module
-                    if($condition['app']['app'] != $module){
-                        if($condition['app']['app'] == 'post'){
-                            if($postType && $condition['app']['slug'] != $postType){
+                    if($condition['app']['app'] != $module) {
+                        if($condition['app']['app'] == 'post') {
+                            if($postType && $condition['app']['slug'] != $postType) {
                                 $shouldBeShown = false;
                                 break;
                             }
@@ -100,16 +103,16 @@ class CustomFieldGroupModel extends Model{
                     }
 
                     // if type is form
-                    if($condition['app']['type'] == 'form'){
-                        if($condition['operator']['value'] == "equals"){
-                            if($condition['value']['value'] != "all"){
-                                if($condition['value']['value'] != $formType){
+                    if($condition['app']['type'] == 'form') {
+                        if($condition['operator']['value'] == "equals") {
+                            if($condition['value']['value'] != "all") {
+                                if($condition['value']['value'] != $formType) {
                                     $shouldBeShown = false;
                                     break;
                                 }
                             }
                         }else{
-                            if($condition['value']['value'] == "all"){
+                            if($condition['value']['value'] == "all") {
                                 $shouldBeShown = false;
                                 break;
                             }
@@ -117,27 +120,27 @@ class CustomFieldGroupModel extends Model{
                     }
 
                     // if type is title
-                    if($condition['app']['type'] == 'title'){
-                        if($condition['app']['app'] == 'post-type'){
-                            if($condition['operator']['value'] == "equals"){
-                                if($condition['value']['value'] != $postType){
+                    if($condition['app']['type'] == 'title') {
+                        if($condition['app']['app'] == 'post-type') {
+                            if($condition['operator']['value'] == "equals") {
+                                if($condition['value']['value'] != $postType) {
                                     $shouldBeShown = false;
                                     break;
                                 }
                             }else{
-                                if($condition['value']['value'] == $postType){
+                                if($condition['value']['value'] == $postType) {
                                     $shouldBeShown = false;
                                     break;
                                 }
                             }
                         }else{
-                            if($condition['operator']['value'] == "equals"){
-                                if($condition['value']['value'] != $id){
+                            if($condition['operator']['value'] == "equals") {
+                                if($condition['value']['value'] != $id) {
                                     $shouldBeShown = false;
                                     break;
                                 }
                             }else{
-                                if($condition['value']['value'] == $id){
+                                if($condition['value']['value'] == $id) {
                                     $shouldBeShown = false;
                                     break;
                                 }
@@ -151,7 +154,7 @@ class CustomFieldGroupModel extends Model{
                 $conditionResult[] = $shouldBeShown;
             }
 
-            if(in_array(true, $conditionResult)){
+            if(in_array(true, $conditionResult)) {
                 $result[] = $customFieldGroup;
             }
         }

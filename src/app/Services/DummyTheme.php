@@ -59,11 +59,11 @@ class DummyTheme
     public function make()
     {
         $this->setDummyReplacements()
-          ->cloneFromGit()
-          ->moveTheme()
-          ->authFunctionality()
-          ->replaceDummyContent()
-          ->activate();
+            ->cloneFromGit()
+            ->moveTheme()
+            ->authFunctionality()
+            ->replaceDummyContent()
+            ->activate();
 
         return true;
     }
@@ -90,7 +90,8 @@ class DummyTheme
      *
      * @return $this
      */
-    private function authFunctionality(){
+    private function authFunctionality()
+    {
         if($this->getAttribute('activate')) {
             File::deleteDirectory($this->destinationDir.'/controllers/Auth');
             File::deleteDirectory($this->destinationDir.'/views/auth');
@@ -99,11 +100,13 @@ class DummyTheme
     }
     /**
      * Get attribute
-     * @param $key
+     *
+     * @param  $key
      * @return string
      */
-    private function getAttribute($key){
-        return (isset($this->attributes[$key])) ? $this->attributes[$key] : '';
+    private function getAttribute($key)
+    {
+        return (isset($this->attributes[$key]) && $this->attributes[$key]) ? $this->attributes[$key] : '';
     }
 
     /**
@@ -112,7 +115,8 @@ class DummyTheme
      * @throws \Cz\Git\GitException
      * @return $this;
      */
-    private function cloneFromGit(){
+    private function cloneFromGit()
+    {
         $this->tmpDirectory = tmpPath().'/'.time();
         GitRepository::cloneRepository($this->gitURL, $this->tmpDirectory);
         return $this;
@@ -124,7 +128,8 @@ class DummyTheme
      * @return $this
      * @throws \Exception
      */
-    public function moveTheme(){
+    public function moveTheme()
+    {
         $this->destinationDir = base_path('themes') . '/' . $this->getAttribute('namespace');
 
         // remove hidden directories
@@ -147,7 +152,8 @@ class DummyTheme
      * @return $this
      * @throws \Exception
      */
-    private function replaceDummyContent(){
+    private function replaceDummyContent()
+    {
         // Replace DummyTheme string in Controllers
         $this->replaceDummy($this->destinationDir . '/controllers');
 
@@ -165,7 +171,8 @@ class DummyTheme
      *
      * @return $this
      */
-    private function activate(){
+    private function activate()
+    {
         if($this->getAttribute('activate')) {
             SettingsModel::setSetting('activeTheme', $this->getAttribute('namespace'));
         }
@@ -178,7 +185,8 @@ class DummyTheme
      *
      * @return $this
      */
-    private function replaceDummy($directory){
+    private function replaceDummy($directory)
+    {
         $files = File::allFiles($directory);
         foreach ($files as $file) {
             $this->replaceDummyInFile($file->getPathName());
@@ -189,11 +197,13 @@ class DummyTheme
 
     /**
      * Replace dummy content in a file
+     *
      * @param $filePath
      */
-    private function replaceDummyInFile($filePath){
+    private function replaceDummyInFile($filePath)
+    {
         $fileSource = File::get($filePath);
-        $fileContent = str_replace(array_keys($this->dummyReplacements),array_values($this->dummyReplacements), $fileSource);
+        $fileContent = str_replace(array_keys($this->dummyReplacements), array_values($this->dummyReplacements), $fileSource);
         $writeFile = File::put($filePath, $fileContent);
         if ($writeFile === false) {
             throw new \Exception("Error writing to file " . $filePath);

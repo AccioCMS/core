@@ -4,8 +4,9 @@
  * Categories Model
  *
  * It handles Categories management
- * @author Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
- * @author Faton Sopa <faton.sopa@manaferra.com>
+ *
+ * @author  Jetmir Haxhisefa <jetmir.haxhisefa@manaferra.com>
+ * @author  Faton Sopa <faton.sopa@manaferra.com>
  * @version 1.0
  */
 
@@ -25,7 +26,8 @@ use Accio\App\Traits;
 use Accio\Support\Facades\Meta;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class CategoryModel extends Model{
+class CategoryModel extends Model
+{
 
     use
         Cachable,
@@ -103,7 +105,8 @@ class CategoryModel extends Model{
     /**
      * @inheritdoc
      * */
-    public function __construct(array $attributes = []){
+    public function __construct(array $attributes = [])
+    {
         parent::__construct($attributes);
         Event::fire('category:construct', [$this]);
     }
@@ -113,7 +116,8 @@ class CategoryModel extends Model{
      *
      * @return array
      */
-    protected static function menuLinkPanel(){
+    protected static function menuLinkPanel()
+    {
         return [
           'label' => 'Category',
           'controller' => 'CategoryController',
@@ -156,8 +160,9 @@ class CategoryModel extends Model{
      *
      * @return HasOne
      */
-    public function featuredImage(){
-        return $this->hasOne('App\Models\Media','mediaID','featuredImageID');
+    public function featuredImage()
+    {
+        return $this->hasOne('App\Models\Media', 'mediaID', 'featuredImageID');
     }
 
     /**
@@ -165,8 +170,9 @@ class CategoryModel extends Model{
      *
      * @return HasOne
      */
-    public function parent(){
-        return $this->hasOne('App\Models\Category','categoryID','parentID');
+    public function parent()
+    {
+        return $this->hasOne('App\Models\Category', 'categoryID', 'parentID');
     }
 
     /**
@@ -175,20 +181,22 @@ class CategoryModel extends Model{
      * @return string
      * @throws \Exception
      */
-    public function getHrefAttribute(){
+    public function getHrefAttribute()
+    {
         return $this->href();
     }
 
     /**
      * Generate a custom URL to a category.
      *
-     * @param string $routeName
-     * @param array $customAttributes
+     * @param  string $routeName
+     * @param  array  $customAttributes
      * @return string
      * @throws \Exception
      */
-    public function href($routeName = '', $customAttributes = []){
-        if(!$routeName){
+    public function href($routeName = '', $customAttributes = [])
+    {
+        if(!$routeName) {
             $routeName = 'category.posts';
         }
         $getRoute = Route::getRoutes()->getByName($routeName);
@@ -196,7 +204,7 @@ class CategoryModel extends Model{
             $routeParams = Route::getRoutes()->getByName($routeName)->parameterNames();
 
             // translating language
-            if($this->getTranslateLanguage()){
+            if($this->getTranslateLanguage()) {
                 $languageSlug = $this->getTranslateLanguage();
             }
             else{
@@ -208,30 +216,30 @@ class CategoryModel extends Model{
             foreach($routeParams as $name){
 
                 switch ($name){
-                    case 'postTypeSlug';
+                case 'postTypeSlug';
 
-                        $postType = PostType::findByID($this->postTypeID);
-                        $params['postTypeSlug'] = cleanPostTypeSlug($postType->slug);
-                        break;
+                    $postType = PostType::findByID($this->postTypeID);
+                    $params['postTypeSlug'] = cleanPostTypeSlug($postType->slug);
+                    break;
 
-                    case 'categorySlug';
-                        $params['categorySlug'] = $this->slug;
-                        break;
+                case 'categorySlug';
+                    $params['categorySlug'] = $this->slug;
+                    break;
 
-                    case 'categoryID';
-                        $params['categoryID'] = $this->categoryID;
-                        break;
+                case 'categoryID';
+                    $params['categoryID'] = $this->categoryID;
+                    break;
 
-                    case 'lang';
-                        // don't show language slug on default language
-                        if(config('project.hideDefaultLanguageInURL') && $languageSlug !=  Language::getDefault('slug')) {
-                            $params['lang'] = $languageSlug;
-                        }
-                        break;
+                case 'lang';
+                    // don't show language slug on default language
+                    if(config('project.hideDefaultLanguageInURL') && $languageSlug !=  Language::getDefault('slug')) {
+                        $params['lang'] = $languageSlug;
+                    }
+                    break;
                 }
             }
 
-            return  route($routeName,$params);
+            return  route($routeName, $params);
         }else{
             throw new \Exception("Route $routeName not found");
         }
@@ -243,30 +251,34 @@ class CategoryModel extends Model{
      *
      * @return array
      */
-    public function metaData(){
+    public function metaData()
+    {
         Meta::setTitle($this->title)
           ->set("description", $this->description)
           ->set("og:type", "profile", "property")
           ->set("og:title", $this->title, "property")
           ->set("og:description", $this->description, "property")
-          ->set("og:url",$this->href, "property")
+          ->set("og:url", $this->href, "property")
           ->setCanonical($this->href)
           ->setHrefLangData($this)
-          ->setWildcards([
+        ->setWildcards(
+            [
             '{{title}}' => $this->title,
             '{{sitename}}' => settings('siteTitle')
-          ]);
+              ]
+        );
     }
 
     /**
      * Scope a query to only include visible categories.
      *
-     * @param string $languageSlug
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  string                                $languageSlug
+     * @param  \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeVisible($query, $languageSlug = ''){
-        if(!$languageSlug){
+    public function scopeVisible($query, $languageSlug = '')
+    {
+        if(!$languageSlug) {
             $languageSlug = App::getLocale();
         }
         return $query->where('isVisible->'.$languageSlug, true);
@@ -275,28 +287,33 @@ class CategoryModel extends Model{
     /**
      * Handle callback of insert, update, delete.
      * */
-    protected static function boot(){
+    protected static function boot()
+    {
         parent::boot();
         
-        self::saved(function($category){
-            Category::_saved($category);
-        });
+        self::saved(
+            function ($category) {
+                Category::_saved($category);
+            }
+        );
     }
 
     /**
      * Perform certain actions after a category is saved.
      *
-     * @param $category
+     * @param  $category
      * @throws \Exception
      */
-    private static function _saved($category){
+    private static function _saved($category)
+    {
         self::updateMenulink($category);
     }
 
     /**
      * Destruct model instance.
      */
-    public function __destruct(){
+    public function __destruct()
+    {
         Event::fire('category:destruct', [$this]);
     }
 }
