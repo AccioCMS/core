@@ -42,13 +42,6 @@ abstract class PostModel extends Model
     public $table = 'post_articles';
 
     /**
-     * If has a dynamic tables or pre-declared table
-     *
-     * @var bool
-     */
-    protected $hasDynamicTable = true;
-
-    /**
      * The temporary table is associated with the "with" method of laravel
      * as it creates a new instance of model, and as a result the $table property has its default value.
      *
@@ -204,14 +197,6 @@ abstract class PostModel extends Model
     }
 
     /**
-     * Configure if post model has dynamic tables or pre-declared table
-     */
-    public function setHasDynamicTable($hasDynamicTable)
-    {
-        $this->hasDynamicTable = $hasDynamicTable;
-    }
-
-    /**
      * Begin querying a model with eager loading.
      * The default "with" method initializes a model with pre-defined table new.
      * The table name of a post type is saved in a static variable which is than appended to the model.
@@ -223,10 +208,6 @@ abstract class PostModel extends Model
     public static function with($relations)
     {
         $model = (new static());
-
-        if(!$model->hasDynamicTable) {
-            return parent::with($relations);
-        }
 
         $class = new \ReflectionClass($model);
         $method = $class->getProperty("table");

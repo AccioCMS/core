@@ -28,29 +28,6 @@ if (! function_exists('findPostBySlug')) {
     }
 }
 
-if (! function_exists('findPost')) {
-    /**
-     * Find a post by its ID
-     *
-     * @param  int|string  $postIdentification
-     * @param  string $postTypeSlug
-     * @return object
-     */
-    function findPost($postID, string $postTypeSlug = '')
-    {
-        if(!$postID){
-            throw new \Exception("No Post ID or Slug given!");
-        }
-
-        if(is_int($postIdentification)){
-            return findPostByID($postIdentification, $postTypeSlug);
-        }else{
-            return findBySlug($postIdentification, $postTypeSlug);
-        }
-    }
-}
-
-
 if(!function_exists('homepage')) {
 
     /**
