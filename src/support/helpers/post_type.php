@@ -1,6 +1,6 @@
 <?php
 
-if(!function_exists('noPostTypeSlug')) {
+if(!function_exists('cleanPostTypeSlug')) {
     /**
      * Remove 'post_' from post type slug
      *
@@ -29,7 +29,7 @@ if (! function_exists('getPostType')) {
 
         if(is_int($postTypeSlug)){
             $postType  = \App\Models\PostType::findByID($postTypeSlug);
-        }elsE{
+        }else{
             $postType  = \App\Models\PostType::findBySlug($postTypeSlug);
         }
 

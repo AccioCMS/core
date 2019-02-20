@@ -362,9 +362,7 @@ trait ThemeTrait
     public static function css($header = true, $defaultAttributes = [], $files = [], $noScript = false)
     {
         $html = '';
-        if($files) {
-            $files = $files;
-        }else{
+        if (! $files) {
             $files = self::config('css');
         }
 
