@@ -136,7 +136,7 @@ export const postForm = {
                             this.columns[k].value = this.makeMultiLanguageValue('array');
                         }else{
                             // add value to the object / this value will be used to store the input value
-                            this.columns[k].value = [];
+                            this.columns[k].value = "";
                         }
                     }
 
